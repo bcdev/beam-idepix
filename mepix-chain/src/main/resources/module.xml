@@ -1,0 +1,73 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>mepix-chain</symbolicName>
+    <version>1.1</version>
+    <name>MERIS Pixel Identification Tool</name>
+    <description>MERIS Pixel Identification Tool</description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>
+        Max Planck Str.2, 21502 Geesthacht (Germany)
+    </contactAddress>
+    <copyright>(C) 2007 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog/>
+
+	<dependency>
+        <module>beam-core</module>
+    </dependency>
+	<dependency>
+        <module>beam-gpf</module>
+    </dependency>
+	 <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+	<dependency>
+        <module>beam-envisat-reader</module>
+    </dependency>	
+	<dependency>
+        <module>beam-meris-brr</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-l2auxdata</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-sdr</module>
+    </dependency>
+
+    <categories>Application,Processor,Mepix,MERIS,AATSR</categories>
+
+    <extension point="beam-ui:actions">
+    	<!--
+        <action>
+            <id>mepix</id>
+            <class>org.esa.beam.visat.actions.ActionGroup</class>
+            <text>MEPIX Pixel Identification Tool (MERIS)</text>
+            <mnemonic/>
+        </action>
+        -->
+        <action>
+            <id>mepix</id>
+            <class>org.esa.beam.mepix.ui.ComputeChainAction</class>
+            <text>MEPIX Pixel Identification Tool (MERIS)...</text>
+            <shortDescr>
+                Call Operator Chain
+            </shortDescr>
+            <mnemonic/>
+            <parent></parent>
+            <helpID>mepixChain</helpID>
+            <placeAfter/>
+        </action>
+    </extension>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/mepix.hs</path>
+        </helpSet>
+    </extension>
+
+</module>

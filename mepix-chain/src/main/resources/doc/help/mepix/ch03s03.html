@@ -1,0 +1,39 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3.3. O2 Products</title><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="MEPIX Software User Manual"><link rel="up" href="ch03.html" title="Chapter 3. MEPIX Products"><link rel="prev" href="ch03s02.html" title="3.2. Standard L2 Products (nominal mode)"><link rel="next" href="ch03s04.html" title="3.4. GlobCover Products (QWG mode)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sum.products.o2"></a>3.3. O2 Products</h2></div></div></div><p>
+            The MEPIX tool can also derive products which will are of interest within the O2 project. These are:
+            </p><div class="itemizedlist"><ul type="bullet"><li style="list-style-type: disc">
+                    Surface Pressure, derived from a new Neural Net approach including a straylight correction as developed by FUB
+                </li><li style="list-style-type: disc">
+                    TOA Pressure ('P1'), derived from an improved LISE algorithm
+                </li><li style="list-style-type: disc">
+                    Surface Pressure, derived from an improved LISE algorithm
+                </li><li style="list-style-type: disc">
+                    Rayleigh-corrected TOA Pressure ('P2'), derived from an improved LISE algorithm
+                </li><li style="list-style-type: disc">
+                    Aerosol apparent pressure ('PScatt', LISE approach)
+                </li></ul></div><p>
+            The algorithms have been implemented based on the documentation and breadboard software
+            provided by FUB and LISE. During two collocations the implementation was verified together with
+            the algorithm developers.
+
+
+       </p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sum.products.o2.psurffub"></a>3.3.1. Surface Pressure (FUB)</h3></div></div></div><p>
+                This algorithm was developed as IDL code by Free University of Berlin (FUB) and is described in
+                [3]. The algorithm includes a new straylight correction scheme proposed by FUB (see [4]).
+                Brockmann Consult provided a Java implementation in MEPIX. A validation with the original
+                IDL code was performed by applying Junit tests on distinct test data provided by FUB.
+            </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sum.products.o2.ptoalise"></a>3.3.2. TOA Pressure ('P1', LISE)</h3></div></div></div><p>
+                This algorithm was developed as FORTRAN code by LISE and is described in [5]. Brockmann
+                Consult provided a Java implementation in MEPIX. A validation with the original FORTRAN code
+                was performed by applying Junit tests on distinct test data provided by LISE.
+            </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sum.products.o2.psurflise"></a>3.3.3. Surface Pressure (LISE)</h3></div></div></div><p>
+                This algorithm was developed as FORTRAN code by LISE and is a slight extension of the TOA
+                pressure using filter-dependent C coefficients. Brockmann Consult provided a Java
+                implementation in MEPIX. 
+            </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sum.products.o2.praycorrlise"></a>3.3.4. Rayleigh-corrected TOA Pressure ('P2', LISE)</h3></div></div></div><p>
+                This correction has been proposed by LISE to be applied on the TOA Pressure. This product
+                is provided as additional band in MEPIX.
+            </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sum.products.o2.pscattlise"></a>3.3.5. Aerosol apparent pressure ('PScatt', LISE)</h3></div></div></div><p>
+                This algorithm was developed as FORTRAN code by LISE and is described in [5]. Brockmann
+            Consult provided a Java implementation in MEPIX. A validation with the original FORTRAN code
+            was performed by applying Junit tests on distinct test data provided by LISE.
+            </p></div></div></body></html>

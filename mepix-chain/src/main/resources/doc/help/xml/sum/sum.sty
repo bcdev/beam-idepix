@@ -1,0 +1,70 @@
+%%
+%% This style is derivated from the docbook one
+%%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{mystyle}[2007/04/04 My DocBook Style]
+%% Just use the original package and pass the options
+\RequirePackageWithOptions{docbook}
+
+
+\lhead[]{}
+\chead[]{}
+\rhead[]{}
+\lfoot[]{}
+\cfoot[]{}
+\rfoot[]{}
+
+% Title page
+
+\def\DBKcover{
+\ifthenelse{\equal{\DBKedition}{}}{\def\edhead{}}{\def\edhead{Ed. \DBKedition}}
+
+ % interligne double
+ \setlength{\oldbaselineskip}{\baselineskip}
+ \setlength{\baselineskip}{2\oldbaselineskip}
+ \textsf{
+\vfill
+\vspace{2.5cm}
+\begin{center}
+  \includegraphics{figures/BClogo}\\
+  \vspace{1cm}
+  \huge{\textbf{\DBKtitle}}\\ %
+  \ifthenelse{\equal{\DBKsubtitle}{}}{}{
+  % \underline{\ \ \ \ \ \ \ \ \ \ \ }\\ %
+  \ \\ %
+  \huge{\textbf{\DBKsubtitle}}\\ %
+  }
+\end{center}
+\vfill
+\setlength{\baselineskip}{\oldbaselineskip}
+\hspace{1cm}
+\vspace{1cm}
+\begin{center}
+\large
+Version \DBKreference{} \\
+\vspace{0.5cm}
+\DBKpubdate{}
+\end{center}
+}
+
+% Format for the other pages
+
+\def\DBKcheadbody{%
+\begin{tabular}{
+>{\raggedright}p{5.6cm} >{\centering}p{5.6cm} >{\raggedleft}p{5.6cm}} %
+\multirow{3}{*} {\parbox[c]{1em}{\includegraphics[height=1.8cm]{figures/BClogo}}} & &  \tabularnewline %
+ & & {\DBKtitle} \tabularnewline %
+& & Version {\DBKreference{}} \tabularnewline %
+& & {\DBKpubdate{}}\tabularnewline %
+& & \tabularnewline %
+\end{tabular}%
+}
+
+
+\newpage
+\setlength{\baselineskip}{\oldbaselineskip}
+\chead[]{\DBKcheadbody}
+\lfoot[]{}
+\cfoot[]{\DBKcopyright{}}
+\rfoot[]{\textsf{\thepage}}
+}

@@ -1,0 +1,46 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>4.4. 'Pressure Products' Tab Pane</title><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="MEPIX Software User Manual"><link rel="up" href="ch04.html" title="Chapter 4. MEPIX Processor"><link rel="prev" href="ch04s03.html" title="4.3. 'IPF Compatible Products' Tab Pane (QWG mode)"><link rel="next" href="ch04s05.html" title="4.5. 'Cloud Products' Tab Pane (QWG mode)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sum.processor.pressure"></a>4.4. 'Pressure Products' Tab Pane</h2></div></div></div><div class="figure"><a name="figure.processor.pressure"></a><div class="figure-contents"><div><img src="figures/pressuretab.png" alt="'Pressure Products' Tab Pane"></div></div><p class="title"><b>Figure 4.4. 'Pressure Products' Tab Pane</b></p></div><br class="figure-break">
+
+        This tab pane consists of the following components:
+        <div class="itemizedlist"><ul type="bullet"><li style="list-style-type: disc">
+                 'Barometric Pressure': If this checkbox is selected, the output product will contain
+                  a band with the barometric pressure derived for each pixel.
+            </li><li style="list-style-type: disc">
+                 'Use GETASSE30 DEM for Barometric Pressure Computation':
+                 If this checkbox is selected, the barometric pressure will be computed using
+                the GETASSE30 DEM instead of the tie point DEM. Note that this option can only
+                be used if the GETASSE30 DEM has been installed in BEAM.
+            </li><li style="list-style-type: disc">
+                 'Surface Pressure (FUB, O2 Project)': If this checkbox is selected,
+                  the output product will contain
+                  a band with the surface pressure,
+                  derived as described in <a class="xref" href="ch03s03.html#sum.products.o2.psurffub" title="3.3.1. Surface Pressure (FUB)">Section 3.3.1</a>
+                 for each pixel.
+            </li><li style="list-style-type: disc">
+                 'Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm':
+                  If this checkbox is selected, a tropical atmosphere (instead of USS standard)
+                  is used within the FUB surface pressure algorithm.
+            </li><li style="list-style-type: disc">
+                 ''P1' (LISE, O2 project, all surfaces)': If this checkbox is selected,
+                  the output product will contain
+                  a band with the 'P1' pressure,
+                  derived as described in <a class="xref" href="ch03s03.html#sum.products.o2.ptoalise" title="3.3.2. TOA Pressure ('P1', LISE)">Section 3.3.2</a>
+                 for each pixel over each surface.
+            </li><li style="list-style-type: disc">
+                 'Surface pressure (LISE, O2 project, land)': If this checkbox is selected,
+                  the output product will contain
+                  a band with the surface pressure,
+                  derived as described in <a class="xref" href="ch03s03.html#sum.products.o2.psurflise" title="3.3.3. Surface Pressure (LISE)">Section 3.3.3</a>
+                 for each pixel over land.
+            </li><li style="list-style-type: disc">
+                 ''P2' (LISE, O2 project, ocean)': If this checkbox is selected,
+                  the output product will contain
+                  a band with the 'P2' pressure,
+                  derived as described in <a class="xref" href="ch03s03.html#sum.products.o2.psurflise" title="3.3.3. Surface Pressure (LISE)">Section 3.3.3</a>
+                 for each pixel over ocean.
+            </li><li style="list-style-type: disc">
+                 ''PScatt' (LISE, O2 project, ocean)': If this checkbox is selected,
+                  the output product will contain
+                  a band with the 'PScatt' pressure,
+                  derived as described in <a class="xref" href="ch03s03.html#sum.products.o2.pscattlise" title="3.3.5. Aerosol apparent pressure ('PScatt', LISE)">Section 3.3.5</a>
+                 for each pixel over ocean.
+            </li></ul></div></div></body></html>

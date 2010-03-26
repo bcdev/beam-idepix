@@ -1,0 +1,115 @@
+<chapter id="sum.installation">
+    <title>Software Installation</title>
+
+    <sect1 id="sum.installation.plugin">
+        <title>MEPIX as BEAM plugin</title>
+        <para>
+            As a BEAM plugin, the MEPIX processor needs the following software to be installed
+            in advance:
+            <itemizedlist mark='bullet'>
+                <listitem>
+                    BEAM, version 4.6 or 4.6.1
+                </listitem>
+            </itemizedlist>
+            The BEAM software can be obtained from the BEAM download page
+            (www.brockmann-consult.de/beam).
+        </para>
+
+        <para>
+            The MEPIX software delivery consists of three jar files, the MEPIX main module
+            and adjusted BRR (Bottom of Rayleigh Reflectance) and SDR (Surface Directional
+            Reflectance) modules, which provide additional Java classes used by MEPIX:
+            <itemizedlist mark='bullet'>
+                <listitem>
+                    mepix-chain-1.1.jar
+                </listitem>
+                <listitem>
+                    beam-meris-brr-2.0.3-SNAPSHOT.jar
+                </listitem>
+                <listitem>
+                    beam-meris-sdr-2.1-SNAPSHOT.jar
+                </listitem>
+            </itemizedlist>
+            These files need to be copied into the 'modules' folder of the BEAM
+            installation (<xref linkend="figure.installation.beammodules" xrefstyle="select: label"/>).
+            Note that existing versions of these jar files need to be replaced/overwritten.
+            There should not be more than one jar file for each of these modules in the
+                'modules' folder!
+            
+        </para>
+
+        <figure id="figure.installation.beammodules">
+            <title>Installation of MEPIX jar files in BEAM modules folder (shown for Windows XP)</title>
+            <graphic scale="60" fileref="figures/beammodules.png"/>
+        </figure>
+
+    </sect1>
+
+    <sect1 id="sum.installation.addons">
+        <title>Additional Requirements</title>
+        <para>
+            To be able to process all options properly, the MEPIX processor needs the following
+            add-ons to be installed in BEAM (if not already done):
+            <itemizedlist mark='bullet'>
+                <listitem>
+                    MERIS L2 Auxdata module
+                </listitem>
+                <listitem>
+                    GETASSE30 DEM
+                </listitem>
+                <listitem>
+                    GETASSE30 DEM reader
+                </listitem>
+            </itemizedlist>
+            The MERIS L2 Auxdata and the GETASSE30 DEM reader can be installed with the
+            BEAM module manager. See BEAM help documentation for details
+            (http://www.brockmann-consult.de/beam/doc/help/visat/ModuleManager.html).
+            The GETASSE30 DEM can be downloaded from the BEAM download page. See also
+            BEAM help documentation
+            (http://www.brockmann-consult.de/beam/ doc/help/visat/GETASSE30ElevationModel.html).
+        </para>
+    </sect1>
+
+    <!-- QWG specific section!! -->
+
+    <sect1 id="sum.installation.qwg">
+        <title>MEPIX QWG Version</title>
+
+        <para>
+            The MEPIX software offers a special mode for QWG users which
+            provides various additional processing options. To access these options,
+            a special configuration needs to be performed
+            (<xref linkend="figure.installation.qwg.beamconfig" xrefstyle="select: label"/>,
+             <xref linkend="figure.installation.qwg.configentry" xrefstyle="select: label"/>)):
+             <itemizedlist mark='bullet'>
+                <listitem>
+                    go to the 'config' folder of the BEAM installation
+                </listitem>
+                <listitem>
+                    edit the file 'beam.config' with a text editor
+                </listitem>
+                <listitem>
+                    add the entry 'mepixMode = QWG' in a new line at the end of the file
+                </listitem>
+                <listitem>
+                    restart BEAM-VISAT
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <figure id="figure.installation.qwg.beamconfig">
+            <title>Configuration file in BEAM config folder (shown for Windows XP)</title>
+            <graphic scale="60" fileref="figures/beamconfig.png"/>
+        </figure>
+
+        <figure id="figure.installation.qwg.configentry">
+            <title>Configuration for QWG mode in BEAM config file </title>
+            <graphic scale="60" fileref="figures/qwgentry.png"/>
+        </figure>
+
+    </sect1>
+    
+    <!-- end QWG specific section!! -->
+
+
+</chapter>

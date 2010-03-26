@@ -1,0 +1,88 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>mepix</artifactId>
+        <groupId>org.esa.beam.mepix</groupId>
+        <version>1.1</version>
+    </parent>
+
+    <packaging>jar</packaging>
+
+    <groupId>org.esa.beam.mepix</groupId>
+    <artifactId>mepix-chain</artifactId>
+    <name>MePix Chain</name>
+    <version>1.1</version>
+    <description>MePix Cloud Screening</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.ceres</groupId>
+            <artifactId>ceres-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-visat</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-envisat-reader</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.esa.beam</groupId>
+			<artifactId>beam-meris-brr</artifactId>
+			<version>2.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.esa.beam</groupId>
+			<artifactId>beam-meris-sdr</artifactId>
+			<version>2.3-SNAPSHOT</version>
+		</dependency>
+        <!--
+        <dependency>
+			<groupId>org.esa.beam</groupId>
+			<artifactId>beam-meris-l2auxdata</artifactId>
+			<version>1.2-SNAPSHOT</version>
+		</dependency>
+		-->
+    </dependencies>
+    <!--
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <configuration>
+                            <tasks>
+                                <property file="../build.properties"/>
+                                <property name="helpdir" value="${project.build.outputDirectory}/doc/help"/>
+                                <ant antfile="../build.xml" target="create-jh-search-db"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    -->
+</project>
+
