@@ -21,6 +21,8 @@ import org.esa.beam.mepix.operators.ComputeChainOp;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
+import javax.media.jai.JAI;
+
 /**
  * Action for computing an operator chain.
  *
@@ -31,6 +33,7 @@ import org.esa.beam.visat.actions.AbstractVisatAction;
 public class ComputeChainAction extends AbstractVisatAction {
     @Override
     public void actionPerformed(CommandEvent commandEvent) {
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // test!!
         final MepixDialog dialog =
             new MepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
                     getAppContext(),

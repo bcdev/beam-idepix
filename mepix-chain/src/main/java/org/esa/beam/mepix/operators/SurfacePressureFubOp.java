@@ -79,28 +79,11 @@ public class SurfacePressureFubOp extends MerisBasisOp {
     private float[] straylightCorrWavelengths = new float[DETECTOR_LENGTH_RR];
 
     private L2AuxData auxData;
-    private JnnNet neuralNet;
     private Band invalidBand;
 
 
     @Override
     public void initialize() throws OperatorException {
-        sourceProduct.setPreferredTileSize(16, 16);
-
-//        if ((straylightCorr) && !sourceProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
-//            throw new OperatorException
-//        		("Straylight correction not possible for full resolution products.");
-//        }
-
-        try {
-            loadNeuralNet();
-        } catch (Exception e) {
-            if (tropicalAtmosphere) {
-                throw new OperatorException("Failed to load neural net SP_FUB_trp.nna:\n" + e.getMessage());
-            } else {
-                throw new OperatorException("Failed to load neural net SP_FUB_uss.nna:\n" + e.getMessage());
-            }
-        }
         try {
 			initAuxData();
 			readStraylightCoeff();
@@ -111,22 +94,24 @@ public class SurfacePressureFubOp extends MerisBasisOp {
         createTargetProduct();
     }
     
-    private void loadNeuralNet() throws IOException, JnnException {
+    private JnnNet loadNeuralNet() throws IOException, JnnException {
 
         InputStream inputStream = null;
+        JnnNet neuralNet = null;
         if (tropicalAtmosphere) {
             inputStream = SurfacePressureFubOp.class.getResourceAsStream(NEURAL_NET_TRP_FILE_NAME);
         } else {
             inputStream = SurfacePressureFubOp.class.getResourceAsStream(NEURAL_NET_USS_FILE_NAME);
         }
         final InputStreamReader reader = new InputStreamReader(inputStream);
-        
+
         try {
             Jnn.setOptimizing(true);
             neuralNet = Jnn.readNna(reader);
         } finally {
             reader.close();
         }
+        return neuralNet;
     }
 
     private void createTargetProduct() throws OperatorException {
@@ -191,6 +176,18 @@ public class SurfacePressureFubOp extends MerisBasisOp {
         pm.beginTask("Processing frame...", rectangle.height);
 
         try {
+            // declare this locally since class JnnNet is not thread safe!!
+            JnnNet neuralNet;
+            try {
+                neuralNet = loadNeuralNet();
+            } catch (Exception e) {
+                if (tropicalAtmosphere) {
+                    throw new OperatorException("Failed to load neural net SP_FUB_trp.nna:\n" + e.getMessage());
+                } else {
+                    throw new OperatorException("Failed to load neural net SP_FUB_uss.nna:\n" + e.getMessage());
+                }
+            }
+
         	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), rectangle, pm);
         	Tile sza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME), rectangle, pm);
 			Tile saa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME), rectangle, pm);

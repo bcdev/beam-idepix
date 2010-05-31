@@ -61,8 +61,6 @@ public class BarometricPressureOp extends MerisBasisOp {
     public void initialize() throws OperatorException {
 
         if (sourceProduct != null) {
-            sourceProduct.setPreferredTileSize(16, 16);
-
             createTargetProduct();
         }
 

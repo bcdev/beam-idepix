@@ -26,6 +26,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
@@ -35,7 +36,6 @@ import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.LUT;
 import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
 
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -157,25 +157,24 @@ public class LisePressureOp extends BasisOp {
     private double[] airMassesLise = new double[6];                      // air masses (LISE)
     private double[] rhoToaLise = new double[6];                         // rhoToa (LISE)
     
-    protected RayleighCorrection rayleighCorrection;
+//    protected RayleighCorrection rayleighCorrection;
     
     // index 0: W0 wavelength for band 11
     // indices 1,2:  bracketted wavemengths for W0
-    private double[] band11CentralWavelengths = new double[3];     
+//    private double[] band11CentralWavelengths = new double[3];
 
 
-    private L2AuxData auxData;
+    L2AuxData auxData;
     private Band invalidBand;
     private Band invalidBandOcean;
     private Band invalidBandLand;
 	private LUT coeffLUT;
-	private double[][][] cLut;
     
     
     @Override
     public void initialize() throws OperatorException {
     	if (sourceProduct != null) {
-    		sourceProduct.setPreferredTileSize(16, 16);
+    		sourceProduct.setPreferredTileSize(64, 64);
     		createTargetProduct();
     	}
     		
@@ -200,7 +199,7 @@ public class LisePressureOp extends BasisOp {
         try {
             L2AuxdataProvider auxdataProvider = L2AuxdataProvider.getInstance();
             auxData = auxdataProvider.getAuxdata(sourceProduct);
-            rayleighCorrection = new RayleighCorrection(auxData);
+//            rayleighCorrection = new RayleighCorrection(auxData);
         } catch (Exception e) {
             throw new OperatorException("Failed to load L2AuxData:\n" + e.getMessage(), e);
         }
@@ -619,9 +618,6 @@ public class LisePressureOp extends BasisOp {
     private int getNearestFilterIndex(double w0) {
     	int index = -1;
     	
-    	band11CentralWavelengths[1] = 0.0;
-    	band11CentralWavelengths[2] = 0.0;
-    	
     	if (w0 <= o2FilterWavelengths[0]) {
             index = 0;  // bug fixed: was 1 before (LB, 01.10.09) !!
     	} else if (w0 >= o2FilterWavelengths[NFILTER-1]) {
@@ -635,9 +631,6 @@ public class LisePressureOp extends BasisOp {
 	    		}
 	    	}
     	}
-    	
-    	band11CentralWavelengths[1] = o2FilterWavelengths[index];
-    	band11CentralWavelengths[2] = o2FilterWavelengths[index+1];
     	
     	return index;
     }
@@ -656,7 +649,8 @@ public class LisePressureOp extends BasisOp {
      * @param ratio - toa11/toa10
      * @return
      */
-    private double getPressure(double w0, double thetaS, double thetaV, int filterIndex, int isza, int ivza, double ratio) {
+    private double getPressure(double centralWvl1, double centralWvl2,
+            double w0, double thetaS, double thetaV, int filterIndex, int isza, int ivza, double ratio) {
     	double pressure = 0.0; // pressure to compute
     	
     	double x0, x1, x2;
@@ -700,7 +694,7 @@ public class LisePressureOp extends BasisOp {
     	s2 = linearInterpol(x0, x1, x2, z1, z2);
     	
     	pressure = linearInterpol(w0,
-				band11CentralWavelengths[1], band11CentralWavelengths[2], s1, s2);
+				centralWvl1, centralWvl2, s1, s2);
     	
     	return pressure;
     }
@@ -761,9 +755,9 @@ public class LisePressureOp extends BasisOp {
     	return rayleighReflectance;
     }
     
-    private double computeRayleighReflectanceCh11(double szaDeg, double vzaDeg, double azimDiff, double pressure) {
+    private double computeRayleighReflectanceCh11(RayleighCorrection rayleighCorrection, double szaDeg, double vzaDeg, double azimDiff, double pressure) {
     	double rayleighReflectance;
-    	
+
     	final double sza = szaDeg * MathUtils.DTOR;
     	final double vza = vzaDeg * MathUtils.DTOR;
     	final double sins = Math.sin(sza);
@@ -784,13 +778,13 @@ public class LisePressureOp extends BasisOp {
 	    rayleighCorrection.phase_rayleigh(mus, muv, sins, sinv, phaseR);
 	
 	    /* Rayleigh reflectance*/
-	    rayleighReflectance = ref_rayleigh_ch11(azimDiffDeg, sza, vza, mus, muv,
+	    rayleighReflectance = ref_rayleigh_ch11(rayleighCorrection, azimDiffDeg, sza, vza, mus, muv,
 	                                    airMass, phaseR, tauRayleighCh11);
 	    
     	return rayleighReflectance;
     }
     
-    private double ref_rayleigh_ch11(double delta_azimuth, double sun_zenith,
+    private double ref_rayleigh_ch11(RayleighCorrection rayleighCorrection, double delta_azimuth, double sun_zenith,
 			double view_zenith, double mus, double muv, double airMass,
 			double[] phaseRayl, double tauRayl) {
     	
@@ -886,7 +880,8 @@ public class LisePressureOp extends BasisOp {
      * @param ivza
      * @return
      */
-    private double computeO2Transmittance(double[][][] to2, double w0, double thetaS, double thetaV, int filterIndex, int isza, int ivza) {
+    private double computeO2Transmittance(double centralWvl1, double centralWvl2,
+            double[][][] to2, double w0, double thetaS, double thetaV, int filterIndex, int isza, int ivza) {
     	double o2Transmittance = 0.0d;
     	
     	double x0, x1, x2;
@@ -936,7 +931,7 @@ public class LisePressureOp extends BasisOp {
     	s2 = linearInterpol(x0, x1, x2, z1, z2);
     	
     	o2Transmittance = linearInterpol(w0,
-				band11CentralWavelengths[1], band11CentralWavelengths[2], s1, s2);
+				centralWvl1, centralWvl2, s1, s2);
     	
     	return o2Transmittance;
     }
@@ -985,14 +980,14 @@ public class LisePressureOp extends BasisOp {
 	 * @param w0
 	 * @return
 	 */
-	public double computeLisePressures(
+	public double computeLisePressures(RayleighCorrection rayleighCorrection,
 			final int pressureIndex,
 			final double szaDeg, final double vzaDeg, final double csza, final double cvza, 
 			final double ssza, final double svza, final double azimDiff,
 			final double rhoToa10, final double rhoToa11, final double rhoToa12, final double w0,
 			final float altitude, final float ecmwfPressure, double pressureScaleHeight, final double airMass) {
 		
-		// Determine nearest filter 
+		// Determine nearest filter
 		int filterIndex = getNearestFilterIndex(w0);
 		
 		// Compute the geometric conditions
@@ -1022,7 +1017,8 @@ public class LisePressureOp extends BasisOp {
 		// Computation of the apparent pressure P1
 		// (an intermediate result - not needed to proceed)
 		if (pressureIndex == 0) {
-			final double appPressure1 = getPressure(
+			final double appPressure1 = getPressure(o2FilterWavelengths[filterIndex],
+                                                    o2FilterWavelengths[filterIndex+1],
 				w0, szaDeg, vzaDeg,
 				filterIndex, gaussIndexS, gaussIndexV, to2Ratio);
 		
@@ -1034,13 +1030,14 @@ public class LisePressureOp extends BasisOp {
 			final FractIndex[] cIndex = FractIndex.createArray(2);
 			Interp.interpCoord(airMass, coeffLUT.getTab(2), cIndex[1]);
 	        Interp.interpCoord(rhoToa10, coeffLUT.getTab(1), cIndex[0]);
-	        cLut = (double[][][]) coeffLUT.getJavaArray();
+	        double[][][] cLut = (double[][][]) coeffLUT.getJavaArray();
 			double cCoeffResult = Interp.interpolate(cLut[filterIndex], cIndex);
 			double eta = rhoToa11/rhoToa10;
 			eta *= cCoeffResult;
 			
 			// Computation of the surface pressure pSurf
-			final double pSurf = getPressure(
+			final double pSurf = getPressure(o2FilterWavelengths[filterIndex],
+                                             o2FilterWavelengths[filterIndex+1],
 					w0, szaDeg, vzaDeg,
 					filterIndex, gaussIndexS, gaussIndexV, eta);
 		
@@ -1052,7 +1049,7 @@ public class LisePressureOp extends BasisOp {
 		if (rayleighCorrection != null && rayleighCorrection.getAuxdata() != null) {			
 			final double press = HelperFunctions.correctEcmwfPressure(
 					ecmwfPressure, altitude, pressureScaleHeight); /* DPM #2.6.15.1-3 */
-			ray761 = computeRayleighReflectanceCh11(
+			ray761 = computeRayleighReflectanceCh11(rayleighCorrection,
 					szaDeg, vzaDeg, azimDiff, press);
 		} else {
 			ray761 = computeRayleighReflectance(
@@ -1061,7 +1058,8 @@ public class LisePressureOp extends BasisOp {
 		}
 
 		// Compute the Rayleigh O2 transmittance
-		final double trO2 = computeO2Transmittance(to2Ray,
+		final double trO2 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                   o2FilterWavelengths[filterIndex+1], to2Ray,
 				w0, szaDeg, vzaDeg,
 				filterIndex, gaussIndexS, gaussIndexV);
 
@@ -1073,7 +1071,8 @@ public class LisePressureOp extends BasisOp {
 		// after Rayleigh correction
 		// (an intermediate result - not needed to proceed)
 		if (pressureIndex == 2) {
-			final double appPressure2 = getPressure(
+			final double appPressure2 = getPressure(o2FilterWavelengths[filterIndex],
+                                                    o2FilterWavelengths[filterIndex+1],
 					w0, szaDeg, vzaDeg,
 					filterIndex, gaussIndexS, gaussIndexV,
 					to2RCorrected);
@@ -1085,19 +1084,22 @@ public class LisePressureOp extends BasisOp {
 		// correction:
 
 		// Compute the aerosol O2 transmittance
-		final double trAerosol = computeO2Transmittance(
+		final double trAerosol = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                   o2FilterWavelengths[filterIndex+1],
 				to2AtmAerosol, w0,
 				szaDeg, vzaDeg, filterIndex, gaussIndexS,
 				gaussIndexV);
 		
 		// Compute the aerosol fresnel O2 transmittance for direct to diffuse
-		final double trFresnel1 = computeO2Transmittance(
+		final double trFresnel1 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                   o2FilterWavelengths[filterIndex+1],
 				to2Fresnel, w0,
 				szaDeg, vzaDeg, filterIndex, gaussIndexS,
 				gaussIndexV);
 		
 		// Compute the aerosol fresnel O2 transmittance for diffuse to direct
-		final double trFresnel2 = computeO2Transmittance(
+		final double trFresnel2 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                   o2FilterWavelengths[filterIndex+1],
 				to2Fresnel, w0,
 //				vzaDeg, szaDeg, filterIndex, gaussIndexS,     // LB, 02.10.09 
 				szaDeg, vzaDeg, filterIndex, gaussIndexS,
@@ -1117,7 +1119,8 @@ public class LisePressureOp extends BasisOp {
 		
 		final double to2Rf = to2RCorrected * trAerosol / xx;
 		
-		final double appPressure3 = getPressure(
+		final double appPressure3 = getPressure(o2FilterWavelengths[filterIndex],
+                                                o2FilterWavelengths[filterIndex+1],
 				w0, szaDeg, vzaDeg,
 				filterIndex, gaussIndexS, gaussIndexV,
 				to2Rf);
@@ -1127,7 +1130,7 @@ public class LisePressureOp extends BasisOp {
 	
 	
 
-	private void computeP1(Band band, Tile targetTile,
+	private void computeP1(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
 			ProgressMonitor pm, int pressureResultIndex,
 			Rectangle rectangle, Tile detector, Tile sza,
 			Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
@@ -1147,7 +1150,7 @@ public class LisePressureOp extends BasisOp {
 					targetTile.setSample(x, y, 0);
 				} else {
 					// Compute the geometric conditions
-					final double pressureResult = getPressureResult(
+					final double pressureResult = getPressureResult(rayleighCorrection,
 							pressureResultIndex, sza, vza, saa, vaa,
 							altitudeTile, ecmwfPressureTile, rhoToa, y, x,
 							detectorIndex);
@@ -1159,7 +1162,7 @@ public class LisePressureOp extends BasisOp {
 		}
 	}
 
-	private double getPressureResult(int pressureResultIndex, Tile sza,
+	private double getPressureResult(RayleighCorrection rayleighCorrection, int pressureResultIndex, Tile sza,
 			Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
 			Tile ecmwfPressureTile, Tile[] rhoToa, int y, int x,
 			final int detectorIndex) {
@@ -1180,17 +1183,17 @@ public class LisePressureOp extends BasisOp {
 		final float ecmwfPressure = ecmwfPressureTile.getSampleFloat(x, y);
 		final double airMass = HelperFunctions.calculateAirMass(vzaDeg, szaDeg);
 		
-		band11CentralWavelengths[0] = auxData.central_wavelength[BB760][detectorIndex];
+		double centralWvl760 = auxData.central_wavelength[BB760][detectorIndex];
 		
 		rhoToa11 = applyStraylightCorr(detectorIndex, rhoToa10, rhoToa11);
 		
-		final double pressureResult = computeLisePressures(pressureResultIndex,
+		final double pressureResult = computeLisePressures(rayleighCorrection, pressureResultIndex,
 				szaDeg, vzaDeg, csza, cvza, ssza, svza, azimDiff, rhoToa10, rhoToa11, rhoToa12, 
-				band11CentralWavelengths[0], altitude, ecmwfPressure, auxData.press_scale_height, airMass);
+				centralWvl760, altitude, ecmwfPressure, auxData.press_scale_height, airMass);
 		return pressureResult;
 	}
 	
-	private void computePSurf(Band band, Tile targetTile,
+	private void computePSurf(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
 			ProgressMonitor pm, int pressureResultIndex, 
 			Rectangle rectangle, Tile detector, Tile sza,
 			Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
@@ -1210,7 +1213,7 @@ public class LisePressureOp extends BasisOp {
 					targetTile.setSample(x, y, 0);
 				} else {
 					// Compute the geometric conditions
-					final double pressureResult = getPressureResult(
+					final double pressureResult = getPressureResult(rayleighCorrection,
 							pressureResultIndex, sza, vza, saa, vaa,
 							altitudeTile, ecmwfPressureTile, rhoToa, y, x,
 							detectorIndex);
@@ -1222,7 +1225,7 @@ public class LisePressureOp extends BasisOp {
 		}
 	}
 
-	private void computeP2(Band band, Tile targetTile,
+	private void computeP2(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
 			ProgressMonitor pm, int pressureResultIndex, 
 			Rectangle rectangle, Tile detector, Tile sza,
 			Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
@@ -1241,7 +1244,7 @@ public class LisePressureOp extends BasisOp {
 				if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
 					targetTile.setSample(x, y, 0);
 				} else {
-					final double pressureResult = getPressureResult(
+					final double pressureResult = getPressureResult(rayleighCorrection,
 							pressureResultIndex, sza, vza, saa, vaa,
 							altitudeTile, ecmwfPressureTile, rhoToa, y, x,
 							detectorIndex);
@@ -1253,7 +1256,7 @@ public class LisePressureOp extends BasisOp {
 		}
 	}
 	
-	private void computePScatt(Band band, Tile targetTile,
+	private void computePScatt(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
 			ProgressMonitor pm, int pressureResultIndex, 
 			Rectangle rectangle, Tile detector, Tile sza,
 			Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
@@ -1272,7 +1275,7 @@ public class LisePressureOp extends BasisOp {
 				if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
 					targetTile.setSample(x, y, 0);
 				} else {
-					final double pressureResult = getPressureResult(
+					final double pressureResult = getPressureResult(rayleighCorrection,
 							pressureResultIndex, sza, vza, saa, vaa,
 							altitudeTile, ecmwfPressureTile, rhoToa, y, x,
 							detectorIndex);
@@ -1317,7 +1320,6 @@ public class LisePressureOp extends BasisOp {
 		double stray = 0.0;
 		if (straylightCorr) {
 			// apply FUB straylight correction...
-			band11CentralWavelengths[0] = straylightCorrWavelengths[detectorIndex];
 			stray = straylightCoefficients[detectorIndex] * rhoToa10;
 			rhoToa11 += stray;
 		}
@@ -1338,7 +1340,10 @@ public class LisePressureOp extends BasisOp {
     	
     	Rectangle rectangle = targetTile.getRectangle();
         pm.beginTask("Processing frame...", rectangle.height);
+
         try {
+            RayleighCorrection rayleighCorrection = new RayleighCorrection(auxData);
+
         	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), rectangle, pm);
         	Tile sza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME), rectangle, pm);
 			Tile vza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME), rectangle, pm);
@@ -1358,22 +1363,22 @@ public class LisePressureOp extends BasisOp {
 			
 			// TODO: set band names as constants
 			if (band.getName().equals("p1_lise") && outputP1 ) {
-				computeP1(band, targetTile, pm, 0, rectangle, detector, sza,
+				computeP1(rayleighCorrection, band, targetTile, pm, 0, rectangle, detector, sza,
 						vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
 						isInvalid, isInvalidOcean, isInvalidLand);
 			}
 			if (band.getName().equals("surface_press_lise") && outputPressureSurface ) {
-				computePSurf(band, targetTile, pm, 1, rectangle, detector, sza,
+				computePSurf(rayleighCorrection, band, targetTile, pm, 1, rectangle, detector, sza,
 						vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
 						isInvalid, isInvalidOcean, isInvalidLand);
 			}
 			if (band.getName().equals("p2_lise") && outputP2 ) {
-				computeP2(band, targetTile, pm, 2, rectangle, detector, sza,
+				computeP2(rayleighCorrection, band, targetTile, pm, 2, rectangle, detector, sza,
 						vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
 						isInvalid, isInvalidOcean, isInvalidLand);
 			}
 			if (band.getName().equals("pscatt_lise") && (outputPScatt || l2CloudDetection)) {
-				computePScatt(band, targetTile, pm, 3, rectangle, detector, sza,
+				computePScatt(rayleighCorrection, band, targetTile, pm, 3, rectangle, detector, sza,
 						vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
 						isInvalid, isInvalidOcean, isInvalidLand);
 			}

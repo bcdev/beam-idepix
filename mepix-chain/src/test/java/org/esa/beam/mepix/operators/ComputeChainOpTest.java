@@ -8,6 +8,7 @@ import junit.framework.TestCase;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.meris.brr.HelperFunctions;
+import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.util.math.MathUtils;
 
 import com.bc.jnn.Jnn;
@@ -111,7 +112,7 @@ public class ComputeChainOpTest extends TestCase {
 		} catch (IOException e) {
 			fail();
 		}
-    	
+
 		// first dataset:
 		// 2.841 2.841 90. 824 1013.25 0.14586 0.07864 0.14586
 		
@@ -137,7 +138,7 @@ public class ComputeChainOpTest extends TestCase {
 		double azimDiff = MathUtils.DTOR * (phi);
 		
 		// test PScatt:
-		double pScatt = op.computeLisePressures(3, thetas, thetav, csza, cvza, ssza, svza, azimDiff, 
+		double pScatt = op.computeLisePressures(null, 3, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
 				
 //		the resulting number should be
@@ -145,17 +146,17 @@ public class ComputeChainOpTest extends TestCase {
 		assertEquals(362.50, pScatt, 1.0);
 		
 		// test P2:
-		double p2 = op.computeLisePressures(2, thetas, thetav, csza, cvza, ssza, svza, azimDiff, 
+		double p2 = op.computeLisePressures(null, 2, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
 		assertEquals(504.2, p2, 1.0);
 		
 		// test PSurf:
-		double pSurf = op.computeLisePressures(1, thetas, thetav, csza, cvza, ssza, svza, azimDiff, 
+		double pSurf = op.computeLisePressures(null, 1, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
 		assertEquals(479.2, pSurf, 1.0);
 		
 		// test P1:
-		double p1 = op.computeLisePressures(0, thetas, thetav, csza, cvza, ssza, svza, azimDiff, 
+		double p1 = op.computeLisePressures(null, 0, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
 		assertEquals(500.8, p1, 1.0);
 		
@@ -176,7 +177,7 @@ public class ComputeChainOpTest extends TestCase {
 		svza = Math.sin(thetav * MathUtils.DTOR);
 		azimDiff = MathUtils.DTOR * (phi);
 		
-		pScatt = op.computeLisePressures(3, thetas, thetav, csza, cvza, ssza, svza, azimDiff, 
+		pScatt = op.computeLisePressures(null, 3, thetas, thetav, csza, cvza, ssza, svza, azimDiff, 
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
 		
 //		the resulting number should be

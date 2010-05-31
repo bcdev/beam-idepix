@@ -7,7 +7,7 @@
     <parent>
         <artifactId>mepix</artifactId>
         <groupId>org.esa.beam.mepix</groupId>
-        <version>1.1</version>
+        <version>1.1.1</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -15,7 +15,7 @@
     <groupId>org.esa.beam.mepix</groupId>
     <artifactId>mepix-bootstrap</artifactId>
     <name>MePix Bootstrap</name>
-    <version>1.1</version>
+    <version>1.1.1</version>
     <description>Provides the bootstrap classpath for all mepix modules</description>
 
     <dependencies>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>org.esa.beam.mepix</groupId>
             <artifactId>mepix-chain</artifactId>
-            <version>1.1</version>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 

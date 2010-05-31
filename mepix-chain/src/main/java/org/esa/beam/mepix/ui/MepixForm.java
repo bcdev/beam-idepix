@@ -81,27 +81,28 @@ public class MepixForm extends JTabbedPane {
                 final Product selectedProduct = (Product) event.getSelection().getSelectedValue();
                 final TargetProductSelectorModel targetProductSelectorModel = targetProductSelector.getModel();
 
-                // convert to MEPIX specific product name
-                String mepixName = selectedProduct.getName();
-                if (selectedProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-                		selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
-        	        String resName = "";
-        	        if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
-        	        	// MER_RR__1
-        	        	resName = EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME;
-        	        } else if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
-        	        	// MER_FR__1
-        	        	resName = EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME;
-        	        }
-        	        String nameL1bPrefix = resName.substring(0, resName.length()-2);
-        	        int nameLength = mepixName.length();
-        	        mepixName = nameL1bPrefix + "2MEPIX" + mepixName.substring(nameL1bPrefix.length()+6, nameLength);
-        	        if (mepixName.toUpperCase().endsWith(".N1") || mepixName.toUpperCase().endsWith(".E1") ||
-        	        		mepixName.toUpperCase().endsWith(".E2"))
-        	        	mepixName = mepixName.substring(0, mepixName.length()-3);
+                if (selectedProduct != null) {
+                    // convert to MEPIX specific product name
+                    String mepixName = selectedProduct.getName();
+                    if (selectedProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
+                            selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
+                        String resName = "";
+                        if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
+                            // MER_RR__1
+                            resName = EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME;
+                        } else if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
+                            // MER_FR__1
+                            resName = EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME;
+                        }
+                        String nameL1bPrefix = resName.substring(0, resName.length() - 2);
+                        int nameLength = mepixName.length();
+                        mepixName = nameL1bPrefix + "2MEPIX" + mepixName.substring(nameL1bPrefix.length() + 6, nameLength);
+                        if (mepixName.toUpperCase().endsWith(".N1") || mepixName.toUpperCase().endsWith(".E1") ||
+                                mepixName.toUpperCase().endsWith(".E2"))
+                            mepixName = mepixName.substring(0, mepixName.length() - 3);
+                    }
+                    targetProductSelectorModel.setProductName(mepixName + targetProductNameSuffix);
                 }
-
-                targetProductSelectorModel.setProductName(mepixName + targetProductNameSuffix);
             }
             public void selectionContextChanged(SelectionChangeEvent event) {
             }

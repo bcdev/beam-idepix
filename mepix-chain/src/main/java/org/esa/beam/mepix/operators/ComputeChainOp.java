@@ -148,10 +148,6 @@ public class ComputeChainOp extends BasisOp {
             label = "'PScatt' (LISE, O2 project, ocean)")
     private boolean pressureOutputPScattLise= true;
     
-//    @Parameter(defaultValue="true",
-//            label = "L2 Cloud Detection Flags with LISE 'PScatt'")
-//    private boolean pressureOutputL2CloudDetectionLisePScatt = true;
-
     @Parameter(defaultValue="false",
             label = "Blue Band Flags")
     private boolean cloudOutputBlueBand = false;
@@ -169,7 +165,6 @@ public class ComputeChainOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
-        sourceProduct.setPreferredTileSize(128, 128);
         
         // Radiance to Reflectance
         Map<String, Object> emptyParams = new HashMap<String, Object>();
@@ -196,11 +191,11 @@ public class ComputeChainOp extends BasisOp {
 
         // Pressure (LISE)
         Product pressureLiseProduct = null;
-        if (ipfOutputL2CloudDetection ||
-            pressureOutputP1Lise ||
-            pressureOutputP2Lise ||
-            pressureOutputPScattLise ||
-            pressureOutputPSurfLise) {
+//        if (ipfOutputL2CloudDetection ||
+//            pressureOutputP1Lise ||
+//            pressureOutputP2Lise ||
+//            pressureOutputPScattLise ||
+//            pressureOutputPSurfLise) {
             Map<String, Product> pressureLiseInput = new HashMap<String, Product>(2);
             pressureLiseInput.put("l1b", sourceProduct);
             pressureLiseInput.put("rhotoa", rad2reflProduct);
@@ -212,7 +207,7 @@ public class ComputeChainOp extends BasisOp {
             pressureLiseParameters.put("outputPScatt", true);
             pressureLiseParameters.put("l2CloudDetection", ipfOutputL2CloudDetection);
             pressureLiseProduct = GPF.createProduct("Meris.LisePressure", pressureLiseParameters, pressureLiseInput);
-        }
+//        }
 
         // Cloud Classification
         Product cloudProduct = null;
@@ -230,32 +225,13 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("userDefinedP1PressureThreshold", ipfQWGUserDefinedP1PressureThreshold);
             cloudClassificationParameters.put("userDefinedPScattPressureThreshold", ipfQWGUserDefinedPScattPressureThreshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
-
             cloudClassificationParameters.put("userDefinedDeltaRhoToa442Threshold", ipfQWGUserDefinedDeltaRhoToa442Threshold);
-//            cloudClassificationParameters.put("userDefinedDeltaRhoToa442ThresholdFactor", ipfQWGUserDefinedDeltaRhoToa442ThresholdFactor);
-
             cloudClassificationParameters.put("userDefinedRhoToa753Threshold", ipfQWGUserDefinedRhoToa753Threshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
             cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold", ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
-    //        cloudClassificationParameters.put("userDefinedPressureThreshold", ipfUserDefinedPressureThreshold);
             cloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MepixCloudClassificationOp.class), cloudClassificationParameters, cloudInput);
         }
-
-        // Cloud Classification with LISE PScatt
-//        Product cloudProductLisePScatt = null;
-//        if (pressureOutputL2CloudDetectionLisePScatt) {
-//            Map<String, Product> cloudInputLisePScatt = new HashMap<String, Product>(3);
-//            cloudInputLisePScatt.put("l1b", sourceProduct);
-//            cloudInputLisePScatt.put("rhotoa", rad2reflProduct);
-//            cloudInputLisePScatt.put("pressureOutputPScattLise", pressureLiseProduct);
-//            Map<String, Object> cloudClassificationParametersLisePScatt = new HashMap<String, Object>(3);
-//            cloudClassificationParametersLisePScatt.put("l2Pressures", ipfOutputL2Pressures);
-//            cloudClassificationParametersLisePScatt.put("l2CloudDetection", pressureOutputL2CloudDetectionLisePScatt);
-//            cloudClassificationParametersLisePScatt.put("isUserDefinedPressureThreshold", false);
-//            cloudProductLisePScatt = GPF.createProduct(OperatorSpi.getOperatorAlias(MepixCloudClassificationOp.class),
-//                    cloudClassificationParametersLisePScatt, cloudInputLisePScatt);
-//        }
 
         // Gaseous Correction
         Product gasProduct = null;
@@ -328,7 +304,6 @@ public class ComputeChainOp extends BasisOp {
             psurfNNInput.put("l1b", sourceProduct);
             psurfNNInput.put("cloud", cloudProduct);
             Map<String, Object> psurfNNParameters = new HashMap<String, Object>(2);
-    //        psurfNNParameters.put("straylightCorr", pressureStraylightCorrFub);
             psurfNNParameters.put("tropicalAtmosphere", pressureFubTropicalAtmosphere);
             // mail from RL, 2009/03/19: always apply correction on FUB pressure
             // currently only for RR (FR coefficients still missing)
@@ -419,17 +394,6 @@ public class ComputeChainOp extends BasisOp {
 	        	targetProduct.addBand(band);
 	        }
         }
-        
-//        if (pressureOutputL2CloudDetectionLisePScatt) {
-//        	FlagCoding flagCoding = MepixCloudClassificationOp.createFlagCoding(MepixCloudClassificationOp.CLOUD_FLAGS_PSCATT_LISE);
-//        	targetProduct.getFlagCodingGroup().add(flagCoding);
-//	        for (Band band:cloudProductLisePScatt.getBands()) {
-//	        	if (band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS_PSCATT_LISE)) {
-//	        		band.setSampleCoding(flagCoding);
-//	        		targetProduct.addBand(band);
-//	        	}
-//	        }
-//        }
         
         if (pressureOutputP1Lise) {
 	        for (Band band:pressureLiseProduct.getBands()) {

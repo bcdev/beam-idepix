@@ -6,7 +6,7 @@
     <parent>
         <artifactId>mepix</artifactId>
         <groupId>org.esa.beam.mepix</groupId>
-        <version>1.1</version>
+        <version>1.1.1</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -14,7 +14,7 @@
     <groupId>org.esa.beam.mepix</groupId>
     <artifactId>mepix-chain</artifactId>
     <name>MePix Chain</name>
-    <version>1.1</version>
+    <version>1.1.1</version>
     <description>MePix Cloud Screening</description>
 
     <dependencies>
@@ -45,44 +45,14 @@
 		<dependency>
 			<groupId>org.esa.beam</groupId>
 			<artifactId>beam-meris-brr</artifactId>
-			<version>2.1-SNAPSHOT</version>
+			<version>2.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.esa.beam</groupId>
 			<artifactId>beam-meris-sdr</artifactId>
-			<version>2.3-SNAPSHOT</version>
+			<version>2.2-SNAPSHOT</version>
 		</dependency>
-        <!--
-        <dependency>
-			<groupId>org.esa.beam</groupId>
-			<artifactId>beam-meris-l2auxdata</artifactId>
-			<version>1.2-SNAPSHOT</version>
-		</dependency>
-		-->
     </dependencies>
-    <!--
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <configuration>
-                            <tasks>
-                                <property file="../build.properties"/>
-                                <property name="helpdir" value="${project.build.outputDirectory}/doc/help"/>
-                                <ant antfile="../build.xml" target="create-jh-search-db"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-    -->
+    
 </project>
 
