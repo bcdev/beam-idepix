@@ -65,6 +65,7 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
     public static final String PRESSURE_ECMWF = "p_ecmwf";
     public static final String SCATT_ANGLE = "scattering_angle";
     public static final String RHO_THRESH_TERM = "rho442_thresh_term";
+    public static final String RHO_AG = "rho_ag";
     public static final String MDSI = "mdsi";
 
     private static final int BAND_BRIGHT_N = 0;

@@ -38,12 +38,12 @@ public class MepixDialog extends SingleTargetProductDialog {
     private boolean isUserDefinedPressureThreshold;
     private double userDefinedPressureThreshold;
 
-    public static final int DIALOG_WIDTH = 500;
+    public static final int DIALOG_WIDTH = 550;
     public static final int DIALOG_HEIGHT = 420;
     private OperatorSpi operatorSpi;
 
     /**
-     * MepixSingleTargetProductDialog constructor
+     * MepixDialog constructor
      * 
      * @param operatorName
      * @param appContext
@@ -54,6 +54,7 @@ public class MepixDialog extends SingleTargetProductDialog {
         super(appContext, title, helpID);
         this.operatorName = operatorName;
         this.targetProductNameSuffix = targetProductNameSuffix;
+        System.setProperty("gpfMode", "GUI");
         initialize(operatorName, appContext);
     }
 
@@ -79,62 +80,16 @@ public class MepixDialog extends SingleTargetProductDialog {
     ///////////// END OF PUBLIC //////////////
 
     private void initialize(String operatorName, AppContext appContext) {
-            targetProductNameSuffix = "";
+        targetProductNameSuffix = "";
 
-            operatorSpi = GPF.getDefaultInstance().getOperatorSpiRegistry().getOperatorSpi(operatorName);
-            if (operatorSpi == null) {
-                throw new IllegalArgumentException("operatorName");
-            }
-
-            form = new MepixForm(appContext, operatorSpi, getTargetProductSelector(),
-                    targetProductNameSuffix);
-
-            parameterMap = new LinkedHashMap<String, Object>(17);
-
-            // define new value containers for distribution of the target products to three different tab panes.
-            final PropertyContainer propertyContainerIpf = createPanelSpecificValueContainer("ipf");
-            final PropertyContainer propertyContainerPressure = createPanelSpecificValueContainer("pressure");
-
-            form.addParameterPane(propertyContainerIpf, "IPF Compatible Products");
-            form.addParameterPane(propertyContainerPressure, "Pressure Products");
-
-            if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-                final PropertyContainer propertyContainerCloud = createPanelSpecificValueContainer("cloud");
-                form.addParameterPane(propertyContainerCloud, "Cloud Products");
-            }
+        operatorSpi = GPF.getDefaultInstance().getOperatorSpiRegistry().getOperatorSpi(operatorName);
+        if (operatorSpi == null) {
+            throw new IllegalArgumentException("operatorName");
         }
+        parameterMap = new LinkedHashMap<String, Object>(17);
 
-
-    private PropertyContainer createPanelSpecificValueContainer(String panelId) {
-        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
-        PropertyContainer pc = PropertyContainer.createMapBacked(parameterMap, operatorSpi.getOperatorClass(), parameterDescriptorFactory);
-
-         try {
-            pc.setDefaultValues();
-        } catch (ValidationException e) {
-            showErrorDialog(e.getMessage());
-        }
-
-        for (Property property:pc.getProperties()) {
-            PropertyDescriptor propertyDescriptor = property.getDescriptor();
-            if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-                if (!propertyDescriptor.getName().startsWith(panelId)) {
-                    removeProperty(pc, propertyDescriptor);
-                }
-            } else {
-                if (!propertyDescriptor.getName().startsWith(panelId) ||
-                     propertyDescriptor.getName().startsWith(panelId + "QWG")  ) {
-                    removeProperty(pc, propertyDescriptor);
-                }
-            }
-        }
-        return pc;
+        form = new MepixForm(appContext, operatorSpi, getTargetProductSelector(),
+                             targetProductNameSuffix, parameterMap);
     }
-
-    private void removeProperty(final PropertyContainer propertyContainer, PropertyDescriptor propertyDescriptor) {
-		Property property = propertyContainer.getProperty(propertyDescriptor.getName());
-		if (property != null)
-			propertyContainer.removeProperty(property);
-	}
 
 }

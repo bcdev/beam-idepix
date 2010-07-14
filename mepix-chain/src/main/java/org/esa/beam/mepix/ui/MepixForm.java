@@ -2,7 +2,10 @@ package org.esa.beam.mepix.ui;
 
 
 
+import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyContainer;
+import com.bc.ceres.binding.PropertyDescriptor;
+import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.swing.TableLayout;
 import com.bc.ceres.swing.binding.BindingContext;
 import com.bc.ceres.swing.binding.PropertyPane;
@@ -11,19 +14,21 @@ import com.bc.ceres.swing.selection.SelectionChangeListener;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductFilter;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.ui.SourceProductSelector;
 import org.esa.beam.framework.gpf.ui.TargetProductSelector;
 import org.esa.beam.framework.gpf.ui.TargetProductSelectorModel;
 import org.esa.beam.framework.ui.AppContext;
-import org.esa.beam.framework.processor.ui.ParameterPage;
-import org.esa.beam.framework.param.ParamGroup;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -44,15 +49,39 @@ public class MepixForm extends JTabbedPane {
     private OperatorSpi operatorSpi;
     private String targetProductNameSuffix;
     private AppContext appContext;
+    private Map<String, Object> parameterMap;
+    private Component vgtParameterPane;
 
     public MepixForm(AppContext appContext, OperatorSpi operatorSpi, TargetProductSelector targetProductSelector,
-                     String targetProductNameSuffix) {
+                     String targetProductNameSuffix, Map<String, Object> parameterMap) {
         this.appContext = appContext;
         this.targetProductSelector = targetProductSelector;
         this.operatorSpi = operatorSpi;
         this.targetProductNameSuffix = targetProductNameSuffix;
+        this.parameterMap = parameterMap;
 
         initComponents();
+
+        // define new value containers for distribution of the target products to three different tab panes.
+        final PropertyContainer propertyContainerIpf = createPanelSpecificValueContainer("ipf");
+        final PropertyContainer propertyContainerPressure = createPanelSpecificValueContainer("pressure");
+
+
+
+        addParameterPane(propertyContainerIpf, "IPF Compatible Products");
+//        add("IPF Compatible Products", createParameterPane(propertyContainerIpf));
+        addParameterPane(propertyContainerPressure, "Pressure Products");
+//        add(createParameterPane(propertyContainerPressure, "Pressure Products"));
+
+        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+            final PropertyContainer propertyContainerCloud = createPanelSpecificValueContainer("cloud");
+            addParameterPane(propertyContainerCloud, "Cloud Products");
+//            add(createParameterPane(propertyContainerCloud, "Cloud Products"));
+        }
+
+        final PropertyContainer propertyContainerCloudscreening = createPanelSpecificValueContainer("cloudscreening");
+        addParameterPane(propertyContainerCloudscreening, "Cloud Screening");
+//        addParameterPane(propertyContainerCloudscreening, "VGT Cloud Screening");
     }
 
     public void initComponents() {
@@ -84,24 +113,55 @@ public class MepixForm extends JTabbedPane {
                 if (selectedProduct != null) {
                     // convert to MEPIX specific product name
                     String mepixName = selectedProduct.getName();
+
+                    // check for MERIS:
                     if (selectedProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-                            selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
+                        selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
+                        selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME)) {
                         String resName = "";
                         if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
                             // MER_RR__1
                             resName = EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME;
-                        } else if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
+                        } else if (selectedProduct.getProductType().equals(
+                                EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
                             // MER_FR__1
                             resName = EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME;
                         }
                         String nameL1bPrefix = resName.substring(0, resName.length() - 2);
                         int nameLength = mepixName.length();
-                        mepixName = nameL1bPrefix + "2MEPIX" + mepixName.substring(nameL1bPrefix.length() + 6, nameLength);
+                        mepixName = nameL1bPrefix + "2MEPIX" + mepixName.substring(nameL1bPrefix.length() + 6,
+                                                                                   nameLength);
                         if (mepixName.toUpperCase().endsWith(".N1") || mepixName.toUpperCase().endsWith(".E1") ||
-                                mepixName.toUpperCase().endsWith(".E2"))
+                            mepixName.toUpperCase().endsWith(".E2")) {
                             mepixName = mepixName.substring(0, mepixName.length() - 3);
+                        }
+                        targetProductSelectorModel.setProductName(mepixName + targetProductNameSuffix);
+                        if (vgtParameterPane != null) {
+                            remove(vgtParameterPane);
+                        }
+                    } else if (selectedProduct.getProductType().startsWith("ATS_TOA_1")) { // todo: introduce constant
+                        // check for AATSR:
+                        mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
+                        targetProductSelectorModel.setProductName(mepixName);
+
+//                        if (vgtParameterPane != null) {
+//                            final PropertyContainer propertyContainerVgt = createPanelSpecificValueContainer("vgt");
+//                            vgtParameterPane = createParameterPane(propertyContainerVgt, "VGT Cloud Screening");
+//                            add(vgtParameterPane);
+//                        }
+                    } else if (selectedProduct.getProductType().startsWith("VGT")) { // todo: introduce constant
+                        // check for VGT:
+                        mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
+                        targetProductSelectorModel.setProductName(mepixName);
+
+//                        if (vgtParameterPane != null) {
+//                            final PropertyContainer propertyContainerVgt = createPanelSpecificValueContainer("vgt");
+//                            vgtParameterPane = createParameterPane(propertyContainerVgt, "VGT Cloud Screening");
+//                            add(vgtParameterPane);
+//                        }
+                    } else {
+                        throw new OperatorException("Input product must be either MERIS, AATSR or VGT L1b!");
                     }
-                    targetProductSelectorModel.setProductName(mepixName + targetProductNameSuffix);
                 }
             }
             public void selectionContextChanged(SelectionChangeEvent event) {
@@ -120,6 +180,17 @@ public class MepixForm extends JTabbedPane {
         paremetersPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
         this.add(title, new JScrollPane(paremetersPanel));
     }
+
+    public Component createParameterPane(PropertyContainer propertyContainer) {
+        BindingContext context = new BindingContext(propertyContainer);
+
+        PropertyPane parametersPane = new PropertyPane(context);
+        JPanel paremetersPanel = parametersPane.createPanel();
+        paremetersPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
+        final JScrollPane jScrollPane = new JScrollPane(paremetersPanel);
+        return jScrollPane;
+    }
+
 
     public HashMap<String, Product> createSourceProductsMap() {
         final HashMap<String, Product> sourceProducts = new HashMap<String, Product>(8);
@@ -148,6 +219,40 @@ public class MepixForm extends JTabbedPane {
     }
 
     ///////////// END OF PUBLIC //////////////
+
+    private PropertyContainer createPanelSpecificValueContainer(String panelId) {
+        ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
+        PropertyContainer pc = PropertyContainer.createMapBacked(parameterMap, operatorSpi.getOperatorClass(),
+                                                                 parameterDescriptorFactory);
+
+        try {
+            pc.setDefaultValues();
+        } catch (ValidationException e) {
+            JOptionPane.showOptionDialog(null, e.getMessage(), "MEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
+                                             JOptionPane.ERROR_MESSAGE, null, null, null);
+        }
+
+        for (Property property : pc.getProperties()) {
+            PropertyDescriptor propertyDescriptor = property.getDescriptor();
+            if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+                if (!propertyDescriptor.getName().startsWith(panelId)) {
+                    removeProperty(pc, propertyDescriptor);
+                }
+            } else {
+                if (!propertyDescriptor.getName().startsWith(panelId) ||
+                    propertyDescriptor.getName().startsWith(panelId + "QWG")) {
+                    removeProperty(pc, propertyDescriptor);
+                }
+            }
+        }
+        return pc;
+    }
+
+    private void removeProperty(final PropertyContainer propertyContainer, PropertyDescriptor propertyDescriptor) {
+		Property property = propertyContainer.getProperty(propertyDescriptor.getName());
+		if (property != null)
+			propertyContainer.removeProperty(property);
+	}
 
     private void setupSourceProductSelectorList(OperatorSpi operatorSpi) {
         sourceProductSelectorList = new ArrayList<SourceProductSelector>(3);

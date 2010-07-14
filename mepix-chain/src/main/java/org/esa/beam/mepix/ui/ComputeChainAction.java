@@ -37,7 +37,7 @@ public class ComputeChainAction extends AbstractVisatAction {
         final MepixDialog dialog =
             new MepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
                     getAppContext(),
-                    "MEPIX Pixel Identification Tool (MERIS) - " + ComputeChainOp.MEPIX_VERSION,
+                    "MEPIX Pixel Identification Tool - " + ComputeChainOp.MEPIX_VERSION,
                     "mepixChain","");
         dialog.show();
     }

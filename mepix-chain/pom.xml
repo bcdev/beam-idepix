@@ -6,7 +6,7 @@
     <parent>
         <artifactId>mepix</artifactId>
         <groupId>org.esa.beam.mepix</groupId>
-        <version>1.1.1</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -14,7 +14,7 @@
     <groupId>org.esa.beam.mepix</groupId>
     <artifactId>beam-meris-mepix</artifactId>
     <name>BEAM Meris Mepix</name>
-    <version>1.1.1</version>
+    <version>1.2-SNAPSHOT</version>
     <description>Mepix Processing Chain</description>
 
     <dependencies>
@@ -41,6 +41,10 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-spot-vgt-reader</artifactId>
         </dependency>
 		<dependency>
 			<groupId>org.esa.beam</groupId>
