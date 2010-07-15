@@ -3,6 +3,7 @@ package org.esa.beam.mepix.util;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.mepix.operators.MepixConstants;
 
 import javax.swing.JOptionPane;
 
@@ -51,5 +52,50 @@ public class MepixUtils {
 
     public static float spectralSlope(float ch1, float ch2, float wl1, float wl2) {
         return (ch2 - ch1)/(wl2 - wl1);
+    }
+
+    public static double scaleVgtSlope(float refl0, float refl1, float wl0, float wl1) {
+        float scaleValue = 0.5f;
+        float slope = 1.0f - Math.abs(1000.0f*MepixUtils.spectralSlope(refl0, refl1, wl0,wl1));
+        return Math.max((slope - scaleValue)/(1.0-scaleValue), 0);
+    }
+
+    public static float[] correctSaturatedReflectances(float[] reflectance) {
+
+        // if all reflectances are NaN, do not correct
+        if (!areReflectancesValid(reflectance)) {
+            return reflectance;
+        }
+
+        float[] correctedReflectance = new float[reflectance.length];
+
+        // search for first non-NaN value from end of spectrum...
+        correctedReflectance[reflectance.length-1] = Float.NaN;
+        for (int i=reflectance.length-1; i>=0; i--) {
+            if (!Float.isNaN(reflectance[i])) {
+                correctedReflectance[reflectance.length-1] = reflectance[i];
+                break;
+            }
+        }
+
+        // correct NaN values from end of spectrum, start with first non-NaN value found above...
+        for (int i=reflectance.length-1; i>0; i--) {
+            if (Float.isNaN(reflectance[i-1])) {
+                correctedReflectance[i-1] = correctedReflectance[i];
+            } else {
+                correctedReflectance[i-1] = reflectance[i-1];    
+            }
+        }
+        return correctedReflectance; 
+    }
+
+
+    public static boolean areReflectancesValid(float[] reflectance) {
+        for (int i=0; i<reflectance.length; i++) {
+            if (!Float.isNaN(reflectance[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -30,8 +30,12 @@ public interface PixelProperties {
 
     public boolean isHigh();
 
+    public boolean isInvalid();
+
     public float brightValue();
 
+    public float spectralFlatnessValue();
+    
     public float whiteValue();
 
     public float ndsiValue();

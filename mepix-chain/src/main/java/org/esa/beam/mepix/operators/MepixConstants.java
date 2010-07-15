@@ -32,8 +32,5 @@ public class MepixConstants {
             VGT_RADIANCE_MIR_BAND_NAME, // 3
     };
 
-    public static final float VGT_WAVELENGTH_B0 = 450.0f;
-    public static final float VGT_WAVELENGTH_B2 = 645.0f;
-    public static final float VGT_WAVELENGTH_B3 = 835.0f;
-    public static final float VGT_WAVELENGTH_MIR = 1670.0f;
+    public static final float[] VGT_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f};
 }

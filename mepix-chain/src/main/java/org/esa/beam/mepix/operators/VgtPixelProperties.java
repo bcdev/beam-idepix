@@ -1,5 +1,6 @@
 package org.esa.beam.mepix.operators;
 
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.mepix.util.MepixUtils;
 
 /**
@@ -11,12 +12,13 @@ public class VgtPixelProperties implements PixelProperties {
     private static final float BRIGHTWHITE_THRESH = 0.8f;
     private static final float NDSI_THRESH = 0.7f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 2.0f;
+    private static final float CLOUD_THRESH = 1.3f;  // = BRIGHTWHITE_THRESH + 0.5, because pressureValue = 0.5
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.8f;
-    private static final float WHITE_THRESH = 0.8f;
+    private static final float BRIGHT_THRESH = 0.5f;
+    private static final float WHITE_THRESH = 0.5f;
+    private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
 
     public static final int SM_F_B0_GOOD = 7;
@@ -28,10 +30,7 @@ public class VgtPixelProperties implements PixelProperties {
     public static final int SM_F_CLOUD_2 = 1;
     public static final int SM_F_CLOUD_1 = 0;
 
-    private float b0;
-    private float b2;
-    private float b3;
-    private float mir;
+    private float[] refl;
 
     private boolean smLand;
 
@@ -39,102 +38,165 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isBrightWhite() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
     }
 
     @Override
     public boolean isCloud() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (whiteValue() + brightValue() + pressureValue() > CLOUD_THRESH && !isClearSnow());
     }
 
     @Override
     public boolean isClearLand() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        float landValue;
+        if (radiometricLandValue() > UNCERTAINTY_VALUE) {
+            landValue = radiometricLandValue();
+        } else if (aPrioriLandValue() > UNCERTAINTY_VALUE) {
+            landValue = aPrioriLandValue();
+        } else {
+            return false; // this means: if we have no information about land, we return isClearLand = false
+        }
+        return (!isCloud() && landValue > LAND_THRESH);
     }
 
     @Override
     public boolean isClearWater() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+         float waterValue;
+        if (radiometricWaterValue() > UNCERTAINTY_VALUE) {
+            waterValue = radiometricWaterValue();
+        } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
+            waterValue = aPrioriWaterValue();
+        } else {
+            return false; // this means: if we have no information about water, we return isClearWater = false
+        }
+        return (!isCloud() && waterValue > WATER_THRESH);
     }
 
     @Override
     public boolean isClearSnow() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (isBrightWhite() && ndsiValue() > NDSI_THRESH);
     }
 
     @Override
     public boolean isLand() {
-        return smLand;  // test
+        if (isInvalid()) {
+            return false;
+        }
+        return (aPrioriLandValue() > LAND_THRESH);
     }
 
     @Override
     public boolean isWater() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (aPrioriWaterValue() > WATER_THRESH);
     }
 
     @Override
     public boolean isBright() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return brightValue() > BRIGHT_THRESH;
     }
 
     @Override
     public boolean isWhite() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return whiteValue() > WHITE_THRESH;
     }
 
     @Override
     public boolean isVegRisk() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return ndviValue() > NDVI_THRESH;
     }
 
     @Override
     public boolean isHigh() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (pressureValue() > PRESSURE_THRESH);
+    }
+
+    @Override
+    public boolean isInvalid() {
+        return !MepixUtils.areReflectancesValid(refl);
     }
 
     @Override
     public float brightValue() {
         if (isLand()) {
-            return (b0 + b2)/2.0f;
+            return (refl[0] + refl[1])/2.0f;
         } else if (isWater()) {
-            return (b0 + b2 + b3)/3.0f;
+            return (refl[0] + refl[1] + refl[2])/3.0f;
         } else {
-            return (b0 + b2)/2.0f;
+            return (refl[0] + refl[1])/2.0f;
         }
     }
 
     @Override
-    public float whiteValue() {
+    public float spectralFlatnessValue() {
         // todo: check for NaN values. this problem affects most of these methods. think about what to do.
-        // these slopes are multiplied by 1000 to scale them to approx. [0.0, 1.0]
-        final float slope0 = Math.abs(1000.0f*MepixUtils.spectralSlope(b0, b2, MepixConstants.VGT_WAVELENGTH_B0,
-                                                      MepixConstants.VGT_WAVELENGTH_B2));
-        final float slope2 = Math.abs(1000.0f*MepixUtils.spectralSlope(b2, b3, MepixConstants.VGT_WAVELENGTH_B2,
-                                                      MepixConstants.VGT_WAVELENGTH_B3));
-        final float slope3 = Math.abs(1000.0f*MepixUtils.spectralSlope(b3, mir, MepixConstants.VGT_WAVELENGTH_B3,
-                                                      MepixConstants.VGT_WAVELENGTH_MIR));
+        final double flatness0 = MepixUtils.scaleVgtSlope(refl[0], refl[1], MepixConstants.VGT_WAVELENGTHS[0],
+                                                      MepixConstants.VGT_WAVELENGTHS[1]);
+        final double flatness2 = MepixUtils.scaleVgtSlope(refl[1], refl[2], MepixConstants.VGT_WAVELENGTHS[1],
+                                                      MepixConstants.VGT_WAVELENGTHS[2]);
+//        final double flatness3 =MepixUtils.scaleVgtSlope(refl[2], refl[3], MepixConstants.VGT_WAVELENGTHS[2],
+//                                                      MepixConstants.VGT_WAVELENGTHS[3]);
+
+
         if (isLand()) {
-            return 1.0f - (slope0 + slope2)/2.0f;
+            return (float) ((flatness0 + flatness2)/2.0);
         } else if (isWater()) {
-            return 1.0f -  (slope0 + slope2)/2.0f;
+            return (float) ((flatness0 + flatness2)/2.0);
         } else {
-            return 1.0f -  (slope0 + slope2)/2.0f;
+            return (float) ((flatness0 + flatness2)/2.0);
+        }
+    }
+
+    public float whiteValue() {
+        if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
+                 return spectralFlatnessValue();
+        }  else {
+            return 0f;
         }
     }
 
     @Override
     public float ndsiValue() {
-        return (b3 - mir)/(b3 + mir); 
+        return (refl[2] - refl[3])/(refl[2] + refl[3]);
     }
 
     @Override
     public float ndviValue() {
-        return (b3 - b2)/(b3 + b2);
+        return (refl[2] - refl[1])/(refl[2] + refl[1]);
     }
 
     @Override
     public float pressureValue() {
-        return 0;
+        return 0.5f;
     }
 
     @Override
@@ -159,23 +221,15 @@ public class VgtPixelProperties implements PixelProperties {
 
     // setters for VGT specific quantities
 
-    public void setB0(float b0) {
-        this.b0 = b0;
-    }
-
-    public void setB2(float b2) {
-        this.b2 = b2;
-    }
-
-    public void setB3(float b3) {
-        this.b3 = b3;
-    }
-
-    public void setMir(float mir) {
-        this.mir = mir;
-    }
-
     public void setSmLand(boolean smLand) {
         this.smLand = smLand;
+    }
+
+    public void setRefl(float[] refl) {
+        if (refl.length != MepixConstants.VGT_WAVELENGTHS.length) {
+            throw new OperatorException("VGT pixel processing: Invalid number of wavelengths [" + refl.length +
+                                        "] - must be " + MepixConstants.VGT_WAVELENGTHS.length);
+        }
+        this.refl = refl;
     }
 }

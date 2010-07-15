@@ -1,5 +1,7 @@
 package org.esa.beam.mepix.operators;
 
+import org.esa.beam.mepix.util.MepixUtils;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -21,6 +23,8 @@ public class AatsrPixelProperties implements PixelProperties{
     private float reflecNadir0670;
     private float reflecNadir0870;
     private float reflecNadir1600;
+
+    private float[] reflNadir;
 
     // todo: complete method implementation
 
@@ -80,13 +84,23 @@ public class AatsrPixelProperties implements PixelProperties{
     }
 
     @Override
+    public boolean isInvalid() {
+        return MepixUtils.areReflectancesValid(reflNadir);
+    }
+
+    @Override
     public float brightValue() {
         return 0;
     }
 
     @Override
-    public float whiteValue() {
+    public float spectralFlatnessValue() {
         return 0;
+    }
+
+    @Override
+    public float whiteValue() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -140,5 +154,9 @@ public class AatsrPixelProperties implements PixelProperties{
 
     public void setReflecNadir1600(float reflecNadir1600) {
         this.reflecNadir1600 = reflecNadir1600;
+    }
+
+    public void setReflNadir(float[] reflNadir) {
+        this.reflNadir = reflNadir;
     }
 }

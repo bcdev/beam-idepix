@@ -13,6 +13,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.mepix.util.MepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 
@@ -44,17 +45,18 @@ public class GACloudScreeningOp extends Operator {
             label = "Copy input radiance bands")
     private boolean gaCopyRadiances;
 
-    public static final int F_CLOUD = 0;
-    public static final int F_CLEAR_LAND = 1;
-    public static final int F_CLEAR_WATER = 2;
-    public static final int F_CLEAR_SNOW = 3;
-    public static final int F_LAND = 4;
-    public static final int F_WATER = 5;
-    public static final int F_BRIGHT = 6;
-    public static final int F_WHITE = 7;
-    private static final int F_BRIGHTWHITE = 8;
-    public static final int F_HIGH = 9;
-    public static final int F_VEG_RISK = 10;
+    public static final int F_INVALID = 0;
+    public static final int F_CLOUD = 1;
+    public static final int F_CLEAR_LAND = 2;
+    public static final int F_CLEAR_WATER = 3;
+    public static final int F_CLEAR_SNOW = 4;
+    public static final int F_LAND = 5;
+    public static final int F_WATER = 6;
+    public static final int F_BRIGHT = 7;
+    public static final int F_WHITE = 8;
+    private static final int F_BRIGHTWHITE = 9;
+    public static final int F_HIGH = 10;
+    public static final int F_VEG_RISK = 11;
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
     private int sceneWidth;
@@ -142,6 +144,7 @@ public class GACloudScreeningOp extends Operator {
 
         Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
         Band whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
+        Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
         Band ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
         Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
         Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
@@ -158,7 +161,8 @@ public class GACloudScreeningOp extends Operator {
                     break;
                 case MepixConstants.PRODUCT_TYPE_VGT:
                     for (int i = 0; i < MepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-                        ProductUtils.copyBand(MepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct, targetProduct);
+//                        ProductUtils.copyBand(MepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct, targetProduct);
+                        targetProduct.addBand(MepixConstants.VGT_RADIANCE_BAND_NAMES[i], ProductData.TYPE_FLOAT32);
                     }
                     ProductUtils.copyFlagBands(sourceProduct, targetProduct);
                     break;
@@ -170,6 +174,7 @@ public class GACloudScreeningOp extends Operator {
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, F_INVALID), null);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
         flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, F_CLEAR_LAND), null);
         flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, F_CLEAR_WATER), null);
@@ -204,13 +209,14 @@ public class GACloudScreeningOp extends Operator {
 
         // VGT variables
         Band smFlagBand = null;
-        Tile b0Tile = null;
-        Tile b2Tile = null;
-        Tile b3Tile = null;
-        Tile mirTile = null;
+//        Tile b0Tile = null;
+//        Tile b2Tile = null;
+//        Tile b3Tile = null;
+//        Tile mirTile = null;
         Tile smFlagTile = null;
 
-        Tile[] vgtRadianceTiles = null;
+        Tile[] vgtReflectanceTiles = null;
+        float[] vgtReflectance = null;
 
         switch (sourceProductTypeId) {
             case MepixConstants.PRODUCT_TYPE_MERIS:
@@ -227,15 +233,12 @@ public class GACloudScreeningOp extends Operator {
                 break;
             case MepixConstants.PRODUCT_TYPE_VGT:
                 smFlagBand = sourceProduct.getBand("SM");
-                b0Tile = getSourceTile(b0Band, rectangle, pm);
-                b2Tile = getSourceTile(b2Band, rectangle, pm);
-                b3Tile = getSourceTile(b3Band, rectangle, pm);
-                mirTile = getSourceTile(mirBand, rectangle, pm);
                 smFlagTile = getSourceTile(smFlagBand, rectangle, pm);
 
-                vgtRadianceTiles = new Tile[MepixConstants.VGT_RADIANCE_BAND_NAMES.length];
+                vgtReflectanceTiles = new Tile[MepixConstants.VGT_RADIANCE_BAND_NAMES.length];
+                vgtReflectance = new float[MepixConstants.VGT_RADIANCE_BAND_NAMES.length];
                 for (int i = 0; i < MepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-                    vgtRadianceTiles[i] = getSourceTile(vgtRadianceBands[i], rectangle, pm);
+                    vgtReflectanceTiles[i] = getSourceTile(vgtRadianceBands[i], rectangle, pm);
                 }
                 break;
             default:
@@ -249,12 +252,12 @@ public class GACloudScreeningOp extends Operator {
 						break;
 					}
 
-                    if (x == 1912 && y == 987) {
-                        System.out.println("");
-                    }
-                    if (x == 1628 && y == 838) {
-                        System.out.println("");
-                    }
+//                    if (x == 1912 && y == 987) {
+//                        System.out.println("");
+//                    }
+//                    if (x == 1737 && y == 1172) {
+//                        System.out.println("");
+//                    }
 
                     // set up pixel properties for given instruments...
                     PixelProperties pixelProperties = null;
@@ -273,15 +276,22 @@ public class GACloudScreeningOp extends Operator {
                             break;
                         case MepixConstants.PRODUCT_TYPE_VGT:
                             pixelProperties = new VgtPixelProperties();
-                            ((VgtPixelProperties) pixelProperties).setB0(b0Tile.getSampleFloat(x, y));
-                            ((VgtPixelProperties) pixelProperties).setB2(b2Tile.getSampleFloat(x, y));
-                            ((VgtPixelProperties) pixelProperties).setB3(b3Tile.getSampleFloat(x, y));
-                            ((VgtPixelProperties) pixelProperties).setMir(mirTile.getSampleFloat(x, y));
+                            for (int i = 0; i < MepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
+                                vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
+                            }
+                            float[] vgtReflectanceSaturationCorrected = MepixUtils.correctSaturatedReflectances(vgtReflectance);
+                            ((VgtPixelProperties) pixelProperties).setRefl(vgtReflectance);
+
                             ((VgtPixelProperties) pixelProperties).setSmLand(smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_LAND));
                             if (gaCopyRadiances) {
                                 for (int i = 0; i < MepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
                                     if (band.getName().equals(MepixConstants.VGT_RADIANCE_BAND_NAMES[i])) {
-                                        targetTile.setSample(x, y, vgtRadianceTiles[i].getSampleFloat(x, y));
+                                        // copy reflectances corrected for saturation
+                                        if (MepixUtils.areReflectancesValid(vgtReflectance)) {
+                                        targetTile.setSample(x, y, vgtReflectanceSaturationCorrected[i]);
+                                        } else {
+                                            targetTile.setSample(x, y, Float.NaN);
+                                        }
                                     }
                                 }
                                 if (band.isFlagBand() && band.getName().equals(MepixConstants.VGT_SM_FLAG_BAND_NAME)) {
@@ -295,6 +305,7 @@ public class GACloudScreeningOp extends Operator {
 
                     if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
+                        targetTile.setSample(x, y, F_INVALID, pixelProperties.isInvalid());
                         targetTile.setSample(x, y, F_CLOUD, pixelProperties.isCloud());
                         targetTile.setSample(x, y, F_CLEAR_LAND, pixelProperties.isClearLand());
                         targetTile.setSample(x, y, F_CLEAR_WATER, pixelProperties.isClearWater());
@@ -313,7 +324,9 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.brightValue());
                     } else if (band.getName().equals("white_value")) {
                         targetTile.setSample(x, y, pixelProperties.whiteValue());
-                    } else if (band.getName().equals("ndvi_value")) {
+                    } else if (band.getName().equals("spectral_flatness_value")) {
+                        targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
+                    }else if (band.getName().equals("ndvi_value")) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
                     } else if (band.getName().equals("ndsi_value")) {
                         targetTile.setSample(x, y, pixelProperties.ndsiValue());
@@ -330,7 +343,7 @@ public class GACloudScreeningOp extends Operator {
         }
     }
 
-
+    
 
     /**
      * The Service Provider Interface (SPI) for the operator.
