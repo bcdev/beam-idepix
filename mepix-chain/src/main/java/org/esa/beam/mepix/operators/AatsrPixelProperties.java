@@ -74,7 +74,17 @@ public class AatsrPixelProperties implements PixelProperties{
     }
 
     @Override
+    public boolean isCold() {
+        return false;
+    }
+
+    @Override
     public boolean isVegRisk() {
+        return false;
+    }
+
+    @Override
+    public boolean isGlintRisk() {
         return false;
     }
 
@@ -102,6 +112,12 @@ public class AatsrPixelProperties implements PixelProperties{
     public float whiteValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public float temperatureValue() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
 
     @Override
     public float ndsiValue() {

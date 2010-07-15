@@ -26,13 +26,19 @@ public interface PixelProperties {
 
     public boolean isWhite();
 
+    public boolean isCold();
+
     public boolean isVegRisk();
+
+    public boolean isGlintRisk();
 
     public boolean isHigh();
 
     public boolean isInvalid();
 
     public float brightValue();
+
+    public float temperatureValue();
 
     public float spectralFlatnessValue();
     

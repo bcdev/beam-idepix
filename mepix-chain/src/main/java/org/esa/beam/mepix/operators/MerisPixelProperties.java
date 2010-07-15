@@ -88,8 +88,18 @@ public class MerisPixelProperties implements PixelProperties {
     }
 
     @Override
+    public boolean isCold() {
+        return false;
+    }
+
+    @Override
     public boolean isVegRisk() {
         return ndviValue() > NDVI_THRESH;
+    }
+
+    @Override
+    public boolean isGlintRisk() {
+        return false;
     }
 
     @Override
@@ -99,7 +109,8 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isInvalid() {
-        return MepixUtils.areReflectancesValid(refl);
+//        return MepixUtils.areReflectancesValid(refl);
+        return false;
     }
 
     @Override
@@ -115,6 +126,11 @@ public class MerisPixelProperties implements PixelProperties {
     @Override
     public float whiteValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public float temperatureValue() {
+        return UNCERTAINTY_VALUE; 
     }
 
     @Override

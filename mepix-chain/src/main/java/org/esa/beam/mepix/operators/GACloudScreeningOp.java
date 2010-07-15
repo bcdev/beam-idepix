@@ -55,8 +55,10 @@ public class GACloudScreeningOp extends Operator {
     public static final int F_BRIGHT = 7;
     public static final int F_WHITE = 8;
     private static final int F_BRIGHTWHITE = 9;
-    public static final int F_HIGH = 10;
-    public static final int F_VEG_RISK = 11;
+    private static final int F_COLD = 10;
+    public static final int F_HIGH = 11;
+    public static final int F_VEG_RISK = 12;
+    public static final int F_GLINT_RISK = 13;
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
     private int sceneWidth;
@@ -144,10 +146,13 @@ public class GACloudScreeningOp extends Operator {
 
         Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
         Band whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
+        Band temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
         Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
         Band ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
         Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
         Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
+        Band radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
+        Band radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
 
         if (gaCopyRadiances) {
             switch (sourceProductTypeId) {
@@ -184,8 +189,10 @@ public class GACloudScreeningOp extends Operator {
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
         flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, F_WHITE), null);
         flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, F_BRIGHTWHITE), null);
+        flagCoding.addFlag("F_COLD", BitSetter.setFlag(0, F_COLD), null);
         flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, F_HIGH), null);
         flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, F_VEG_RISK), null);
+        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, F_GLINT_RISK), null);
 
         return flagCoding;
     }
@@ -255,9 +262,9 @@ public class GACloudScreeningOp extends Operator {
 //                    if (x == 1912 && y == 987) {
 //                        System.out.println("");
 //                    }
-//                    if (x == 1737 && y == 1172) {
-//                        System.out.println("");
-//                    }
+                    if (x == 737 && y == 172) {
+                        System.out.println("");
+                    }
 
                     // set up pixel properties for given instruments...
                     PixelProperties pixelProperties = null;
@@ -315,8 +322,10 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, F_BRIGHT, pixelProperties.isBright());
                         targetTile.setSample(x, y, F_WHITE, pixelProperties.isWhite());
                         targetTile.setSample(x, y, F_BRIGHTWHITE, pixelProperties.isBrightWhite());
+                        targetTile.setSample(x, y, F_COLD, pixelProperties.isCold());
                         targetTile.setSample(x, y, F_HIGH, pixelProperties.isHigh());
                         targetTile.setSample(x, y, F_VEG_RISK, pixelProperties.isVegRisk());
+                        targetTile.setSample(x, y, F_GLINT_RISK, pixelProperties.isGlintRisk());
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
@@ -324,7 +333,9 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.brightValue());
                     } else if (band.getName().equals("white_value")) {
                         targetTile.setSample(x, y, pixelProperties.whiteValue());
-                    } else if (band.getName().equals("spectral_flatness_value")) {
+                    } else if (band.getName().equals("temperature_value")) {
+                        targetTile.setSample(x, y, pixelProperties.temperatureValue());
+                    }else if (band.getName().equals("spectral_flatness_value")) {
                         targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
                     }else if (band.getName().equals("ndvi_value")) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
@@ -332,6 +343,10 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.ndsiValue());
                     } else if (band.getName().equals("pressure_value")) {
                         targetTile.setSample(x, y, pixelProperties.pressureValue());
+                    } else if (band.getName().equals("radiometric_land_value")) {
+                        targetTile.setSample(x, y, pixelProperties.radiometricLandValue());
+                    } else if (band.getName().equals("radiometric_water_value")) {
+                        targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
                     }
 				}
 				pm.worked(1);

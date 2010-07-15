@@ -2,6 +2,7 @@ package org.esa.beam.mepix.operators;
 
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.mepix.util.MepixUtils;
+import org.esa.beam.util.math.MathUtils;
 
 /**
  * @author Olaf Danne
@@ -9,10 +10,10 @@ import org.esa.beam.mepix.util.MepixUtils;
  */
 public class VgtPixelProperties implements PixelProperties {
 
-    private static final float BRIGHTWHITE_THRESH = 0.8f;
-    private static final float NDSI_THRESH = 0.7f;
+    private static final float BRIGHTWHITE_THRESH = 0.65f;
+    private static final float NDSI_THRESH = 0.65f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.3f;  // = BRIGHTWHITE_THRESH + 0.5, because pressureValue = 0.5
+    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
@@ -20,6 +21,9 @@ public class VgtPixelProperties implements PixelProperties {
     private static final float WHITE_THRESH = 0.5f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
+    private static final float REFL835_WATER_THRESH = 0.1f;
+    private static final float REFL835_LAND_THRESH = 0.15f;
+    private static final float GLINT_THRESH =  -3.65E-4f;
 
     public static final int SM_F_B0_GOOD = 7;
     public static final int SM_F_B2_GOOD = 6;
@@ -27,11 +31,11 @@ public class VgtPixelProperties implements PixelProperties {
     public static final int SM_F_MIR_GOOD = 4;
     public static final int SM_F_LAND = 3;
     public static final int SM_F_ICE_SNOW = 2;
+
     public static final int SM_F_CLOUD_2 = 1;
+
     public static final int SM_F_CLOUD_1 = 0;
-
     private float[] refl;
-
     private boolean smLand;
 
     // todo: complete method implementation
@@ -49,7 +53,7 @@ public class VgtPixelProperties implements PixelProperties {
         if (isInvalid()) {
             return false;
         }
-        return (whiteValue() + brightValue() + pressureValue() > CLOUD_THRESH && !isClearSnow());
+        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
     }
 
     @Override
@@ -58,7 +62,8 @@ public class VgtPixelProperties implements PixelProperties {
             return false;
         }
         float landValue;
-        if (radiometricLandValue() > UNCERTAINTY_VALUE) {
+
+        if (!MathUtils.equalValues(radiometricLandValue(), UNCERTAINTY_VALUE)) {
             landValue = radiometricLandValue();
         } else if (aPrioriLandValue() > UNCERTAINTY_VALUE) {
             landValue = aPrioriLandValue();
@@ -74,7 +79,7 @@ public class VgtPixelProperties implements PixelProperties {
             return false;
         }
          float waterValue;
-        if (radiometricWaterValue() > UNCERTAINTY_VALUE) {
+        if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
             waterValue = radiometricWaterValue();
         } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
             waterValue = aPrioriWaterValue();
@@ -125,11 +130,22 @@ public class VgtPixelProperties implements PixelProperties {
     }
 
     @Override
+    public boolean isCold() {
+        return false;
+    }
+
+    @Override
     public boolean isVegRisk() {
         if (isInvalid()) {
             return false;
         }
         return ndviValue() > NDVI_THRESH;
+    }
+
+    @Override
+    public boolean isGlintRisk() {
+        return isWater() && isCloud() &&
+               (MepixUtils.spectralSlope(refl[0], refl[1], MepixConstants.VGT_WAVELENGTHS[0], MepixConstants.VGT_WAVELENGTHS[1]) > GLINT_THRESH);
     }
 
     @Override
@@ -150,7 +166,7 @@ public class VgtPixelProperties implements PixelProperties {
         if (isLand()) {
             return (refl[0] + refl[1])/2.0f;
         } else if (isWater()) {
-            return (refl[0] + refl[1] + refl[2])/3.0f;
+            return (refl[1] + refl[2]);
         } else {
             return (refl[0] + refl[1])/2.0f;
         }
@@ -185,6 +201,11 @@ public class VgtPixelProperties implements PixelProperties {
     }
 
     @Override
+    public float temperatureValue() {
+        return UNCERTAINTY_VALUE;  
+    }
+
+    @Override
     public float ndsiValue() {
         return (refl[2] - refl[3])/(refl[2] + refl[3]);
     }
@@ -201,22 +222,47 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public float aPrioriLandValue() {
-        return 0;
+        if (isInvalid()) {
+            return 0.5f;
+        } else if (smLand) {
+            return 1.0f;
+        } else return 0.0f;
     }
 
     @Override
     public float aPrioriWaterValue() {
-        return 0;
+        if (isInvalid()) {
+            return 0.5f;
+        } else if (!smLand) {
+            return 1.0f;
+        } else return 0.0f;
     }
 
     @Override
     public float radiometricLandValue() {
-        return 0;
+        if (isInvalid() || isCloud()) {
+            return 0.5f;
+        } else if (refl[2] > refl[1] && refl[2] > REFL835_LAND_THRESH) {
+                // todo: refine this test
+                return 1.0f;
+        } else if (refl[2] > REFL835_LAND_THRESH) {
+                // todo: refine this test
+                return 0.75f;
+        }else {
+            return 0.25f;
+        }
     }
 
     @Override
     public float radiometricWaterValue() {
-        return 0;
+        if (isInvalid() || isCloud()) {
+            return 0.5f;
+        } else if (refl[0] > refl[1] && refl[1] > refl[2] && refl[2] < REFL835_WATER_THRESH) {
+            // todo: refine this test
+            return 1.0f;
+        } else {
+            return 0.25f;
+        }
     }
 
     // setters for VGT specific quantities
