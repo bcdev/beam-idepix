@@ -226,7 +226,9 @@ public class VgtPixelProperties implements PixelProperties {
             return 0.5f;
         } else if (smLand) {
             return 1.0f;
-        } else return 0.0f;
+        } else {
+            return 0.0f;
+        }
     }
 
     @Override

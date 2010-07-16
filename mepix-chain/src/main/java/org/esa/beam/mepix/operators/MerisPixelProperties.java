@@ -1,6 +1,7 @@
 package org.esa.beam.mepix.operators;
 
 import org.esa.beam.mepix.util.MepixUtils;
+import org.esa.beam.util.math.MathUtils;
 
 /**
  * @author Olaf Danne
@@ -8,38 +9,53 @@ import org.esa.beam.mepix.util.MepixUtils;
  */
 public class MerisPixelProperties implements PixelProperties {
 
-    private static final float BRIGHTWHITE_THRESH = 1.0f;
-    private static float NDSI_THRESH = 0.7f;
-    private static float PRESSURE_THRESH = 0.9f;
-    private static float CLOUD_THRESH = 2.0f;
-    private static float UNCERTAINTY_VALUE = 0.5f;
-    private static float LAND_THRESH = 0.9f;
-    private static float WATER_THRESH = 0.9f;
-    private static float BRIGHT_THRESH = 0.9f;
-    private static float WHITE_THRESH = 0.9f;
-    private static float NDVI_THRESH = 0.4f;
+    private static final float BRIGHTWHITE_THRESH = 0.65f;
+    private static final float NDSI_THRESH = 0.65f;
+    private static final float PRESSURE_THRESH = 0.9f;
+    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
+    private static final float UNCERTAINTY_VALUE = 0.5f;
+    private static final float LAND_THRESH = 0.9f;
+    private static final float WATER_THRESH = 0.9f;
+    private static final float BRIGHT_THRESH = 0.5f;
+    private static final float WHITE_THRESH = 0.5f;
+    private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
+    private static final float NDVI_THRESH = 0.4f;
+    private static final float REFL835_WATER_THRESH = 0.1f;
+    private static final float REFL835_LAND_THRESH = 0.15f;
+    private static final float GLINT_THRESH =  -3.65E-4f;
 
+    public static final int L1B_F_LAND = 4;
+    
     private float brr442;
     private float brr442Thresh;
+    private float p1;
+    private float pscatt;
+    private boolean l1FlagLand;
 
     private float[] refl;
+    private float[] brr;
+
 
     // todo: complete method implementation
 
     @Override
     public boolean isBrightWhite() {
-        return (spectralFlatnessValue() + brightValue() > BRIGHTWHITE_THRESH);
+        return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
     }
 
     @Override
     public boolean isCloud() {
-        return (spectralFlatnessValue() + brightValue() + pressureValue() > CLOUD_THRESH && !isClearSnow());
+        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
     }
 
     @Override
     public boolean isClearLand() {
+        if (isInvalid()) {
+            return false;
+        }
         float landValue;
-        if (radiometricLandValue() > UNCERTAINTY_VALUE) {
+
+        if (!MathUtils.equalValues(radiometricLandValue(), UNCERTAINTY_VALUE)) {
             landValue = radiometricLandValue();
         } else if (aPrioriLandValue() > UNCERTAINTY_VALUE) {
             landValue = aPrioriLandValue();
@@ -51,8 +67,11 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearWater() {
-        float waterValue;
-        if (radiometricWaterValue() > UNCERTAINTY_VALUE) {
+        if (isInvalid()) {
+            return false;
+        }
+         float waterValue;
+        if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
             waterValue = radiometricWaterValue();
         } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
             waterValue = aPrioriWaterValue();
@@ -64,27 +83,42 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearSnow() {
+        if (isInvalid()) {
+            return false;
+        }
         return (isBrightWhite() && ndsiValue() > NDSI_THRESH);
     }
 
     @Override
     public boolean isLand() {
+        if (isInvalid()) {
+            return false;
+        }
         return (aPrioriLandValue() > LAND_THRESH);
     }
 
     @Override
     public boolean isWater() {
+        if (isInvalid()) {
+            return false;
+        }
         return (aPrioriWaterValue() > WATER_THRESH);
     }
 
     @Override
     public boolean isBright() {
+        if (isInvalid()) {
+            return false;
+        }
         return brightValue() > BRIGHT_THRESH;
     }
 
     @Override
     public boolean isWhite() {
-        return spectralFlatnessValue() > WHITE_THRESH;
+        if (isInvalid()) {
+            return false;
+        }
+        return whiteValue() > WHITE_THRESH;
     }
 
     @Override
@@ -94,38 +128,52 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isVegRisk() {
+        if (isInvalid()) {
+            return false;
+        }
         return ndviValue() > NDVI_THRESH;
     }
 
     @Override
     public boolean isGlintRisk() {
+        // todo: define
         return false;
     }
 
     @Override
     public boolean isHigh() {
+        if (isInvalid()) {
+            return false;
+        }
         return (pressureValue() > PRESSURE_THRESH);
     }
 
     @Override
     public boolean isInvalid() {
-//        return MepixUtils.areReflectancesValid(refl);
-        return false;
+        return !MepixUtils.areReflectancesValid(refl);
     }
 
     @Override
     public float brightValue() {
+        if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
+            return MepixConstants.NO_DATA_VALUE;
+        }
         return brr442 / brr442Thresh;
     }
 
     @Override
     public float spectralFlatnessValue() {
-        return 1.0f; 
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float whiteValue() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
+                 return spectralFlatnessValue();
+        }  else {
+            return 0f;
+        }
     }
 
     @Override
@@ -135,37 +183,55 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float ndsiValue() {
-        return 0.0f;
+        return (brr[11]-brr[12])/(brr[11]+brr[12]);
     }
 
     @Override
     public float ndviValue() {
-        return 0.0f;
+        return (brr[9]-brr[4])/(brr[9]+brr[4]);
     }
 
     @Override
     public float pressureValue() {
-        return 1.0f;
+        if (isLand()) {
+            return 1.0f - p1/1000.0f;
+        } else if (isWater()) {
+            return 1.0f - pscatt/1000.0f;
+        } else {
+            return UNCERTAINTY_VALUE;
+        }
     }
 
     @Override
     public float aPrioriLandValue() {
-        return 1.0f;
+        if (isInvalid()) {
+            return 0.5f;
+        } else if (l1FlagLand) {
+            return 1.0f;
+        } else {
+            return 0.0f;
+        }
     }
 
     @Override
     public float aPrioriWaterValue() {
-        return 0.0f;
+        if (isInvalid()) {
+            return 0.5f;
+        } else if (!l1FlagLand) {
+            return 1.0f;
+        } else return 0.0f;
     }
 
     @Override
     public float radiometricLandValue() {
-        return 1.0f;
+         // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float radiometricWaterValue() {
-        return 0.0f;
+         // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     // setters for MERIS specific quantities
@@ -179,5 +245,21 @@ public class MerisPixelProperties implements PixelProperties {
 
     public void setRefl(float[] refl) {
         this.refl = refl;
+    }
+
+    public void setBrr(float[] brr) {
+        this.brr = brr;
+    }
+
+    public void setP1(float p1) {
+        this.p1 = p1;
+    }
+
+    public void setPscatt(float pscatt) {
+        this.pscatt = pscatt;
+    }
+
+    public void setL1FlagLand(boolean l1FlagLand) {
+        this.l1FlagLand = l1FlagLand;
     }
 }

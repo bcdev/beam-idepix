@@ -1,6 +1,7 @@
 package org.esa.beam.mepix.operators;
 
 import org.esa.beam.mepix.util.MepixUtils;
+import org.esa.beam.util.math.MathUtils;
 
 /**
  * @author Olaf Danne
@@ -8,69 +9,106 @@ import org.esa.beam.mepix.util.MepixUtils;
  */
 public class AatsrPixelProperties implements PixelProperties{
 
-    private static final float BRIGHTWHITE_THRESH = 1.0f;
-    private static final float NDSI_THRESH = 0.7f;
+    private static final float BRIGHTWHITE_THRESH = 0.65f;
+    private static final float NDSI_THRESH = 0.65f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 2.0f;
+    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.9f;
-    private static final float WHITE_THRESH = 0.9f;
+    private static final float BRIGHT_THRESH = 0.5f;
+    private static final float WHITE_THRESH = 0.5f;
+    private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
+    private static final float REFL835_WATER_THRESH = 0.1f;
+    private static final float REFL835_LAND_THRESH = 0.15f;
+    private static final float GLINT_THRESH =  -3.65E-4f;
 
-    private float reflecNadir0550;
-    private float reflecNadir0670;
-    private float reflecNadir0870;
-    private float reflecNadir1600;
-
-    private float[] reflNadir;
+    private float[] refl;
 
     // todo: complete method implementation
 
-    @Override
+@Override
     public boolean isBrightWhite() {
-        return false;
+        return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
     }
 
     @Override
     public boolean isCloud() {
-        return false;
+        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
     }
 
     @Override
     public boolean isClearLand() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        float landValue;
+
+        if (!MathUtils.equalValues(radiometricLandValue(), UNCERTAINTY_VALUE)) {
+            landValue = radiometricLandValue();
+        } else if (aPrioriLandValue() > UNCERTAINTY_VALUE) {
+            landValue = aPrioriLandValue();
+        } else {
+            return false; // this means: if we have no information about land, we return isClearLand = false
+        }
+        return (!isCloud() && landValue > LAND_THRESH);
     }
 
     @Override
     public boolean isClearWater() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+         float waterValue;
+        if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
+            waterValue = radiometricWaterValue();
+        } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
+            waterValue = aPrioriWaterValue();
+        } else {
+            return false; // this means: if we have no information about water, we return isClearWater = false
+        }
+        return (!isCloud() && waterValue > WATER_THRESH);
     }
 
     @Override
     public boolean isClearSnow() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (isBrightWhite() && ndsiValue() > NDSI_THRESH);
     }
 
     @Override
     public boolean isLand() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (aPrioriLandValue() > LAND_THRESH);
     }
 
     @Override
     public boolean isWater() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (aPrioriWaterValue() > WATER_THRESH);
     }
 
     @Override
     public boolean isBright() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return brightValue() > BRIGHT_THRESH;
     }
 
     @Override
     public boolean isWhite() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return whiteValue() > WHITE_THRESH;
     }
 
     @Override
@@ -80,99 +118,103 @@ public class AatsrPixelProperties implements PixelProperties{
 
     @Override
     public boolean isVegRisk() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return ndviValue() > NDVI_THRESH;
     }
 
     @Override
     public boolean isGlintRisk() {
+        // todo: define
         return false;
     }
 
     @Override
     public boolean isHigh() {
-        return false;
+        if (isInvalid()) {
+            return false;
+        }
+        return (pressureValue() > PRESSURE_THRESH);
     }
 
     @Override
     public boolean isInvalid() {
-        return MepixUtils.areReflectancesValid(reflNadir);
+        return !MepixUtils.areReflectancesValid(refl);
     }
 
     @Override
     public float brightValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float spectralFlatnessValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float whiteValue() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
+                 return spectralFlatnessValue();
+        }  else {
+            return 0f;
+        }
     }
 
     @Override
     public float temperatureValue() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
 
     @Override
     public float ndsiValue() {
-        return (reflecNadir0550 - reflecNadir0670)/(reflecNadir0550 + reflecNadir0670); // test
+        return (refl[0] - refl[1])/(refl[0] + refl[1]); // test
     }
 
     @Override
     public float ndviValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float pressureValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float aPrioriLandValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float aPrioriWaterValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float radiometricLandValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float radiometricWaterValue() {
-        return 0;
+        // todo: define
+        return UNCERTAINTY_VALUE;
     }
 
     // setters for AATSR specific quantities
 
-    public void setReflecNadir0550(float reflecNadir0550) {
-        this.reflecNadir0550 = reflecNadir0550;
-    }
-
-    public void setReflecNadir0670(float reflecNadir0670) {
-        this.reflecNadir0670 = reflecNadir0670;
-    }
-
-    public void setReflecNadir0870(float reflecNadir0870) {
-        this.reflecNadir0870 = reflecNadir0870;
-    }
-
-    public void setReflecNadir1600(float reflecNadir1600) {
-        this.reflecNadir1600 = reflecNadir1600;
-    }
-
-    public void setReflNadir(float[] reflNadir) {
-        this.reflNadir = reflNadir;
+    public void setRefl(float[] refl) {
+        this.refl = refl;
     }
 }

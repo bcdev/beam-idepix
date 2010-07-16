@@ -4,6 +4,8 @@ import com.bc.jnn.Jnn;
 import com.bc.jnn.JnnException;
 import com.bc.jnn.JnnNet;
 import junit.framework.TestCase;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.mepix.util.MepixUtils;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.util.math.MathUtils;
@@ -117,5 +119,21 @@ public class MepixUtilsTest extends TestCase {
         refl2 = 1.002f;
         vgtSlope = MepixUtils.scaleVgtSlope(refl1, refl2, wvl1, wvl2);
         assertEquals(0.6, vgtSlope, 1.E-5);
+    }
+
+    public void testSetNewBandProperties() {
+        Band band1 = new Band("test", ProductData.TYPE_FLOAT32, 10, 10);
+        MepixUtils.setNewBandProperties(band1, "bla", "km", -999.0, false);
+        assertEquals("bla", band1.getDescription());
+        assertEquals("km", band1.getUnit());
+        assertEquals(-999.0, band1.getNoDataValue());
+        assertEquals(false, band1.isNoDataValueUsed());
+
+        Band band2 = new Band("test2", ProductData.TYPE_INT32, 10, 10);
+        MepixUtils.setNewBandProperties(band2, "blubb", "ton", -1, true);
+        assertEquals("blubb", band2.getDescription());
+        assertEquals("ton", band2.getUnit());
+        assertEquals(-1.0, band2.getNoDataValue());
+        assertEquals(true, band2.isNoDataValueUsed());
     }
 }

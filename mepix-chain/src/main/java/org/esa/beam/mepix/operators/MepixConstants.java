@@ -1,5 +1,7 @@
 package org.esa.beam.mepix.operators;
 
+import org.esa.beam.dataio.envisat.EnvisatConstants;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -33,4 +35,41 @@ public class MepixConstants {
     };
 
     public static final float[] VGT_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f};
+
+    public static String[] AATSR_REFLECTANCE_BAND_NAMES = {
+            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_0550_BAND_NAME, // 0
+            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_0670_BAND_NAME, // 1
+            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_0870_BAND_NAME, // 2
+            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_1600_BAND_NAME, // 3
+            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_0550_BAND_NAME, // 4
+            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_0670_BAND_NAME, // 5
+            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_0870_BAND_NAME, // 6
+            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_1600_BAND_NAME  // 7
+    };
+
+    public static final float[] AATSR_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f, 450.0f, 645.0f, 835.0f, 1670.0f};
+
+    public static String[] AATSR_FLAG_BAND_NAMES = {
+            "confid_flags_nadir", // 0
+            "cloud_flags_nadir", // 1
+            "confid_flags_fward", // 2
+            "cloud_flags_fward", // 3
+    };
+
+    public static String[] MERIS_BRR_BAND_NAMES = {
+            "brr_1", // 0
+            "brr_2", // 0
+            "brr_3", // 0
+            "brr_4", // 0
+            "brr_5", // 0
+            "brr_6", // 0
+            "brr_7", // 0
+            "brr_8", // 0
+            "brr_9", // 0
+            "brr_10", // 0
+            "brr_12", // 0
+            "brr_13", // 0
+            "brr_14", // 0
+    };
+
 }

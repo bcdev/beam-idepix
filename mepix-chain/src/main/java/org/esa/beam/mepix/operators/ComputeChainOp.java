@@ -175,6 +175,7 @@ public class ComputeChainOp extends BasisOp {
     private boolean straylightCorr;
     private Product merisCloudProduct;
     private Product rayleighProduct;
+    private Product pressureLiseProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -228,7 +229,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         // Pressure (LISE)
-        Product pressureLiseProduct = null;
+        pressureLiseProduct = null;
         //        if (ipfOutputL2CloudDetection ||
         //            pressureOutputP1Lise ||
         //            pressureOutputP2Lise ||
@@ -431,7 +432,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputP1Lise) {
-            for (Band band:pressureLiseProduct.getBands()) {
+            for (Band band: pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P1)) {
                     targetProduct.addBand(band);
                 }
@@ -439,7 +440,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputPSurfLise) {
-            for (Band band:pressureLiseProduct.getBands()) {
+            for (Band band: pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSURF)) {
                     targetProduct.addBand(band);
                 }
@@ -447,7 +448,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputP2Lise) {
-            for (Band band:pressureLiseProduct.getBands()) {
+            for (Band band: pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P2)) {
                     targetProduct.addBand(band);
                 }
@@ -455,7 +456,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputPScattLise) {
-            for (Band band:pressureLiseProduct.getBands()) {
+            for (Band band: pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSCATT)) {
                     targetProduct.addBand(band);
                 }
@@ -510,6 +511,7 @@ public class ComputeChainOp extends BasisOp {
         gaCloudInput.put("vgtl1b", sourceProduct);
         gaCloudInput.put("cloud", merisCloudProduct);
         gaCloudInput.put("rayleigh", rayleighProduct);
+        gaCloudInput.put("pressure", pressureLiseProduct);
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", cloudscreeningCopyRadiances);
 
