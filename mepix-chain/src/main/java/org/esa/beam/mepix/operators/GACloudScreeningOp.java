@@ -380,12 +380,9 @@ public class GACloudScreeningOp extends Operator {
 						break;
 					}
 
-//                    if (x == 1912 && y == 987) {
+//                    if (x == 737 && y == 172) {
 //                        System.out.println("");
 //                    }
-                    if (x == 737 && y == 172) {
-                        System.out.println("");
-                    }
 
                     // set up pixel properties for given instruments...
                     PixelProperties pixelProperties = null;

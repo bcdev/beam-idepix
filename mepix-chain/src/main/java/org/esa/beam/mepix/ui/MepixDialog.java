@@ -4,8 +4,10 @@ import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyDescriptor;
+import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
@@ -38,7 +40,7 @@ public class MepixDialog extends SingleTargetProductDialog {
     private boolean isUserDefinedPressureThreshold;
     private double userDefinedPressureThreshold;
 
-    public static final int DIALOG_WIDTH = 550;
+    public static final int DIALOG_WIDTH = 650;
     public static final int DIALOG_HEIGHT = 420;
     private OperatorSpi operatorSpi;
 
@@ -75,6 +77,26 @@ public class MepixDialog extends SingleTargetProductDialog {
     public void hide() {
         form.releaseSourceProductSelectors();
         super.hide();
+    }
+
+    @Override
+    protected boolean verifyUserInput() {
+        final HashMap<String, Product> sourceProducts = form.createSourceProductsMap();
+        Product sourceProduct = sourceProducts.get("source");
+        if (sourceProduct == null) {
+            showErrorDialog("No input product specified!");
+            return false;
+        } else {
+            if (!sourceProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) &&
+                !sourceProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) &&
+                !sourceProduct.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) &&
+                !sourceProduct.getProductType().startsWith("ATS_TOA_1") && // todo: introduce constant
+                !sourceProduct.getProductType().startsWith("VGT")) { // todo: introduce constant
+                showErrorDialog("Input product must be either MERIS, AATSR or VGT L1b!");
+                return false;
+            }
+        }
+        return true;
     }
 
     ///////////// END OF PUBLIC //////////////

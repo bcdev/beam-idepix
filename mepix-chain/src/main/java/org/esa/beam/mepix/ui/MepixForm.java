@@ -22,6 +22,7 @@ import org.esa.beam.framework.gpf.ui.SourceProductSelector;
 import org.esa.beam.framework.gpf.ui.TargetProductSelector;
 import org.esa.beam.framework.gpf.ui.TargetProductSelectorModel;
 import org.esa.beam.framework.ui.AppContext;
+import org.esa.beam.mepix.operators.MepixConstants;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -52,6 +53,7 @@ public class MepixForm extends JTabbedPane {
     private Map<String, Object> parameterMap;
     private Component vgtParameterPane;
 
+    
     public MepixForm(AppContext appContext, OperatorSpi operatorSpi, TargetProductSelector targetProductSelector,
                      String targetProductNameSuffix, Map<String, Object> parameterMap) {
         this.appContext = appContext;
@@ -62,26 +64,38 @@ public class MepixForm extends JTabbedPane {
 
         initComponents();
 
+        final PropertyContainer propertyContainerCloudscreening =
+                createPanelSpecificValueContainer(MepixConstants.cloudScreeningParameterNames);
+        addParameterPane(propertyContainerCloudscreening, "Cloud Screening");
+//        addParameterPane(propertyContainerCloudscreening, "VGT Cloud Screening");
+
         // define new value containers for distribution of the target products to three different tab panes.
-        final PropertyContainer propertyContainerIpf = createPanelSpecificValueContainer("ipf");
-        final PropertyContainer propertyContainerPressure = createPanelSpecificValueContainer("pressure");
-
-
+        final PropertyContainer propertyContainerIpf =
+                createPanelSpecificValueContainer(MepixConstants.ipfParameterNames);
+        final PropertyContainer propertyContainerPressure =
+                createPanelSpecificValueContainer(MepixConstants.pressureParameterNames);
 
         addParameterPane(propertyContainerIpf, "IPF Compatible Products");
 //        add("IPF Compatible Products", createParameterPane(propertyContainerIpf));
         addParameterPane(propertyContainerPressure, "Pressure Products");
 //        add(createParameterPane(propertyContainerPressure, "Pressure Products"));
 
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-            final PropertyContainer propertyContainerCloud = createPanelSpecificValueContainer("cloud");
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+            final PropertyContainer propertyContainerCloud =
+                    createPanelSpecificValueContainer(MepixConstants.cloudProductParameterNames);
             addParameterPane(propertyContainerCloud, "Cloud Products");
 //            add(createParameterPane(propertyContainerCloud, "Cloud Products"));
-        }
+//        }
 
-        final PropertyContainer propertyContainerCloudscreening = createPanelSpecificValueContainer("cloudscreening");
-        addParameterPane(propertyContainerCloudscreening, "Cloud Screening");
-//        addParameterPane(propertyContainerCloudscreening, "VGT Cloud Screening");
+        final PropertyContainer propertyContainerGlobalbedo=
+                createPanelSpecificValueContainer(MepixConstants.globalbedoParameterNames);
+        addParameterPane(propertyContainerGlobalbedo, "GlobAlbedo");
+//        addParameterPane(propertyContainerGlobalbedo, "VGT Cloud Screening");
+
+        final PropertyContainer propertyContainerCoastcolour=
+                createPanelSpecificValueContainer(MepixConstants.coastcolourParameterNames);
+        addParameterPane(propertyContainerCoastcolour, "CoastColour");
+//        addParameterPane(propertyContainerCoastcolour, "VGT Cloud Screening");
     }
 
     public void initComponents() {
@@ -159,9 +173,10 @@ public class MepixForm extends JTabbedPane {
 //                            vgtParameterPane = createParameterPane(propertyContainerVgt, "VGT Cloud Screening");
 //                            add(vgtParameterPane);
 //                        }
-                    } else {
-                        throw new OperatorException("Input product must be either MERIS, AATSR or VGT L1b!");
                     }
+//                    else {
+//                        throw new OperatorException("Input product must be either MERIS, AATSR or VGT L1b!");
+//                    }
                 }
             }
             public void selectionContextChanged(SelectionChangeEvent event) {
@@ -220,7 +235,7 @@ public class MepixForm extends JTabbedPane {
 
     ///////////// END OF PUBLIC //////////////
 
-    private PropertyContainer createPanelSpecificValueContainer(String panelId) {
+    private PropertyContainer createPanelSpecificValueContainer(String[] thisPanelIDs) {
         ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
         PropertyContainer pc = PropertyContainer.createMapBacked(parameterMap, operatorSpi.getOperatorClass(),
                                                                  parameterDescriptorFactory);
@@ -234,18 +249,28 @@ public class MepixForm extends JTabbedPane {
 
         for (Property property : pc.getProperties()) {
             PropertyDescriptor propertyDescriptor = property.getDescriptor();
-            if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-                if (!propertyDescriptor.getName().startsWith(panelId)) {
+//            if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+//                if (!propertyDescriptor.getName().startsWith(panelId)) {
+                if (!panelContainsProperty(propertyDescriptor.getName(), thisPanelIDs)) {
                     removeProperty(pc, propertyDescriptor);
                 }
-            } else {
-                if (!propertyDescriptor.getName().startsWith(panelId) ||
-                    propertyDescriptor.getName().startsWith(panelId + "QWG")) {
-                    removeProperty(pc, propertyDescriptor);
-                }
-            }
+//            } else {
+//                if (!propertyDescriptor.getName().startsWith(panelId) ||
+//                    propertyDescriptor.getName().startsWith(panelId + "QWG")) {
+//                    removeProperty(pc, propertyDescriptor);
+//                }
+//            }
         }
         return pc;
+    }
+
+    private boolean panelContainsProperty(String thisPropertyName, String[] propertyNames) {
+        for (String name:propertyNames) {
+            if (name.equals(thisPropertyName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void removeProperty(final PropertyContainer propertyContainer, PropertyDescriptor propertyDescriptor) {

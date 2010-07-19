@@ -8,6 +8,37 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
  */
 public class MepixConstants {
 
+    public static final String[] ipfParameterNames = new String[]{
+            "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",
+            "ipfOutputL2Pressures", "ipfOutputL2CloudDetection",
+            "ipfQWGUserDefinedP1PressureThreshold", "ipfQWGUserDefinedPScattPressureThreshold",
+            "ipfQWGUserDefinedRhoToa442Threshold", "ipfQWGUserDefinedDeltaRhoToa442Threshold",
+            "ipfQWGUserDefinedRhoToa753Threshold", "ipfQWGUserDefinedRhoToaRatio753775Threshold",
+            "ipfQWGUserDefinedMDSIThreshold"
+    };
+
+    public static final String[] pressureParameterNames = new String[]{
+            "pressureOutputPbaro", "pressurePbaroGetasse", "pressureOutputPsurfFub", "pressureFubTropicalAtmosphere",
+            "pressureQWGOutputCtpStraylightCorrFub", "pressureOutputP1Lise", "pressureOutputPSurfLise",
+            "pressureOutputP2Lise", "pressureOutputPScattLise"
+    };
+
+    public static final String[] cloudProductParameterNames = new String[]{
+            "cloudOutputBlueBand", "cloudOutputCloudProbability", "cloudOutputCombinedCloud"
+    };
+
+    public static final String[] cloudScreeningParameterNames = new String[]{
+            "algorithm"
+    };
+
+    public static final String[] globalbedoParameterNames = new String[]{
+            "gaCopyRadiances"
+    };
+
+    public static final String[] coastcolourParameterNames = new String[]{
+            "ccCopyRadiances"
+    };
+
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;
     public static final int PRODUCT_TYPE_AATSR = 1;

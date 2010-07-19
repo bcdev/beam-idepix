@@ -14,7 +14,6 @@
  */
 package org.esa.beam.mepix.operators;
 
-import com.bc.ceres.binding.ValueSet;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
@@ -60,8 +59,13 @@ public class ComputeChainOp extends BasisOp {
 
     @TargetProduct(description = "The target product.")
     Product targetProduct;
-    
-    // ComputeChainOp
+
+
+     // Cloudscreening parameters
+    @Parameter(defaultValue = "QWG", valueSet = {"QWG", "GlobAlbedo", "CoastColour"})
+    private CloudScreeningSelector algorithm;
+
+    // IPF parameters
     @Parameter(defaultValue="false",
             label = "TOA Reflectances")
     private boolean ipfOutputRad2Refl = false;
@@ -69,15 +73,14 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue="false",
             label = "Gas Absorption Corrected Reflectances")
     private boolean ipfOutputGaseous = false;
-    
-    @Parameter(defaultValue="false",
-    		label = "Land/Water Reclassification Flags")
-    		private boolean ipfOutputLandWater = false;
-    
-    @Parameter(defaultValue="false",
-    		label = "Rayleigh Corrected Reflectances")
-    		private boolean ipfOutputRayleigh = false;
-    
+
+    @Parameter(defaultValue = "false",
+               label = "Land/Water Reclassification Flags")
+    private boolean ipfOutputLandWater = false;
+
+    @Parameter(defaultValue = "false",
+               label = "Rayleigh Corrected Reflectances")
+    private boolean ipfOutputRayleigh = false;
     
     @Parameter(defaultValue="true",
             label = "L2 Cloud Top Pressure and Surface Pressure")
@@ -97,8 +100,6 @@ public class ComputeChainOp extends BasisOp {
 
     @Parameter(label=" User Defined Delta RhoTOA442 Threshold ", defaultValue="0.03")
     public double ipfQWGUserDefinedDeltaRhoToa442Threshold;
-//    @Parameter(label=" User Defined Delta RhoTOA442 Threshold Factor", defaultValue="1.0")
-//    public double ipfQWGUserDefinedDeltaRhoToa442ThresholdFactor;
 
     @Parameter(label=" RhoTOA753 Threshold ", defaultValue="0.1")
     public double ipfQWGUserDefinedRhoToa753Threshold = 0.1;
@@ -107,13 +108,8 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label=" MDSI Threshold ", defaultValue="0.01")
     private double ipfQWGUserDefinedMDSIThreshold = 0.01;
 
-//    @Parameter(defaultValue="false",
-//            label = "Use Own Pressure Threshold for Cloud Detection Flags")
-//    private boolean ipfIsUserDefinedPressureThreshold = false;
-//
-//    @Parameter(defaultValue="0.0", label="          Pressure Threshold")
-//    private double ipfUserDefinedPressureThreshold = 0.0;
 
+    // Pressure product parameters
     @Parameter(defaultValue="true",
     		label = "Barometric Pressure")
     private boolean pressureOutputPbaro= true;
@@ -149,7 +145,9 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue="true",
             label = "'PScatt' (LISE, O2 project, ocean)")
     private boolean pressureOutputPScattLise= true;
-    
+
+
+    // Cloud product parameters
     @Parameter(defaultValue="false",
             label = "Blue Band Flags")
     private boolean cloudOutputBlueBand = false;
@@ -162,13 +160,18 @@ public class ComputeChainOp extends BasisOp {
             label = "Combined Clouds Flags")
     private boolean cloudOutputCombinedCloud= false;
 
-    // VGT parameters
-    @Parameter(defaultValue="false",
-            label = "Copy input radiance bands")
-    private boolean cloudscreeningCopyRadiances = false;
 
-    @Parameter(defaultValue = "QWG", valueSet = {"QWG", "GlobAlbedo", "CoastColour"})
-    private CloudScreeningSelector cloudscreeningAlgorithm;
+    // Globalbedo parameters
+    @Parameter(defaultValue="false",
+            label = "Copy input radiance/reflectance bands")
+    private boolean gaCopyRadiances = false;
+
+    // Coastcolour parameters
+    @Parameter(defaultValue="false",
+            label = "Copy input radiance/reflectance bands")
+    private boolean ccCopyRadiances = false;
+
+
 
     
     public static final String MEPIX_VERSION = "v1.2";
@@ -181,10 +184,22 @@ public class ComputeChainOp extends BasisOp {
     public void initialize() throws OperatorException {
 
         MepixUtils.validateInputProduct(sourceProduct);
-        int cloudScreeningAlgo = cloudscreeningAlgorithm.getValue();
+        int cloudScreeningAlgo = algorithm.getValue();
 
 
-//        if (cloudScreeningAlgo == CloudScreeningSelector.QWG.getValue()) {
+        if (cloudScreeningAlgo == CloudScreeningSelector.QWG.getValue()) {
+            processQwg();
+        } else if (cloudScreeningAlgo == CloudScreeningSelector.GlobAlbedo.getValue()){
+            // GA cloud classification
+            if (sourceProduct.getProductType().startsWith("MER")) {
+                processQwg();
+            }
+            processGlobAlbedo();
+        } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()){
+            // not yet implemented
+            // todo
+        }
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
 //            processQwg();
 //        } else {
 //            // GA cloud classification
@@ -193,15 +208,6 @@ public class ComputeChainOp extends BasisOp {
 //            }
 //            processGlobAlbedo();
 //        }
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-            processQwg();
-        } else {
-            // GA cloud classification
-            if (sourceProduct.getProductType().startsWith("MER")) {
-                processQwg();
-            }
-            processGlobAlbedo();
-        }
     }
 
     private void processQwg() {
@@ -513,7 +519,7 @@ public class ComputeChainOp extends BasisOp {
         gaCloudInput.put("rayleigh", rayleighProduct);
         gaCloudInput.put("pressure", pressureLiseProduct);
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
-        gaCloudClassificationParameters.put("gaCopyRadiances", cloudscreeningCopyRadiances);
+        gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class), gaCloudClassificationParameters, gaCloudInput);
         targetProduct = gaCloudProduct;
