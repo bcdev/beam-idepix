@@ -53,6 +53,14 @@ public class MepixForm extends JTabbedPane {
     private Map<String, Object> parameterMap;
     private Component vgtParameterPane;
 
+    private final int IO_TAB_INDEX = 0;
+    private final int CLOUDSCREENING_TAB_INDEX = 1;
+    private final int IPF_TAB_INDEX = 2;
+    private final int PRESSURE_TAB_INDEX = 3;
+    private final int CLOUDS_TAB_INDEX = 4;
+    private final int GLOBALBEDO_TAB_INDEX = 5;
+    private final int COASTCOLOUR_TAB_INDEX = 6;
+
     
     public MepixForm(AppContext appContext, OperatorSpi operatorSpi, TargetProductSelector targetProductSelector,
                      String targetProductNameSuffix, Map<String, Object> parameterMap) {
@@ -67,7 +75,6 @@ public class MepixForm extends JTabbedPane {
         final PropertyContainer propertyContainerCloudscreening =
                 createPanelSpecificValueContainer(MepixConstants.cloudScreeningParameterNames);
         addParameterPane(propertyContainerCloudscreening, "Cloud Screening");
-//        addParameterPane(propertyContainerCloudscreening, "VGT Cloud Screening");
 
         // define new value containers for distribution of the target products to three different tab panes.
         final PropertyContainer propertyContainerIpf =
@@ -76,26 +83,22 @@ public class MepixForm extends JTabbedPane {
                 createPanelSpecificValueContainer(MepixConstants.pressureParameterNames);
 
         addParameterPane(propertyContainerIpf, "IPF Compatible Products");
-//        add("IPF Compatible Products", createParameterPane(propertyContainerIpf));
         addParameterPane(propertyContainerPressure, "Pressure Products");
-//        add(createParameterPane(propertyContainerPressure, "Pressure Products"));
 
 //        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
             final PropertyContainer propertyContainerCloud =
                     createPanelSpecificValueContainer(MepixConstants.cloudProductParameterNames);
             addParameterPane(propertyContainerCloud, "Cloud Products");
-//            add(createParameterPane(propertyContainerCloud, "Cloud Products"));
 //        }
 
         final PropertyContainer propertyContainerGlobalbedo=
                 createPanelSpecificValueContainer(MepixConstants.globalbedoParameterNames);
         addParameterPane(propertyContainerGlobalbedo, "GlobAlbedo");
-//        addParameterPane(propertyContainerGlobalbedo, "VGT Cloud Screening");
 
         final PropertyContainer propertyContainerCoastcolour=
                 createPanelSpecificValueContainer(MepixConstants.coastcolourParameterNames);
         addParameterPane(propertyContainerCoastcolour, "CoastColour");
-//        addParameterPane(propertyContainerCoastcolour, "VGT Cloud Screening");
+        setEnabledAt(COASTCOLOUR_TAB_INDEX, false); // todo: enable later
     }
 
     public void initComponents() {
@@ -120,7 +123,6 @@ public class MepixForm extends JTabbedPane {
         ioParametersPanel.add(tableLayout.createVerticalSpacer());
         sourceProductSelectorList.get(0).addSelectionChangeListener(new SelectionChangeListener() {
             public void selectionChanged(SelectionChangeEvent event) {
-//                final Product selectedProduct = (Product) event.getSelection().getFirstElement();
                 final Product selectedProduct = (Product) event.getSelection().getSelectedValue();
                 final TargetProductSelectorModel targetProductSelectorModel = targetProductSelector.getModel();
 
@@ -150,33 +152,30 @@ public class MepixForm extends JTabbedPane {
                             mepixName = mepixName.substring(0, mepixName.length() - 3);
                         }
                         targetProductSelectorModel.setProductName(mepixName + targetProductNameSuffix);
-                        if (vgtParameterPane != null) {
-                            remove(vgtParameterPane);
-                        }
-                    } else if (selectedProduct.getProductType().startsWith("ATS_TOA_1")) { // todo: introduce constant
+                        setEnabledAt(GLOBALBEDO_TAB_INDEX, true);
+                        setEnabledAt(IPF_TAB_INDEX, true);
+                        setEnabledAt(PRESSURE_TAB_INDEX, true);
+                        setEnabledAt(CLOUDS_TAB_INDEX, true);
+                        setEnabledAt(COASTCOLOUR_TAB_INDEX, false);
+                    } else if (selectedProduct.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME)) {
                         // check for AATSR:
                         mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
                         targetProductSelectorModel.setProductName(mepixName);
-
-//                        if (vgtParameterPane != null) {
-//                            final PropertyContainer propertyContainerVgt = createPanelSpecificValueContainer("vgt");
-//                            vgtParameterPane = createParameterPane(propertyContainerVgt, "VGT Cloud Screening");
-//                            add(vgtParameterPane);
-//                        }
-                    } else if (selectedProduct.getProductType().startsWith("VGT")) { // todo: introduce constant
+                        setEnabledAt(GLOBALBEDO_TAB_INDEX, true);
+                        setEnabledAt(IPF_TAB_INDEX, false);
+                        setEnabledAt(PRESSURE_TAB_INDEX, false);
+                        setEnabledAt(CLOUDS_TAB_INDEX, false);
+                        setEnabledAt(COASTCOLOUR_TAB_INDEX, false);
+                    } else if (selectedProduct.getProductType().startsWith(MepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX)) {
                         // check for VGT:
                         mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
                         targetProductSelectorModel.setProductName(mepixName);
-
-//                        if (vgtParameterPane != null) {
-//                            final PropertyContainer propertyContainerVgt = createPanelSpecificValueContainer("vgt");
-//                            vgtParameterPane = createParameterPane(propertyContainerVgt, "VGT Cloud Screening");
-//                            add(vgtParameterPane);
-//                        }
+                        setEnabledAt(GLOBALBEDO_TAB_INDEX, true);
+                        setEnabledAt(IPF_TAB_INDEX, false);
+                        setEnabledAt(PRESSURE_TAB_INDEX, false);
+                        setEnabledAt(CLOUDS_TAB_INDEX, false);
+                        setEnabledAt(COASTCOLOUR_TAB_INDEX, false);
                     }
-//                    else {
-//                        throw new OperatorException("Input product must be either MERIS, AATSR or VGT L1b!");
-//                    }
                 }
             }
             public void selectionContextChanged(SelectionChangeEvent event) {

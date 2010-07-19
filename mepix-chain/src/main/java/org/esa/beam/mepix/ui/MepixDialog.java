@@ -13,6 +13,8 @@ import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
 import org.esa.beam.framework.gpf.ui.SourceProductSelector;
 import org.esa.beam.framework.ui.AppContext;
+import org.esa.beam.mepix.operators.MepixConstants;
+import org.esa.beam.mepix.util.MepixUtils;
 
 import javax.swing.JCheckBox;
 import javax.swing.JTextField;
@@ -87,16 +89,8 @@ public class MepixDialog extends SingleTargetProductDialog {
             showErrorDialog("No input product specified!");
             return false;
         } else {
-            if (!sourceProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) &&
-                !sourceProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) &&
-                !sourceProduct.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) &&
-                !sourceProduct.getProductType().startsWith("ATS_TOA_1") && // todo: introduce constant
-                !sourceProduct.getProductType().startsWith("VGT")) { // todo: introduce constant
-                showErrorDialog("Input product must be either MERIS, AATSR or VGT L1b!");
-                return false;
-            }
+            return MepixUtils.isInputValid(sourceProduct);
         }
-        return true;
     }
 
     ///////////// END OF PUBLIC //////////////

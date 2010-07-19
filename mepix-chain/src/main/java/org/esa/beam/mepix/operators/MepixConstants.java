@@ -39,6 +39,9 @@ public class MepixConstants {
             "ccCopyRadiances"
     };
 
+
+    public static String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
+
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;
     public static final int PRODUCT_TYPE_AATSR = 1;
@@ -102,5 +105,13 @@ public class MepixConstants {
             "brr_13", // 0
             "brr_14", // 0
     };
+
+    public static final String inputconsistencyErrorMessage =
+            "Selected cloud screening algorithm cannot be used with given input product. \n\n" +
+            "Valid combinations are: \n" +
+            " - QWG for MERIS products \n" +
+            " - GlobColour for MERIS, AATSR, VGT products \n" +
+            " - CoastColour for MERIS products ";
+
 
 }

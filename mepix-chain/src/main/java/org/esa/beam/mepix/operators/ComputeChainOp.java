@@ -183,9 +183,13 @@ public class ComputeChainOp extends BasisOp {
     @Override
     public void initialize() throws OperatorException {
 
-        MepixUtils.validateInputProduct(sourceProduct);
+        final boolean inputProductIsValid = MepixUtils.validateInputProduct(sourceProduct, algorithm);
+        if (!inputProductIsValid) {
+            MepixUtils.logErrorMessage(MepixConstants.inputconsistencyErrorMessage);
+            return;
+        }
+        
         int cloudScreeningAlgo = algorithm.getValue();
-
 
         if (cloudScreeningAlgo == CloudScreeningSelector.QWG.getValue()) {
             processQwg();
@@ -197,6 +201,7 @@ public class ComputeChainOp extends BasisOp {
             processGlobAlbedo();
         } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()){
             // not yet implemented
+            MepixUtils.logErrorMessage("This algorithm is not yet supported.");
             // todo
         }
 //        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
