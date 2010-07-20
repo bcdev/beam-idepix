@@ -46,7 +46,7 @@ import java.util.StringTokenizer;
 
 /**
  * Operator for computing aerosol apparent pressure (LISE algorithm).
- * todo: cleanup --> e.g  move I/O methods to an auxdata class
+ * todo: cleanup!!! --> e.g  move I/O methods to an auxdata class
  *
  * @author Olaf Danne
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $

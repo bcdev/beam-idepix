@@ -1,12 +1,15 @@
 package org.esa.beam.mepix.operators;
 
 /**
+ * Interface for pixel properties.
+ * To be used for instrument-specific implementations.
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 public interface PixelProperties {
 
-    // todo: add documentation
+    // todo: add documentation if set of properties is finally agreed
 
     public boolean isBrightWhite();
 

@@ -20,10 +20,9 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.VirtualBand;
-import org.esa.beam.framework.datamodel.BitmaskDef;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -31,6 +30,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
@@ -43,12 +43,17 @@ import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 
-import java.awt.Rectangle;
 import java.awt.Color;
+import java.awt.Rectangle;
 
 
+/**
+ * This class provides the Mepix QWG cloud classification.
+ * todo: the check 'mepixMode=QWG' has been disabled, computations are now following MEGS8  --> clarify this!
+ * 
+ *
+ */
 @OperatorMetadata(alias = "Meris.MepixCloudClassification",
         version = "1.0",
         internal = true,
@@ -58,14 +63,10 @@ import java.awt.Color;
 public class MepixCloudClassificationOp extends MerisBasisOp implements Constants {
 
     public static final String CLOUD_FLAGS = "cloud_classif_flags";
-    public static final String CLOUD_FLAGS_PSCATT_LISE = "cloud_classif_flags_pscatt_lise";
     public static final String PRESSURE_CTP = "cloud_top_press";
-//    public static final String PRESSURE_PSCATT_LISE = "pscatt_lise_ipf";
     public static final String PRESSURE_SURFACE = "surface_press";
-    public static final String PRESSURE_ECMWF = "p_ecmwf";
     public static final String SCATT_ANGLE = "scattering_angle";
     public static final String RHO_THRESH_TERM = "rho442_thresh_term";
-    public static final String RHO_AG = "rho_ag";
     public static final String MDSI = "mdsi";
 
     private static final int BAND_BRIGHT_N = 0;
@@ -83,19 +84,18 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
     public static final int F_HIGH_MDSI = 8;
     public static final int F_SNOW_ICE = 9;
 
-    private static final BitmaskDef[] BITMASK_DEFINITIONS = new BitmaskDef[]{
-            new BitmaskDef("f_cloud", "MEPIX final cloud flag", CLOUD_FLAGS + ".F_CLOUD", Color.CYAN, 0.5f),
-            new BitmaskDef("f_bright", "MEPIX combined of old and second bright test", CLOUD_FLAGS + ".F_BRIGHT", new Color(0,153,153), 0.5f),
-            new BitmaskDef("f_bright_rc", "MEPIX old bright test", CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204,255,204), 0.5f),
-            new BitmaskDef("f_low_p_pscatt", "MEPIX test on apparent scattering (over ocean)", CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153,153,0), 0.5f),
-            new BitmaskDef("f_low_p_p1", "MEPIX test on P1 (over land)", CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f),                  
-            new BitmaskDef("f_slope_1", "MEPIX old slope 1 test", CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f),
-            new BitmaskDef("f_slope_2", "MEPIX old slope 2 test", CLOUD_FLAGS + ".F_SLOPE_2", new Color(153,0,153), 0.5f),
-            new BitmaskDef("f_bright_toa", "MEPIX second bright test", CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f),
-            new BitmaskDef("f_high_mdsi", "MEPIX MDSI above threshold (warning: not sufficient for snow detection)", CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f),
-            new BitmaskDef("f_snow_ice", "MEPIX snow/ice flag", CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f),
-    };
-
+//    private static final BitmaskDef[] BITMASK_DEFINITIONS = new BitmaskDef[]{
+//            new BitmaskDef("f_cloud", "MEPIX final cloud flag", CLOUD_FLAGS + ".F_CLOUD", Color.CYAN, 0.5f),
+//            new BitmaskDef("f_bright", "MEPIX combined of old and second bright test", CLOUD_FLAGS + ".F_BRIGHT", new Color(0,153,153), 0.5f),
+//            new BitmaskDef("f_bright_rc", "MEPIX old bright test", CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204,255,204), 0.5f),
+//            new BitmaskDef("f_low_p_pscatt", "MEPIX test on apparent scattering (over ocean)", CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153,153,0), 0.5f),
+//            new BitmaskDef("f_low_p_p1", "MEPIX test on P1 (over land)", CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f),
+//            new BitmaskDef("f_slope_1", "MEPIX old slope 1 test", CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f),
+//            new BitmaskDef("f_slope_2", "MEPIX old slope 2 test", CLOUD_FLAGS + ".F_SLOPE_2", new Color(153,0,153), 0.5f),
+//            new BitmaskDef("f_bright_toa", "MEPIX second bright test", CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f),
+//            new BitmaskDef("f_high_mdsi", "MEPIX MDSI above threshold (warning: not sufficient for snow detection)", CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f),
+//            new BitmaskDef("f_snow_ice", "MEPIX snow/ice flag", CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f),
+//    };
 
     private L2AuxData auxData;
     
@@ -171,12 +171,9 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
 //            targetProduct.getFlagCodingGroup().add(flagCoding);
 //        }
 
-        VirtualBand mdsiBand = new VirtualBand(MDSI, ProductData.TYPE_FLOAT32,
-                                               10, 10, "mdsi");
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-//            targetProduct.addBand(mdsiBand);
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
             targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
-        }
+//        }
 
         if (l1bProduct.getPreferredTileSize() != null) {
             targetProduct.setPreferredTileSize(l1bProduct.getPreferredTileSize());
@@ -192,13 +189,46 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
         flagCoding.addFlag("F_LOW_P_P1", BitSetter.setFlag(0, F_LOW_P_P1), null);
         flagCoding.addFlag("F_SLOPE_1", BitSetter.setFlag(0, F_SLOPE_1), null);
         flagCoding.addFlag("F_SLOPE_2", BitSetter.setFlag(0, F_SLOPE_2), null);
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
             flagCoding.addFlag("F_BRIGHT_TOA", BitSetter.setFlag(0, F_BRIGHT_TOA), null);
             flagCoding.addFlag("F_HIGH_MDSI", BitSetter.setFlag(0, F_HIGH_MDSI), null);
             flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
-        }
+//        }
         return flagCoding;
     }
+
+    private static Mask[] createBitmaskDefs(Product sourceProduct) {
+
+        Mask[] bitmaskDefs = new Mask[10];
+
+        int w = sourceProduct.getSceneRasterWidth();
+        int h = sourceProduct.getSceneRasterHeight();
+
+        bitmaskDefs[0] = Mask.BandMathsType.create("f_cloud", "MEPIX final cloud flag", w, h, CLOUD_FLAGS + ".F_CLOUD",
+                                                   Color.CYAN, 0.5f);
+        bitmaskDefs[1] = Mask.BandMathsType.create("f_bright", "MEPIX combined of old and second bright test", w, h,
+                                                   CLOUD_FLAGS + ".F_BRIGHT", new Color(0, 153, 153), 0.5f);
+        bitmaskDefs[2] = Mask.BandMathsType.create("f_bright_rc", "MEPIX old bright test", w, h,
+                                                   CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204, 255, 204), 0.5f);
+        bitmaskDefs[3] = Mask.BandMathsType.create("f_low_p_pscatt", "MEPIX test on apparent scattering (over ocean)",
+                                                   w, h, CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153, 153, 0), 0.5f);
+        bitmaskDefs[4] = Mask.BandMathsType.create("f_low_p_p1", "MEPIX test on P1 (over land)", w, h,
+                                                   CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f);
+        bitmaskDefs[5] = Mask.BandMathsType.create("f_slope_1", "MEPIX old slope 1 test", w, h,
+                                                   CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
+        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_2", "MEPIX old slope 2 test", w, h,
+                                                   CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
+        bitmaskDefs[7] = Mask.BandMathsType.create("f_bright_toa", "MEPIX second bright test", w, h,
+                                                   CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
+        bitmaskDefs[8] = Mask.BandMathsType.create("f_high_mdsi",
+                                                   "MEPIX MDSI above threshold (warning: not sufficient for snow detection)",
+                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
+        bitmaskDefs[9] = Mask.BandMathsType.create("f_snow_ice", "MEPIX snow/ice flag", w, h,
+                                                   CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f);
+
+        return bitmaskDefs;
+    }
+
 
     private SourceData loadSourceTiles(Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
 
@@ -290,11 +320,11 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
                         }
                         // end test
 
-                        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+//                        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
                             if (band.getName().equals(MDSI)) {
                                 setMdsi(sd, pixelInfo, targetTile);
                             }
-                        }
+//                        }
 					}
 					i++;
 				}
@@ -303,7 +333,6 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
         } catch (Exception e) {
             throw new OperatorException(e);
         } finally {
-//        	System.out.println("THRESHOLD: " + userDefinedPressureThreshold);
             pm.done();
         }
     }
@@ -318,13 +347,6 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
     public void setCloudTopPressure(PixelInfo pixelInfo, Tile targetTile) {
     	targetTile.setSample(pixelInfo.x, pixelInfo.y, pixelInfo.ctp);
     }
-
-//    public void setCloudPressureEcmwf(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
-//        final ReturnValue press = new ReturnValue();
-//
-//        Comp_Pressure(sd, pixelInfo, press);
-//        targetTile.setSample(pixelInfo.x, pixelInfo.y, Math.max(0.0, pixelInfo.ecmwfPressure));
-//    }
 
     public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         final ReturnValue press = new ReturnValue();
@@ -367,9 +389,9 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
         boolean land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
-        boolean is_cloud = false;
+        boolean is_cloud;
 
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
             // Mepix 2.x
             boolean bright_toa_f = resultFlags[3];
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_TOA, bright_toa_f);
@@ -393,14 +415,14 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
             }
             boolean snow_ice = (high_mdsi && bright_f);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, snow_ice);
-        } else {
-            // Mepix 1.1
-            is_cloud = is_cloudy(land_f,
-                                     bright_f,
-                                     low_P_nn, low_P_poly, delta_p,
-                                     slope_1_f, slope_2_f,
-                                     true, pcd_poly);
-        }
+//        } else {
+//            // Mepix 1.1
+//            is_cloud = is_cloudy(land_f,
+//                                     bright_f,
+//                                     low_P_nn, low_P_poly, delta_p,
+//                                     slope_1_f, slope_2_f,
+//                                     true, pcd_poly);
+//        }
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
     }
@@ -547,23 +569,23 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
         FractIndex[] DP_Index = FractIndex.createArray(2);
 
         /* get proper threshold - DPM #2.1.2-2 */
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
             if (sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {
         	    delta_press_thresh = userDefinedP1PressureThreshold;
             } else {
                 delta_press_thresh = userDefinedPScattPressureThreshold;
             }
-        } else {
-	        if (sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {
-	            Interp.interpCoord(sd.sza[pixelInfo.index], auxData.DPthresh_land.getTab(0), DP_Index[0]);
-	            Interp.interpCoord(sd.vza[pixelInfo.index], auxData.DPthresh_land.getTab(1), DP_Index[1]);
-	            delta_press_thresh = Interp.interpolate(auxData.DPthresh_land.getJavaArray(), DP_Index);
-	        } else {
-	            Interp.interpCoord(sd.sza[pixelInfo.index], auxData.DPthresh_ocean.getTab(0), DP_Index[0]);
-	            Interp.interpCoord(sd.vza[pixelInfo.index], auxData.DPthresh_ocean.getTab(1), DP_Index[1]);
-	            delta_press_thresh = Interp.interpolate(auxData.DPthresh_ocean.getJavaArray(), DP_Index);
-	        }
-        }
+//        } else {
+//	        if (sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {
+//	            Interp.interpCoord(sd.sza[pixelInfo.index], auxData.DPthresh_land.getTab(0), DP_Index[0]);
+//	            Interp.interpCoord(sd.vza[pixelInfo.index], auxData.DPthresh_land.getTab(1), DP_Index[1]);
+//	            delta_press_thresh = Interp.interpolate(auxData.DPthresh_land.getJavaArray(), DP_Index);
+//	        } else {
+//	            Interp.interpCoord(sd.sza[pixelInfo.index], auxData.DPthresh_ocean.getTab(0), DP_Index[0]);
+//	            Interp.interpCoord(sd.vza[pixelInfo.index], auxData.DPthresh_ocean.getTab(1), DP_Index[1]);
+//	            delta_press_thresh = Interp.interpolate(auxData.DPthresh_ocean.getJavaArray(), DP_Index);
+//	        }
+//        }
 
         /* test NN pressure- DPM #2.1.2-4 */ // low_P_nn
         if (inputPressure != -1) {
@@ -705,7 +727,7 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
         boolean bright_rc = false;
         boolean bright_toa_f = false;
         boolean high_mdsi = false;
-        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
+//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
             // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
             bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
                 || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
@@ -728,7 +750,7 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
 
             final float mdsi = computeMdsi(dc.rhoToa[bb865][pixelInfo.index], dc.rhoToa[bb890][pixelInfo.index]);
             high_mdsi = (mdsi > userDefinedMDSIThreshold);
-        }
+//        }
 
         result_flags[0] = bright_f;
         result_flags[1] = slope1_f;
@@ -792,13 +814,23 @@ public class MepixCloudClassificationOp extends MerisBasisOp implements Constant
         return sd.radiance[radianceBandId].getSampleFloat(x, y) > auxData.Saturation_L[bandId];
     }
 
-    public static void addBitmasks(Product product) {
-        for (BitmaskDef bitmaskDef : BITMASK_DEFINITIONS) {
-            // need a copy, cause the BitmaskDefs are otherwise disposed
-            // if the outputProduct gets disposed after processing
-            product.addBitmaskDef(bitmaskDef.createCopy());
+//    public static void addBitmasks(Product product) {
+//        for (BitmaskDef bitmaskDef : BITMASK_DEFINITIONS) {
+//            // need a copy, cause the BitmaskDefs are otherwise disposed
+//            // if the outputProduct gets disposed after processing
+//            product.addBitmaskDef(bitmaskDef.createCopy());
+//        }
+//    }
+
+    public static void addBitmasks(Product sourceProduct, Product targetProduct) {
+        Mask[] bitmaskDefs = createBitmaskDefs(sourceProduct);
+
+        int index = 0;
+        for (Mask bitmaskDef : bitmaskDefs) {
+            targetProduct.getMaskGroup().add(index++, bitmaskDef);
         }
     }
+
 
     private static class SourceData {
 		private float[][] rhoToa;

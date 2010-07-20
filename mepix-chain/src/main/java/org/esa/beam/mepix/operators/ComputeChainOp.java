@@ -61,9 +61,10 @@ public class ComputeChainOp extends BasisOp {
     Product targetProduct;
 
 
-     // Cloudscreening parameters
+     // Cloud screening parameters
     @Parameter(defaultValue = "QWG", valueSet = {"QWG", "GlobAlbedo", "CoastColour"})
     private CloudScreeningSelector algorithm;
+
 
     // IPF parameters
     @Parameter(defaultValue="false",
@@ -167,14 +168,12 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaCopyRadiances = false;
 
     // Coastcolour parameters
+
     @Parameter(defaultValue="false",
             label = "Copy input radiance/reflectance bands")
     private boolean ccCopyRadiances = false;
 
 
-
-    
-    public static final String MEPIX_VERSION = "v1.2";
     private boolean straylightCorr;
     private Product merisCloudProduct;
     private Product rayleighProduct;
@@ -195,24 +194,15 @@ public class ComputeChainOp extends BasisOp {
             processQwg();
         } else if (cloudScreeningAlgo == CloudScreeningSelector.GlobAlbedo.getValue()){
             // GA cloud classification
-            if (sourceProduct.getProductType().startsWith("MER")) {
+            if (MepixUtils.isValidMerisProduct(sourceProduct)) {
                 processQwg();
             }
             processGlobAlbedo();
         } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()){
             // not yet implemented
-            MepixUtils.logErrorMessage("This algorithm is not yet supported.");
             // todo
+            MepixUtils.logErrorMessage("This algorithm is not yet supported.");
         }
-//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-//            processQwg();
-//        } else {
-//            // GA cloud classification
-//            if (sourceProduct.getProductType().startsWith("MER")) {
-//                processQwg();
-//            }
-//            processGlobAlbedo();
-//        }
     }
 
     private void processQwg() {
@@ -221,7 +211,7 @@ public class ComputeChainOp extends BasisOp {
         Product rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams, sourceProduct);
 
         // Barometric Pressure
-        Product pbaroProduct = null;
+        Product pbaroProduct;
         Map<String, Object> pbaroParameters = new HashMap<String, Object>(1);
         pbaroParameters.put("useGetasseDem", pressurePbaroGetasse);
         pbaroProduct = GPF.createProduct("Meris.BarometricPressure", pbaroParameters, sourceProduct);
@@ -241,11 +231,6 @@ public class ComputeChainOp extends BasisOp {
 
         // Pressure (LISE)
         pressureLiseProduct = null;
-        //        if (ipfOutputL2CloudDetection ||
-        //            pressureOutputP1Lise ||
-        //            pressureOutputP2Lise ||
-        //            pressureOutputPScattLise ||
-        //            pressureOutputPSurfLise) {
         Map<String, Product> pressureLiseInput = new HashMap<String, Product>(2);
         pressureLiseInput.put("l1b", sourceProduct);
         pressureLiseInput.put("rhotoa", rad2reflProduct);
@@ -257,7 +242,6 @@ public class ComputeChainOp extends BasisOp {
         pressureLiseParameters.put("outputPScatt", true);
         pressureLiseParameters.put("l2CloudDetection", ipfOutputL2CloudDetection);
         pressureLiseProduct = GPF.createProduct("Meris.LisePressure", pressureLiseParameters, pressureLiseInput);
-        //        }
 
         // Cloud Classification
         merisCloudProduct = null;
@@ -285,7 +269,8 @@ public class ComputeChainOp extends BasisOp {
 
         // Gaseous Correction
         Product gasProduct = null;
-//        if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous) {
+        if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
+                algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
             Map<String, Product> gasInput = new HashMap<String, Product>(3);
             gasInput.put("l1b", sourceProduct);
             gasInput.put("rhotoa", rad2reflProduct);
@@ -294,18 +279,21 @@ public class ComputeChainOp extends BasisOp {
             gasParameters.put("correctWater", true);
             gasParameters.put("exportTg", true);
             gasProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), gasParameters, gasInput);
-//        }
+        }
 
         // Land Water Reclassification
         Product landProduct = null;
-//        if (ipfOutputRayleigh || ipfOutputLandWater) {
+        if (ipfOutputRayleigh || ipfOutputLandWater ||
+                algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
             Map<String, Product> landInput = new HashMap<String, Product>(2);
             landInput.put("l1b", sourceProduct);
             landInput.put("gascor", gasProduct);
             landProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), emptyParams, landInput);
-//        }
+        }
 
         // Rayleigh Correction
+        if (ipfOutputRayleigh ||
+                algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
         Map<String, Product> rayleighInput = new HashMap<String, Product>(3);
         rayleighInput.put("l1b", sourceProduct);
         rayleighInput.put("land", landProduct);
@@ -314,6 +302,7 @@ public class ComputeChainOp extends BasisOp {
         rayleighParameters.put("correctWater", true);
         rayleighParameters.put("exportRayCoeffs", true);
         rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RayleighCorrectionOp.class), rayleighParameters, rayleighInput);
+        }
 
         // Blue Band
         Product blueBandProduct = null;
@@ -512,17 +501,17 @@ public class ComputeChainOp extends BasisOp {
         Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
         l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
 
-        MepixCloudClassificationOp.addBitmasks(targetProduct);
+        MepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
     }
 
     private void processGlobAlbedo() {
         // Cloud Classification
-        Product gaCloudProduct = null;
+        Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
-        gaCloudInput.put("vgtl1b", sourceProduct);
-        gaCloudInput.put("cloud", merisCloudProduct);
-        gaCloudInput.put("rayleigh", rayleighProduct);
-        gaCloudInput.put("pressure", pressureLiseProduct);
+        gaCloudInput.put("gal1b", sourceProduct);
+        gaCloudInput.put("cloud", merisCloudProduct);   // may be null
+        gaCloudInput.put("rayleigh", rayleighProduct);  // may be null
+        gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
 

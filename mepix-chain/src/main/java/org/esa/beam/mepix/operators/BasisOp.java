@@ -1,6 +1,5 @@
 package org.esa.beam.mepix.operators;
 
-import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.util.ProductUtils;

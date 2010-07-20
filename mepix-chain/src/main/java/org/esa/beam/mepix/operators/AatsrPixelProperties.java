@@ -4,10 +4,12 @@ import org.esa.beam.mepix.util.MepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
 /**
+ * This class represents pixel properties as derived from AATSR L1b data
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AatsrPixelProperties implements PixelProperties{
+public class AatsrPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.65f;
@@ -22,13 +24,12 @@ public class AatsrPixelProperties implements PixelProperties{
     private static final float NDVI_THRESH = 0.4f;
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
-    private static final float GLINT_THRESH =  -3.65E-4f;
+    private static final float GLINT_THRESH = -3.65E-4f;
 
     private float[] refl;
 
-    // todo: complete method implementation
 
-@Override
+    @Override
     public boolean isBrightWhite() {
         return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
     }
@@ -60,7 +61,7 @@ public class AatsrPixelProperties implements PixelProperties{
         if (isInvalid()) {
             return false;
         }
-         float waterValue;
+        float waterValue;
         if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
             waterValue = radiometricWaterValue();
         } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
@@ -73,42 +74,27 @@ public class AatsrPixelProperties implements PixelProperties{
 
     @Override
     public boolean isClearSnow() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
     }
 
     @Override
     public boolean isLand() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (aPrioriLandValue() > LAND_THRESH);
+        return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
     }
 
     @Override
     public boolean isWater() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (aPrioriWaterValue() > WATER_THRESH);
+        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
     }
 
     @Override
     public boolean isBright() {
-        if (isInvalid()) {
-            return false;
-        }
-        return brightValue() > BRIGHT_THRESH;
+        return (!isInvalid() && brightValue() > BRIGHT_THRESH);
     }
 
     @Override
     public boolean isWhite() {
-        if (isInvalid()) {
-            return false;
-        }
-        return whiteValue() > WHITE_THRESH;
+        return (!isInvalid() && whiteValue() > WHITE_THRESH);
     }
 
     @Override
@@ -118,10 +104,7 @@ public class AatsrPixelProperties implements PixelProperties{
 
     @Override
     public boolean isVegRisk() {
-        if (isInvalid()) {
-            return false;
-        }
-        return ndviValue() > NDVI_THRESH;
+        return (!isInvalid() && ndviValue() > NDVI_THRESH);
     }
 
     @Override
@@ -132,10 +115,7 @@ public class AatsrPixelProperties implements PixelProperties{
 
     @Override
     public boolean isHigh() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (pressureValue() > PRESSURE_THRESH);
+        return (!isInvalid() && pressureValue() > PRESSURE_THRESH);
     }
 
     @Override
@@ -157,9 +137,9 @@ public class AatsrPixelProperties implements PixelProperties{
 
     @Override
     public float whiteValue() {
-        if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
-                 return spectralFlatnessValue();
-        }  else {
+        if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
+            return spectralFlatnessValue();
+        } else {
             return 0f;
         }
     }
@@ -173,7 +153,7 @@ public class AatsrPixelProperties implements PixelProperties{
 
     @Override
     public float ndsiValue() {
-        return (refl[0] - refl[1])/(refl[0] + refl[1]); // test
+        return (refl[0] - refl[1]) / (refl[0] + refl[1]); // test
     }
 
     @Override

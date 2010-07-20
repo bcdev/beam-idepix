@@ -96,7 +96,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
     
     private JnnNet loadNeuralNet() throws IOException, JnnException {
 
-        InputStream inputStream = null;
+        InputStream inputStream;
         JnnNet neuralNet = null;
         if (tropicalAtmosphere) {
             inputStream = SurfacePressureFubOp.class.getResourceAsStream(NEURAL_NET_TRP_FILE_NAME);
@@ -204,7 +204,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
 			Tile isInvalid = getSourceTile(invalidBand, rectangle, pm);
 			
 			Tile cloudFlags = getSourceTile(cloudProduct.getBand(MepixCloudClassificationOp.CLOUD_FLAGS), rectangle, pm);
-			
+
             final double[] nnIn = new double[7];
             final double[] nnOut = new double[1];
 

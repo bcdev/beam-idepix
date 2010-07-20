@@ -3,7 +3,6 @@ package org.esa.beam.mepix.util;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.mepix.operators.CloudScreeningSelector;
 import org.esa.beam.mepix.operators.MepixConstants;
 

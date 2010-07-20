@@ -5,6 +5,8 @@ import org.esa.beam.mepix.util.MepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
 /**
+ * This class represents pixel properties as derived from SPOT VGT L1b data
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
@@ -31,10 +33,9 @@ public class VgtPixelProperties implements PixelProperties {
     public static final int SM_F_MIR_GOOD = 4;
     public static final int SM_F_LAND = 3;
     public static final int SM_F_ICE_SNOW = 2;
-
     public static final int SM_F_CLOUD_2 = 1;
-
     public static final int SM_F_CLOUD_1 = 0;
+
     private float[] refl;
     private boolean smLand;
 
@@ -42,10 +43,7 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isBrightWhite() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
+        return (!isInvalid() && whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
     }
 
     @Override
@@ -53,7 +51,8 @@ public class VgtPixelProperties implements PixelProperties {
         if (isInvalid()) {
             return false;
         }
-        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
+        return (!isInvalid() && (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) &&
+                !isClearSnow());
     }
 
     @Override
@@ -78,7 +77,8 @@ public class VgtPixelProperties implements PixelProperties {
         if (isInvalid()) {
             return false;
         }
-         float waterValue;
+
+        float waterValue;
         if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
             waterValue = radiometricWaterValue();
         } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
@@ -91,42 +91,27 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
     }
 
     @Override
     public boolean isLand() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (aPrioriLandValue() > LAND_THRESH);
+        return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
     }
 
     @Override
     public boolean isWater() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (aPrioriWaterValue() > WATER_THRESH);
+        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
     }
 
     @Override
     public boolean isBright() {
-        if (isInvalid()) {
-            return false;
-        }
-        return brightValue() > BRIGHT_THRESH;
+        return (!isInvalid() && brightValue() > BRIGHT_THRESH);
     }
 
     @Override
     public boolean isWhite() {
-        if (isInvalid()) {
-            return false;
-        }
-        return whiteValue() > WHITE_THRESH;
+        return (!isInvalid() && whiteValue() > WHITE_THRESH);
     }
 
     @Override
@@ -136,10 +121,7 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isVegRisk() {
-        if (isInvalid()) {
-            return false;
-        }
-        return ndviValue() > NDVI_THRESH;
+        return (!isInvalid() && ndviValue() > NDVI_THRESH);
     }
 
     @Override
@@ -150,10 +132,7 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isHigh() {
-        if (isInvalid()) {
-            return false;
-        }
-        return (pressureValue() > PRESSURE_THRESH);
+        return (!isInvalid() && pressureValue() > PRESSURE_THRESH);
     }
 
     @Override

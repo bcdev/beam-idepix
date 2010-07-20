@@ -18,10 +18,9 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.mepix.operators.ComputeChainOp;
+import org.esa.beam.mepix.operators.MepixConstants;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
-
-import javax.media.jai.JAI;
 
 /**
  * Action for computing an operator chain.
@@ -37,7 +36,7 @@ public class ComputeChainAction extends AbstractVisatAction {
         final MepixDialog dialog =
             new MepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
                     getAppContext(),
-                    "MEPIX Pixel Identification Tool - " + ComputeChainOp.MEPIX_VERSION,
+                    "MEPIX Pixel Identification Tool - " + MepixConstants.MEPIX_VERSION,
                     "mepixChain","");
         dialog.show();
     }

@@ -1,6 +1,8 @@
 package org.esa.beam.mepix.operators;
 
 /**
+ * Enumeration for selection of cloud screening algorithm
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */

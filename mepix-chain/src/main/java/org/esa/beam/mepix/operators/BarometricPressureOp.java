@@ -180,9 +180,6 @@ public class BarometricPressureOp extends MerisBasisOp {
             Tile latitudeTile = getSourceTile(sourceProduct.getTiePointGrid("latitude"), rectangle, pm);
             Tile altitudeTile = getSourceTile(sourceProduct.getTiePointGrid("dem_alt"), rectangle, pm);
 
-			Band band10 = sourceProduct.getBand("radiance_10");
-			Tile toar10 = getSourceTile(band10, rectangle, pm);
-
             Tile isInvalid = getSourceTile(invalidBand, rectangle, pm);
 
             // implement computation as follows:
@@ -210,7 +207,6 @@ public class BarometricPressureOp extends MerisBasisOp {
 					if (pm.isCanceled()) {
 						break;
 					}
-					final int detectorXY = detector.getSampleInt(x, y);
 					if (isInvalid.getSampleBoolean(x, y)) {
 						targetTile.setSample(x, y, 0);
 					} else {

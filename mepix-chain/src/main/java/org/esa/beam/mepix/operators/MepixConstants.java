@@ -3,10 +3,14 @@ package org.esa.beam.mepix.operators;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 
 /**
+ * MEPIX constants
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 public class MepixConstants {
+
+    public static final String MEPIX_VERSION = "v1.2-SNAPSHOT";
 
     public static final String[] ipfParameterNames = new String[]{
             "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",
@@ -51,8 +55,6 @@ public class MepixConstants {
     public static String VGT_RADIANCE_2_BAND_NAME = "B2";
     public static String VGT_RADIANCE_3_BAND_NAME = "B3";
     public static String VGT_RADIANCE_MIR_BAND_NAME = "MIR";
-
-
 
     public static String VGT_SM_FLAG_BAND_NAME = "SM";
 
@@ -114,4 +116,11 @@ public class MepixConstants {
             " - CoastColour for MERIS products ";
 
 
+    public static final int IO_TAB_INDEX = 0;
+    public static final int CLOUDSCREENING_TAB_INDEX = 1;
+    public static final int IPF_TAB_INDEX = 2;
+    public static final int PRESSURE_TAB_INDEX = 3;
+    public static final int CLOUDS_TAB_INDEX = 4;
+    public static final int GLOBALBEDO_TAB_INDEX = 5;
+    public static final int COASTCOLOUR_TAB_INDEX = 6;
 }
