@@ -8,6 +8,8 @@ import org.esa.beam.framework.gpf.ui.TargetProductSelectorModel;
 import org.esa.beam.mepix.operators.MepixConstants;
 
 /**
+ * Listener for selection of source product
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
