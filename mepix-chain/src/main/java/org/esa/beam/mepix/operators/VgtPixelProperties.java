@@ -153,14 +153,10 @@ public class VgtPixelProperties implements PixelProperties {
 
     @Override
     public float spectralFlatnessValue() {
-        // todo: check for NaN values. this problem affects most of these methods. think about what to do.
         final double flatness0 = MepixUtils.scaleVgtSlope(refl[0], refl[1], MepixConstants.VGT_WAVELENGTHS[0],
                                                       MepixConstants.VGT_WAVELENGTHS[1]);
         final double flatness2 = MepixUtils.scaleVgtSlope(refl[1], refl[2], MepixConstants.VGT_WAVELENGTHS[1],
                                                       MepixConstants.VGT_WAVELENGTHS[2]);
-//        final double flatness3 =MepixUtils.scaleVgtSlope(refl[2], refl[3], MepixConstants.VGT_WAVELENGTHS[2],
-//                                                      MepixConstants.VGT_WAVELENGTHS[3]);
-
 
         if (isLand()) {
             return (float) ((flatness0 + flatness2)/2.0);

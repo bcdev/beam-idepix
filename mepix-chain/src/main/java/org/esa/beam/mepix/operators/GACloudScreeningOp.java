@@ -80,6 +80,7 @@ public class GACloudScreeningOp extends Operator {
 
     // AATSR bands:
     private Band[] aatsrReflectanceBands;
+    private Band btemp1200Band;
 
     // VGT bands:
     private Band[] vgtReflectanceBands;
@@ -110,6 +111,7 @@ public class GACloudScreeningOp extends Operator {
                     for (int i = 0; i < MepixConstants.AATSR_WAVELENGTHS.length; i++) {
                         aatsrReflectanceBands[i] = sourceProduct.getBand(MepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i]);
                     }
+                    btemp1200Band = sourceProduct.getBand("btemp_nadir_1200");
 
                     break;
                 case MepixConstants.PRODUCT_TYPE_VGT:
@@ -316,6 +318,7 @@ public class GACloudScreeningOp extends Operator {
         // AATSR variables
         Band[] aatsrFlagBands;
         Tile[] aatsrFlagTiles;
+        Tile btemp1200Tile = null;
         Tile[] aatsrReflectanceTiles = null;
         float[] aatsrReflectance = null;
 
@@ -361,6 +364,8 @@ public class GACloudScreeningOp extends Operator {
                 for (int i = 0; i < MepixConstants.AATSR_WAVELENGTHS.length; i++) {
                     aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle, pm);
                 }
+
+                btemp1200Tile = getSourceTile(btemp1200Band, rectangle, pm);
                 break;
             case MepixConstants.PRODUCT_TYPE_VGT:
                 smFlagBand = sourceProduct.getBand("SM");
@@ -408,6 +413,7 @@ public class GACloudScreeningOp extends Operator {
                                 aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
                             }
                             ((AatsrPixelProperties) pixelProperties).setRefl(aatsrReflectance);
+                            ((AatsrPixelProperties) pixelProperties).setBtemp1200(btemp1200Tile.getSampleFloat(x, y));
                             break;
                         case MepixConstants.PRODUCT_TYPE_VGT:
                             pixelProperties = new VgtPixelProperties();

@@ -92,6 +92,10 @@ public class MepixConstants {
             "cloud_flags_fward", // 3
     };
 
+    public static final float[] MERIS_WAVELENGTHS =
+            {412.7f, 442.5f, 489.9f, 509.8f, 559.7f, 619.6f, 664.6f, 680.8f,
+            708.3f, 753.3f, 761.5f, 778.4f, 864.9f, 884.9f, 900.0f};
+
     public static String[] MERIS_BRR_BAND_NAMES = {
             "brr_1", // 0
             "brr_2", // 0

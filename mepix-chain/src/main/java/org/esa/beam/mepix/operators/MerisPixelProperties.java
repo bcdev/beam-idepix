@@ -1,5 +1,6 @@
 package org.esa.beam.mepix.operators;
 
+import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.mepix.util.MepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
@@ -22,8 +23,8 @@ public class MerisPixelProperties implements PixelProperties {
     private static final float WHITE_THRESH = 0.5f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
-    private static final float REFL835_WATER_THRESH = 0.1f;
-    private static final float REFL835_LAND_THRESH = 0.15f;
+    private static final float REFL620_WATER_THRESH = 0.1f;
+    private static final float REFL620_LAND_THRESH = 0.15f;
     private static final float GLINT_THRESH =  -3.65E-4f;
 
     public static final int L1B_F_LAND = 4;
@@ -144,8 +145,15 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float spectralFlatnessValue() {
-        // todo: define
-        return UNCERTAINTY_VALUE;
+        final double flatness0 = MepixUtils.spectralSlope(refl[0], refl[2],
+                                                          MepixConstants. MERIS_WAVELENGTHS[0], MepixConstants. MERIS_WAVELENGTHS[2]);
+        final double flatness1 = MepixUtils.spectralSlope(refl[4], refl[5],
+                                                                  MepixConstants. MERIS_WAVELENGTHS[4], MepixConstants. MERIS_WAVELENGTHS[5]);
+        final double flatness2 = MepixUtils.spectralSlope(refl[6], refl[9],
+                                                                  MepixConstants. MERIS_WAVELENGTHS[6], MepixConstants. MERIS_WAVELENGTHS[9]);
+
+
+        return (float) ((flatness0 + flatness1 + flatness2)/3.0);
     }
 
     @Override
@@ -205,14 +213,32 @@ public class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float radiometricLandValue() {
-         // todo: define
         return UNCERTAINTY_VALUE;
+
+        // todo: clarify value for REFL620_LAND_THRESH (not yet in ATBD) then implement the following
+//        if (isCloud()) {
+//            return UNCERTAINTY_VALUE;
+//        }
+//        if (refl[9] >= refl[6] && refl[6] > REFL620_LAND_THRESH) {
+//            return 1.0f;
+//        } else {
+//            return 0.5f;
+//        }
     }
 
     @Override
     public float radiometricWaterValue() {
-         // todo: define
-        return UNCERTAINTY_VALUE;
+         return UNCERTAINTY_VALUE;
+
+        // todo: clarify value for REFL620_WATER_THRESH (not yet in ATBD) then implement the following
+//        if (isCloud()) {
+//            return UNCERTAINTY_VALUE;
+//        }
+//        if (refl[9] >= refl[6] && refl[6] > REFL620_WATER_THRESH) {
+//            return 1.0f;
+//        } else {
+//            return 0.5f;
+//        }
     }
 
     // setters for MERIS specific quantities

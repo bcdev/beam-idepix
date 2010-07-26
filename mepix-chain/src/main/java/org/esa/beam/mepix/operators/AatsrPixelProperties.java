@@ -27,6 +27,7 @@ public class AatsrPixelProperties implements PixelProperties {
     private static final float GLINT_THRESH = -3.65E-4f;
 
     private float[] refl;
+    private float btemp1200;
 
 
     @Override
@@ -125,14 +126,19 @@ public class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
-        // todo: define
-        return UNCERTAINTY_VALUE;
+        return ((refl[0] + refl[1] + refl[2]) / 3.0f);
     }
 
     @Override
     public float spectralFlatnessValue() {
-        // todo: define
-        return UNCERTAINTY_VALUE;
+        final double flatness0 = MepixUtils.spectralSlope(refl[0], refl[1],
+                                                          MepixConstants.AATSR_WAVELENGTHS[0],
+                                                          MepixConstants.AATSR_WAVELENGTHS[1]);
+        final double flatness1 = MepixUtils.spectralSlope(refl[1], refl[2],
+                                                          MepixConstants.AATSR_WAVELENGTHS[1],
+                                                          MepixConstants.AATSR_WAVELENGTHS[2]);
+
+        return (float) ((flatness0 + flatness1) / 2.0);
     }
 
     @Override
@@ -146,20 +152,17 @@ public class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float temperatureValue() {
-        // todo: define
-        return UNCERTAINTY_VALUE;
+        return btemp1200;
     }
-
 
     @Override
     public float ndsiValue() {
-        return (refl[0] - refl[1]) / (refl[0] + refl[1]); // test
+        return (refl[2] - refl[4]) / (refl[2] + refl[4]);
     }
 
     @Override
     public float ndviValue() {
-        // todo: define
-        return UNCERTAINTY_VALUE;
+        return (refl[2] - refl[3]) / (refl[2] + refl[3]);
     }
 
     @Override
@@ -196,5 +199,9 @@ public class AatsrPixelProperties implements PixelProperties {
 
     public void setRefl(float[] refl) {
         this.refl = refl;
+    }
+
+    public void setBtemp1200(float btemp1200) {
+        this.btemp1200 = btemp1200;
     }
 }
