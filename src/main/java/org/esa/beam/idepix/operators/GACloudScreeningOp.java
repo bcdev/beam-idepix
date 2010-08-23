@@ -51,8 +51,8 @@ public class GACloudScreeningOp extends Operator {
     private boolean gaCopyRadiances;
     @Parameter(defaultValue="false", label = "Copy input annotation bands")
     private boolean gaCopyAnnotations;
-//    @Parameter(defaultValue="false", label = "Copy input annotation bands")
-//    private boolean ga;
+    @Parameter(defaultValue="false", label = "Compute only the flag band")
+    private boolean gaComputeFlagsOnly;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
@@ -161,25 +161,26 @@ public class GACloudScreeningOp extends Operator {
         targetProduct.setEndTime(sourceProduct.getEndTime());
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
 
-        Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(brightBand, "Brightness", "dl", MepixConstants.NO_DATA_VALUE, true);
-        Band whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", MepixConstants.NO_DATA_VALUE, true);
-        Band temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", MepixConstants.NO_DATA_VALUE, true);
-        Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl", MepixConstants.NO_DATA_VALUE, true);
-        Band ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", MepixConstants.NO_DATA_VALUE, true);
-        Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(ndsiBand, "NDSI", "dl", MepixConstants.NO_DATA_VALUE, true);
-        Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", MepixConstants.NO_DATA_VALUE, true);
-        Band radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", MepixConstants.NO_DATA_VALUE, true);
-        Band radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
-        MepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "", MepixConstants.NO_DATA_VALUE, true);
-
+        if (!gaComputeFlagsOnly) {
+            Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(brightBand, "Brightness", "dl", MepixConstants.NO_DATA_VALUE, true);
+            Band whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", MepixConstants.NO_DATA_VALUE, true);
+            Band temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", MepixConstants.NO_DATA_VALUE, true);
+            Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl", MepixConstants.NO_DATA_VALUE, true);
+            Band ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", MepixConstants.NO_DATA_VALUE, true);
+            Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(ndsiBand, "NDSI", "dl", MepixConstants.NO_DATA_VALUE, true);
+            Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", MepixConstants.NO_DATA_VALUE, true);
+            Band radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", MepixConstants.NO_DATA_VALUE, true);
+            Band radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
+            MepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "", MepixConstants.NO_DATA_VALUE, true);
+        }
         // new bit masks:
         int bitmaskIndex = setupGlobAlbedoCloudscreeningBitmasks();
 

@@ -36,7 +36,7 @@ public class MepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaCopyAnnotations"
+            "gaCopyRadiances", "gaCopyAnnotations", "gaComputeFlagsOnly"
     };
 
     public static final String[] coastcolourParameterNames = new String[]{

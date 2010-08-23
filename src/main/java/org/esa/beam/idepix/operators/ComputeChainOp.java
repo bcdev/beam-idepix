@@ -167,8 +167,11 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaCopyRadiances = false;
     @Parameter(defaultValue="false", label = "Copy input annotation bands")
     private boolean gaCopyAnnotations;
-    // Coastcolour parameters
+    @Parameter(defaultValue="false", label = "Compute only the flag band")
+    private boolean gaComputeFlagsOnly;
+    
 
+    // Coastcolour parameters
     @Parameter(defaultValue="false",
             label = "Copy input radiance/reflectance bands")
     private boolean ccCopyRadiances = false;
@@ -515,6 +518,7 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
+        gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class), gaCloudClassificationParameters, gaCloudInput);
         targetProduct = gaCloudProduct;
