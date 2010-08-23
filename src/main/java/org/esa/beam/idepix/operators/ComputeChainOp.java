@@ -163,10 +163,10 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Globalbedo parameters
-    @Parameter(defaultValue="false",
-            label = "Copy input radiance/reflectance bands")
+    @Parameter(defaultValue="false", label = "Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = false;
-
+    @Parameter(defaultValue="false", label = "Copy input annotation bands")
+    private boolean gaCopyAnnotations;
     // Coastcolour parameters
 
     @Parameter(defaultValue="false",
@@ -514,6 +514,7 @@ public class ComputeChainOp extends BasisOp {
         gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
+        gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class), gaCloudClassificationParameters, gaCloudInput);
         targetProduct = gaCloudProduct;

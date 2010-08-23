@@ -36,7 +36,7 @@ public class MepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances"
+            "gaCopyRadiances", "gaCopyAnnotations"
     };
 
     public static final String[] coastcolourParameterNames = new String[]{
@@ -68,6 +68,16 @@ public class MepixConstants {
             VGT_RADIANCE_2_BAND_NAME, // 1
             VGT_RADIANCE_3_BAND_NAME, // 2
             VGT_RADIANCE_MIR_BAND_NAME, // 3
+    };
+
+    public static String[] VGT_ANNOTATION_BAND_NAMES = {
+            "VZA",
+            "SZA",
+            "VAA",
+            "SAA",
+            "WVG",
+            "OG",
+            "AG",
     };
 
     public static final float[] VGT_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f};

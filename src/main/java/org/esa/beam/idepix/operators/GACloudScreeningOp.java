@@ -47,9 +47,12 @@ public class GACloudScreeningOp extends Operator {
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    @Parameter(defaultValue="true",
-            label = "Copy input radiance bands")
+    @Parameter(defaultValue="false", label = "Copy input radiance bands")
     private boolean gaCopyRadiances;
+    @Parameter(defaultValue="false", label = "Copy input annotation bands")
+    private boolean gaCopyAnnotations;
+//    @Parameter(defaultValue="false", label = "Copy input annotation bands")
+//    private boolean ga;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
@@ -156,6 +159,7 @@ public class GACloudScreeningOp extends Operator {
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
         targetProduct.setStartTime(sourceProduct.getStartTime());
         targetProduct.setEndTime(sourceProduct.getEndTime());
+        ProductUtils.copyMetadata(sourceProduct, targetProduct);
 
         Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
         MepixUtils.setNewBandProperties(brightBand, "Brightness", "dl", MepixConstants.NO_DATA_VALUE, true);
@@ -212,6 +216,21 @@ public class GACloudScreeningOp extends Operator {
                     break;
                 default:
                     break;
+            }
+
+            if (gaCopyAnnotations) {
+                switch (sourceProductTypeId) {
+                    case MepixConstants.PRODUCT_TYPE_VGT:
+                        for (String bandName : MepixConstants.VGT_ANNOTATION_BAND_NAMES) {
+                            Band b = ProductUtils.copyBand(bandName, sourceProduct, targetProduct);
+                            if (b != null) {
+                                b.setSourceImage(sourceProduct.getBand(bandName).getSourceImage());
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
 
             // copy flag bands
