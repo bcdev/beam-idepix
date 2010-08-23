@@ -41,14 +41,6 @@
     <categories>Application,Processor,MERIS,AATSR</categories>
 
     <extension point="beam-ui:actions">
-    	<!--
-        <action>
-            <id>idepix</id>
-            <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>MEPIX Pixel Identification Tool (MERIS)</text>
-            <mnemonic/>
-        </action>
-        -->
         <action>
             <id>idepix</id>
             <class>org.esa.beam.idepix.ui.ComputeChainAction</class>
