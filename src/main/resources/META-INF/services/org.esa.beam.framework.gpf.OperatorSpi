@@ -1,6 +1,6 @@
-org.esa.beam.mepix.operators.ComputeChainOp$Spi
-org.esa.beam.mepix.operators.SurfacePressureFubOp$Spi
-org.esa.beam.mepix.operators.LisePressureOp$Spi
-org.esa.beam.mepix.operators.MepixCloudClassificationOp$Spi
-org.esa.beam.mepix.operators.GACloudScreeningOp$Spi
-org.esa.beam.mepix.operators.BarometricPressureOp$Spi
+org.esa.beam.idepix.operators.ComputeChainOp$Spi
+org.esa.beam.idepix.operators.SurfacePressureFubOp$Spi
+org.esa.beam.idepix.operators.LisePressureOp$Spi
+org.esa.beam.idepix.operators.MepixCloudClassificationOp$Spi
+org.esa.beam.idepix.operators.GACloudScreeningOp$Spi
+org.esa.beam.idepix.operators.BarometricPressureOp$Spi

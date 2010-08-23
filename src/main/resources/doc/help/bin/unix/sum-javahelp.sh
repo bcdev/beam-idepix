@@ -1,5 +1,5 @@
 cd ../../xml/sum
-TARGET_DIR=../../mepix/
+TARGET_DIR=../../idepix/
 
 #clean up target directory
 rm -f ${TARGET_DIR}/*.png
@@ -10,6 +10,3 @@ xsltproc -o ${TARGET_DIR} sum-javahelp.xsl sum.xml
 
 #copy figures
 cp figures/*.png ${TARGET_DIR}/figures
-
-#create JavaHelp index
-../../javahelp/bin/jhindexer -db ${TARGET_DIR}/JavaHelpSearch ${TARGET_DIR}

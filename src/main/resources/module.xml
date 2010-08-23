@@ -1,15 +1,15 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>beam-meris-mepix</symbolicName>
-    <version>1.1.1</version>
-    <name>MERIS Pixel Identification Tool</name>
-    <description>MERIS Pixel Identification Tool</description>
+    <symbolicName>beam-idepix</symbolicName>
+    <version>1.2</version>
+    <name>Generic classification of pixels</name>
+    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.</description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>
         Max Planck Str.2, 21502 Geesthacht (Germany)
     </contactAddress>
-    <copyright>(C) 2007 by Brockmann Consult GmbH</copyright>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
@@ -38,26 +38,26 @@
         <module>beam-meris-sdr</module>
     </dependency>
 
-    <categories>Application,Processor,Mepix,MERIS,AATSR</categories>
+    <categories>Application,Processor,MERIS,AATSR</categories>
 
     <extension point="beam-ui:actions">
     	<!--
         <action>
-            <id>mepix</id>
+            <id>idepix</id>
             <class>org.esa.beam.visat.actions.ActionGroup</class>
             <text>MEPIX Pixel Identification Tool (MERIS)</text>
             <mnemonic/>
         </action>
         -->
         <action>
-            <id>mepix</id>
-            <class>org.esa.beam.mepix.ui.ComputeChainAction</class>
-            <text>MEPIX Pixel Identification Tool (MERIS)...</text>
+            <id>idepix</id>
+            <class>org.esa.beam.idepix.ui.ComputeChainAction</class>
+            <text>IDEPIX Generic classification of pixels...</text>
             <shortDescr>
-                Call Operator Chain
+                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
             </shortDescr>
             <mnemonic/>
-            <parent></parent>
+            <parent>tool</parent>
             <helpID>mepixChain</helpID>
             <placeAfter/>
         </action>
@@ -66,7 +66,7 @@
     <extension point="beam-ui:helpSets">
         <helpSet>
             <parent>beam-help</parent>
-            <path>doc/help/mepix.hs</path>
+            <path>doc/help/idepix.hs</path>
         </helpSet>
     </extension>
 

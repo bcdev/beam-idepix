@@ -77,28 +77,11 @@
            TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <geotools.version>2.6.5</geotools.version>
         <beam.version>4.8</beam.version>
-        <ceres.version>0.11</ceres.version>
     </properties>
 
 
     <dependencies>
-
-        <!-- Ceres System Level Module ############################################# -->
-
-        <!--<dependency>-->
-            <!--<groupId>com.bc.ceres</groupId>-->
-            <!--<artifactId>ceres-launcher</artifactId>-->
-            <!--<version>${ceres.version}</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>com.bc.ceres</groupId>-->
-            <!--<artifactId>ceres-core</artifactId>-->
-            <!--<version>${ceres.version}</version>-->
-        <!--</dependency>-->
-
         <!-- BEAM System Level Modules ############################################# -->
 
         <dependency>
@@ -120,6 +103,7 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-bootstrap</artifactId>
             <version>${beam.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
@@ -131,11 +115,6 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
             <version>1.3.200</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-spot-vgt-reader</artifactId>
-            <version>1.0</version>
         </dependency>
 
         <!-- Other BEAM operator Modules ############################################# -->
@@ -183,6 +162,18 @@
                     <jdkLevel>1.6</jdkLevel>
                     <exclude>target</exclude>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.bc.maven.plugins</groupId>
+                <artifactId>maven-javahelp-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>javahelp-indexer</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

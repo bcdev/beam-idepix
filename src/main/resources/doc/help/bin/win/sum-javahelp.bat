@@ -1,7 +1,7 @@
 @echo off
 
 set SOURCE_DIR=..\..\xml\sum\
-set TARGET_DIR=..\..\mepix
+set TARGET_DIR=..\..\idepix
 
 rem clean up target directory
 rem del %TARGET_DIR% /q
@@ -13,6 +13,3 @@ xsltproc -o %TARGET_DIR% %SOURCE_DIR%sum-javahelp.xsl %SOURCE_DIR%sum.xml
 
 rem copy figures
 rem copy %SOURCE_DIR%figures\*.png %TARGET_DIR%figures /s /i /y
-
-rem create JavaHelp index
-jhindexer -db %TARGET_DIR%JavaHelpSearch %TARGET_DIR%

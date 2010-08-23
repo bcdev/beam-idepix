@@ -5,11 +5,11 @@
 
 <map version="2.0">
 
-    <mapID target="mepixChain" url="mepix/Mepix.html"/>
-    <mapID target="mepixIndex" url="mepix/index.html"/>
-    <mapID target="mepixIntro" url="mepix/ch01.html"/>
-    <mapID target="mepixInstall" url="mepix/ch02.html"/>
-    <mapID target="mepixProducts" url="mepix/ch03.html"/>
-    <mapID target="mepixGui" url="mepix/ch04.html"/>
+    <mapID target="mepixChain" url="idepix/Mepix.html"/>
+    <mapID target="mepixIndex" url="idepix/index.html"/>
+    <mapID target="mepixIntro" url="idepix/ch01.html"/>
+    <mapID target="mepixInstall" url="idepix/ch02.html"/>
+    <mapID target="mepixProducts" url="idepix/ch03.html"/>
+    <mapID target="mepixGui" url="idepix/ch04.html"/>
 
 </map>
