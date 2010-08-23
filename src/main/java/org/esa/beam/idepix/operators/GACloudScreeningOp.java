@@ -152,7 +152,10 @@ public class GACloudScreeningOp extends Operator {
         FlagCoding flagCoding = createFlagCoding(GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
+
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
+        targetProduct.setStartTime(sourceProduct.getStartTime());
+        targetProduct.setEndTime(sourceProduct.getEndTime());
 
         Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
         MepixUtils.setNewBandProperties(brightBand, "Brightness", "dl", MepixConstants.NO_DATA_VALUE, true);
