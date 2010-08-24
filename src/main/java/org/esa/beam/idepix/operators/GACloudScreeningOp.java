@@ -219,21 +219,6 @@ public class GACloudScreeningOp extends Operator {
                     break;
             }
 
-            if (gaCopyAnnotations) {
-                switch (sourceProductTypeId) {
-                    case MepixConstants.PRODUCT_TYPE_VGT:
-                        for (String bandName : MepixConstants.VGT_ANNOTATION_BAND_NAMES) {
-                            Band b = ProductUtils.copyBand(bandName, sourceProduct, targetProduct);
-                            if (b != null) {
-                                b.setSourceImage(sourceProduct.getBand(bandName).getSourceImage());
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-
             // copy flag bands
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
             for (Band sb:sourceProduct.getBands()) {
@@ -247,6 +232,21 @@ public class GACloudScreeningOp extends Operator {
             for (int i=0; i<sourceProduct.getMaskGroup().getNodeCount(); i++) {
                 Mask mask = sourceProduct.getMaskGroup().get(i);
                 targetProduct.getMaskGroup().add(bitmaskIndex + i, mask);
+            }
+        }
+
+        if (gaCopyAnnotations) {
+            switch (sourceProductTypeId) {
+                case MepixConstants.PRODUCT_TYPE_VGT:
+                    for (String bandName : MepixConstants.VGT_ANNOTATION_BAND_NAMES) {
+                        Band b = ProductUtils.copyBand(bandName, sourceProduct, targetProduct);
+                        if (b != null) {
+                            b.setSourceImage(sourceProduct.getBand(bandName).getSourceImage());
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
