@@ -50,7 +50,7 @@
             </shortDescr>
             <mnemonic/>
             <parent>tool</parent>
-            <helpID>mepixChain</helpID>
+            <helpID>idepixChain</helpID>
             <placeAfter/>
         </action>
     </extension>

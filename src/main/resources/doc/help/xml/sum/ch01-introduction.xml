@@ -3,21 +3,24 @@
 
     <sect1 id="sum.introduction.scope">
         <title>Scope</title>
-        <para>This document is the software user manual (SUM) for the MEPIX processor.</para>
+        <para>This document is the software user manual (SUM) for the IDEPIX processor.</para>
     </sect1>
 
     <sect1 id="sum.introduction.objectives">
         <title>Objectives</title>
         <para>
-            MEPIX is a BEAM scientific processor for multiple use. In the short term, it is serving as an experimental
+            IDEPIX is a BEAM scientific processor for multiple use. In the short term, it is serving as an experimental
             platform to evaluate the new products which are derived from the exploitation of the oxygen
             band. This work is done in the context and funded by the ESA O2 project. In parallel that part of the
-            MERIS L2 processing which is relevant for the pixel classification is also implemented in MEPIX.
+            MERIS L2 processing which is relevant for the pixel classification is also implemented in IDEPIX.
             The objective is to test the standard MERIS pixel classification with the new pressure products.
             Furthermore, the pixel classification as developed in the GlobCover and AlbedoMap projects has been integrated
-            in the MEPIX processor. The objective is to compare the standard L2 pixel classification
+            in the IDEPIX processor. The objective is to compare the standard L2 pixel classification
             with the GlobCover one. This work is done for the MERIS Data Quality Working Group, and is
             funded through the “Pixel Classification Processor” workpackage of the BEAM maintenance contract.
+            IDEPIX has grown from the former MEPIX processor and is currently being extended for the data
+            processing of other instruments (such as AATSR and SPOT VGT) in the frame of various new
+            projects (e.g. GlobAlbedo)
         </para>
     </sect1>
 
@@ -28,13 +31,17 @@
 			This specification is mainly written for the following audiences:
 			<itemizedlist mark='bullet'>
 				<listitem>
-					MEPIX Application users
+					IDEPIX Application users
 				</listitem>
 			</itemizedlist>	
 		</para>
 		<para>
-			The MEPIX user manual specifications assumes that the reader is familiar with basic concepts in
+			The IDEPIX user manual specifications assumes that the reader is familiar with basic concepts in
 			using the BEAM software and its integrated processors.
+		</para>
+        <para>
+            NOTE: Since the processor is still under continuous development, this help manual may not always reflect
+            the latest state.
 		</para>
     </sect1>
 

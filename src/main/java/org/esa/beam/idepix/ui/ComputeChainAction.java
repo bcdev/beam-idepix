@@ -37,7 +37,7 @@ public class ComputeChainAction extends AbstractVisatAction {
             new MepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
                     getAppContext(),
                     "IDEPIX Pixel Identification Tool - " + MepixConstants.MEPIX_VERSION,
-                    "mepixChain","");
+                    "idepixChain","");
         dialog.show();
     }
 

@@ -1,10 +1,10 @@
 <chapter id="sum.products">
-    <title>MEPIX Products</title>
+    <title>IDEPIX Products</title>
 
     <sect1 id="sum.products.l2.qwg">
-        <title>Standard L2 Products (QWG mode)</title>
+        <title>Standard L2 Products</title>
         <para>
-            The standard L2 products which can be derived using the MEPIX tool <emphasis role="italic">in QWG mode</emphasis> are:
+            The standard L2 products which can be derived using the MEPIX tool are:
             <itemizedlist mark='bullet'>
                 <listitem>
                      Cloud Top Pressure
@@ -20,7 +20,7 @@
             One major difference to the IPF implementation is that the pressure products are calculated for all
             surfaces. This has been done in order to be able to assess later the possibility of using the pressure
             products for pixel classification. However, over cloud and cloud free land pixels, respectively, the
-            cloud top pressure and land surface pressure products should be identical between MEPIX and the
+            cloud top pressure and land surface pressure products should be identical between IDEPIX and the
             standard processing.
        </para> 
 
@@ -40,8 +40,8 @@
                     <colspec colname='c2'/>
                     <thead>
                         <row>
-                           <entry>MEPIX CTP algorithm characteristics</entry>
-                           <entry>Comparison of MEPIX and IPF/megs products</entry>
+                           <entry>IDEPIX CTP algorithm characteristics</entry>
+                           <entry>Comparison of IDEPIX and IPF/megs products</entry>
                         </row>
                     </thead>
 
@@ -80,7 +80,7 @@
                     <colspec colname='c2'/>
                     <thead>
                         <row>
-                           <entry>MEPIX surface pressure algorithm characteristics</entry>
+                           <entry>IDEPIX surface pressure algorithm characteristics</entry>
                            <entry>Differences to standard L2 algorithm</entry>
                         </row>
                     </thead>
@@ -119,8 +119,8 @@
                     <colspec colname='c2'/>
                     <thead>
                         <row>
-                           <entry>MEPIX cloud flag determination characteristics</entry>
-                           <entry>Comparison of MEPIX and IPF/megs products</entry>
+                           <entry>IDEPIX cloud flag determination characteristics</entry>
+                           <entry>Comparison of IDEPIX and IPF/megs products</entry>
                         </row>
                     </thead>
 
@@ -146,33 +146,11 @@
         </sect2>
     </sect1>
 
-    <sect1 id="sum.products.l2">
-        <title>Standard L2 Products (nominal mode)</title>
-        <para>
-            The standard L2 products which can be derived using the MEPIX tool <emphasis role="italic">in nominal, non-QWG mode</emphasis> are also:
-            <itemizedlist mark='bullet'>
-                <listitem>
-                     Cloud Top Pressure
-                </listitem>
-                <listitem>
-                     Surface Pressure
-                </listitem>
-                <listitem>
-                     Cloud Flag
-                </listitem>
-            </itemizedlist>
-            In opposite to the QWG mode, the algorithms have been implemented on the basis of the
-            former DPM/IODD versions (ir72a, i7r3A [2]). Overall, the algorithms are quite similar,
-            but there are a few differences in detail (see [1] and [2] for more information).
-       </para>
-
-    </sect1>
-
 
     <sect1 id="sum.products.o2">
         <title>O2 Products</title>
         <para>
-            The MEPIX tool can also derive products which will are of interest within the O2 project. These are:
+            The IDEPIX tool can also derive products which had been of interest within the O2 project. These are:
             <itemizedlist mark='bullet'>
                 <listitem>
                     Surface Pressure, derived from a new Neural Net approach including a straylight correction as developed by FUB
@@ -203,7 +181,7 @@
             <para>
                 This algorithm was developed as IDL code by Free University of Berlin (FUB) and is described in
                 [3]. The algorithm includes a new straylight correction scheme proposed by FUB (see [4]).
-                Brockmann Consult provided a Java implementation in MEPIX. A validation with the original
+                Brockmann Consult provided a Java implementation in IDEPIX. A validation with the original
                 IDL code was performed by applying Junit tests on distinct test data provided by FUB.
             </para>
         </sect2>
@@ -212,7 +190,7 @@
             <title>TOA Pressure ('P1', LISE)</title>
             <para>
                 This algorithm was developed as FORTRAN code by LISE and is described in [5]. Brockmann
-                Consult provided a Java implementation in MEPIX. A validation with the original FORTRAN code
+                Consult provided a Java implementation in IDEPIX. A validation with the original FORTRAN code
                 was performed by applying Junit tests on distinct test data provided by LISE.
             </para>
         </sect2>
@@ -222,7 +200,7 @@
             <para>
                 This algorithm was developed as FORTRAN code by LISE and is a slight extension of the TOA
                 pressure using filter-dependent C coefficients. Brockmann Consult provided a Java
-                implementation in MEPIX. 
+                implementation in IDEPIX.
             </para>
         </sect2>
 
@@ -230,7 +208,7 @@
             <title>Rayleigh-corrected TOA Pressure ('P2', LISE)</title>
             <para>
                 This correction has been proposed by LISE to be applied on the TOA Pressure. This product
-                is provided as additional band in MEPIX.
+                is provided as additional band in IDEPIX.
             </para>
         </sect2>
 
@@ -238,18 +216,17 @@
             <title>Aerosol apparent pressure ('PScatt', LISE)</title>
             <para>
                 This algorithm was developed as FORTRAN code by LISE and is described in [5]. Brockmann
-            Consult provided a Java implementation in MEPIX. A validation with the original FORTRAN code
+            Consult provided a Java implementation in IDEPIX. A validation with the original FORTRAN code
             was performed by applying Junit tests on distinct test data provided by LISE.
             </para>
         </sect2>
    </sect1>
 
-    <!-- QWG: -->
     <sect1 id="sum.products.globcover">
-        <title>GlobCover Products (QWG mode)</title>
+        <title>GlobCover Products</title>
         <para>
-            The GlobCover products (pixel classification) which can be derived using the MEPIX tool
-            in QWG mode are:
+            The GlobCover products (pixel classification) which can be derived using the IDEPIX tool
+            are:
             <itemizedlist mark='bullet'>
                 <listitem>
                     Blue Bands pixel classification
@@ -270,7 +247,7 @@
                     <colspec colname='c1'/>
                     <thead>
                         <row>
-                           <entry>MEPIX Blue Band algorithm characteristics</entry>
+                           <entry>IDEPIX Blue Band algorithm characteristics</entry>
                         </row>
                     </thead>
 
@@ -309,7 +286,7 @@
                     <colspec colname='c1'/>
                     <thead>
                         <row>
-                           <entry>MEPIX Cloud Probability algorithm characteristics</entry>
+                           <entry>IDEPIX Cloud Probability algorithm characteristics</entry>
                         </row>
                     </thead>
 

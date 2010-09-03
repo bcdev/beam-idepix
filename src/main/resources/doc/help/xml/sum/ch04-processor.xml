@@ -1,18 +1,27 @@
 <chapter id="sum.processor">
-    <title>MEPIX Processor</title>
+    <title>IDEPIX Processor</title>
 
     <para>
-        The MEPIX processor user interface is represented by one main dialog, which
-        consists of the following components:
+        The IDEPIX processor user interface is represented by one main dialog, which
+        curently consists of the following components:
         <itemizedlist mark='bullet'>
             <listitem>
                  'I/O Parameters' Tab Pane
+            </listitem>
+            <listitem>
+                 'Cloudscreening' Tab Pane
             </listitem>
             <listitem>
                  'IPF Compatible Products' Tab Pane
             </listitem>
             <listitem>
                  'Pressure Products' Tab Pane
+            </listitem>
+            <listitem>
+                 'Cloud Products' Tab Pane
+            </listitem>
+            <listitem>
+                 'GlobAlbedo' Tab Pane
             </listitem>
             <listitem>
                  'Run', 'Close' and 'Help' control buttons
@@ -60,6 +69,13 @@
         </itemizedlist>
     </sect1>
 
+    <sect1 id="sum.processor.cloudscreening">
+        <title>'Cloudscreening' Tab Pane</title>
+        The 'Cloudscreening' provides a list to select a cloud screening algorithm which is valid in the
+        current context (instrument, project). In case an invalid algorithm is selected, the user
+        will be notified. - This part is still under development.
+    </sect1>
+
     <sect1 id="sum.processor.ipf">
         <title>'IPF Compatible Products' Tab Pane</title>
 
@@ -96,21 +112,6 @@
                   a cloud classification flag band,
                 derived as described in <xref linkend="sum.products.l2" xrefstyle="select: label"/>.
             </listitem>
-        </itemizedlist>
-    </sect1>
-
-    <!-- QWG:   -->
-    <sect1 id="sum.processor.ipf.qwg">
-        <title>'IPF Compatible Products' Tab Pane (QWG mode)</title>
-
-        <figure id="figure.processor.ipftab.qwg">
-            <title>'IPF Compatible Products' Tab Pane in QWG mode</title>
-            <graphic scale="60" fileref="figures/ipftab_qwg.png"/>
-        </figure>
-
-        If MEPIX is run in QWG mode, the 'IPF Compatible Products' tab pane provides additional components
-        (<xref linkend="figure.processor.ipftab.qwg" xrefstyle="select: label"/>):
-        <itemizedlist mark='bullet'>
             <listitem>
                 'P1 Pressure Threshold': Text field to set the threshold for P1 pressure used for cloud detection.
                 Default is 125 hPa.
@@ -207,16 +208,14 @@
         </itemizedlist>
     </sect1>
 
-    <!-- QWG:     -->
     <sect1 id="sum.processor.pressure">
-        <title>'Cloud Products' Tab Pane (QWG mode)</title>
-        If MEPIX is run in QWG mode, an additional tab pane 'Cloud Products' is available which
-        provides options to write additional bands with GlobCover products.
+        <title>'Cloud Products' Tab Pane</title>
+        The 'Cloud Products' provides options to write additional bands with GlobCover products.
         (<xref linkend="figure.processor.cloudqwg" xrefstyle="select: label"/>):
 
         <figure id="figure.processor.cloudqwg">
-			<title>'Cloud Products' Tab Pane (QWG mode only)</title>
-			<graphic scale="60" fileref="figures/cloudtab_qwg.png"/>
+			<title>'Cloud Products' Tab Pane</title>
+			<graphic scale="60" fileref="figures/cloudtab.png"/>
 		</figure>
 
         This tab pane consists of the following components:
@@ -237,18 +236,24 @@
         See section <xref linkend="sum.products.globcover" xrefstyle="select: label"/> for details on
         these GlobCover products.
     </sect1>
+
+    <sect1 id="sum.processor.globalbedo">
+        <title>'GlobAlbedo' Tab Pane</title>
+        The 'GlobAlbedo' tab pane provides options to write additional bands produced with the
+        GlobAlbedo cloud screening algorithm. This part is still under development.
+    </sect1>
     
 
     <sect1 id="sum.processor.control">
         <title>Control Buttons</title>
 
-        From all MEPIX tab panes, the following control buttons can be accessed:
+        From all IDEPIX tab panes, the following control buttons can be accessed:
         <itemizedlist mark='bullet'>
             <listitem>
                  'Run': If this button is clicked, the processor will start the computations.
             </listitem>
             <listitem>
-                 'Close': If this button is clicked, the MEPIX dialog is closed.
+                 'Close': If this button is clicked, the IDEPIX dialog is closed.
             </listitem>
             <listitem>
                  'Help': If this button is clicked, this manual is displayed as online help.
@@ -256,7 +261,7 @@
         </itemizedlist>
 
         <figure id="figure.processor.controlbuttons">
-			<title>MEPIX control buttons</title>
+			<title>IDEPIX control buttons</title>
 			<graphic scale="60" fileref="figures/controlbuttons.png"/>
 		</figure>
 
@@ -265,7 +270,7 @@
     <sect1 id="sum.processor.gpt">
         <title>Processing from command line</title>
 
-        Since the MEPIX processor makes use of the BEAM graph processing framework, it can be
+        Since the IDEPIX processor makes use of the BEAM graph processing framework, it can be
         used also as a command line tool outside BEAM-VISAT. The graph processing is invoked
         by the command
         <itemizedlist mark='bullet'>
@@ -281,20 +286,20 @@
             </listitem>
         </itemizedlist>
 
-        Specific help on the MEPIX processor, can be obtained with
+        Specific help on the IDEPIX processor, can be obtained with
         <itemizedlist mark='bullet'>
             <listitem>
-                 ${BEAM-INSTALL-DIR}/bin/gpt -h mepix.ComputeChain
+                 ${BEAM-INSTALL-DIR}/bin/gpt -h idepix.ComputeChain
             </listitem>
         </itemizedlist>
-        In this case, information on the usage and a list of all available parameters are given
-        (see <xref linkend="figure.processor.gpt" xrefstyle="select: label"/>).
+        In this case, information on the usage and a list of all available parameters are given.
+        <!--(see <xref linkend="figure.processor.gpt" xrefstyle="select: label"/>).-->
 
 
-        <figure id="figure.processor.gpt">
-			<title>MEPIX command line processing</title>
-			<graphic scale="40" fileref="figures/mepix_gpt.png"/>
-		</figure>
+        <!--<figure id="figure.processor.gpt">-->
+			<!--<title>IDEPIX command line processing</title>-->
+			<!--<graphic scale="40" fileref="figures/mepix_gpt.png"/>-->
+		<!--</figure>-->
 
     </sect1>
 

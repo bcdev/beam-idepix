@@ -9,13 +9,13 @@
                 ]>
 
 <book id="sum">
-    <title>MEPIX Software User Manual</title>
+    <title>IDEPIX Software User Manual</title>
 
     <bookinfo>
-        <issuenum revision="1">1.1</issuenum>
-        <date>15 December 2009</date>
+        <issuenum revision="1">1.2</issuenum>
+        <date>02 September 2010</date>
 
-        <pubsnumber>1.1</pubsnumber>
+        <pubsnumber>1.2</pubsnumber>
 
         <author>
             <firstname>Olaf</firstname>
@@ -33,10 +33,10 @@
             <email>olaf.danne@brockmann-consult.de</email>
         </author>
 
-        <pubdate>15 December 2009</pubdate>
+        <pubdate>02 September 2010</pubdate>
 
         <copyright>
-            <year>2009</year>
+            <year>2010</year>
             <holder>Brockmann Consult GmbH</holder>
         </copyright>
 
@@ -53,6 +53,16 @@
         </legalnotice>
 
         <revhistory>
+            <revision>
+                <revnumber>1.2</revnumber>
+                <date>02/09/10</date>
+                <authorinitials>O. Danne</authorinitials>
+                <revdescription>
+                    <para>
+                        Adjustments after separation of the processor from former MEPIX.
+                    </para>
+                </revdescription>
+            </revision>
 			<revision>
                 <revnumber>1.1</revnumber>
                 <date>15/12/09</date>
@@ -79,7 +89,6 @@
     <!-- External entity refs -->
 	
     &ch01;
-    
     &ch02;
 	&ch03;
 	&ch04;

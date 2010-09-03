@@ -1,8 +1,27 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>4.3. 'IPF Compatible Products' Tab Pane (QWG mode)</title><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="MEPIX Software User Manual"><link rel="up" href="ch04.html" title="Chapter 4. MEPIX Processor"><link rel="prev" href="ch04s02.html" title="4.2. 'IPF Compatible Products' Tab Pane"><link rel="next" href="ch04s04.html" title="4.4. 'Pressure Products' Tab Pane"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sum.processor.ipf.qwg"></a>4.3. 'IPF Compatible Products' Tab Pane (QWG mode)</h2></div></div></div><div class="figure"><a name="figure.processor.ipftab.qwg"></a><div class="figure-contents"><div><img src="figures/ipftab_qwg.png" alt="'IPF Compatible Products' Tab Pane in QWG mode"></div></div><p class="title"><b>Figure 4.3. 'IPF Compatible Products' Tab Pane in QWG mode</b></p></div><br class="figure-break">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>4.3. 'IPF Compatible Products' Tab Pane</title><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="IDEPIX Software User Manual"><link rel="up" href="ch04.html" title="Chapter 4. IDEPIX Processor"><link rel="prev" href="ch04s02.html" title="4.2. 'Cloudscreening' Tab Pane"><link rel="next" href="ch04s04.html" title="4.4. 'Pressure Products' Tab Pane"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sum.processor.ipf"></a>4.3. 'IPF Compatible Products' Tab Pane</h2></div></div></div><div class="figure"><a name="figure.processor.ipftab"></a><div class="figure-contents"><div><img src="figures/ipftab.png" alt="'IPF Compatible Products' Tab Pane"></div></div><p class="title"><b>Figure 4.2. 'IPF Compatible Products' Tab Pane</b></p></div><br class="figure-break">
 
-        If MEPIX is run in QWG mode, the 'IPF Compatible Products' tab pane provides additional components
-        (<a class="xref" href="ch04s03.html#figure.processor.ipftab.qwg" title="Figure 4.3. 'IPF Compatible Products' Tab Pane in QWG mode">Figure 4.3</a>):
+        This tab pane consists of the following components:
         <div class="itemizedlist"><ul type="bullet"><li style="list-style-type: disc">
+                 'TOA Reflectances': If this checkbox is selected, the output product will contain
+                  the TOA Reflectances (derived from radiance-to-reflectance conversion) for each MERIS band.
+            </li><li style="list-style-type: disc">
+                 'Gas Absorption Corrected Reflectances': If this checkbox is selected, the output product will contain
+                  the gas absorption corrected reflectances for each MERIS band.
+            </li><li style="list-style-type: disc">
+                 'Land/Water reclassification flags': If this checkbox is selected, the output product will contain
+                  an additional flag band derived from a land/water reclassification.
+            </li><li style="list-style-type: disc">
+                 'Rayleigh Corrected Reflectances': If this checkbox is selected, the output product will contain
+                  the Rayleigh corrected reflectances for each MERIS band.
+            </li><li style="list-style-type: disc">
+                 'L2 Cloud Top Pressure and Surface Pressure': If this checkbox is selected, the output product will contain
+                  bands with the L2 Cloud Top Pressure and Surface Pressure,
+                derived as described in <a class="xref" href="">???</a>.
+            </li><li style="list-style-type: disc">
+                'L2 Cloud Detection Flags': If this checkbox is selected, the output product will contain
+                  a cloud classification flag band,
+                derived as described in <a class="xref" href="">???</a>.
+            </li><li style="list-style-type: disc">
                 'P1 Pressure Threshold': Text field to set the threshold for P1 pressure used for cloud detection.
                 Default is 125 hPa.
             </li><li style="list-style-type: disc">
