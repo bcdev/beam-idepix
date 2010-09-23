@@ -17,6 +17,7 @@
 package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.glevel.MultiLevelImage;
+import com.sun.media.jai.util.SunTileCache;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -27,7 +28,9 @@ import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.cloud.CloudTopPressureOp;
 import org.esa.beam.util.StopWatch;
 
+import javax.media.jai.JAI;
 import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -60,31 +63,56 @@ public class ComputeChainOpPerformanceTest {
         params.put("algorithm", CloudScreeningSelector.GlobAlbedo);
     }
 
-    public static void main( String[] args ) throws IOException, URISyntaxException, IllegalAccessException, InstantiationException {
-        setUp();
-        if( args.length < 1 ) {
-            System.out.println("Usage: ComputeChainOpPerformanceTest <product>" );
+    public static void main(String[] args) throws IOException, URISyntaxException, IllegalAccessException,
+                                                  InstantiationException {
+        if (args.length < 1 || args.length > 5) {
+            System.out.println(
+                    "Usage: ComputeChainOpPerformanceTest <product> [width, height] [factor_to_increase_cache] [print_values]");
             System.exit(-1);
         }
+
+        setUp();
         final Product idepixProduct = computeIdepixProduct(args[0]);
-        testTimeToGetData(idepixProduct, new Rectangle( 0, 0, 10, 10 ));
-        testTimeToGetData(idepixProduct, new Rectangle( 0, 0, idepixProduct.getSceneRasterWidth(), idepixProduct.getSceneRasterHeight() ));
+        int width = args.length > 1 ? Integer.parseInt(args[1]) : idepixProduct.getSceneRasterWidth();
+        int height = args.length > 2 ? Integer.parseInt(args[2]) : width;
+        float factor = args.length > 3 ? Float.parseFloat(args[3]) : 1.0f;
+        increaseCache(factor);
+
+        Raster data = testTimeToGetData(idepixProduct, new Rectangle(0, 0, width, height));
+        if (args.length > 4 && Boolean.parseBoolean(args[4])) {
+            print(data);
+        }
     }
 
-    private static void testTimeToGetData(Product product, Rectangle bounds) {
+    private static void increaseCache(float increaseCacheFactor) {
+        final SunTileCache cache = (SunTileCache) JAI.getDefaultInstance().getTileCache();
+        cache.setMemoryCapacity((long) (cache.getMemoryCapacity() * increaseCacheFactor));
+    }
+
+    private static Raster testTimeToGetData(Product product, Rectangle bounds) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         System.out.println("stopWatch started for bounds:");
         System.out.println(bounds.toString());
         MultiLevelImage image = product.getBandAt(0).getSourceImage();
-        image.getData(bounds);
+        Raster data = image.getData(bounds);
         stopWatch.stop();
         System.out.println("stopWatch = " + stopWatch.getTimeDiffString());
+        return data;
     }
 
     private static Product computeIdepixProduct(String resource) throws IOException, URISyntaxException {
         Product product = ProductIO.readProduct(resource);
         return GPF.createProduct("idepix.ComputeChain", params, product);
+    }
+
+    private static void print(Raster data) {
+        for (int x = 0; x < data.getWidth(); x++) {
+            for (int y = 0; y < data.getHeight(); y++) {
+                System.out.print(data.getSample(x, y, 0) + " ");
+            }
+            System.out.println("");
+        }
     }
 
 }
