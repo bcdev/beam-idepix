@@ -27,6 +27,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.cloud.CloudTopPressureOp;
 import org.esa.beam.util.StopWatch;
+import org.junit.Ignore;
 
 import javax.media.jai.JAI;
 import java.awt.Rectangle;
@@ -39,6 +40,7 @@ import java.util.Map;
 /**
  * @author Thomas Storm
  */
+@Ignore
 public class ComputeChainOpPerformanceTest {
 
     private static ComputeChainOp.Spi operatorSpi = new ComputeChainOp.Spi();
