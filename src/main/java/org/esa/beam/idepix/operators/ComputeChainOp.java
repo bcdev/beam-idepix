@@ -188,8 +188,7 @@ public class ComputeChainOp extends BasisOp {
 
         final boolean inputProductIsValid = MepixUtils.validateInputProduct(sourceProduct, algorithm);
         if (!inputProductIsValid) {
-            MepixUtils.logErrorMessage(MepixConstants.inputconsistencyErrorMessage);
-            return;
+            throw new OperatorException(MepixConstants.inputconsistencyErrorMessage);
         }
 
         int cloudScreeningAlgo = algorithm.getValue();
@@ -203,7 +202,7 @@ public class ComputeChainOp extends BasisOp {
             }
             processGlobAlbedo();
         } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()) {
-            // not yet implemented
+            // todo - not yet implemented
             throw new OperatorException("This algorithm is not yet supported.");
         }
     }
