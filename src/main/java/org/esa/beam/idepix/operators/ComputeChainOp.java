@@ -47,32 +47,33 @@ import java.util.Map;
  * @version $Revision: 7609 $ $Date: 2009-12-18 17:51:22 +0100 (Fr, 18 Dez 2009) $
  */
 @OperatorMetadata(alias = "idepix.ComputeChain",
-        version = "1.0.4",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008 by Brockmann Consult",
-        description = "This operator just calls a chain of other operators.")
+                  version = "1.0.4",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "This operator just calls a chain of other operators.")
 public class ComputeChainOp extends BasisOp {
-	@SourceProduct(alias = "source", 
-					label = "Name (MERIS L1b product)",
-					description = "The source product.")
+
+    @SourceProduct(alias = "source",
+                   label = "Name (MERIS L1b product)",
+                   description = "The source product.")
     Product sourceProduct;
 
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
 
-     // Cloud screening parameters
+    // Cloud screening parameters
     @Parameter(defaultValue = "QWG", valueSet = {"QWG", "GlobAlbedo", "CoastColour"})
     private CloudScreeningSelector algorithm;
 
 
     // IPF parameters
-    @Parameter(defaultValue="false",
-            label = "TOA Reflectances")
+    @Parameter(defaultValue = "false",
+               label = "TOA Reflectances")
     private boolean ipfOutputRad2Refl = false;
-    
-    @Parameter(defaultValue="false",
-            label = "Gas Absorption Corrected Reflectances")
+
+    @Parameter(defaultValue = "false",
+               label = "Gas Absorption Corrected Reflectances")
     private boolean ipfOutputGaseous = false;
 
     @Parameter(defaultValue = "false",
@@ -82,98 +83,98 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false",
                label = "Rayleigh Corrected Reflectances")
     private boolean ipfOutputRayleigh = false;
-    
-    @Parameter(defaultValue="true",
-            label = "L2 Cloud Top Pressure and Surface Pressure")
+
+    @Parameter(defaultValue = "true",
+               label = "L2 Cloud Top Pressure and Surface Pressure")
     private boolean ipfOutputL2Pressures = true;
 
-    @Parameter(defaultValue="true",
-            label = "L2 Cloud Detection Flags")
+    @Parameter(defaultValue = "true",
+               label = "L2 Cloud Detection Flags")
     private boolean ipfOutputL2CloudDetection = true;
 
     // QWG specific test options
-    @Parameter(label=" P1 Pressure Threshold ", defaultValue="125.0")
+    @Parameter(label = " P1 Pressure Threshold ", defaultValue = "125.0")
     public double ipfQWGUserDefinedP1PressureThreshold = 125.0;
-    @Parameter(label=" PScatt Pressure Threshold ", defaultValue="700.0")
+    @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     public double ipfQWGUserDefinedPScattPressureThreshold = 700.0;
-    @Parameter(label=" RhoTOA442 Threshold ", defaultValue="0.185")
+    @Parameter(label = " RhoTOA442 Threshold ", defaultValue = "0.185")
     public double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
 
-    @Parameter(label=" User Defined Delta RhoTOA442 Threshold ", defaultValue="0.03")
+    @Parameter(label = " User Defined Delta RhoTOA442 Threshold ", defaultValue = "0.03")
     public double ipfQWGUserDefinedDeltaRhoToa442Threshold;
 
-    @Parameter(label=" RhoTOA753 Threshold ", defaultValue="0.1")
+    @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
     public double ipfQWGUserDefinedRhoToa753Threshold = 0.1;
-    @Parameter(label=" RhoTOA Ratio 753/775 Threshold ", defaultValue="0.15")
+    @Parameter(label = " RhoTOA Ratio 753/775 Threshold ", defaultValue = "0.15")
     public double ipfQWGUserDefinedRhoToaRatio753775Threshold = 0.15;
-    @Parameter(label=" MDSI Threshold ", defaultValue="0.01")
+    @Parameter(label = " MDSI Threshold ", defaultValue = "0.01")
     private double ipfQWGUserDefinedMDSIThreshold = 0.01;
 
 
     // Pressure product parameters
-    @Parameter(defaultValue="true",
-    		label = "Barometric Pressure")
-    private boolean pressureOutputPbaro= true;
+    @Parameter(defaultValue = "true",
+               label = "Barometric Pressure")
+    private boolean pressureOutputPbaro = true;
 
-    @Parameter(defaultValue="false",
-    		label = "Use GETASSE30 DEM for Barometric Pressure Computation")
-    private boolean pressurePbaroGetasse= false;
+    @Parameter(defaultValue = "false",
+               label = "Use GETASSE30 DEM for Barometric Pressure Computation")
+    private boolean pressurePbaroGetasse = false;
 
-    @Parameter(defaultValue="true",
-    		label = "Surface Pressure (FUB, O2 project)")
-    private boolean pressureOutputPsurfFub= true;
+    @Parameter(defaultValue = "true",
+               label = "Surface Pressure (FUB, O2 project)")
+    private boolean pressureOutputPsurfFub = true;
 
-    @Parameter(defaultValue="false",
-    		label = "Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm")
-    private boolean pressureFubTropicalAtmosphere= false;
+    @Parameter(defaultValue = "false",
+               label = "Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm")
+    private boolean pressureFubTropicalAtmosphere = false;
 
-    @Parameter(defaultValue="false",
-            label = "L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
+    @Parameter(defaultValue = "false",
+               label = "L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
     private boolean pressureQWGOutputCtpStraylightCorrFub = false;
 
-    @Parameter(defaultValue="true",
-            label = "'P1' (LISE, O2 project, all surfaces)")
-    private boolean pressureOutputP1Lise= true;
-    
-    @Parameter(defaultValue="true",
-            label = "Surface Pressure (LISE, O2 project, land)")
-    private boolean pressureOutputPSurfLise= true;
-    
-    @Parameter(defaultValue="true",
-            label = "'P2' (LISE, O2 project, ocean)")
-    private boolean pressureOutputP2Lise= true;
-    
-    @Parameter(defaultValue="true",
-            label = "'PScatt' (LISE, O2 project, ocean)")
-    private boolean pressureOutputPScattLise= true;
+    @Parameter(defaultValue = "true",
+               label = "'P1' (LISE, O2 project, all surfaces)")
+    private boolean pressureOutputP1Lise = true;
+
+    @Parameter(defaultValue = "true",
+               label = "Surface Pressure (LISE, O2 project, land)")
+    private boolean pressureOutputPSurfLise = true;
+
+    @Parameter(defaultValue = "true",
+               label = "'P2' (LISE, O2 project, ocean)")
+    private boolean pressureOutputP2Lise = true;
+
+    @Parameter(defaultValue = "true",
+               label = "'PScatt' (LISE, O2 project, ocean)")
+    private boolean pressureOutputPScattLise = true;
 
 
     // Cloud product parameters
-    @Parameter(defaultValue="false",
-            label = "Blue Band Flags")
+    @Parameter(defaultValue = "false",
+               label = "Blue Band Flags")
     private boolean cloudOutputBlueBand = false;
-    
-    @Parameter(defaultValue="false",
-            label = "Cloud Probability")
+
+    @Parameter(defaultValue = "false",
+               label = "Cloud Probability")
     private boolean cloudOutputCloudProbability = false;
-    
-    @Parameter(defaultValue="false",
-            label = "Combined Clouds Flags")
-    private boolean cloudOutputCombinedCloud= false;
+
+    @Parameter(defaultValue = "false",
+               label = "Combined Clouds Flags")
+    private boolean cloudOutputCombinedCloud = false;
 
 
     // Globalbedo parameters
-    @Parameter(defaultValue="false", label = "Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = false;
-    @Parameter(defaultValue="false", label = "Copy input annotation bands")
+    @Parameter(defaultValue = "false", label = "Copy input annotation bands")
     private boolean gaCopyAnnotations;
-    @Parameter(defaultValue="false", label = "Compute only the flag band")
+    @Parameter(defaultValue = "false", label = "Compute only the flag band")
     private boolean gaComputeFlagsOnly;
-    
+
 
     // Coastcolour parameters
-    @Parameter(defaultValue="false",
-            label = "Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "false",
+               label = "Copy input radiance/reflectance bands")
     private boolean ccCopyRadiances = false;
 
 
@@ -190,28 +191,28 @@ public class ComputeChainOp extends BasisOp {
             MepixUtils.logErrorMessage(MepixConstants.inputconsistencyErrorMessage);
             return;
         }
-        
+
         int cloudScreeningAlgo = algorithm.getValue();
 
         if (cloudScreeningAlgo == CloudScreeningSelector.QWG.getValue()) {
             processQwg();
-        } else if (cloudScreeningAlgo == CloudScreeningSelector.GlobAlbedo.getValue()){
+        } else if (cloudScreeningAlgo == CloudScreeningSelector.GlobAlbedo.getValue()) {
             // GA cloud classification
             if (MepixUtils.isValidMerisProduct(sourceProduct)) {
                 processQwg();
             }
             processGlobAlbedo();
-        } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()){
+        } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()) {
             // not yet implemented
-            // todo
-            MepixUtils.logErrorMessage("This algorithm is not yet supported.");
+            throw new OperatorException("This algorithm is not yet supported.");
         }
     }
 
     private void processQwg() {
         // Radiance to Reflectance
         Map<String, Object> emptyParams = new HashMap<String, Object>();
-        Product rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams, sourceProduct);
+        Product rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams,
+                                                    sourceProduct);
 
         // Barometric Pressure
         Product pbaroProduct;
@@ -238,7 +239,8 @@ public class ComputeChainOp extends BasisOp {
         pressureLiseInput.put("l1b", sourceProduct);
         pressureLiseInput.put("rhotoa", rad2reflProduct);
         Map<String, Object> pressureLiseParameters = new HashMap<String, Object>(6);
-        pressureLiseParameters.put("straylightCorr", false);   // mail from RL/RS, 2009/03/19: do not apply correction on LISE pressure
+        pressureLiseParameters.put("straylightCorr",
+                                   false);   // mail from RL/RS, 2009/03/19: do not apply correction on LISE pressure
         pressureLiseParameters.put("outputP1", true);
         pressureLiseParameters.put("outputPressureSurface", pressureOutputPSurfLise);
         pressureLiseParameters.put("outputP2", pressureOutputP2Lise);
@@ -260,20 +262,24 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("l2Pressures", ipfOutputL2Pressures);
             cloudClassificationParameters.put("l2CloudDetection", ipfOutputL2CloudDetection);
             cloudClassificationParameters.put("userDefinedP1PressureThreshold", ipfQWGUserDefinedP1PressureThreshold);
-            cloudClassificationParameters.put("userDefinedPScattPressureThreshold", ipfQWGUserDefinedPScattPressureThreshold);
+            cloudClassificationParameters.put("userDefinedPScattPressureThreshold",
+                                              ipfQWGUserDefinedPScattPressureThreshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
-            cloudClassificationParameters.put("userDefinedDeltaRhoToa442Threshold", ipfQWGUserDefinedDeltaRhoToa442Threshold);
+            cloudClassificationParameters.put("userDefinedDeltaRhoToa442Threshold",
+                                              ipfQWGUserDefinedDeltaRhoToa442Threshold);
             cloudClassificationParameters.put("userDefinedRhoToa753Threshold", ipfQWGUserDefinedRhoToa753Threshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
-            cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold", ipfQWGUserDefinedRhoToaRatio753775Threshold);
+            cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold",
+                                              ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
-            merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MepixCloudClassificationOp.class), cloudClassificationParameters, cloudInput);
+            merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MepixCloudClassificationOp.class),
+                                                  cloudClassificationParameters, cloudInput);
         }
 
         // Gaseous Correction
         Product gasProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-                algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
+            algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
             Map<String, Product> gasInput = new HashMap<String, Product>(3);
             gasInput.put("l1b", sourceProduct);
             gasInput.put("rhotoa", rad2reflProduct);
@@ -281,30 +287,33 @@ public class ComputeChainOp extends BasisOp {
             Map<String, Object> gasParameters = new HashMap<String, Object>(2);
             gasParameters.put("correctWater", true);
             gasParameters.put("exportTg", true);
-            gasProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), gasParameters, gasInput);
+            gasProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), gasParameters,
+                                           gasInput);
         }
 
         // Land Water Reclassification
         Product landProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater ||
-                algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
+            algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
             Map<String, Product> landInput = new HashMap<String, Product>(2);
             landInput.put("l1b", sourceProduct);
             landInput.put("gascor", gasProduct);
-            landProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), emptyParams, landInput);
+            landProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), emptyParams,
+                                            landInput);
         }
 
         // Rayleigh Correction
         if (ipfOutputRayleigh ||
-                algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
-        Map<String, Product> rayleighInput = new HashMap<String, Product>(3);
-        rayleighInput.put("l1b", sourceProduct);
-        rayleighInput.put("land", landProduct);
-        rayleighInput.put("input", gasProduct);
-        Map<String, Object> rayleighParameters = new HashMap<String, Object>(2);
-        rayleighParameters.put("correctWater", true);
-        rayleighParameters.put("exportRayCoeffs", true);
-        rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RayleighCorrectionOp.class), rayleighParameters, rayleighInput);
+            algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
+            Map<String, Product> rayleighInput = new HashMap<String, Product>(3);
+            rayleighInput.put("l1b", sourceProduct);
+            rayleighInput.put("land", landProduct);
+            rayleighInput.put("input", gasProduct);
+            Map<String, Object> rayleighParameters = new HashMap<String, Object>(2);
+            rayleighParameters.put("correctWater", true);
+            rayleighParameters.put("exportRayCoeffs", true);
+            rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RayleighCorrectionOp.class),
+                                                rayleighParameters, rayleighInput);
         }
 
         // Blue Band
@@ -333,7 +342,8 @@ public class ComputeChainOp extends BasisOp {
             cloudProbabilityParameters.put("configFile", "cloud_config.txt");
             cloudProbabilityParameters.put("validLandExpression", "not l1_flags.INVALID and dem_alt > -50");
             cloudProbabilityParameters.put("validOceanExpression", "not l1_flags.INVALID and dem_alt <= -50");
-            cloudProbabilityProduct = GPF.createProduct("Meris.CloudProbability", cloudProbabilityParameters, cloudProbabilityInput);
+            cloudProbabilityProduct = GPF.createProduct("Meris.CloudProbability", cloudProbabilityParameters,
+                                                        cloudProbabilityInput);
         }
 
         // Surface Pressure NN (FUB)
@@ -362,20 +372,21 @@ public class ComputeChainOp extends BasisOp {
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
         if (ipfOutputRad2Refl) {
-            for (Band band:rad2reflProduct.getBands()) {
+            for (Band band : rad2reflProduct.getBands()) {
                 targetProduct.addBand(band);
             }
         }
         if (ipfOutputL2Pressures) {
-            for (Band band: merisCloudProduct.getBands()) {
-                if (!band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS))
+            for (Band band : merisCloudProduct.getBands()) {
+                if (!band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS)) {
                     targetProduct.addBand(band);
+                }
             }
         }
         if (ipfOutputL2CloudDetection) {
             FlagCoding flagCoding = MepixCloudClassificationOp.createFlagCoding(MepixCloudClassificationOp.CLOUD_FLAGS);
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band: merisCloudProduct.getBands()) {
+            for (Band band : merisCloudProduct.getBands()) {
                 if (band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                     targetProduct.addBand(band);
@@ -386,7 +397,7 @@ public class ComputeChainOp extends BasisOp {
         if (ipfOutputGaseous) {
             FlagCoding flagCoding = GaseousCorrectionOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band:gasProduct.getBands()) {
+            for (Band band : gasProduct.getBands()) {
                 if (band.getName().equals(GaseousCorrectionOp.GAS_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                 }
@@ -397,7 +408,7 @@ public class ComputeChainOp extends BasisOp {
             int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
             FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band:rayleighProduct.getBands()) {
+            for (Band band : rayleighProduct.getBands()) {
                 if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                 }
@@ -407,7 +418,7 @@ public class ComputeChainOp extends BasisOp {
         if (ipfOutputLandWater) {
             FlagCoding flagCoding = LandClassificationOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band:landProduct.getBands()) {
+            for (Band band : landProduct.getBands()) {
                 if (band.getName().equals(LandClassificationOp.LAND_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                 }
@@ -416,26 +427,27 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (straylightCorr && pressureQWGOutputCtpStraylightCorrFub) {
-           for (Band band:ctpProductStraylight.getBands()) {
-               if (!band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS))
-                   targetProduct.addBand(band);
-           }
-       }
+            for (Band band : ctpProductStraylight.getBands()) {
+                if (!band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS)) {
+                    targetProduct.addBand(band);
+                }
+            }
+        }
 
         if (pressureOutputPbaro) {
-           for (Band band:pbaroProduct.getBands()) {
-               targetProduct.addBand(band);
-           }
-       }
+            for (Band band : pbaroProduct.getBands()) {
+                targetProduct.addBand(band);
+            }
+        }
 
         if (pressureOutputPsurfFub) {
-            for (Band band:psurfNNProduct.getBands()) {
+            for (Band band : psurfNNProduct.getBands()) {
                 targetProduct.addBand(band);
             }
         }
 
         if (pressureOutputP1Lise) {
-            for (Band band: pressureLiseProduct.getBands()) {
+            for (Band band : pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P1)) {
                     targetProduct.addBand(band);
                 }
@@ -443,7 +455,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputPSurfLise) {
-            for (Band band: pressureLiseProduct.getBands()) {
+            for (Band band : pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSURF)) {
                     targetProduct.addBand(band);
                 }
@@ -451,7 +463,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputP2Lise) {
-            for (Band band: pressureLiseProduct.getBands()) {
+            for (Band band : pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P2)) {
                     targetProduct.addBand(band);
                 }
@@ -459,7 +471,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         if (pressureOutputPScattLise) {
-            for (Band band: pressureLiseProduct.getBands()) {
+            for (Band band : pressureLiseProduct.getBands()) {
                 if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSCATT)) {
                     targetProduct.addBand(band);
                 }
@@ -469,7 +481,7 @@ public class ComputeChainOp extends BasisOp {
         if (cloudOutputBlueBand) {
             FlagCoding flagCoding = BlueBandOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band:blueBandProduct.getBands()) {
+            for (Band band : blueBandProduct.getBands()) {
                 if (band.getName().equals(BlueBandOp.BLUE_FLAG_BAND)) {
                     band.setSampleCoding(flagCoding);
                 }
@@ -480,7 +492,7 @@ public class ComputeChainOp extends BasisOp {
         if (cloudOutputCloudProbability) {
             FlagCoding flagCoding = CloudProbabilityOp.createCloudFlagCoding(targetProduct);
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band:cloudProbabilityProduct.getBands()) {
+            for (Band band : cloudProbabilityProduct.getBands()) {
                 if (band.getName().equals(CloudProbabilityOp.CLOUD_FLAG_BAND)) {
                     band.setSampleCoding(flagCoding);
                 }
@@ -491,7 +503,7 @@ public class ComputeChainOp extends BasisOp {
         if (cloudOutputCombinedCloud) {
             FlagCoding flagCoding = CombinedCloudOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band:combinedCloudProduct.getBands()) {
+            for (Band band : combinedCloudProduct.getBands()) {
                 if (band.getName().equals(CombinedCloudOp.FLAG_BAND_NAME)) {
                     band.setSampleCoding(flagCoding);
                 }
@@ -520,7 +532,8 @@ public class ComputeChainOp extends BasisOp {
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
 
-        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class), gaCloudClassificationParameters, gaCloudInput);
+        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
+                                           gaCloudClassificationParameters, gaCloudInput);
         targetProduct = gaCloudProduct;
     }
 
@@ -529,6 +542,7 @@ public class ComputeChainOp extends BasisOp {
      * It provides operator meta-data and is a factory for new operator instances.
      */
     public static class Spi extends OperatorSpi {
+
         public Spi() {
             super(ComputeChainOp.class);
         }
