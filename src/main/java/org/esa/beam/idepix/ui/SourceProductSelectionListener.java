@@ -6,6 +6,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.ui.TargetProductSelectorModel;
 import org.esa.beam.idepix.operators.MepixConstants;
+import org.esa.beam.idepix.util.MepixUtils;
 
 /**
  * Listener for selection of source product
@@ -13,7 +14,7 @@ import org.esa.beam.idepix.operators.MepixConstants;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class SourceProductSelectionListener implements SelectionChangeListener{
+public class SourceProductSelectionListener implements SelectionChangeListener {
 
     private MepixForm form;
     private TargetProductSelectorModel targetProductSelectorModel;
@@ -34,9 +35,7 @@ public class SourceProductSelectionListener implements SelectionChangeListener{
             String mepixName = selectedProduct.getName();
 
             // check for MERIS:
-            if (selectedProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-                selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
-                selectedProduct.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME)) {
+            if (MepixUtils.isValidMerisProduct(selectedProduct)) {
                 String resName = "";
                 if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
                     // MER_RR__1
@@ -60,7 +59,7 @@ public class SourceProductSelectionListener implements SelectionChangeListener{
                 form.setEnabledAt(MepixConstants.PRESSURE_TAB_INDEX, true);
                 form.setEnabledAt(MepixConstants.CLOUDS_TAB_INDEX, true);
                 form.setEnabledAt(MepixConstants.COASTCOLOUR_TAB_INDEX, false);
-            } else if (selectedProduct.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME)) {
+            } else if (MepixUtils.isValidAatsrProduct(selectedProduct)) {
                 // check for AATSR:
                 mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
                 targetProductSelectorModel.setProductName(mepixName);
@@ -69,7 +68,7 @@ public class SourceProductSelectionListener implements SelectionChangeListener{
                 form.setEnabledAt(MepixConstants.PRESSURE_TAB_INDEX, false);
                 form.setEnabledAt(MepixConstants.CLOUDS_TAB_INDEX, false);
                 form.setEnabledAt(MepixConstants.COASTCOLOUR_TAB_INDEX, false);
-            } else if (selectedProduct.getProductType().startsWith(MepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX)) {
+            } else if (MepixUtils.isValidVgtProduct(selectedProduct)) {
                 // check for VGT:
                 mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
                 targetProductSelectorModel.setProductName(mepixName);

@@ -191,17 +191,16 @@ public class ComputeChainOp extends BasisOp {
             throw new OperatorException(MepixConstants.inputconsistencyErrorMessage);
         }
 
-        int cloudScreeningAlgo = algorithm.getValue();
 
-        if (cloudScreeningAlgo == CloudScreeningSelector.QWG.getValue()) {
+        if (CloudScreeningSelector.QWG.equals(algorithm)) {
             processQwg();
-        } else if (cloudScreeningAlgo == CloudScreeningSelector.GlobAlbedo.getValue()) {
+        } else if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
             // GA cloud classification
             if (MepixUtils.isValidMerisProduct(sourceProduct)) {
                 processQwg();
             }
             processGlobAlbedo();
-        } else if (cloudScreeningAlgo == CloudScreeningSelector.CoastColour.getValue()) {
+        } else if (CloudScreeningSelector.CoastColour.equals(algorithm)) {
             // todo - not yet implemented
             throw new OperatorException("This algorithm is not yet supported.");
         }
@@ -278,7 +277,7 @@ public class ComputeChainOp extends BasisOp {
         // Gaseous Correction
         Product gasProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-            algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
+            CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
             Map<String, Product> gasInput = new HashMap<String, Product>(3);
             gasInput.put("l1b", sourceProduct);
             gasInput.put("rhotoa", rad2reflProduct);
@@ -292,8 +291,7 @@ public class ComputeChainOp extends BasisOp {
 
         // Land Water Reclassification
         Product landProduct = null;
-        if (ipfOutputRayleigh || ipfOutputLandWater ||
-            algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
+        if (ipfOutputRayleigh || ipfOutputLandWater || CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
             Map<String, Product> landInput = new HashMap<String, Product>(2);
             landInput.put("l1b", sourceProduct);
             landInput.put("gascor", gasProduct);
@@ -302,8 +300,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         // Rayleigh Correction
-        if (ipfOutputRayleigh ||
-            algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
+        if (ipfOutputRayleigh || CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
             Map<String, Product> rayleighInput = new HashMap<String, Product>(3);
             rayleighInput.put("l1b", sourceProduct);
             rayleighInput.put("land", landProduct);

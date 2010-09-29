@@ -14,35 +14,51 @@ import javax.swing.JOptionPane;
  */
 public class MepixUtils {
 
+    private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("aatsrrecalibration");
+
     public static boolean validateInputProduct(Product inputProduct, CloudScreeningSelector algorithm) {
         return isInputValid(inputProduct) && isInputConsistent(inputProduct, algorithm);
     }
 
     public static boolean isInputValid(Product inputProduct) {
-        if (!inputProduct.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) &&
-            !inputProduct.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) &&
-            !inputProduct.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) &&
-            !inputProduct.getProductType().startsWith("ATS_TOA_1") &&
-            !inputProduct.getProductType().startsWith("VGT")) {
+        if (!isValidMerisProduct(inputProduct) &&
+            !isValidAatsrProduct(inputProduct) &&
+            !isValidVgtProduct(inputProduct)) {
             logErrorMessage("Input product must be either MERIS, AATSR or VGT L1b!");
         }
         return true;
     }
 
+    public static boolean isValidMerisProduct(Product product) {
+        return product.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
+               product.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
+               product.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) ||
+               product.getName().startsWith(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME);
+    }
 
-    private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("aatsrrecalibration");
+    public static boolean isValidAatsrProduct(Product product) {
+        return product.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+    }
 
-    public static void logInfoMessage(String msg) {
-        if (System.getProperty("gpfMode") != null && System.getProperty("gpfMode").equals("GUI")) {
-            JOptionPane.showOptionDialog(null, msg, "MEPIX - Info Message", JOptionPane.DEFAULT_OPTION,
-                                         JOptionPane.INFORMATION_MESSAGE, null, null, null);
-        } else {
-            info(msg);
+    public static boolean isValidVgtProduct(Product product) {
+        return product.getProductType().startsWith(MepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
+    }
+
+
+    private static boolean isInputConsistent(Product sourceProduct, CloudScreeningSelector algorithm) {
+        if (CloudScreeningSelector.QWG.equals(algorithm) || CloudScreeningSelector.CoastColour.equals(algorithm)) {
+            return (isValidMerisProduct(sourceProduct));
         }
+        if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+            return (isValidMerisProduct(sourceProduct) ||
+                    isValidAatsrProduct(sourceProduct) ||
+                    isValidVgtProduct(sourceProduct));
+        }
+        return false;
     }
 
     public static void logErrorMessage(String msg) {
-        if (System.getProperty("gpfMode") != null && System.getProperty("gpfMode").equals("GUI")) {
+        if (System.getProperty("gpfMode") != null && "GUI".equals(System.getProperty("gpfMode"))) {
             JOptionPane.showOptionDialog(null, msg, "MEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
                                          JOptionPane.ERROR_MESSAGE, null, null, null);
         } else {
@@ -98,8 +114,8 @@ public class MepixUtils {
 
 
     public static boolean areReflectancesValid(float[] reflectance) {
-        for (int i = 0; i < reflectance.length; i++) {
-            if (!Float.isNaN(reflectance[i])) {
+        for (float aReflectance : reflectance) {
+            if (!Float.isNaN(aReflectance)) {
                 return true;
             }
         }
@@ -113,44 +129,5 @@ public class MepixUtils {
         band.setNoDataValue(noDataValue);
         band.setNoDataValueUsed(useNoDataValue);
     }
-
-    public static boolean isValidMerisProduct(Product product) {
-        if (product.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-            product.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
-            product.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME)) {
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean isValidAatsrProduct(Product product) {
-        if (product.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME)) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean isValidVgtProduct(Product product) {
-            if (product.getProductType().startsWith(MepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX)) {
-                return true;
-            }
-            return false;
-        }
-    
-
-    private static boolean isInputConsistent(Product sourceProduct, CloudScreeningSelector algorithm) {
-        if (algorithm.getValue() == CloudScreeningSelector.QWG.getValue()) {
-            return (isValidMerisProduct(sourceProduct));
-        } else if (algorithm.getValue() == CloudScreeningSelector.GlobAlbedo.getValue()) {
-            return (isValidMerisProduct(sourceProduct) ||
-                    isValidAatsrProduct(sourceProduct) ||
-                    isValidVgtProduct(sourceProduct));
-        } else if (algorithm.getValue() == CloudScreeningSelector.CoastColour.getValue()) {
-            return (isValidMerisProduct(sourceProduct));
-        }
-        return false;
-    }
-
-
 
 }

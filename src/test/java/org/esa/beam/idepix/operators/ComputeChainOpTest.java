@@ -22,9 +22,6 @@ import com.bc.jnn.JnnNet;
 public class ComputeChainOpTest extends TestCase {
 	private JnnNet neuralNet;
 
-    public void testSomething() {
-    }
-    
     public void testSurfacePressureFub() {
     	
         final InputStream inputStream = SurfacePressureFubOp.class.getResourceAsStream("SP_FUB_trp.nna");
@@ -117,7 +114,6 @@ public class ComputeChainOpTest extends TestCase {
 		float thetas = 2.841f;
 		float thetav = 2.841f;
 		float phi = 90.0f;
-		int   idetector = 824;
 		double rho_meris753 = 0.14586d;
 		double rho_meris761 = 0.07864d;
 		double rho_meris778 = 0.14586d;
@@ -141,22 +137,22 @@ public class ComputeChainOpTest extends TestCase {
 				
 //		the resulting number should be
 //		362.50
-		assertEquals(362.50, pScatt, 1.0);
+		assertEquals(362.50, pScatt, 1.0e-1);
 		
 		// test P2:
 		double p2 = op.computeLisePressures(null, 2, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
-		assertEquals(504.2, p2, 1.0);
+		assertEquals(504.2, p2, 1.0e-1);
 		
 		// test PSurf:
 		double pSurf = op.computeLisePressures(null, 1, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
-		assertEquals(479.2, pSurf, 1.0);
+		assertEquals(479.2, pSurf, 1.0e-1);
 		
 		// test P1:
 		double p1 = op.computeLisePressures(null, 0, thetas, thetav, csza, cvza, ssza, svza, azimDiff,
 				rho_meris753, rho_meris761, rho_meris778, w0, altitude, ecmwfPressure, pressureScaleHeight, airMass);
-		assertEquals(500.8, p1, 1.0);
+		assertEquals(500.8, p1, 1.0e-1);
 		
 		//  another test for PScatt with second dataset:
 		// 6.521 2.841 90. 824 1013.25 0.14673 0.07913 0.14673
@@ -164,7 +160,6 @@ public class ComputeChainOpTest extends TestCase {
 		thetas = 6.521f;
 		thetav = 2.841f;
 		phi = 90.0f;
-		idetector = 824;
 		rho_meris753 = 0.14673f;
 		rho_meris761 = 0.07913f;
 		rho_meris778 = 0.14673f;
@@ -180,6 +175,6 @@ public class ComputeChainOpTest extends TestCase {
 		
 //		the resulting number should be
 //		379.09
-		assertEquals(379.09, pScatt, 1.0);
+		assertEquals(379.09, pScatt, 1.0e-1);
     }
 }
