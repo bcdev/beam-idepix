@@ -57,7 +57,7 @@ import java.awt.Rectangle;
 @OperatorMetadata(alias = "Meris.MepixCloudClassification",
         version = "1.0",
         internal = true,
-        authors = "Marco Z�hlke, Olaf Danne", 
+        authors = "Marco Zühlke, Olaf Danne",
         copyright = "(c) 2007 by Brockmann Consult",
         description = "MERIS L2 cloud classification (preliminary version for MEPIX processor).")
 public class MepixCloudClassificationOp extends MerisBasisOp implements Constants {
