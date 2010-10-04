@@ -9,7 +9,7 @@ import org.esa.beam.util.math.MathUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AatsrPixelProperties implements PixelProperties {
+class AatsrPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.65f;

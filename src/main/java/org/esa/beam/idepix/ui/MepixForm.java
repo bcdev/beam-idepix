@@ -24,7 +24,7 @@ import java.util.Map;
  * @author Olaf Danne
  * @version $Revision: 7464 $ $Date: 2009-12-11 17:18:25 +0100 (Fr, 11 Dez 2009) $
  */
-public class MepixForm extends JTabbedPane {
+class MepixForm extends JTabbedPane {
 
     private OperatorSpi operatorSpi;
     private Map<String, Object> parameterMap;

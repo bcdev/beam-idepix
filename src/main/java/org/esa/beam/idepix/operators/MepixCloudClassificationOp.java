@@ -74,32 +74,19 @@ public class MepixCloudClassificationOp extends MerisBasisOp {
     private static final int BAND_SLOPE_N_1 = 1;
     private static final int BAND_SLOPE_N_2 = 2;
 
-    public static final int F_CLOUD = 0;
-    public static final int F_BRIGHT = 1;
-    public static final int F_BRIGHT_RC = 2;
-    public static final int F_LOW_P_PSCATT = 3;
-    public static final int F_LOW_P_P1 = 4;
-    public static final int F_SLOPE_1 = 5;
-    public static final int F_SLOPE_2 = 6;
-    public static final int F_BRIGHT_TOA = 7;
-    public static final int F_HIGH_MDSI = 8;
-    public static final int F_SNOW_ICE = 9;
-
-//    private static final BitmaskDef[] BITMASK_DEFINITIONS = new BitmaskDef[]{
-//            new BitmaskDef("f_cloud", "MEPIX final cloud flag", CLOUD_FLAGS + ".F_CLOUD", Color.CYAN, 0.5f),
-//            new BitmaskDef("f_bright", "MEPIX combined of old and second bright test", CLOUD_FLAGS + ".F_BRIGHT", new Color(0,153,153), 0.5f),
-//            new BitmaskDef("f_bright_rc", "MEPIX old bright test", CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204,255,204), 0.5f),
-//            new BitmaskDef("f_low_p_pscatt", "MEPIX test on apparent scattering (over ocean)", CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153,153,0), 0.5f),
-//            new BitmaskDef("f_low_p_p1", "MEPIX test on P1 (over land)", CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f),
-//            new BitmaskDef("f_slope_1", "MEPIX old slope 1 test", CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f),
-//            new BitmaskDef("f_slope_2", "MEPIX old slope 2 test", CLOUD_FLAGS + ".F_SLOPE_2", new Color(153,0,153), 0.5f),
-//            new BitmaskDef("f_bright_toa", "MEPIX second bright test", CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f),
-//            new BitmaskDef("f_high_mdsi", "MEPIX MDSI above threshold (warning: not sufficient for snow detection)", CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f),
-//            new BitmaskDef("f_snow_ice", "MEPIX snow/ice flag", CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f),
-//    };
+    private static final int F_CLOUD = 0;
+    private static final int F_BRIGHT = 1;
+    private static final int F_BRIGHT_RC = 2;
+    private static final int F_LOW_P_PSCATT = 3;
+    private static final int F_LOW_P_P1 = 4;
+    private static final int F_SLOPE_1 = 5;
+    private static final int F_SLOPE_2 = 6;
+    private static final int F_BRIGHT_TOA = 7;
+    private static final int F_HIGH_MDSI = 8;
+    private static final int F_SNOW_ICE = 9;
 
     private L2AuxData auxData;
-    
+
     private RayleighCorrection rayleighCorrection;
     
     @SourceProduct(alias="l1b")
@@ -112,32 +99,36 @@ public class MepixCloudClassificationOp extends MerisBasisOp {
     private Product lisePressureProduct;
     @SourceProduct(alias="pressureBaro")
     private Product pbaroProduct;
+
+    @SuppressWarnings({"FieldCanBeLocal"})
     @TargetProduct
     private Product targetProduct;
+
     @Parameter(description="If 'true' the algorithm will compute L2 Pressures.", defaultValue="true")
-    public boolean l2Pressures = true;
+    private boolean l2Pressures;
+    // todo (mp 2010/10/04)- parameter is never used
     @Parameter(description="If 'true' the algorithm will compute L2 Cloud detection flags.", defaultValue="true")
-    public boolean l2CloudDetection = true;
-    @Parameter(defaultValue="false", label = "L2 Cloud Detection Flags with LISE 'PScatt'")
-    private boolean pressureOutputL2CloudDetectionLisePScatt = false;
+    private boolean l2CloudDetection;
+    @Parameter(label = "L2 Cloud Detection Flags with LISE 'PScatt'", defaultValue="false")
+    private boolean pressureOutputL2CloudDetectionLisePScatt;
     @Parameter(description="User Defined P1 Pressure Threshold.", defaultValue="125.0")
-    public double userDefinedP1PressureThreshold;
+    private double userDefinedP1PressureThreshold;
      @Parameter(description="User Defined PScatt Pressure Threshold.", defaultValue="700.0")
-    public double userDefinedPScattPressureThreshold;
+    private double userDefinedPScattPressureThreshold;
     @Parameter(description="User Defined RhoTOA442 Threshold.", defaultValue="0.185")
-    public double userDefinedRhoToa442Threshold;
+    private double userDefinedRhoToa442Threshold;
 
     @Parameter(description="User Defined Delta RhoTOA442 Threshold.", defaultValue="0.03")
-    public double userDefinedDeltaRhoToa442Threshold;
+    private double userDefinedDeltaRhoToa442Threshold;
 //    @Parameter(description="User Defined Delta RhoTOA442 Threshold Factor.", defaultValue="1.0")
 //    public double userDefinedDeltaRhoToa442ThresholdFactor;
 
     @Parameter(description="User Defined RhoTOA753 Threshold.", defaultValue="0.1")
-    public double userDefinedRhoToa753Threshold;
+    private double userDefinedRhoToa753Threshold;
     @Parameter(description="User Defined RhoTOA Ratio 753/775 Threshold.", defaultValue="0.15")
-    public double userDefinedRhoToaRatio753775Threshold;
+    private double userDefinedRhoToaRatio753775Threshold;
     @Parameter(description="User Defined MDSI Threshold.", defaultValue="0.01")
-    public double userDefinedMDSIThreshold;
+    private double userDefinedMDSIThreshold;
 
 
     @Override

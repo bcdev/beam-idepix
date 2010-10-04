@@ -14,19 +14,20 @@ import org.esa.beam.idepix.util.MepixUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class SourceProductSelectionListener implements SelectionChangeListener {
+class SourceProductSelectionListener implements SelectionChangeListener {
 
     private MepixForm form;
     private TargetProductSelectorModel targetProductSelectorModel;
     private String targetProductNameSuffix;
 
-    public SourceProductSelectionListener(MepixForm form, TargetProductSelectorModel targetProductSelectorModel,
+    SourceProductSelectionListener(MepixForm form, TargetProductSelectorModel targetProductSelectorModel,
                                           String targetProductNameSuffix) {
         this.form = form;
         this.targetProductSelectorModel = targetProductSelectorModel;
         this.targetProductNameSuffix = targetProductNameSuffix;
     }
 
+    @Override
     public void selectionChanged(SelectionChangeEvent event) {
         final Product selectedProduct = (Product) event.getSelection().getSelectedValue();
 
@@ -81,6 +82,7 @@ public class SourceProductSelectionListener implements SelectionChangeListener {
         }
     }
 
+    @Override
     public void selectionContextChanged(SelectionChangeEvent event) {
         // no actions
     }

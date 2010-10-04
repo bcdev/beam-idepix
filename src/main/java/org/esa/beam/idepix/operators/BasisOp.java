@@ -4,7 +4,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.util.ProductUtils;
 
-public abstract class BasisOp extends Operator {
+abstract class BasisOp extends Operator {
 	/**
      * creates a new product with the same size
      *

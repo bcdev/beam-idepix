@@ -7,57 +7,57 @@ package org.esa.beam.idepix.operators;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public interface PixelProperties {
+interface PixelProperties {
 
     // todo: add documentation if set of properties is finally agreed
 
-    public boolean isBrightWhite();
+    boolean isBrightWhite();
 
-    public boolean isCloud();
+    boolean isCloud();
 
-    public boolean isClearLand();
+    boolean isClearLand();
 
-    public boolean isClearWater();
+    boolean isClearWater();
 
-    public boolean isClearSnow();
+    boolean isClearSnow();
 
-    public boolean isLand();
+    boolean isLand();
 
-    public boolean isWater();
+    boolean isWater();
 
-    public boolean isBright();
+    boolean isBright();
 
-    public boolean isWhite();
+    boolean isWhite();
 
-    public boolean isCold();
+    boolean isCold();
 
-    public boolean isVegRisk();
+    boolean isVegRisk();
 
-    public boolean isGlintRisk();
+    boolean isGlintRisk();
 
-    public boolean isHigh();
+    boolean isHigh();
 
-    public boolean isInvalid();
+    boolean isInvalid();
 
-    public float brightValue();
+    float brightValue();
 
-    public float temperatureValue();
+    float temperatureValue();
 
-    public float spectralFlatnessValue();
+    float spectralFlatnessValue();
     
-    public float whiteValue();
+    float whiteValue();
 
-    public float ndsiValue();
+    float ndsiValue();
 
-    public float ndviValue();
+    float ndviValue();
 
-    public float pressureValue();
+    float pressureValue();
 
-    public float aPrioriLandValue();
+    float aPrioriLandValue();
 
-    public float aPrioriWaterValue();
+    float aPrioriWaterValue();
 
-    public float radiometricLandValue();
+    float radiometricLandValue();
 
-    public float radiometricWaterValue();
+    float radiometricWaterValue();
 }

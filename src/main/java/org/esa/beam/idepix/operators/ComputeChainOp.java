@@ -46,6 +46,7 @@ import java.util.Map;
  * @author Olaf Danne
  * @version $Revision: 7609 $ $Date: 2009-12-18 17:51:22 +0100 (Fr, 18 Dez 2009) $
  */
+@SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
                   version = "1.0.4",
                   authors = "Olaf Danne",
@@ -56,10 +57,10 @@ public class ComputeChainOp extends BasisOp {
     @SourceProduct(alias = "source",
                    label = "Name (MERIS L1b product)",
                    description = "The source product.")
-    Product sourceProduct;
+    private Product sourceProduct;
 
     @TargetProduct(description = "The target product.")
-    Product targetProduct;
+    private Product targetProduct;
 
 
     // Cloud screening parameters
@@ -94,19 +95,19 @@ public class ComputeChainOp extends BasisOp {
 
     // QWG specific test options
     @Parameter(label = " P1 Pressure Threshold ", defaultValue = "125.0")
-    public double ipfQWGUserDefinedP1PressureThreshold = 125.0;
+    private double ipfQWGUserDefinedP1PressureThreshold = 125.0;
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
-    public double ipfQWGUserDefinedPScattPressureThreshold = 700.0;
+    private double ipfQWGUserDefinedPScattPressureThreshold = 700.0;
     @Parameter(label = " RhoTOA442 Threshold ", defaultValue = "0.185")
-    public double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
+    private double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
 
     @Parameter(label = " User Defined Delta RhoTOA442 Threshold ", defaultValue = "0.03")
-    public double ipfQWGUserDefinedDeltaRhoToa442Threshold;
+    private double ipfQWGUserDefinedDeltaRhoToa442Threshold;
 
     @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
-    public double ipfQWGUserDefinedRhoToa753Threshold = 0.1;
+    private double ipfQWGUserDefinedRhoToa753Threshold = 0.1;
     @Parameter(label = " RhoTOA Ratio 753/775 Threshold ", defaultValue = "0.15")
-    public double ipfQWGUserDefinedRhoToaRatio753775Threshold = 0.15;
+    private double ipfQWGUserDefinedRhoToaRatio753775Threshold = 0.15;
     @Parameter(label = " MDSI Threshold ", defaultValue = "0.01")
     private double ipfQWGUserDefinedMDSIThreshold = 0.01;
 

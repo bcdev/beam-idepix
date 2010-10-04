@@ -16,6 +16,9 @@ public class MepixUtils {
 
     private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("aatsrrecalibration");
 
+    private MepixUtils() {
+    }
+
     public static boolean validateInputProduct(Product inputProduct, CloudScreeningSelector algorithm) {
         return isInputValid(inputProduct) && isInputConsistent(inputProduct, algorithm);
     }

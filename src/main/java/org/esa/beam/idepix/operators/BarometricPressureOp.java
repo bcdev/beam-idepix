@@ -9,6 +9,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.dataop.dem.ElevationModel;
 import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
 import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
+import org.esa.beam.framework.dataop.resamp.Resampling;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -39,11 +40,14 @@ import java.util.StringTokenizer;
         description = "This operator computes barometric pressure assuming US standard atmosphere.")
 public class BarometricPressureOp extends MerisBasisOp {
     @SourceProduct(alias="l1b", description = "The source product.")
-    Product sourceProduct;
+    private Product sourceProduct;
+
+    @SuppressWarnings({"FieldCanBeLocal"})
     @TargetProduct(description = "The target product.")
-    Product targetProduct;
+    private Product targetProduct;
+
     @Parameter(description="If 'true' the algorithm will use altitudes from GETASSE30 DEM.", defaultValue="false")
-    public boolean useGetasseDem = false;
+    private boolean useGetasseDem = false;
 
     public static final String PRESSURE_BAROMETRIC = "barometric_press";
 
@@ -54,7 +58,7 @@ public class BarometricPressureOp extends MerisBasisOp {
     private static final int WATER_VAPOUR_PRESSURE_TABLE_LENGTH = 22;
     private static final int WATER_VAPOUR_PRESSURE_TABLE_HEADER_LINES = 3;
 
-    WaterVapourPressureTable waterVapourPressureTable;
+    private WaterVapourPressureTable waterVapourPressureTable;
     private ElevationModel getasseElevationModel;
 
     @Override
@@ -77,15 +81,16 @@ public class BarometricPressureOp extends MerisBasisOp {
             if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
                 throw new OperatorException("DEM not installed: " + demName + ". Please install with Module Manager.");
             }
-            getasseElevationModel = demDescriptor.createDem();
+            getasseElevationModel = demDescriptor.createDem(Resampling.NEAREST_NEIGHBOUR);
         }
     }
 
     private void createTargetProduct() throws OperatorException {
         targetProduct = createCompatibleProduct(sourceProduct, "MER_PBARO", "MER_L2");
         targetProduct.addBand(PRESSURE_BAROMETRIC, ProductData.TYPE_FLOAT32);
-        if (useGetasseDem)
+        if (useGetasseDem) {
             targetProduct.addBand("getasse_alt", ProductData.TYPE_FLOAT32);
+        }
 
         BandMathsOp bandArithmeticOp =
             BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
@@ -96,7 +101,6 @@ public class BarometricPressureOp extends MerisBasisOp {
         final InputStream inputStream = BarometricPressureOp.class.getResourceAsStream(WATER_VAPOUR_PRESSURE_TABLE_FILE_NAME);
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        StringTokenizer st;
         try {
             waterVapourPressureTable = new WaterVapourPressureTable();
 
@@ -108,7 +112,7 @@ public class BarometricPressureOp extends MerisBasisOp {
             for (int i = 0; i < WATER_VAPOUR_PRESSURE_TABLE_LENGTH; i++) {
                 String line = bufferedReader.readLine();
                 line = line.trim();
-                st = new StringTokenizer(line, " ", false);
+                StringTokenizer st = new StringTokenizer(line, " ", false);
 
                 if (st.hasMoreTokens()) {
                     // temperature
@@ -124,7 +128,7 @@ public class BarometricPressureOp extends MerisBasisOp {
         } catch (NumberFormatException e) {
             throw new OperatorException("Failed to load Water Vapour Pressure Table: \n" + e.getMessage(), e);
         } finally {
-            inputStream.close();
+            bufferedReader.close();
         }
     }
 
@@ -231,10 +235,10 @@ public class BarometricPressureOp extends MerisBasisOp {
                         double p2 = waterVapourPressureTable.getPressure()[surfaceTempIndex+1];
                         final double e = linearInterpol(surfaceTemp, t1, t2, p1, p2);
 
-                        final double pbaro = slp / Math.exp(g*alt/(R*(surfaceTemp + C*e + gamma*alt/2.0)));
+                        final double pbaro = slp / Math.exp(g * alt / (R * (surfaceTemp + C * e + gamma * alt / 2.0)));
 
                         // if GETASSE DEM is used, write altitude in a separate band
-                        if (band.getName().equals("getasse_alt")) {
+                        if ("getasse_alt".equals(band.getName())) {
                              targetTile.setSample(x, y, alt);
                         } else {
 						    targetTile.setSample(x, y, pbaro);
@@ -251,7 +255,7 @@ public class BarometricPressureOp extends MerisBasisOp {
         }
     }
 
-    private class WaterVapourPressureTable {
+    private static class WaterVapourPressureTable {
         private double[] temperature = new double[WATER_VAPOUR_PRESSURE_TABLE_LENGTH];
         private double[] pressure = new double[WATER_VAPOUR_PRESSURE_TABLE_LENGTH];
 

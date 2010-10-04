@@ -28,7 +28,7 @@ import java.util.Map;
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  *
  */
-public class MepixDialog extends SingleTargetProductDialog {
+class MepixDialog extends SingleTargetProductDialog {
 
     private List<SourceProductSelector> sourceProductSelectorList;
     private Map<Field, SourceProductSelector> sourceProductSelectorMap;
@@ -43,15 +43,10 @@ public class MepixDialog extends SingleTargetProductDialog {
     public static final int DIALOG_HEIGHT = 420;
     private OperatorSpi operatorSpi;
 
-    /**
+    /*
      * MepixDialog constructor
-     * 
-     * @param operatorName
-     * @param appContext
-     * @param title
-     * @param helpID
      */
-    public MepixDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
+    MepixDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
         super(appContext, title, helpID);
         this.operatorName = operatorName;
         this.appContext = appContext;
@@ -111,7 +106,7 @@ public class MepixDialog extends SingleTargetProductDialog {
     private void initComponents() {
         // Fetch source products
         setupSourceProductSelectorList(operatorSpi);
-        if (sourceProductSelectorList.size() > 0) {
+        if (!sourceProductSelectorList.isEmpty()) {
            setSourceProductSelectorToolTipTexts();
         }
 
@@ -197,10 +192,11 @@ public class MepixDialog extends SingleTargetProductDialog {
 
         private final SourceProduct annot;
 
-        public AnnotatedSourceProductFilter(SourceProduct annot) {
+        private AnnotatedSourceProductFilter(SourceProduct annot) {
             this.annot = annot;
         }
 
+        @Override
         public boolean accept(Product product) {
 
             if (!annot.type().isEmpty() && !product.getProductType().matches(annot.type())) {
