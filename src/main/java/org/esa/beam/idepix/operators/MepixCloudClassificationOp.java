@@ -35,7 +35,6 @@ import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.meris.brr.dpm.DpmPixel;
-import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.DpmConfigException;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxdataProvider;
@@ -46,6 +45,8 @@ import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+
+import static org.esa.beam.meris.l2auxdata.Constants.*;
 
 
 /**
@@ -60,7 +61,7 @@ import java.awt.Rectangle;
         authors = "Marco Zühlke, Olaf Danne",
         copyright = "(c) 2007 by Brockmann Consult",
         description = "MERIS L2 cloud classification (preliminary version for MEPIX processor).")
-public class MepixCloudClassificationOp extends MerisBasisOp implements Constants {
+public class MepixCloudClassificationOp extends MerisBasisOp {
 
     public static final String CLOUD_FLAGS = "cloud_classif_flags";
     public static final String PRESSURE_CTP = "cloud_top_press";
