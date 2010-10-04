@@ -81,7 +81,7 @@ public class BarometricPressureOp extends MerisBasisOp {
             if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
                 throw new OperatorException("DEM not installed: " + demName + ". Please install with Module Manager.");
             }
-            getasseElevationModel = demDescriptor.createDem(Resampling.NEAREST_NEIGHBOUR);
+            getasseElevationModel = demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
         }
     }
 
