@@ -26,6 +26,7 @@ class VgtPixelProperties implements PixelProperties {
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
     private static final float GLINT_THRESH =  -3.65E-4f;
+    private static final float TEMPERATURE_THRESH = 0.9f;
 
     public static final int SM_F_B0_GOOD = 7;
     public static final int SM_F_B2_GOOD = 6;
@@ -116,7 +117,7 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isCold() {
-        return false;
+        return (!isInvalid() && temperatureValue() > TEMPERATURE_THRESH);
     }
 
     @Override

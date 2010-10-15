@@ -339,6 +339,8 @@ public class GACloudScreeningOp extends Operator {
         float[] merisBrr = null;
 
         // AATSR variables
+        Band aatsrL1bFlagBand;
+        Tile aatsrL1bFlagTile = null;
         Band[] aatsrFlagBands;
         Tile[] aatsrFlagTiles;
         Tile btemp1200Tile = null;
@@ -374,6 +376,9 @@ public class GACloudScreeningOp extends Operator {
                 }
                 break;
             case MepixConstants.PRODUCT_TYPE_AATSR:
+
+                aatsrL1bFlagBand = sourceProduct.getBand(EnvisatConstants.AATSR_L1B_CLOUD_FLAGS_NADIR_BAND_NAME);
+                aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle, pm);
 
                 aatsrFlagBands = new Band[MepixConstants.AATSR_FLAG_BAND_NAMES.length];
                 aatsrFlagTiles = new Tile[MepixConstants.AATSR_FLAG_BAND_NAMES.length];
@@ -437,6 +442,7 @@ public class GACloudScreeningOp extends Operator {
                             }
                             ((AatsrPixelProperties) pixelProperties).setRefl(aatsrReflectance);
                             ((AatsrPixelProperties) pixelProperties).setBtemp1200(btemp1200Tile.getSampleFloat(x, y));
+                            ((AatsrPixelProperties) pixelProperties).setL1FlagGlintRisk(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_GLINT_RISK));
                             break;
                         case MepixConstants.PRODUCT_TYPE_VGT:
                             pixelProperties = new VgtPixelProperties();

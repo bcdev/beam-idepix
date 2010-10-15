@@ -25,9 +25,13 @@ class AatsrPixelProperties implements PixelProperties {
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
     private static final float GLINT_THRESH = -3.65E-4f;
+    private static final float TEMPERATURE_THRESH = 0.9f;
+
+    public static final int L1B_F_GLINT_RISK = 2;
 
     private float[] refl;
     private float btemp1200;
+    private boolean l1FlagGlintRisk;
 
 
     @Override
@@ -100,7 +104,7 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isCold() {
-        return false;
+        return (!isInvalid() && temperatureValue() > TEMPERATURE_THRESH);
     }
 
     @Override
@@ -110,8 +114,7 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isGlintRisk() {
-        // todo: define
-        return false;
+        return l1FlagGlintRisk;
     }
 
     @Override
@@ -126,7 +129,7 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
-        return ((refl[0] + refl[1] + refl[2]) / 3.0f);
+        return ((refl[0] + refl[1] + refl[2]) / 300.0f);
     }
 
     @Override
@@ -138,7 +141,7 @@ class AatsrPixelProperties implements PixelProperties {
                                                           MepixConstants.AATSR_WAVELENGTHS[1],
                                                           MepixConstants.AATSR_WAVELENGTHS[2]);
 
-        return (float) ((flatness0 + flatness1) / 2.0);
+        return (float) ((flatness0 + flatness1) / 200.0);
     }
 
     @Override
@@ -167,25 +170,33 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float pressureValue() {
-        // todo: define
         return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float aPrioriLandValue() {
-        // todo: define
+        // todo: get from tie points
         return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float aPrioriWaterValue() {
-        // todo: define
+        // todo: get from tie points
         return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float radiometricLandValue() {
         // todo: define
+         // todo: clarify value for REFL620_LAND_THRESH (not yet in ATBD) then implement the following
+//        if (isCloud()) {
+//            return UNCERTAINTY_VALUE;
+//        }
+//        if (refl[9] >= refl[6] && refl[6] > REFL620_LAND_THRESH) {
+//            return 1.0f;
+//        } else {
+//            return 0.5f;
+//        }
         return UNCERTAINTY_VALUE;
     }
 
@@ -203,5 +214,9 @@ class AatsrPixelProperties implements PixelProperties {
 
     public void setBtemp1200(float btemp1200) {
         this.btemp1200 = btemp1200;
+    }
+
+    public void setL1FlagGlintRisk(boolean l1FlagGlintRisk) {
+        this.l1FlagGlintRisk = l1FlagGlintRisk;
     }
 }

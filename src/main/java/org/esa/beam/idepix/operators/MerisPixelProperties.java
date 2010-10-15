@@ -24,16 +24,17 @@ class MerisPixelProperties implements PixelProperties {
     private static final float NDVI_THRESH = 0.4f;
     private static final float REFL620_WATER_THRESH = 0.1f;
     private static final float REFL620_LAND_THRESH = 0.15f;
+    private static final float TEMPERATURE_THRESH = 0.9f;
+
     private static final float GLINT_THRESH =  -3.65E-4f;
 
     public static final int L1B_F_LAND = 4;
-    
     private float brr442;
     private float brr442Thresh;
     private float p1;
     private float pscatt;
-    private boolean l1FlagLand;
 
+    private boolean l1FlagLand;
     private float[] refl;
     private float[] brr;
 
@@ -110,7 +111,7 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isCold() {
-        return false;
+        return (!isInvalid() && temperatureValue() > TEMPERATURE_THRESH);
     }
 
     @Override

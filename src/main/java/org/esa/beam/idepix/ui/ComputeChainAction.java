@@ -41,11 +41,4 @@ public class ComputeChainAction extends AbstractVisatAction {
         dialog.show();
     }
 
-    @Override
-    public void updateState() {
-        final Product selectedProduct = VisatApp.getApp().getSelectedProduct();
-        final boolean enabled = selectedProduct != null;
-
-        setEnabled(enabled);
-    }
 }

@@ -37,23 +37,7 @@ class SourceProductSelectionListener implements SelectionChangeListener {
 
             // check for MERIS:
             if (MepixUtils.isValidMerisProduct(selectedProduct)) {
-                String resName = "";
-                if (selectedProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
-                    // MER_RR__1
-                    resName = EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME;
-                } else if (selectedProduct.getProductType().equals(
-                        EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME)) {
-                    // MER_FR__1
-                    resName = EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME;
-                }
-                final String nameL1bPrefix = resName.substring(0, resName.length() - 2);
-                final int nameLength = mepixName.length();
-                mepixName = nameL1bPrefix + "2MEPIX" + mepixName.substring(nameL1bPrefix.length() + 6,
-                                                                           nameLength);
-                if (mepixName.toUpperCase().endsWith(".N1") || mepixName.toUpperCase().endsWith(".E1") ||
-                    mepixName.toUpperCase().endsWith(".E2")) {
-                    mepixName = mepixName.substring(0, mepixName.length() - 3);
-                }
+                mepixName = selectedProduct.getName() + "_IDEPIX";  // todo: discuss
                 targetProductSelectorModel.setProductName(mepixName + targetProductNameSuffix);
                 form.setEnabledAt(MepixConstants.GLOBALBEDO_TAB_INDEX, true);
                 form.setEnabledAt(MepixConstants.IPF_TAB_INDEX, true);
@@ -62,7 +46,7 @@ class SourceProductSelectionListener implements SelectionChangeListener {
                 form.setEnabledAt(MepixConstants.COASTCOLOUR_TAB_INDEX, false);
             } else if (MepixUtils.isValidAatsrProduct(selectedProduct)) {
                 // check for AATSR:
-                mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
+                mepixName = selectedProduct.getName() + "_IDEPIX";  // todo: discuss
                 targetProductSelectorModel.setProductName(mepixName);
                 form.setEnabledAt(MepixConstants.GLOBALBEDO_TAB_INDEX, true);
                 form.setEnabledAt(MepixConstants.IPF_TAB_INDEX, false);
@@ -71,7 +55,7 @@ class SourceProductSelectionListener implements SelectionChangeListener {
                 form.setEnabledAt(MepixConstants.COASTCOLOUR_TAB_INDEX, false);
             } else if (MepixUtils.isValidVgtProduct(selectedProduct)) {
                 // check for VGT:
-                mepixName = selectedProduct.getName() + "VGT2MEPIX";  // todo: discuss
+                mepixName = selectedProduct.getName() + "_IDEPIX";  // todo: discuss
                 targetProductSelectorModel.setProductName(mepixName);
                 form.setEnabledAt(MepixConstants.GLOBALBEDO_TAB_INDEX, true);
                 form.setEnabledAt(MepixConstants.IPF_TAB_INDEX, false);

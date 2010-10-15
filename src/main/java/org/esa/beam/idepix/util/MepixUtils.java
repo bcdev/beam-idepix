@@ -33,10 +33,12 @@ public class MepixUtils {
     }
 
     public static boolean isValidMerisProduct(Product product) {
-        return product.getName().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-               product.getName().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
-               product.getName().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) ||
-               product.getName().startsWith(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME);
+        if (product.getProductType().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
+            product.getProductType().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
+            product.getProductType().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME)) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean isValidAatsrProduct(Product product) {
