@@ -203,7 +203,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
 			
 			Tile isInvalid = getSourceTile(invalidBand, rectangle, pm);
 			
-			Tile cloudFlags = getSourceTile(cloudProduct.getBand(MepixCloudClassificationOp.CLOUD_FLAGS), rectangle, pm);
+			Tile cloudFlags = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle, pm);
 
             final double[] nnIn = new double[7];
             final double[] nnOut = new double[1];
@@ -215,8 +215,6 @@ public class SurfacePressureFubOp extends MerisBasisOp {
 						break;
 					}
 					final int detectorXY = detector.getSampleInt(x, y);
-//					if (isInvalid.getSampleBoolean(x, y) ||
-//					     cloudFlags.getSampleBit(x, y, MepixCloudClassificationOp.F_CLOUD)) {
 					if (isInvalid.getSampleBoolean(x, y)) {
 						targetTile.setSample(x, y, 0);
 					} else {

@@ -10,7 +10,7 @@ import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
 import org.esa.beam.framework.gpf.ui.SourceProductSelector;
 import org.esa.beam.framework.gpf.ui.TargetProductSelectorModel;
 import org.esa.beam.framework.ui.AppContext;
-import org.esa.beam.idepix.util.MepixUtils;
+import org.esa.beam.idepix.util.IdepixUtils;
 
 import javax.swing.JPanel;
 import java.awt.Dimension;
@@ -22,20 +22,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class represents the product dialog for the MEPIX processing.
+ * This class represents the product dialog for the IDEPIX processing.
  *
  * @author olafd
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  *
  */
-class MepixDialog extends SingleTargetProductDialog {
+class IdepixDialog extends SingleTargetProductDialog {
 
     private List<SourceProductSelector> sourceProductSelectorList;
     private Map<Field, SourceProductSelector> sourceProductSelectorMap;
 
     private String operatorName;
     private Map<String, Object> parameterMap;
-    private MepixForm form;
+    private IdepixForm form;
     private String targetProductNameSuffix;
     private AppContext appContext;
 
@@ -44,9 +44,9 @@ class MepixDialog extends SingleTargetProductDialog {
     private OperatorSpi operatorSpi;
 
     /*
-     * MepixDialog constructor
+     * IdepixDialog constructor
      */
-    MepixDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
+    IdepixDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
         super(appContext, title, helpID);
         this.operatorName = operatorName;
         this.appContext = appContext;
@@ -82,7 +82,7 @@ class MepixDialog extends SingleTargetProductDialog {
             showErrorDialog("No input product specified!");
             return false;
         } else {
-            return MepixUtils.isInputValid(sourceProduct);
+            return IdepixUtils.isInputValid(sourceProduct);
         }
     }
 
@@ -95,7 +95,7 @@ class MepixDialog extends SingleTargetProductDialog {
         }
         parameterMap = new LinkedHashMap<String, Object>(17);
 
-        form = new MepixForm(operatorSpi, parameterMap);
+        form = new IdepixForm(operatorSpi, parameterMap);
 
         initComponents();
         
@@ -129,7 +129,7 @@ class MepixDialog extends SingleTargetProductDialog {
                 new SourceProductSelectionListener(form, targetProductSelectorModel, targetProductNameSuffix);
         sourceProductSelectorList.get(0).addSelectionChangeListener(sourceProductSelectionListener);
 
-		form.setPreferredSize(new Dimension(MepixDialog.DIALOG_WIDTH, MepixDialog.DIALOG_HEIGHT));
+		form.setPreferredSize(new Dimension(IdepixDialog.DIALOG_WIDTH, IdepixDialog.DIALOG_HEIGHT));
         form.add("I/O Parameters", ioParametersPanel);
     }
 

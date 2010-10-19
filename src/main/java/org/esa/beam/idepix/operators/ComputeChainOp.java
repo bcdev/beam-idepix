@@ -25,7 +25,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.idepix.util.MepixUtils;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.BrrOp;
 import org.esa.beam.meris.brr.GaseousCorrectionOp;
 import org.esa.beam.meris.brr.LandClassificationOp;
@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * MEPIX main operator setting up a chain of existing operators.
+ * IDEPIX main operator setting up a chain of existing operators.
  *
  * @author Olaf Danne
  * @version $Revision: 7609 $ $Date: 2009-12-18 17:51:22 +0100 (Fr, 18 Dez 2009) $
@@ -64,7 +64,7 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Cloud screening parameters
-    @Parameter(defaultValue = "QWG", valueSet = {"QWG", "GlobAlbedo", "CoastColour"})
+    @Parameter(defaultValue = "GlobAlbedo", valueSet = {"GlobAlbedo", "QWG",  "CoastColour"})
     private CloudScreeningSelector algorithm;
 
 
@@ -165,8 +165,8 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Globalbedo parameters
-    @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
-    private boolean gaCopyRadiances = false;
+    @Parameter(defaultValue = "true", label = "Copy input radiance/reflectance bands")
+    private boolean gaCopyRadiances = true;
     @Parameter(defaultValue = "false", label = "Copy input annotation bands")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
@@ -182,14 +182,15 @@ public class ComputeChainOp extends BasisOp {
     private boolean straylightCorr;
     private Product merisCloudProduct;
     private Product rayleighProduct;
+    private Product correctedRayleighProduct;
     private Product pressureLiseProduct;
 
     @Override
     public void initialize() throws OperatorException {
 
-        final boolean inputProductIsValid = MepixUtils.validateInputProduct(sourceProduct, algorithm);
+        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, algorithm);
         if (!inputProductIsValid) {
-            throw new OperatorException(MepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
 
 
@@ -197,7 +198,7 @@ public class ComputeChainOp extends BasisOp {
             processQwg();
         } else if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
             // GA cloud classification
-            if (MepixUtils.isValidMerisProduct(sourceProduct)) {
+            if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
                 processQwg();
             }
             processGlobAlbedo();
@@ -250,7 +251,8 @@ public class ComputeChainOp extends BasisOp {
         // Cloud Classification
         merisCloudProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection) {
+            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection ||
+            CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
             Map<String, Product> cloudInput = new HashMap<String, Product>(4);
             cloudInput.put("l1b", sourceProduct);
             cloudInput.put("rhotoa", rad2reflProduct);
@@ -271,7 +273,7 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold",
                                               ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
-            merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MepixCloudClassificationOp.class),
+            merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),
                                                   cloudClassificationParameters, cloudInput);
         }
 
@@ -311,6 +313,18 @@ public class ComputeChainOp extends BasisOp {
             rayleighParameters.put("exportRayCoeffs", true);
             rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RayleighCorrectionOp.class),
                                                 rayleighParameters, rayleighInput);
+        }
+
+        if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+            Map<String, Product> brrCloudInput = new HashMap<String, Product>(5);
+            brrCloudInput.put("l1b", sourceProduct);
+            brrCloudInput.put("brr", rayleighProduct);
+            brrCloudInput.put("refl", rad2reflProduct);
+            brrCloudInput.put("cloud", merisCloudProduct);
+            brrCloudInput.put("land", landProduct);
+            correctedRayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisBrrCorrectionOp.class),
+                                                         GPF.NO_PARAMS,
+                                                         brrCloudInput);
         }
 
         // Blue Band
@@ -375,16 +389,16 @@ public class ComputeChainOp extends BasisOp {
         }
         if (ipfOutputL2Pressures) {
             for (Band band : merisCloudProduct.getBands()) {
-                if (!band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS)) {
+                if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
                     targetProduct.addBand(band);
                 }
             }
         }
         if (ipfOutputL2CloudDetection) {
-            FlagCoding flagCoding = MepixCloudClassificationOp.createFlagCoding(MepixCloudClassificationOp.CLOUD_FLAGS);
+            FlagCoding flagCoding = IdepixCloudClassificationOp.createFlagCoding(IdepixCloudClassificationOp.CLOUD_FLAGS);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : merisCloudProduct.getBands()) {
-                if (band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS)) {
+                if (band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                     targetProduct.addBand(band);
                 }
@@ -425,7 +439,7 @@ public class ComputeChainOp extends BasisOp {
 
         if (straylightCorr && pressureQWGOutputCtpStraylightCorrFub) {
             for (Band band : ctpProductStraylight.getBands()) {
-                if (!band.getName().equals(MepixCloudClassificationOp.CLOUD_FLAGS)) {
+                if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
                     targetProduct.addBand(band);
                 }
             }
@@ -513,7 +527,7 @@ public class ComputeChainOp extends BasisOp {
         Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
         l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
 
-        MepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
+        IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
     }
 
     private void processGlobAlbedo() {
@@ -522,7 +536,8 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
         gaCloudInput.put("gal1b", sourceProduct);
         gaCloudInput.put("cloud", merisCloudProduct);   // may be null
-        gaCloudInput.put("rayleigh", rayleighProduct);  // may be null
+//        gaCloudInput.put("rayleigh", rayleighProduct);  // may be null
+        gaCloudInput.put("rayleigh", correctedRayleighProduct);  // may be null  // todo: discuss
         gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);

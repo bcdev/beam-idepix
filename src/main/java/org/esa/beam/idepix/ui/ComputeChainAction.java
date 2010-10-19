@@ -14,12 +14,10 @@
  */
 package org.esa.beam.idepix.ui;
 
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.idepix.operators.ComputeChainOp;
-import org.esa.beam.idepix.operators.MepixConstants;
-import org.esa.beam.visat.VisatApp;
+import org.esa.beam.idepix.operators.IdepixConstants;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
 /**
@@ -33,10 +31,10 @@ public class ComputeChainAction extends AbstractVisatAction {
     @Override
     public void actionPerformed(CommandEvent commandEvent) {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // test!!
-        final MepixDialog dialog =
-            new MepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
+        final IdepixDialog dialog =
+            new IdepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
                     getAppContext(),
-                    "IDEPIX Pixel Identification Tool - " + MepixConstants.MEPIX_VERSION,
+                    "IDEPIX Pixel Identification Tool - " + IdepixConstants.IDEPIX_VERSION,
                     "idepixChain","");
         dialog.show();
     }

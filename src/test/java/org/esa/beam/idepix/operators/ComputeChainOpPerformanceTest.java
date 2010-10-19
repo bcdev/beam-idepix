@@ -52,7 +52,7 @@ public class ComputeChainOpPerformanceTest {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new BarometricPressureOp.Spi());
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new CloudTopPressureOp.Spi());
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new LisePressureOp.Spi());
-        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new MepixCloudClassificationOp.Spi());
+        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new IdepixCloudClassificationOp.Spi());
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new SurfacePressureFubOp.Spi());
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new GaseousCorrectionOp.Spi());
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new LandClassificationOp.Spi());

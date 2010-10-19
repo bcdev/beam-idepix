@@ -3,14 +3,14 @@ package org.esa.beam.idepix.operators;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 
 /**
- * MEPIX constants
+ * IDEPIX constants
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class MepixConstants {
+public class IdepixConstants {
 
-    public static final String MEPIX_VERSION = "v1.2-SNAPSHOT";
+    public static final String IDEPIX_VERSION = "v1.2-SNAPSHOT";
 
     public static final String[] ipfParameterNames = new String[]{
             "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",

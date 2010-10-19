@@ -4,7 +4,7 @@
     <sect1 id="sum.products.l2.qwg">
         <title>Standard L2 Products</title>
         <para>
-            The standard L2 products which can be derived using the MEPIX tool are:
+            The standard L2 products which can be derived using the IDEPIX tool are:
             <itemizedlist mark='bullet'>
                 <listitem>
                      Cloud Top Pressure
@@ -235,7 +235,7 @@
                     Cloud Probability
                 </listitem>
             </itemizedlist>
-            MEPIX uses the implementation which had been developed within the GlobCover project.
+            IDEPIX uses the implementation which had been developed within the GlobCover project.
        </para>
 
         <sect2 id="sum.products.globcover.blueband">

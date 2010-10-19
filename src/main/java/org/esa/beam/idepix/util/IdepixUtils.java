@@ -4,7 +4,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
-import org.esa.beam.idepix.operators.MepixConstants;
+import org.esa.beam.idepix.operators.IdepixConstants;
 
 import javax.swing.JOptionPane;
 
@@ -12,11 +12,11 @@ import javax.swing.JOptionPane;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class MepixUtils {
+public class IdepixUtils {
 
     private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("aatsrrecalibration");
 
-    private MepixUtils() {
+    private IdepixUtils() {
     }
 
     public static boolean validateInputProduct(Product inputProduct, CloudScreeningSelector algorithm) {
@@ -46,7 +46,7 @@ public class MepixUtils {
     }
 
     public static boolean isValidVgtProduct(Product product) {
-        return product.getProductType().startsWith(MepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
+        return product.getProductType().startsWith(IdepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
     }
 
 
@@ -64,7 +64,7 @@ public class MepixUtils {
 
     public static void logErrorMessage(String msg) {
         if (System.getProperty("gpfMode") != null && "GUI".equals(System.getProperty("gpfMode"))) {
-            JOptionPane.showOptionDialog(null, msg, "MEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
+            JOptionPane.showOptionDialog(null, msg, "IDEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
                                          JOptionPane.ERROR_MESSAGE, null, null, null);
         } else {
             info(msg);
@@ -84,7 +84,7 @@ public class MepixUtils {
 
     public static double scaleVgtSlope(float refl0, float refl1, float wl0, float wl1) {
         float scaleValue = 0.5f;
-        float slope = 1.0f - Math.abs(1000.0f * MepixUtils.spectralSlope(refl0, refl1, wl0, wl1));
+        float slope = 1.0f - Math.abs(1000.0f * IdepixUtils.spectralSlope(refl0, refl1, wl0, wl1));
         return Math.max((slope - scaleValue) / (1.0 - scaleValue), 0);
     }
 

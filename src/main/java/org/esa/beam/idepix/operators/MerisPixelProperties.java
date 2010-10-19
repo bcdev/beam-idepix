@@ -1,6 +1,6 @@
 package org.esa.beam.idepix.operators;
 
-import org.esa.beam.idepix.util.MepixUtils;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
 /**
@@ -132,25 +132,25 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isInvalid() {
-        return !MepixUtils.areReflectancesValid(refl);
+        return !IdepixUtils.areReflectancesValid(refl);
     }
 
     @Override
     public float brightValue() {
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
-            return MepixConstants.NO_DATA_VALUE;
+            return IdepixConstants.NO_DATA_VALUE;
         }
         return brr442 / brr442Thresh;
     }
 
     @Override
     public float spectralFlatnessValue() {
-        final double flatness0 = MepixUtils.spectralSlope(refl[0], refl[2],
-                                                          MepixConstants. MERIS_WAVELENGTHS[0], MepixConstants. MERIS_WAVELENGTHS[2]);
-        final double flatness1 = MepixUtils.spectralSlope(refl[4], refl[5],
-                                                                  MepixConstants. MERIS_WAVELENGTHS[4], MepixConstants. MERIS_WAVELENGTHS[5]);
-        final double flatness2 = MepixUtils.spectralSlope(refl[6], refl[9],
-                                                                  MepixConstants. MERIS_WAVELENGTHS[6], MepixConstants. MERIS_WAVELENGTHS[9]);
+        final double flatness0 = IdepixUtils.spectralSlope(refl[0], refl[2],
+                                                          IdepixConstants. MERIS_WAVELENGTHS[0], IdepixConstants. MERIS_WAVELENGTHS[2]);
+        final double flatness1 = IdepixUtils.spectralSlope(refl[4], refl[5],
+                                                                  IdepixConstants. MERIS_WAVELENGTHS[4], IdepixConstants. MERIS_WAVELENGTHS[5]);
+        final double flatness2 = IdepixUtils.spectralSlope(refl[6], refl[9],
+                                                                  IdepixConstants. MERIS_WAVELENGTHS[6], IdepixConstants. MERIS_WAVELENGTHS[9]);
 
 
         return (float) ((flatness0 + flatness1 + flatness2)/3.0);

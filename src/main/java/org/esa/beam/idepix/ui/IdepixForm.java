@@ -9,59 +9,58 @@ import com.bc.ceres.swing.binding.BindingContext;
 import com.bc.ceres.swing.binding.PropertyPane;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
-import org.esa.beam.idepix.operators.MepixConstants;
+import org.esa.beam.idepix.operators.IdepixConstants;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
+import java.awt.Component;
 import java.util.Map;
 
 /**
- * Mepix input form represented by a customized JTabbedPane
+ * Idepix input form represented by a customized JTabbedPane
  *
  * @author Olaf Danne
  * @version $Revision: 7464 $ $Date: 2009-12-11 17:18:25 +0100 (Fr, 11 Dez 2009) $
  */
-class MepixForm extends JTabbedPane {
+class IdepixForm extends JTabbedPane {
 
     private OperatorSpi operatorSpi;
     private Map<String, Object> parameterMap;
 
-    public MepixForm(OperatorSpi operatorSpi, Map<String, Object> parameterMap) {
+    public IdepixForm(OperatorSpi operatorSpi, Map<String, Object> parameterMap) {
         this.operatorSpi = operatorSpi;
         this.parameterMap = parameterMap;
     }
 
     public void initialize() {
         final PropertyContainer propertyContainerCloudscreening =
-                createPanelSpecificValueContainer(MepixConstants.cloudScreeningParameterNames);
+                createPanelSpecificValueContainer(IdepixConstants.cloudScreeningParameterNames);
         addParameterPane(propertyContainerCloudscreening, "Cloud Screening");
 
         // define new value containers for distribution of the target products to three different tab panes.
         final PropertyContainer propertyContainerIpf =
-                createPanelSpecificValueContainer(MepixConstants.ipfParameterNames);
+                createPanelSpecificValueContainer(IdepixConstants.ipfParameterNames);
         final PropertyContainer propertyContainerPressure =
-                createPanelSpecificValueContainer(MepixConstants.pressureParameterNames);
+                createPanelSpecificValueContainer(IdepixConstants.pressureParameterNames);
 
         addParameterPane(propertyContainerIpf, "IPF Compatible Products");
         addParameterPane(propertyContainerPressure, "Pressure Products");
 
-//        if (System.getProperty("mepixMode") != null && System.getProperty("mepixMode").equals("QWG")) {
-            final PropertyContainer propertyContainerCloud =
-                    createPanelSpecificValueContainer(MepixConstants.cloudProductParameterNames);
-            addParameterPane(propertyContainerCloud, "Cloud Products");
-//        }
+        final PropertyContainer propertyContainerCloud =
+                createPanelSpecificValueContainer(IdepixConstants.cloudProductParameterNames);
+        addParameterPane(propertyContainerCloud, "Cloud Products");
 
         final PropertyContainer propertyContainerGlobalbedo=
-                createPanelSpecificValueContainer(MepixConstants.globalbedoParameterNames);
+                createPanelSpecificValueContainer(IdepixConstants.globalbedoParameterNames);
         addParameterPane(propertyContainerGlobalbedo, "GlobAlbedo");
 
         final PropertyContainer propertyContainerCoastcolour=
-                createPanelSpecificValueContainer(MepixConstants.coastcolourParameterNames);
+                createPanelSpecificValueContainer(IdepixConstants.coastcolourParameterNames);
         addParameterPane(propertyContainerCoastcolour, "CoastColour");
-        setEnabledAt(MepixConstants.COASTCOLOUR_TAB_INDEX, false); // todo: enable later
+        setEnabledAt(IdepixConstants.COASTCOLOUR_TAB_INDEX, false); // todo: enable later
     }
 
      ///////////// END OF PUBLIC //////////////
@@ -73,7 +72,7 @@ class MepixForm extends JTabbedPane {
         PropertyPane parametersPane = new PropertyPane(context);
         JPanel paremetersPanel = parametersPane.createPanel();
         paremetersPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
-        this.add(title, new JScrollPane(paremetersPanel));
+        final Component component1 = this.add(title, new JScrollPane(paremetersPanel));
     }
 
     private PropertyContainer createPanelSpecificValueContainer(String[] thisPanelIDs) {
@@ -84,7 +83,7 @@ class MepixForm extends JTabbedPane {
         try {
             pc.setDefaultValues();
         } catch (ValidationException e) {
-            JOptionPane.showOptionDialog(null, e.getMessage(), "MEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
+            JOptionPane.showOptionDialog(null, e.getMessage(), "IDEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
                                              JOptionPane.ERROR_MESSAGE, null, null, null);
         }
 

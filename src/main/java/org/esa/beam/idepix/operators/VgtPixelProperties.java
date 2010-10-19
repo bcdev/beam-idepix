@@ -1,7 +1,7 @@
 package org.esa.beam.idepix.operators;
 
 import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.idepix.util.MepixUtils;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
 /**
@@ -128,7 +128,7 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public boolean isGlintRisk() {
         return isWater() && isCloud() &&
-               (MepixUtils.spectralSlope(refl[0], refl[1], MepixConstants.VGT_WAVELENGTHS[0], MepixConstants.VGT_WAVELENGTHS[1]) > GLINT_THRESH);
+               (IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0], IdepixConstants.VGT_WAVELENGTHS[1]) > GLINT_THRESH);
     }
 
     @Override
@@ -138,7 +138,7 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isInvalid() {
-        return !MepixUtils.areReflectancesValid(refl);
+        return !IdepixUtils.areReflectancesValid(refl);
     }
 
     @Override
@@ -154,10 +154,10 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public float spectralFlatnessValue() {
-        final double flatness0 = MepixUtils.scaleVgtSlope(refl[0], refl[1], MepixConstants.VGT_WAVELENGTHS[0],
-                                                      MepixConstants.VGT_WAVELENGTHS[1]);
-        final double flatness2 = MepixUtils.scaleVgtSlope(refl[1], refl[2], MepixConstants.VGT_WAVELENGTHS[1],
-                                                      MepixConstants.VGT_WAVELENGTHS[2]);
+        final double flatness0 = IdepixUtils.scaleVgtSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
+                                                      IdepixConstants.VGT_WAVELENGTHS[1]);
+        final double flatness2 = IdepixUtils.scaleVgtSlope(refl[1], refl[2], IdepixConstants.VGT_WAVELENGTHS[1],
+                                                      IdepixConstants.VGT_WAVELENGTHS[2]);
 
         if (isLand()) {
             return (float) ((flatness0 + flatness2)/2.0);
@@ -250,9 +250,9 @@ class VgtPixelProperties implements PixelProperties {
     }
 
     public void setRefl(float[] refl) {
-        if (refl.length != MepixConstants.VGT_WAVELENGTHS.length) {
+        if (refl.length != IdepixConstants.VGT_WAVELENGTHS.length) {
             throw new OperatorException("VGT pixel processing: Invalid number of wavelengths [" + refl.length +
-                                        "] - must be " + MepixConstants.VGT_WAVELENGTHS.length);
+                                        "] - must be " + IdepixConstants.VGT_WAVELENGTHS.length);
         }
         this.refl = refl;
     }
