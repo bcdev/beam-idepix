@@ -25,7 +25,7 @@ class VgtPixelProperties implements PixelProperties {
     private static final float NDVI_THRESH = 0.4f;
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
-    private static final float GLINT_THRESH =  -3.65E-4f;
+    private static final float GLINT_THRESH = -3.65E-4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
     public static final int SM_F_B0_GOOD = 7;
@@ -128,7 +128,8 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public boolean isGlintRisk() {
         return isWater() && isCloud() &&
-               (IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0], IdepixConstants.VGT_WAVELENGTHS[1]) > GLINT_THRESH);
+               (IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
+                                          IdepixConstants.VGT_WAVELENGTHS[1]) > GLINT_THRESH);
     }
 
     @Override
@@ -144,51 +145,51 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public float brightValue() {
         if (isLand()) {
-            return (refl[0] + refl[1])/2.0f;
+            return (refl[0] + refl[1]) / 2.0f;
         } else if (isWater()) {
             return (refl[1] + refl[2]);
         } else {
-            return (refl[0] + refl[1])/2.0f;
+            return (refl[0] + refl[1]) / 2.0f;
         }
     }
 
     @Override
     public float spectralFlatnessValue() {
         final double flatness0 = IdepixUtils.scaleVgtSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
-                                                      IdepixConstants.VGT_WAVELENGTHS[1]);
+                                                           IdepixConstants.VGT_WAVELENGTHS[1]);
         final double flatness2 = IdepixUtils.scaleVgtSlope(refl[1], refl[2], IdepixConstants.VGT_WAVELENGTHS[1],
-                                                      IdepixConstants.VGT_WAVELENGTHS[2]);
+                                                           IdepixConstants.VGT_WAVELENGTHS[2]);
 
         if (isLand()) {
-            return (float) ((flatness0 + flatness2)/2.0);
+            return (float) ((flatness0 + flatness2) / 2.0);
         } else if (isWater()) {
-            return (float) ((flatness0 + flatness2)/2.0);
+            return (float) ((flatness0 + flatness2) / 2.0);
         } else {
-            return (float) ((flatness0 + flatness2)/2.0);
+            return (float) ((flatness0 + flatness2) / 2.0);
         }
     }
 
     public float whiteValue() {
-        if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
-                 return spectralFlatnessValue();
-        }  else {
+        if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
+            return spectralFlatnessValue();
+        } else {
             return 0f;
         }
     }
 
     @Override
     public float temperatureValue() {
-        return UNCERTAINTY_VALUE;  
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float ndsiValue() {
-        return (refl[2] - refl[3])/(refl[2] + refl[3]);
+        return (refl[2] - refl[3]) / (refl[2] + refl[3]);
     }
 
     @Override
     public float ndviValue() {
-        return (refl[2] - refl[1])/(refl[2] + refl[1]);
+        return (refl[2] - refl[1]) / (refl[2] + refl[1]);
     }
 
     @Override
@@ -213,7 +214,9 @@ class VgtPixelProperties implements PixelProperties {
             return 0.5f;
         } else if (!smLand) {
             return 1.0f;
-        } else return 0.0f;
+        } else {
+            return 0.0f;
+        }
     }
 
     @Override
@@ -221,12 +224,10 @@ class VgtPixelProperties implements PixelProperties {
         if (isInvalid() || isCloud()) {
             return 0.5f;
         } else if (refl[2] > refl[1] && refl[2] > REFL835_LAND_THRESH) {
-                // todo: refine this test
-                return 1.0f;
+            return 1.0f;
         } else if (refl[2] > REFL835_LAND_THRESH) {
-                // todo: refine this test
-                return 0.75f;
-        }else {
+            return 0.75f;
+        } else {
             return 0.25f;
         }
     }
@@ -236,7 +237,6 @@ class VgtPixelProperties implements PixelProperties {
         if (isInvalid() || isCloud()) {
             return 0.5f;
         } else if (refl[0] > refl[1] && refl[1] > refl[2] && refl[2] < REFL835_WATER_THRESH) {
-            // todo: refine this test
             return 1.0f;
         } else {
             return 0.25f;

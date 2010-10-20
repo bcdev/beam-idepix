@@ -220,22 +220,11 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float radiometricLandValue() {
-        // todo: define
-         // todo: clarify value for REFL620_LAND_THRESH (not yet in ATBD) then implement the following
-//        if (isCloud()) {
-//            return UNCERTAINTY_VALUE;
-//        }
-//        if (refl[9] >= refl[6] && refl[6] > REFL620_LAND_THRESH) {
-//            return 1.0f;
-//        } else {
-//            return 0.5f;
-//        }
         return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float radiometricWaterValue() {
-        // todo: define
         return UNCERTAINTY_VALUE;
     }
 

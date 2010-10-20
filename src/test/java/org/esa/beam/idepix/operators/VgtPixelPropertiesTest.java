@@ -1,10 +1,12 @@
 package org.esa.beam.idepix.operators;
 
+import junit.framework.TestCase;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class VgtPixelPropertiesTest {
+public class VgtPixelPropertiesTest extends TestCase {
 
     private VgtPixelProperties vgtPixelProperties;
 
