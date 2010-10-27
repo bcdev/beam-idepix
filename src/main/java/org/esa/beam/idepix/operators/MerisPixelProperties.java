@@ -24,9 +24,7 @@ class MerisPixelProperties implements PixelProperties {
     private static final float WHITE_THRESH = 0.9f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
-    private static final float REFL620_WATER_THRESH = 0.1f;
-    private static final float REFL620_LAND_THRESH = 0.15f;
-    private static final float REFL0670_UPPER_THRESH = 1.0f;
+    private static final float REFL0670_UPPER_THRESH = 1.0f;     // 664nm for MERIS
     private static final float REFL0670_LOWER_THRESH = 0.4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
@@ -90,13 +88,13 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+//        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
 
-//        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
-//        boolean is0670InInterval = (refl[6] >= REFL0670_LOWER_THRESH && refl[6] <= REFL0670_UPPER_THRESH);
-//        boolean isClearSnow = isNdsiInInterval && is0670InInterval;
-//
-//        return !isInvalid() && isClearSnow;
+        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
+        boolean is0670InInterval = (refl[6] >= REFL0670_LOWER_THRESH && refl[6] <= REFL0670_UPPER_THRESH);
+        boolean isClearSnow = isNdsiInInterval && is0670InInterval;
+
+        return !isInvalid() && isClearSnow;
     }
 
     @Override
