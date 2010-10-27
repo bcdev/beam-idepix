@@ -24,7 +24,7 @@ public class AatsrPixelPropertiesTest extends TestCase {
     public void testSpectralFlatnessValue() {
         float[] refl = setSpectralFlatnessTestValues();
         aatsrPixelProperties.setRefl(refl);
-        assertEquals(0.015f, aatsrPixelProperties.spectralFlatnessValue(), 1.0E-3);
+        assertEquals(-14.0f, aatsrPixelProperties.spectralFlatnessValue(), 1.0E-3);
     }
 
     public void testWhiteValue() {
@@ -32,10 +32,10 @@ public class AatsrPixelPropertiesTest extends TestCase {
         aatsrPixelProperties.setRefl(refl);
 
         // bright value > BRIGHT_FOR_WHITE_THRESH
-        assertEquals(0.015f, aatsrPixelProperties.whiteValue(), 1.0E-3);
+        assertEquals(-14.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
 
         // bright value = 0
-        refl = new float[IdepixConstants.AATSR_WAVELENGTHS.length];
+        refl = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
         aatsrPixelProperties.setRefl(refl);
         assertEquals(0.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
     }
@@ -73,7 +73,7 @@ public class AatsrPixelPropertiesTest extends TestCase {
 
     public void testAPrioriLandValue() {
         // land:
-        aatsrPixelProperties.setRefl(new float[IdepixConstants.AATSR_WAVELENGTHS.length]);
+        aatsrPixelProperties.setRefl(new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length]);
         aatsrPixelProperties.setL1FlagLand(true);
         assertEquals(1.0f, aatsrPixelProperties.aPrioriLandValue());
         // water:
@@ -83,7 +83,7 @@ public class AatsrPixelPropertiesTest extends TestCase {
 
     public void testAPrioriWaterValue() {
         // water:
-        aatsrPixelProperties.setRefl(new float[IdepixConstants.AATSR_WAVELENGTHS.length]);
+        aatsrPixelProperties.setRefl(new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length]);
         aatsrPixelProperties.setL1FlagLand(false);
         assertEquals(1.0f, aatsrPixelProperties.aPrioriWaterValue());
         // land:
@@ -100,7 +100,7 @@ public class AatsrPixelPropertiesTest extends TestCase {
     }
 
     private float[] setSpectralFlatnessTestValues() {
-        float[] refl = new float[IdepixConstants.AATSR_WAVELENGTHS.length];
+        float[] refl = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
 
         // flatness_0 := 1.0:
         refl[0] = 450.0f;

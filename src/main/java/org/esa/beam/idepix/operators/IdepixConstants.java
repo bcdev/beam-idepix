@@ -36,7 +36,7 @@ public class IdepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaCopyAnnotations", "gaComputeFlagsOnly"
+            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyAnnotations", "gaUseAatsrFwardForClouds"
     };
 
     public static final String[] coastcolourParameterNames = new String[]{
@@ -93,7 +93,17 @@ public class IdepixConstants {
             EnvisatConstants.AATSR_L1B_REFLEC_FWARD_1600_BAND_NAME  // 7
     };
 
-    public static final float[] AATSR_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f, 450.0f, 645.0f, 835.0f, 1670.0f};
+    public static String[] AATSR_BTEMP_BAND_NAMES = {
+            EnvisatConstants.AATSR_L1B_BTEMP_NADIR_0370_BAND_NAME, // 0
+            EnvisatConstants.AATSR_L1B_BTEMP_NADIR_1100_BAND_NAME, // 1
+            EnvisatConstants.AATSR_L1B_BTEMP_NADIR_1200_BAND_NAME, // 2
+            EnvisatConstants.AATSR_L1B_BTEMP_FWARD_0370_BAND_NAME, // 3
+            EnvisatConstants.AATSR_L1B_BTEMP_FWARD_1100_BAND_NAME, // 4
+            EnvisatConstants.AATSR_L1B_BTEMP_FWARD_1200_BAND_NAME, // 5
+    };
+
+    public static final float[] AATSR_REFL_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f, 450.0f, 645.0f, 835.0f, 1670.0f};
+    public static final float[] AATSR_TEMP_WAVELENGTHS = {370.0f, 1100.0f, 1200.0f, 370.0f, 1100.0f, 1200.0f};
 
     public static String[] AATSR_FLAG_BAND_NAMES = {
             "confid_flags_nadir", // 0

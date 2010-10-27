@@ -14,17 +14,21 @@ class AatsrPixelProperties implements PixelProperties {
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.65f;
     private static final float PRESSURE_THRESH = 0.9f;
-//    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
-    private static final float CLOUD_THRESH = 1.0f;
+    private static final float CLOUD_THRESH = 1.65f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.5f;
-    private static final float WHITE_THRESH = 0.5f;
+    private static final float BRIGHT_THRESH = 0.2f;
+//    private static final float WHITE_THRESH = 0.5f;
+    private static final float WHITE_THRESH = 0.9f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
+    private static final float REFL1600_UPPER_THRESH = 0.1f;
+    private static final float REFL1600_LOWER_THRESH = 0.01f;
+    private static final float REFL0670_UPPER_THRESH = 1.0f;
+    private static final float REFL0670_LOWER_THRESH = 0.4f;
     private static final float GLINT_THRESH = -3.65E-4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
@@ -35,6 +39,7 @@ class AatsrPixelProperties implements PixelProperties {
     private float btemp1200;
     private boolean l1FlagLand;
     private boolean l1FlagGlintRisk;
+    private boolean useFwardViewForCloudMask;
 
 
     @Override
@@ -93,7 +98,28 @@ class AatsrPixelProperties implements PixelProperties {
         
         // this fits very well for example ATS_TOA_1PRUPA20050310_093826_subset.dim
         // for snow pixels over the Alpes, we obviously have refl_645 > refl_835 for most pixels
-        return (!isInvalid() && whiteValue() < 0.0 && ndsiValue() > NDSI_THRESH);
+//        return (!isInvalid() && whiteValue() < 0.0 && ndsiValue() > NDSI_THRESH);
+
+        // SnowRadiance:
+//        if (apply100PercentSnowMask && !(ndsi > ndsiUpperThreshold)) {
+//            boolean is1600InInterval = aatsr1610 >= aatsr1610LowerThreshold && aatsr1610 <= aatsr1610UpperThreshold;
+//            boolean is0670InInterval = aatsr0670 >= aatsr0670LowerThreshold && aatsr0670 <= aatsr0670UpperThreshold;
+//            considerPixelAsSnow = is1600InInterval && is0670InInterval;
+//        }
+//        with
+//        ndsiUpperThreshold = 0.96
+//        aatsr1610LowerThreshold = 1.0
+//        aatsr1610UpperThreshold = 10.0
+//        aatsr0670LowerThreshold = 1.0
+//        aatsr0670UpperThreshold = 10.0
+
+        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
+        boolean is1600InInterval = (refl[3] / 100.0 >= REFL1600_LOWER_THRESH && refl[3] / 100.0 <= REFL1600_UPPER_THRESH);
+        boolean is0670InInterval = (refl[1] / 100.0 >= REFL0670_LOWER_THRESH && refl[1] / 100.0 <= REFL0670_UPPER_THRESH);
+        boolean isClearSnow = isNdsiInInterval && is1600InInterval && is0670InInterval;
+
+        return !isInvalid() && isClearSnow;
+
     }
 
     @Override
@@ -143,19 +169,22 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
+        // todo: we want to be in the interval [0.0, 1.0] ?!?
         return ((refl[0] + refl[1] + refl[2]) / 300.0f);
     }
 
     @Override
     public float spectralFlatnessValue() {
-        final double flatness0 = IdepixUtils.spectralSlope(refl[0], refl[1],
-                                                          IdepixConstants.AATSR_WAVELENGTHS[0],
-                                                          IdepixConstants.AATSR_WAVELENGTHS[1]);
-        final double flatness1 = IdepixUtils.spectralSlope(refl[1], refl[2],
-                                                          IdepixConstants.AATSR_WAVELENGTHS[1],
-                                                          IdepixConstants.AATSR_WAVELENGTHS[2]);
+        final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[1],
+                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[0],
+                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[1]);
+        final double slope1 = IdepixUtils.spectralSlope(refl[1], refl[2],
+                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[1],
+                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
 
-        return (float) ((flatness0 + flatness1) / 200.0);
+//        return (float) ((slope0 + slope1) / 200.0);
+        // todo: we want to be in the interval [-1.0, 1.0] for computation of white value. In principle, the slopes do not have an upper limit
+        return (float) (1.0f - Math.abs(1000.0*(slope0 + slope1)/200.0));
     }
 
     @Override
@@ -231,7 +260,11 @@ class AatsrPixelProperties implements PixelProperties {
     // setters for AATSR specific quantities
 
     public void setRefl(float[] refl) {
-        this.refl = refl;
+        if (useFwardViewForCloudMask) {
+            this.refl = new float[]{refl[4], refl[5], refl[6], refl[7]};
+        } else {
+            this.refl = new float[]{refl[0], refl[1], refl[2], refl[3]};
+        }
     }
 
     public void setBtemp1200(float btemp1200) {
@@ -244,5 +277,9 @@ class AatsrPixelProperties implements PixelProperties {
 
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
+    }
+
+    public void setUseFwardViewForCloudMask(boolean useFwardViewForCloudMask) {
+        this.useFwardViewForCloudMask = useFwardViewForCloudMask;
     }
 }

@@ -167,10 +167,13 @@ public class ComputeChainOp extends BasisOp {
     // Globalbedo parameters
     @Parameter(defaultValue = "true", label = "Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = true;
-    @Parameter(defaultValue = "false", label = "Copy input annotation bands")
-    private boolean gaCopyAnnotations;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
     private boolean gaComputeFlagsOnly;
+    @Parameter(defaultValue="false", label = "Copy input annotation bands (VGT)")
+    private boolean gaCopyAnnotations;
+    @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
+    private boolean gaUseAatsrFwardForClouds;
+
 
 
     // Coastcolour parameters
@@ -184,6 +187,7 @@ public class ComputeChainOp extends BasisOp {
     private Product rayleighProduct;
     private Product correctedRayleighProduct;
     private Product pressureLiseProduct;
+    private Product rad2reflProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -211,7 +215,7 @@ public class ComputeChainOp extends BasisOp {
     private void processQwg() {
         // Radiance to Reflectance
         Map<String, Object> emptyParams = new HashMap<String, Object>();
-        Product rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams,
+        rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams,
                                                     sourceProduct);
 
         // Barometric Pressure
@@ -539,10 +543,12 @@ public class ComputeChainOp extends BasisOp {
 //        gaCloudInput.put("rayleigh", rayleighProduct);  // may be null
         gaCloudInput.put("rayleigh", correctedRayleighProduct);  // may be null  // todo: discuss
         gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
+        gaCloudInput.put("refl", rad2reflProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
+        gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);

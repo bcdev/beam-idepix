@@ -12,18 +12,22 @@ import org.esa.beam.util.math.MathUtils;
 class MerisPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
-    private static final float NDSI_THRESH = 0.65f;
+    private static final float NDSI_THRESH = 0.014f;  // changed from 0.65, 2010/10/22
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
+//    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
+    private static final float CLOUD_THRESH = 2.40f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
     private static final float BRIGHT_THRESH = 0.5f;
-    private static final float WHITE_THRESH = 0.5f;
+//    private static final float WHITE_THRESH = 0.7f;
+    private static final float WHITE_THRESH = 0.9f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
     private static final float REFL620_WATER_THRESH = 0.1f;
     private static final float REFL620_LAND_THRESH = 0.15f;
+    private static final float REFL0670_UPPER_THRESH = 1.0f;
+    private static final float REFL0670_LOWER_THRESH = 0.4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
     private static final float GLINT_THRESH =  -3.65E-4f;
@@ -87,6 +91,12 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public boolean isClearSnow() {
         return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+
+//        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
+//        boolean is0670InInterval = (refl[6] >= REFL0670_LOWER_THRESH && refl[6] <= REFL0670_UPPER_THRESH);
+//        boolean isClearSnow = isNdsiInInterval && is0670InInterval;
+//
+//        return !isInvalid() && isClearSnow;
     }
 
     @Override
@@ -140,26 +150,31 @@ class MerisPixelProperties implements PixelProperties {
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
+        // todo: we want to be in the interval [0.0, 1.0] ?!?
         return brr442 / brr442Thresh;
     }
 
     @Override
     public float spectralFlatnessValue() {
-        final double flatness0 = IdepixUtils.spectralSlope(refl[0], refl[2],
+        final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[2],
                                                           IdepixConstants. MERIS_WAVELENGTHS[0], IdepixConstants. MERIS_WAVELENGTHS[2]);
-        final double flatness1 = IdepixUtils.spectralSlope(refl[4], refl[5],
+        final double slope1 = IdepixUtils.spectralSlope(refl[4], refl[5],
                                                                   IdepixConstants. MERIS_WAVELENGTHS[4], IdepixConstants. MERIS_WAVELENGTHS[5]);
-        final double flatness2 = IdepixUtils.spectralSlope(refl[6], refl[9],
+        final double slope2 = IdepixUtils.spectralSlope(refl[6], refl[9],
                                                                   IdepixConstants. MERIS_WAVELENGTHS[6], IdepixConstants. MERIS_WAVELENGTHS[9]);
 
 
-        return (float) ((flatness0 + flatness1 + flatness2)/3.0);
+//        return (float) (1.0f - Math.pow((1000.0*(slope0 + slope1 + slope2)/3.0), 2.0));
+        // todo: we want to be in the interval [-1.0, 1.0] for computation of white value. In principle, the slopes do not have an upper limit
+        final double flatness = 1.0f - Math.abs(1000.0 * (slope0 + slope1 + slope2) / 3.0);
+        float result = (float) Math.max(-1.0f, flatness);
+        return result;
     }
 
     @Override
     public float whiteValue() {
         if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
-                 return spectralFlatnessValue();
+                 return 2*spectralFlatnessValue() - 1;
         }  else {
             return 0f;
         }
