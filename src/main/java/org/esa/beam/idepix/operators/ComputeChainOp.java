@@ -33,6 +33,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
+import org.esa.beam.meris.cloud.CloudShadowOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.BeamConstants;
 import org.esa.beam.util.ProductUtils;
@@ -188,6 +189,7 @@ public class ComputeChainOp extends BasisOp {
     private Product correctedRayleighProduct;
     private Product pressureLiseProduct;
     private Product rad2reflProduct;
+    private Product cloudShadowProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -384,6 +386,17 @@ public class ComputeChainOp extends BasisOp {
             combinedCloudProduct = GPF.createProduct("Meris.CombinedCloud", emptyParams, combinedCloudInput);
         }
 
+        // Cloud Shadow (currently for GlobAlbedo only)
+//        if (cloudOutputBlueBand || CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+//            Map<String, Product> cloudShadowInput = new HashMap<String, Product>(3);
+//            cloudShadowInput.put("l1b", sourceProduct);
+//            cloudShadowInput.put("cloud", combinedCloudProduct);
+//            cloudShadowInput.put("ctp", ctpProduct);
+//            Map<String, Object> cloudShadowParameters = new HashMap<String, Object>(1);
+//            cloudShadowParameters.put("shadowWidth", 64);
+//            cloudShadowProduct = GPF.createProduct("Idepix.CloudShadow", cloudShadowParameters, cloudShadowInput);
+//        }
+
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
         if (ipfOutputRad2Refl) {
@@ -531,7 +544,17 @@ public class ComputeChainOp extends BasisOp {
         Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
         l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
 
+//        FlagCoding flagCoding = IdepixCloudClassificationOp.createFlagCoding(CombinedCloudOp.FLAG_BAND_NAME);
+//        targetProduct.getFlagCodingGroup().add(flagCoding);
+//        for (Band band : cloudShadowProduct.getBands()) {
+//            if (band.getName().equals(CombinedCloudOp.FLAG_BAND_NAME)) {
+//                band.setSampleCoding(flagCoding);
+//                targetProduct.addBand(band);
+//            }
+//        }
+
         IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
+
     }
 
     private void processGlobAlbedo() {
@@ -541,9 +564,10 @@ public class ComputeChainOp extends BasisOp {
         gaCloudInput.put("gal1b", sourceProduct);
         gaCloudInput.put("cloud", merisCloudProduct);   // may be null
 //        gaCloudInput.put("rayleigh", rayleighProduct);  // may be null
-        gaCloudInput.put("rayleigh", correctedRayleighProduct);  // may be null  // todo: discuss
+        gaCloudInput.put("rayleigh", correctedRayleighProduct);  // may be null
         gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
         gaCloudInput.put("refl", rad2reflProduct);   // may be null
+        gaCloudInput.put("cloudshadow", cloudShadowProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
@@ -553,6 +577,11 @@ public class ComputeChainOp extends BasisOp {
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
         targetProduct = gaCloudProduct;
+
+        // add cloud shadow flag
+        // todo: MERIS: we need to put the gaCloudProduct into CloudShadowOp and THEN compute the shadow with this cloud mask
+        // then, add the shadow flag to the gaCloudProduct, which results in the target product
+        // todo: new cloud shadow operator for AATSR, VGT which is not MERIS-specific!
     }
 
     /**

@@ -14,6 +14,8 @@ interface PixelProperties {
     boolean isBrightWhite();
 
     boolean isCloud();
+    
+    boolean isCloudShadow();
 
     boolean isClearLand();
 

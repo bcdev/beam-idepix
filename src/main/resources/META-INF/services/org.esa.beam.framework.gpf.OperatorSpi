@@ -5,3 +5,4 @@ org.esa.beam.idepix.operators.IdepixCloudClassificationOp$Spi
 org.esa.beam.idepix.operators.GACloudScreeningOp$Spi
 org.esa.beam.idepix.operators.BarometricPressureOp$Spi
 org.esa.beam.idepix.operators.MerisBrrCorrectionOp$Spi
+org.esa.beam.idepix.operators.IdepixCloudShadowOp$Spi

@@ -57,6 +57,12 @@ class VgtPixelProperties implements PixelProperties {
     }
 
     @Override
+    public boolean isCloudShadow() {
+        // todo: define
+        return false;
+    }
+
+    @Override
     public boolean isClearLand() {
         if (isInvalid()) {
             return false;

@@ -11,21 +11,17 @@ import org.esa.beam.util.math.MathUtils;
  */
 class MerisPixelProperties implements PixelProperties {
 
-    private static final float BRIGHTWHITE_THRESH = 0.65f;
+    private static final float BRIGHTWHITE_THRESH = 1.5f; // changed, 2010/10/29
     private static final float NDSI_THRESH = 0.014f;  // changed from 0.65, 2010/10/22
     private static final float PRESSURE_THRESH = 0.9f;
-//    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
-    private static final float CLOUD_THRESH = 2.40f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
+    private static final float CLOUD_THRESH = 2.40f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
     private static final float BRIGHT_THRESH = 0.5f;
-//    private static final float WHITE_THRESH = 0.7f;
     private static final float WHITE_THRESH = 0.9f;
-    private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
+    private static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;
     private static final float NDVI_THRESH = 0.4f;
-    private static final float REFL0670_UPPER_THRESH = 1.0f;     // 664nm for MERIS
-    private static final float REFL0670_LOWER_THRESH = 0.4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
     private static final float GLINT_THRESH =  -3.65E-4f;
@@ -37,11 +33,10 @@ class MerisPixelProperties implements PixelProperties {
     private float pscatt;
 
     private boolean l1FlagLand;
+    private boolean combinedCloudFlagShadow;
     private float[] refl;
     private float[] brr;
 
-
-    // todo: complete method implementation
 
     @Override
     public boolean isBrightWhite() {
@@ -51,6 +46,12 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public boolean isCloud() {
         return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
+    }
+
+    @Override
+    public boolean isCloudShadow() {
+//        return combinedCloudFlagShadow;  // todo: activate if ready
+        return false;
     }
 
     @Override
@@ -88,13 +89,13 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearSnow() {
-//        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
 
-        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
-        boolean is0670InInterval = (refl[6] >= REFL0670_LOWER_THRESH && refl[6] <= REFL0670_UPPER_THRESH);
-        boolean isClearSnow = isNdsiInInterval && is0670InInterval;
-
-        return !isInvalid() && isClearSnow;
+//        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
+//        boolean is0670InInterval = (refl[6] >= REFL0670_LOWER_THRESH && refl[6] <= REFL0670_UPPER_THRESH);
+//        boolean isClearSnow = isNdsiInInterval && is0670InInterval;
+//
+//        return !isInvalid() && isClearSnow;
     }
 
     @Override
@@ -148,7 +149,6 @@ class MerisPixelProperties implements PixelProperties {
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
-        // todo: we want to be in the interval [0.0, 1.0] ?!?
         return brr442 / brr442Thresh;
     }
 
@@ -162,8 +162,6 @@ class MerisPixelProperties implements PixelProperties {
                                                                   IdepixConstants. MERIS_WAVELENGTHS[6], IdepixConstants. MERIS_WAVELENGTHS[9]);
 
 
-//        return (float) (1.0f - Math.pow((1000.0*(slope0 + slope1 + slope2)/3.0), 2.0));
-        // todo: we want to be in the interval [-1.0, 1.0] for computation of white value. In principle, the slopes do not have an upper limit
         final double flatness = 1.0f - Math.abs(1000.0 * (slope0 + slope1 + slope2) / 3.0);
         float result = (float) Math.max(-1.0f, flatness);
         return result;
@@ -281,5 +279,9 @@ class MerisPixelProperties implements PixelProperties {
 
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
+    }
+
+    public void setCombinedCloudFlagShadow(boolean combinedCloudFlagShadow) {
+        this.combinedCloudFlagShadow = combinedCloudFlagShadow;
     }
 }

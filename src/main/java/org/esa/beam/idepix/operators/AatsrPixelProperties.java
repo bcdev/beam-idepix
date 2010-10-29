@@ -19,7 +19,6 @@ class AatsrPixelProperties implements PixelProperties {
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
     private static final float BRIGHT_THRESH = 0.2f;
-//    private static final float WHITE_THRESH = 0.5f;
     private static final float WHITE_THRESH = 0.9f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
@@ -49,14 +48,19 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isCloud() {
-        // with CLOUD_THRESH = 1.0, this fits very nice for investigated high and mid level clouds. Low clouds
-        // are a bit underestimated. Checked for products:
+        // Checked for products:
         // - ATS_TOA_1PRUPA20050310_093826_subset.dim
         // - 20090702_101450
         // - 20100410_104752
         // - 20100621_112512
         // - 20100721_122242
         return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
+    }
+
+    @Override
+    public boolean isCloudShadow() {
+        // todo: define
+        return false;
     }
 
     @Override
@@ -94,12 +98,8 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearSnow() {
-//        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
         
-        // this fits very well for example ATS_TOA_1PRUPA20050310_093826_subset.dim
-        // for snow pixels over the Alpes, we obviously have refl_645 > refl_835 for most pixels
-//        return (!isInvalid() && whiteValue() < 0.0 && ndsiValue() > NDSI_THRESH);
-
         // SnowRadiance:
 //        if (apply100PercentSnowMask && !(ndsi > ndsiUpperThreshold)) {
 //            boolean is1600InInterval = aatsr1610 >= aatsr1610LowerThreshold && aatsr1610 <= aatsr1610UpperThreshold;
@@ -113,12 +113,12 @@ class AatsrPixelProperties implements PixelProperties {
 //        aatsr0670LowerThreshold = 1.0
 //        aatsr0670UpperThreshold = 10.0
 
-        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
-        boolean is1600InInterval = (refl[3] / 100.0 >= REFL1600_LOWER_THRESH && refl[3] / 100.0 <= REFL1600_UPPER_THRESH);
-        boolean is0670InInterval = (refl[1] / 100.0 >= REFL0670_LOWER_THRESH && refl[1] / 100.0 <= REFL0670_UPPER_THRESH);
-        boolean isClearSnow = isNdsiInInterval && is1600InInterval && is0670InInterval;
-
-        return !isInvalid() && isClearSnow;
+//        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
+//        boolean is1600InInterval = (refl[3] / 100.0 >= REFL1600_LOWER_THRESH && refl[3] / 100.0 <= REFL1600_UPPER_THRESH);
+//        boolean is0670InInterval = (refl[1] / 100.0 >= REFL0670_LOWER_THRESH && refl[1] / 100.0 <= REFL0670_UPPER_THRESH);
+//        boolean isClearSnow = isNdsiInInterval && is1600InInterval && is0670InInterval;
+//
+//        return !isInvalid() && isClearSnow;
 
     }
 
@@ -169,7 +169,6 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
-        // todo: we want to be in the interval [0.0, 1.0] ?!?
         return ((refl[0] + refl[1] + refl[2]) / 300.0f);
     }
 
@@ -182,8 +181,6 @@ class AatsrPixelProperties implements PixelProperties {
                                                           IdepixConstants.AATSR_REFL_WAVELENGTHS[1],
                                                           IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
 
-//        return (float) ((slope0 + slope1) / 200.0);
-        // todo: we want to be in the interval [-1.0, 1.0] for computation of white value. In principle, the slopes do not have an upper limit
         return (float) (1.0f - Math.abs(1000.0*(slope0 + slope1)/200.0));
     }
 
