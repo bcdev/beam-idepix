@@ -14,7 +14,7 @@ class MerisPixelProperties implements PixelProperties {
     private static final float BRIGHTWHITE_THRESH = 1.5f; // changed, 2010/10/29
     private static final float NDSI_THRESH = 0.014f;  // changed from 0.65, 2010/10/22
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 2.40f;
+    private static final float CLOUD_THRESH = 1.65f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
