@@ -29,7 +29,7 @@ class AatsrPixelProperties implements PixelProperties {
     private static final float REFL0670_UPPER_THRESH = 1.0f;
     private static final float REFL0670_LOWER_THRESH = 0.4f;
     private static final float GLINT_THRESH = -3.65E-4f;
-    private static final float TEMPERATURE_THRESH = 0.9f;
+    private static final float TEMPERATURE_THRESH = 0.6f;
 
     public static final int L1B_F_LAND = 0;
     public static final int L1B_F_GLINT_RISK = 2;
@@ -98,7 +98,7 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && !isCold() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
         
         // SnowRadiance:
 //        if (apply100PercentSnowMask && !(ndsi > ndsiUpperThreshold)) {
