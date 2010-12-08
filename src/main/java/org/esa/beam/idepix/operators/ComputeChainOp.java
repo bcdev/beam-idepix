@@ -189,6 +189,7 @@ public class ComputeChainOp extends BasisOp {
     private Product correctedRayleighProduct;
     private Product pressureLiseProduct;
     private Product rad2reflProduct;
+    private Product pbaroProduct;
     private Product cloudShadowProduct;
 
     @Override
@@ -221,7 +222,6 @@ public class ComputeChainOp extends BasisOp {
                                                     sourceProduct);
 
         // Barometric Pressure
-        Product pbaroProduct;
         Map<String, Object> pbaroParameters = new HashMap<String, Object>(1);
         pbaroParameters.put("useGetasseDem", pressurePbaroGetasse);
         pbaroProduct = GPF.createProduct("Meris.BarometricPressure", pbaroParameters, sourceProduct);
@@ -566,6 +566,7 @@ public class ComputeChainOp extends BasisOp {
 //        gaCloudInput.put("rayleigh", rayleighProduct);  // may be null
         gaCloudInput.put("rayleigh", correctedRayleighProduct);  // may be null
         gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
+        gaCloudInput.put("pbaro", pbaroProduct);   // may be null
         gaCloudInput.put("refl", rad2reflProduct);   // may be null
         gaCloudInput.put("cloudshadow", cloudShadowProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);

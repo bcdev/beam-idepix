@@ -50,6 +50,8 @@ public class GACloudScreeningOp extends Operator {
     private Product rad2reflProduct;
     @SourceProduct(alias="pressure", optional=true)
     private Product pressureProduct;
+    @SourceProduct(alias="pbaro", optional=true)
+    private Product pbaroProduct;
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
@@ -89,6 +91,7 @@ public class GACloudScreeningOp extends Operator {
     private Band brr442Band;
     private Band brr442ThreshBand;
     private Band p1Band;
+    private Band pbaroBand;
     private Band pscattBand;
 
     // AATSR bands:
@@ -118,6 +121,7 @@ public class GACloudScreeningOp extends Operator {
                         merisBrrBands[i] = rayleighProduct.getBand(IdepixConstants.MERIS_BRR_BAND_NAMES[i]);
                     }
                     p1Band = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
+                    pbaroBand = pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC);
                     pscattBand = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
                     brr442ThreshBand = cloudProduct.getBand("rho442_thresh_term");
 
@@ -357,6 +361,7 @@ public class GACloudScreeningOp extends Operator {
         Tile merisCombinedCloudFlagTile = null;
         Tile brr442Tile = null;
         Tile p1Tile = null;
+        Tile pbaroTile = null;
         Tile pscattTile = null;
         Tile brr442ThreshTile = null;
         Tile[] merisReflectanceTiles = null;
@@ -384,6 +389,7 @@ public class GACloudScreeningOp extends Operator {
                 brr442Tile = getSourceTile(brr442Band, rectangle, pm);
                 brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle, pm);
                 p1Tile = getSourceTile(p1Band, rectangle, pm);
+                pbaroTile = getSourceTile(pbaroBand, rectangle, pm);
                 pscattTile = getSourceTile(pscattBand, rectangle, pm);
 
                 merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
@@ -463,6 +469,7 @@ public class GACloudScreeningOp extends Operator {
                             ((MerisPixelProperties) pixelProperties).setBrr442(brr442Tile.getSampleFloat(x, y));
                             ((MerisPixelProperties) pixelProperties).setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
                             ((MerisPixelProperties) pixelProperties).setP1(p1Tile.getSampleFloat(x, y));
+                            ((MerisPixelProperties) pixelProperties).setPBaro(pbaroTile.getSampleFloat(x, y));
                             ((MerisPixelProperties) pixelProperties).setPscatt(pscattTile.getSampleFloat(x, y));
                             ((MerisPixelProperties) pixelProperties).setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
                             final int isShadowBitIndex = (int) (Math.log((double)CombinedCloudOp.FLAG_CLOUD_SHADOW)/Math.log(2.0));

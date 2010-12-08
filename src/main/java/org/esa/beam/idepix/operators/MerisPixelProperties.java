@@ -31,6 +31,7 @@ class MerisPixelProperties implements PixelProperties {
     private float brr442Thresh;
     private float p1;
     private float pscatt;
+    private float pbaro;
 
     private boolean l1FlagLand;
     private boolean combinedCloudFlagShadow;
@@ -195,6 +196,8 @@ class MerisPixelProperties implements PixelProperties {
     public float pressureValue() {
         if (isLand()) {
             return 1.0f - p1/1000.0f;
+            // test: use diff. pbaro - p1 instead:
+//            return (float) (Math.min(1.0, (pbaro - p1)/200.0f));
         } else if (isWater()) {
             return 1.0f - pscatt/1000.0f;
         } else {
@@ -277,6 +280,10 @@ class MerisPixelProperties implements PixelProperties {
         this.pscatt = pscatt;
     }
 
+    public void setPBaro(float pbaro) {
+        this.pbaro = pbaro;
+    }
+
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
     }
@@ -284,4 +291,5 @@ class MerisPixelProperties implements PixelProperties {
     public void setCombinedCloudFlagShadow(boolean combinedCloudFlagShadow) {
         this.combinedCloudFlagShadow = combinedCloudFlagShadow;
     }
+
 }
