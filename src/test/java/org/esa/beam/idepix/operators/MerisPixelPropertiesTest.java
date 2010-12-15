@@ -13,6 +13,8 @@ public class MerisPixelPropertiesTest extends TestCase {
 
     public void setUp() {
         merisPixelProperties = new MerisPixelProperties();
+        float[] refl = setSpectralFlatnessTestValues();
+        merisPixelProperties.setRefl(refl);
     }
 
     public void testBrightValue() {
@@ -31,15 +33,10 @@ public class MerisPixelPropertiesTest extends TestCase {
     }
 
     public void testSpectralFlatnessValue() {
-        float[] refl = setSpectralFlatnessTestValues();
-        merisPixelProperties.setRefl(refl);
         assertEquals(-1.0f, merisPixelProperties.spectralFlatnessValue(), 1.E-3);
     }
 
     public void testWhiteValue() {
-        float[] refl = setSpectralFlatnessTestValues();
-        merisPixelProperties.setRefl(refl);
-
         // bright value: no data
         merisPixelProperties.setBrr442(-1.0f);
         merisPixelProperties.setBrr442Thresh(0.1f);
@@ -53,6 +50,10 @@ public class MerisPixelPropertiesTest extends TestCase {
 
     public void testTemperature() {
         assertEquals(0.5f, merisPixelProperties.temperatureValue());
+    }
+
+    public void testGlintRiskValue() {
+        assertEquals(0.5f, merisPixelProperties.glintRiskValue());
     }
 
     public void testNdsi() {

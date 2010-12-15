@@ -11,8 +11,8 @@ import org.esa.beam.util.math.MathUtils;
  */
 class MerisPixelProperties implements PixelProperties {
 
-    private static final float BRIGHTWHITE_THRESH = 1.5f; // changed, 2010/10/29
-    private static final float NDSI_THRESH = 0.014f;  // changed from 0.65, 2010/10/22
+    private static final float BRIGHTWHITE_THRESH = 1.5f;
+    private static final float NDSI_THRESH = 0.014f;
     private static final float PRESSURE_THRESH = 0.9f;
     private static final float CLOUD_THRESH = 1.65f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
@@ -24,7 +24,7 @@ class MerisPixelProperties implements PixelProperties {
     private static final float NDVI_THRESH = 0.4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
-    private static final float GLINT_THRESH =  -3.65E-4f;
+    private static final float GLINT_THRESH =  0.9f;
 
     public static final int L1B_F_LAND = 4;
     private float brr442;
@@ -51,7 +51,7 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isCloudShadow() {
-//        return combinedCloudFlagShadow;  // todo: activate if ready
+//        return combinedCloudFlagShadow;  // todo: activate when ready
         return false;
     }
 
@@ -91,12 +91,6 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public boolean isClearSnow() {
         return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
-
-//        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
-//        boolean is0670InInterval = (refl[6] >= REFL0670_LOWER_THRESH && refl[6] <= REFL0670_UPPER_THRESH);
-//        boolean isClearSnow = isNdsiInInterval && is0670InInterval;
-//
-//        return !isInvalid() && isClearSnow;
     }
 
     @Override
@@ -131,8 +125,7 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isGlintRisk() {
-        // todo: define
-        return false;
+        return (isWater() && isCloud() && (glintRiskValue() > GLINT_THRESH));
     }
 
     @Override
@@ -170,9 +163,9 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float whiteValue() {
-        if (brightValue()>BRIGHT_FOR_WHITE_THRESH) {
-                 return 2*spectralFlatnessValue() - 1;
-        }  else {
+        if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
+            return 2 * spectralFlatnessValue() - 1;
+        } else {
             return 0f;
         }
     }
@@ -197,12 +190,19 @@ class MerisPixelProperties implements PixelProperties {
         if (isLand()) {
             return 1.0f - p1/1000.0f;
             // test: use diff. pbaro - p1 instead:
-//            return (float) (Math.min(1.0, (pbaro - p1)/200.0f));
+//            return (float) (Math.min(1.0, (pbaro - p1)/2,00.0f));
+            // this was checked, but we got many artifacts along coastlines.
+            // --> to be further investigated
         } else if (isWater()) {
             return 1.0f - pscatt/1000.0f;
         } else {
             return UNCERTAINTY_VALUE;
         }
+    }
+    
+    @Override
+    public float glintRiskValue() {
+        return UNCERTAINTY_VALUE;
     }
 
     @Override

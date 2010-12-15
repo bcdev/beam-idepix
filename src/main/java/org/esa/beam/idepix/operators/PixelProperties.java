@@ -55,6 +55,8 @@ interface PixelProperties {
 
     float pressureValue();
 
+    float glintRiskValue();
+
     float aPrioriLandValue();
 
     float aPrioriWaterValue();

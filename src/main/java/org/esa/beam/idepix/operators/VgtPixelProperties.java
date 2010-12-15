@@ -13,9 +13,9 @@ import org.esa.beam.util.math.MathUtils;
 class VgtPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
-    private static final float NDSI_THRESH = 0.65f;
+    private static final float NDSI_THRESH = 0.72f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.65f;  // = BRIGHTWHITE_THRESH + 2*0.5, because pressureValue, temperatureValue = 0.5
+    private static final float CLOUD_THRESH = 1.3f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
@@ -39,8 +39,6 @@ class VgtPixelProperties implements PixelProperties {
 
     private float[] refl;
     private boolean smLand;
-
-    // todo: complete method implementation
 
     @Override
     public boolean isBrightWhite() {
@@ -133,9 +131,7 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isGlintRisk() {
-        return isWater() && isCloud() &&
-               (IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
-                                          IdepixConstants.VGT_WAVELENGTHS[1]) > GLINT_THRESH);
+        return isWater() && isCloud() && (glintRiskValue() > GLINT_THRESH);
     }
 
     @Override
@@ -161,17 +157,18 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public float spectralFlatnessValue() {
-        final double flatness0 = IdepixUtils.scaleVgtSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
+        final double slope0 = IdepixUtils.scaleVgtSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
                                                            IdepixConstants.VGT_WAVELENGTHS[1]);
-        final double flatness2 = IdepixUtils.scaleVgtSlope(refl[1], refl[2], IdepixConstants.VGT_WAVELENGTHS[1],
+        final double slope1 = IdepixUtils.scaleVgtSlope(refl[1], refl[2], IdepixConstants.VGT_WAVELENGTHS[1],
                                                            IdepixConstants.VGT_WAVELENGTHS[2]);
 
+        // maybe distinguish between water and land?
         if (isLand()) {
-            return (float) ((flatness0 + flatness2) / 2.0);
+            return (float) ((slope0 + slope1) / 2.0);
         } else if (isWater()) {
-            return (float) ((flatness0 + flatness2) / 2.0);
+            return (float) ((slope0 + slope1) / 2.0);     // currently all the same
         } else {
-            return (float) ((flatness0 + flatness2) / 2.0);
+            return (float) ((slope0 + slope1) / 2.0);     // currently all the same
         }
     }
 
@@ -201,6 +198,13 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public float pressureValue() {
         return 0.5f;
+    }
+
+    @Override
+    public float glintRiskValue() {
+        // todo: define conversion onto interval [0,1]
+        return IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
+                                          IdepixConstants.VGT_WAVELENGTHS[1]);
     }
 
     @Override

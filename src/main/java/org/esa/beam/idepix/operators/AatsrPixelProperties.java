@@ -14,7 +14,7 @@ class AatsrPixelProperties implements PixelProperties {
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.65f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.65f;
+    private static final float CLOUD_THRESH = 1.15f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
@@ -22,13 +22,7 @@ class AatsrPixelProperties implements PixelProperties {
     private static final float WHITE_THRESH = 0.9f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
-    private static final float REFL835_WATER_THRESH = 0.1f;
-    private static final float REFL835_LAND_THRESH = 0.15f;
-    private static final float REFL1600_UPPER_THRESH = 0.1f;
-    private static final float REFL1600_LOWER_THRESH = 0.01f;
-    private static final float REFL0670_UPPER_THRESH = 1.0f;
-    private static final float REFL0670_LOWER_THRESH = 0.4f;
-    private static final float GLINT_THRESH = -3.65E-4f;
+    private static final float GLINT_THRESH = 0.9f;
     private static final float TEMPERATURE_THRESH = 0.6f;
 
     public static final int L1B_F_LAND = 0;
@@ -48,12 +42,6 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isCloud() {
-        // Checked for products:
-        // - ATS_TOA_1PRUPA20050310_093826_subset.dim
-        // - 20090702_101450
-        // - 20100410_104752
-        // - 20100621_112512
-        // - 20100721_122242
         return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
     }
 
@@ -99,27 +87,6 @@ class AatsrPixelProperties implements PixelProperties {
     @Override
     public boolean isClearSnow() {
         return (!isInvalid() && !isCold() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
-        
-        // SnowRadiance:
-//        if (apply100PercentSnowMask && !(ndsi > ndsiUpperThreshold)) {
-//            boolean is1600InInterval = aatsr1610 >= aatsr1610LowerThreshold && aatsr1610 <= aatsr1610UpperThreshold;
-//            boolean is0670InInterval = aatsr0670 >= aatsr0670LowerThreshold && aatsr0670 <= aatsr0670UpperThreshold;
-//            considerPixelAsSnow = is1600InInterval && is0670InInterval;
-//        }
-//        with
-//        ndsiUpperThreshold = 0.96
-//        aatsr1610LowerThreshold = 1.0
-//        aatsr1610UpperThreshold = 10.0
-//        aatsr0670LowerThreshold = 1.0
-//        aatsr0670UpperThreshold = 10.0
-
-//        boolean isNdsiInInterval = (ndsiValue() > NDSI_THRESH);
-//        boolean is1600InInterval = (refl[3] / 100.0 >= REFL1600_LOWER_THRESH && refl[3] / 100.0 <= REFL1600_UPPER_THRESH);
-//        boolean is0670InInterval = (refl[1] / 100.0 >= REFL0670_LOWER_THRESH && refl[1] / 100.0 <= REFL0670_UPPER_THRESH);
-//        boolean isClearSnow = isNdsiInInterval && is1600InInterval && is0670InInterval;
-//
-//        return !isInvalid() && isClearSnow;
-
     }
 
     @Override
@@ -154,7 +121,8 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public boolean isGlintRisk() {
-        return l1FlagGlintRisk;
+        return l1FlagGlintRisk ||
+                (isWater() && isCloud() && (glintRiskValue() > GLINT_THRESH));
     }
 
     @Override
@@ -181,7 +149,9 @@ class AatsrPixelProperties implements PixelProperties {
                                                           IdepixConstants.AATSR_REFL_WAVELENGTHS[1],
                                                           IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
 
-        return (float) (1.0f - Math.abs(1000.0*(slope0 + slope1)/200.0));
+        final double flatness = (1.0f - Math.abs(1000.0*(slope0 + slope1)/200.0));
+        float result = (float) Math.max(-1.0f, flatness);
+        return result;
     }
 
     @Override
@@ -221,6 +191,11 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float pressureValue() {
+        return UNCERTAINTY_VALUE;
+    }
+
+    @Override
+    public float glintRiskValue() {
         return UNCERTAINTY_VALUE;
     }
 

@@ -12,30 +12,25 @@ public class AatsrPixelPropertiesTest extends TestCase {
 
     public void setUp() {
         aatsrPixelProperties = new AatsrPixelProperties();
+        float[] refl = setSpectralFlatnessTestValues();
+        aatsrPixelProperties.setRefl(refl);
     }
 
 
     public void testBrightValue() {
-        float[] refl = setSpectralFlatnessTestValues();
-        aatsrPixelProperties.setRefl(refl);
         assertEquals(7.06667f, aatsrPixelProperties.brightValue(), 1.0E-3);
     }
 
     public void testSpectralFlatnessValue() {
-        float[] refl = setSpectralFlatnessTestValues();
-        aatsrPixelProperties.setRefl(refl);
-        assertEquals(-14.0f, aatsrPixelProperties.spectralFlatnessValue(), 1.0E-3);
+        assertEquals(-1.0f, aatsrPixelProperties.spectralFlatnessValue(), 1.0E-3);
     }
 
     public void testWhiteValue() {
-        float[] refl = setSpectralFlatnessTestValues();
-        aatsrPixelProperties.setRefl(refl);
-
         // bright value > BRIGHT_FOR_WHITE_THRESH
-        assertEquals(-14.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
+        assertEquals(-1.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
 
         // bright value = 0
-        refl = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
+        float[] refl = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
         aatsrPixelProperties.setRefl(refl);
         assertEquals(0.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
     }
@@ -55,15 +50,15 @@ public class AatsrPixelPropertiesTest extends TestCase {
         assertEquals(0.1f, aatsrPixelProperties.temperatureValue());
     }
 
+    public void testGlintRiskValue() {
+        assertEquals(0.5f, aatsrPixelProperties.glintRiskValue());
+    }
+
     public void testNdsi() {
-        float[] refl = setSpectralFlatnessTestValues();
-        aatsrPixelProperties.setRefl(refl);
         assertEquals(0.333f, aatsrPixelProperties.ndsiValue(), 1.E-3);
     }
 
     public void testNdvi() {
-        float[] refl = setSpectralFlatnessTestValues();
-        aatsrPixelProperties.setRefl(refl);
         assertEquals(0.2275f, aatsrPixelProperties.ndviValue(), 1.E-3);
     }
 
