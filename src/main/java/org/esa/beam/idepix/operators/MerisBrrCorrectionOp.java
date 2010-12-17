@@ -23,15 +23,15 @@ import static org.esa.beam.idepix.util.OperatorUtils.*;
  * @version $Revision: $ $Date:  $
  */
 public class MerisBrrCorrectionOp extends Operator {
-    @SourceProduct(alias="l1b")
+    @SourceProduct(alias = "l1b")
     private Product l1bProduct;
-    @SourceProduct(alias="brr")
+    @SourceProduct(alias = "brr")
     private Product brrProduct;
-    @SourceProduct(alias="refl")
+    @SourceProduct(alias = "refl")
     private Product rad2reflProduct;
-    @SourceProduct(alias="cloud")
+    @SourceProduct(alias = "cloud")
     private Product cloudProduct;
-    @SourceProduct(alias="land")
+    @SourceProduct(alias = "land")
     private Product landProduct;
 
     @TargetProduct
@@ -46,7 +46,7 @@ public class MerisBrrCorrectionOp extends Operator {
 
         targetProduct = OperatorUtils.createCompatibleProduct(l1bProduct, "MER", productType);
         for (String bandName : brrProduct.getBandNames()) {
-            if(!brrProduct.getBand(bandName).isFlagBand()) {
+            if (!brrProduct.getBand(bandName).isFlagBand()) {
                 Band targetBand = ProductUtils.copyBand(bandName, brrProduct, targetProduct);
                 if (!bandName.startsWith("brr")) {
                     targetBand.setSourceImage(brrProduct.getBand(bandName).getSourceImage());
@@ -63,45 +63,39 @@ public class MerisBrrCorrectionOp extends Operator {
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         Rectangle rectangle = targetTile.getRectangle();
-        pm.beginTask("Processing frame...", rectangle.height + 6);
-        try {
-            final int bandNumber = band.getSpectralBandIndex() + 1;
+        final int bandNumber = band.getSpectralBandIndex() + 1;
 
-            Tile brrTile = getSourceTile(brrProduct.getBand("brr_" + bandNumber), rectangle, subPm1(pm));
-            Tile rad2reflTile = getSourceTile(rad2reflProduct.getBand("rho_toa_" + bandNumber), rectangle, subPm1(pm));
-            Tile isInvalid = getSourceTile(invalidBand, rectangle, subPm1(pm));
+        Tile brrTile = getSourceTile(brrProduct.getBand("brr_" + bandNumber), rectangle);
+        Tile rad2reflTile = getSourceTile(rad2reflProduct.getBand("rho_toa_" + bandNumber), rectangle);
+        Tile isInvalid = getSourceTile(invalidBand, rectangle);
 
-            Tile surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE), rectangle, subPm1(pm));
-            Tile cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP), rectangle, subPm1(pm));
-            Tile cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle, subPm1(pm));
-            Tile landFlagsTile = getSourceTile(landProduct.getBand(LandClassificationOp.LAND_FLAGS), rectangle, subPm1(pm));
+        Tile surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE), rectangle);
+        Tile cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP), rectangle);
+        Tile cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
+        Tile landFlagsTile = getSourceTile(landProduct.getBand(LandClassificationOp.LAND_FLAGS), rectangle);
 
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                    if (isInvalid.getSampleBoolean(x, y)) {
-                        targetTile.setSample(x, y, -1.0);
+        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                if (isInvalid.getSampleBoolean(x, y)) {
+                    targetTile.setSample(x, y, -1.0);
+                } else {
+                    if (cloudFlagsTile.getSampleBit(x, y, IdepixCloudClassificationOp.F_CLOUD)) {
+                        final float surfacePressure = surfacePressureTile.getSampleFloat(x, y);
+                        final float cloudTopPressure = cloudTopPressureTile.getSampleFloat(x, y);
+                        final float rad2refl = rad2reflTile.getSampleFloat(x, y);
+                        final float brrCorr = rad2refl * cloudTopPressure / surfacePressure;
+                        targetTile.setSample(x, y, brrCorr);
+                    } else if (landFlagsTile.getSampleBit(x, y, LandClassificationOp.F_ICE)) {
+                        final float brrCorr = rad2reflTile.getSampleFloat(x, y);
+                        targetTile.setSample(x, y, brrCorr);
                     } else {
-                        if (cloudFlagsTile.getSampleBit(x, y, IdepixCloudClassificationOp.F_CLOUD)) {
-                            final float surfacePressure = surfacePressureTile.getSampleFloat(x, y);
-                            final float cloudTopPressure = cloudTopPressureTile.getSampleFloat(x, y);
-                            final float rad2refl = rad2reflTile.getSampleFloat(x, y);
-                            final float brrCorr = rad2refl * cloudTopPressure / surfacePressure;
-                            targetTile.setSample(x, y, brrCorr);
-                        } else if (landFlagsTile.getSampleBit(x, y, LandClassificationOp.F_ICE)) {
-                            final float brrCorr = rad2reflTile.getSampleFloat(x, y);
-                            targetTile.setSample(x, y, brrCorr);
-                        } else {
-                            // leave original value
-                            final float brr = brrTile.getSampleFloat(x, y);
-                            targetTile.setSample(x, y, brr);
-                        }
+                        // leave original value
+                        final float brr = brrTile.getSampleFloat(x, y);
+                        targetTile.setSample(x, y, brr);
                     }
                 }
-                checkForCancellation(pm);
-                pm.worked(1);
             }
-        } finally {
-            pm.done();
+            checkForCancellation();
         }
     }
 

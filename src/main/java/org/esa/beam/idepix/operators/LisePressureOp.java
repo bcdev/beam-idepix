@@ -174,7 +174,6 @@ public class LisePressureOp extends BasisOp {
     @Override
     public void initialize() throws OperatorException {
     	if (sourceProduct != null) {
-    		sourceProduct.setPreferredTileSize(64, 64);
     		createTargetProduct();
     	}
     		

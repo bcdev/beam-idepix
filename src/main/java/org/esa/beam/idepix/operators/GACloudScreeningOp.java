@@ -172,7 +172,6 @@ public class GACloudScreeningOp extends Operator {
         int sceneHeight = sourceProduct.getSceneRasterHeight();
 
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
-        targetProduct.setPreferredTileSize(256,256);
 
         Band cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = createFlagCoding(GA_CLOUD_FLAGS);
@@ -352,7 +351,6 @@ public class GACloudScreeningOp extends Operator {
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
 
     	Rectangle rectangle = targetTile.getRectangle();
-        pm.beginTask("Processing frame...", rectangle.height);
 
         // MERIS variables
         Band merisL1bFlagBand;
@@ -387,65 +385,65 @@ public class GACloudScreeningOp extends Operator {
 
         switch (sourceProductTypeId) {
             case IdepixConstants.PRODUCT_TYPE_MERIS:
-                brr442Tile = getSourceTile(brr442Band, rectangle, pm);
-                brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle, pm);
-                p1Tile = getSourceTile(p1Band, rectangle, pm);
-                pbaroTile = getSourceTile(pbaroBand, rectangle, pm);
-                pscattTile = getSourceTile(pscattBand, rectangle, pm);
+                brr442Tile = getSourceTile(brr442Band, rectangle);
+                brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle);
+                p1Tile = getSourceTile(p1Band, rectangle);
+                pbaroTile = getSourceTile(pbaroBand, rectangle);
+                pscattTile = getSourceTile(pscattBand, rectangle);
 
                 merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
-                merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle, pm);
+                merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
 
                 if (cloudShadowProduct != null) {
                     merisCombinedCloudFlagBand = cloudShadowProduct.getBand(CombinedCloudOp.FLAG_BAND_NAME);
-                    merisCombinedCloudFlagTile = getSourceTile(merisCombinedCloudFlagBand, rectangle, pm);
+                    merisCombinedCloudFlagTile = getSourceTile(merisCombinedCloudFlagBand, rectangle);
                 }
 
                 merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
                 merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
                 for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
-                    merisBrrTiles[i] = getSourceTile(merisBrrBands[i], rectangle, pm);
+                    merisBrrTiles[i] = getSourceTile(merisBrrBands[i], rectangle);
                 }
 
                 merisReflectanceTiles = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
                 merisReflectance = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
                 for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                    merisReflectanceTiles[i] = getSourceTile(merisReflBands[i], rectangle, pm);
+                    merisReflectanceTiles[i] = getSourceTile(merisReflBands[i], rectangle);
                 }
                 break;
             case IdepixConstants.PRODUCT_TYPE_AATSR:
 
                 aatsrL1bFlagBand = sourceProduct.getBand(EnvisatConstants.AATSR_L1B_CLOUD_FLAGS_NADIR_BAND_NAME);
-                aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle, pm);
+                aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle);
 
                 aatsrFlagBands = new Band[IdepixConstants.AATSR_FLAG_BAND_NAMES.length];
                 aatsrFlagTiles = new Tile[IdepixConstants.AATSR_FLAG_BAND_NAMES.length];
                 for (int i = 0; i < IdepixConstants.AATSR_FLAG_BAND_NAMES.length; i++) {
                     aatsrFlagBands[i] = sourceProduct.getBand(IdepixConstants.AATSR_FLAG_BAND_NAMES[i]);
-                    aatsrFlagTiles[i] = getSourceTile(aatsrFlagBands[i], rectangle, pm);
+                    aatsrFlagTiles[i] = getSourceTile(aatsrFlagBands[i], rectangle);
                 }
 
                 aatsrReflectanceTiles = new Tile[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
                 aatsrReflectance = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
                 for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
-                    aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle, pm);
+                    aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle);
                 }
 
                 aatsrBtempTiles= new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
                 aatsrBtemp= new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
                 for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
-                    aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle, pm);
+                    aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
                 }
 
                 break;
             case IdepixConstants.PRODUCT_TYPE_VGT:
                 smFlagBand = sourceProduct.getBand("SM");
-                smFlagTile = getSourceTile(smFlagBand, rectangle, pm);
+                smFlagTile = getSourceTile(smFlagBand, rectangle);
 
                 vgtReflectanceTiles = new Tile[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
                 vgtReflectance = new float[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
                 for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-                    vgtReflectanceTiles[i] = getSourceTile(vgtReflectanceBands[i], rectangle, pm);
+                    vgtReflectanceTiles[i] = getSourceTile(vgtReflectanceBands[i], rectangle);
                 }
                 break;
             default:
@@ -454,10 +452,8 @@ public class GACloudScreeningOp extends Operator {
 
         try {
 			for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-				for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-					if (pm.isCanceled()) {
-						break;
-					}
+                checkForCancellation();
+                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
                     // set up pixel properties for given instruments...
                     PixelProperties pixelProperties = null;
@@ -564,12 +560,9 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
                     }
 				}
-				pm.worked(1);
 			}
         } catch (Exception e) {
         	throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
-		} finally {
-            pm.done();
         }
     }
 

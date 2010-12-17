@@ -151,10 +151,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
-
-        if (l1bProduct.getPreferredTileSize() != null) {
-            targetProduct.setPreferredTileSize(l1bProduct.getPreferredTileSize());
-        }
     }
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {

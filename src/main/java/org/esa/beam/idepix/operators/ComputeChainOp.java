@@ -49,10 +49,10 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
-                  version = "1.0.4",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2008 by Brockmann Consult",
-                  description = "This operator just calls a chain of other operators.")
+                  version = "1.2",
+                  authors = "Olaf Danne, Carsten Brockmann",
+                  copyright = "(c) 2010 by Brockmann Consult",
+                  description = "Pixel identification and classification. This operator just calls a chain of other operators.")
 public class ComputeChainOp extends BasisOp {
 
     @SourceProduct(alias = "source",
