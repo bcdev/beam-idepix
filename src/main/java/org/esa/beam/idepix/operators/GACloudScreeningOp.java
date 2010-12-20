@@ -125,8 +125,6 @@ public class GACloudScreeningOp extends Operator {
                     pscattBand = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
                     brr442ThreshBand = cloudProduct.getBand("rho442_thresh_term");
 
-
-
                     break;
                 case IdepixConstants.PRODUCT_TYPE_AATSR:
                     aatsrReflectanceBands = new Band[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
@@ -459,60 +457,22 @@ public class GACloudScreeningOp extends Operator {
                     PixelProperties pixelProperties = null;
                     switch (sourceProductTypeId) {
                         case IdepixConstants.PRODUCT_TYPE_MERIS:
-                            pixelProperties = new MerisPixelProperties();
-                            for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                                merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
-                                if (band.getName().equals(EnvisatConstants.MERIS_L1B_BAND_NAMES[i])) {
-                                    targetTile.setSample(x, y, merisReflectance[i]);
-                                }
-                            }
-                            ((MerisPixelProperties) pixelProperties).setRefl(merisReflectance);
-                            for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
-                                merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
-                            }
-                            ((MerisPixelProperties) pixelProperties).setBrr(merisBrr);
-                            ((MerisPixelProperties) pixelProperties).setBrr442(brr442Tile.getSampleFloat(x, y));
-                            ((MerisPixelProperties) pixelProperties).setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
-                            ((MerisPixelProperties) pixelProperties).setP1(p1Tile.getSampleFloat(x, y));
-                            ((MerisPixelProperties) pixelProperties).setPBaro(pbaroTile.getSampleFloat(x, y));
-                            ((MerisPixelProperties) pixelProperties).setPscatt(pscattTile.getSampleFloat(x, y));
-                            ((MerisPixelProperties) pixelProperties).setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
-                            final int isShadowBitIndex = (int) (Math.log((double)CombinedCloudOp.FLAG_CLOUD_SHADOW)/Math.log(2.0));
-                            if (merisCombinedCloudFlagTile != null) {
-                             ((MerisPixelProperties) pixelProperties).setCombinedCloudFlagShadow(merisCombinedCloudFlagTile.getSampleBit(x, y, isShadowBitIndex));
-                            }
+                            pixelProperties = createMerisPixelProperties(band, targetTile, merisL1bFlagTile,
+                                                                         merisCombinedCloudFlagTile, brr442Tile, p1Tile,
+                                                                         pbaroTile, pscattTile, brr442ThreshTile,
+                                                                         merisReflectanceTiles, merisReflectance,
+                                                                         merisBrrTiles, merisBrr, y, x);
 
                             break;
                         case IdepixConstants.PRODUCT_TYPE_AATSR:
-                            pixelProperties = new AatsrPixelProperties();
-                            for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
-                                aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
-                                if (band.getName().equals(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i])) {
-                                    targetTile.setSample(x, y, aatsrReflectance[i]);
-                                }
-                            }
-                            for (int i = 0; i < IdepixConstants.AATSR_BTEMP_BAND_NAMES.length; i++) {
-                                aatsrBtemp[i] = aatsrBtempTiles[i].getSampleFloat(x, y);
-                                if (band.getName().equals(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i])) {
-                                    targetTile.setSample(x, y, aatsrBtemp[i]);
-                                }
-                            }
-
-                            ((AatsrPixelProperties) pixelProperties).setUseFwardViewForCloudMask(gaUseAatsrFwardForClouds);
-                            ((AatsrPixelProperties) pixelProperties).setRefl(aatsrReflectance);
-                            ((AatsrPixelProperties) pixelProperties).setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
-                            ((AatsrPixelProperties) pixelProperties).setL1FlagLand(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_LAND));
-                            ((AatsrPixelProperties) pixelProperties).setL1FlagGlintRisk(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_GLINT_RISK));
+                            pixelProperties = createAatsrPixelProperties(band, targetTile, aatsrL1bFlagTile,
+                                                                         aatsrReflectanceTiles, aatsrReflectance,
+                                                                         aatsrBtempTiles,
+                                                                         aatsrBtemp, y, x);
                             break;
                         case IdepixConstants.PRODUCT_TYPE_VGT:
-                            pixelProperties = new VgtPixelProperties();
-                            for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-                                vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
-                            }
-                            float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
-                            ((VgtPixelProperties) pixelProperties).setRefl(vgtReflectanceSaturationCorrected);
-
-                            ((VgtPixelProperties) pixelProperties).setSmLand(smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_LAND));
+                            pixelProperties = createVgtPixelProperties(smFlagTile, vgtReflectanceTiles, vgtReflectance,
+                                                                       y, x);
                             break;
                         default:
                             break;
@@ -538,25 +498,25 @@ public class GACloudScreeningOp extends Operator {
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
-                    if (band.getName().equals("bright_value")) {
+                    if ("bright_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.brightValue());
-                    } else if (band.getName().equals("white_value")) {
+                    } else if ("white_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.whiteValue());
-                    } else if (band.getName().equals("bright_white_value")) {
+                    } else if ("bright_white_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.brightValue() + pixelProperties.whiteValue());
-                    }else if (band.getName().equals("temperature_value")) {
+                    }else if ("temperature_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.temperatureValue());
-                    }else if (band.getName().equals("spectral_flatness_value")) {
+                    }else if ("spectral_flatness_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
-                    }else if (band.getName().equals("ndvi_value")) {
+                    }else if ("ndvi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
-                    } else if (band.getName().equals("ndsi_value")) {
+                    } else if ("ndsi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndsiValue());
-                    } else if (band.getName().equals("pressure_value")) {
+                    } else if ("pressure_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.pressureValue());
-                    } else if (band.getName().equals("radiometric_land_value")) {
+                    } else if ("radiometric_land_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.radiometricLandValue());
-                    } else if (band.getName().equals("radiometric_water_value")) {
+                    } else if ("radiometric_water_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
                     }
 				}
@@ -564,6 +524,74 @@ public class GACloudScreeningOp extends Operator {
         } catch (Exception e) {
         	throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
         }
+    }
+
+    private VgtPixelProperties createVgtPixelProperties(Tile smFlagTile, Tile[] vgtReflectanceTiles,
+                                                     float[] vgtReflectance, int y, int x) {
+        VgtPixelProperties pixelProperties = new VgtPixelProperties();
+        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
+            vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
+        }
+        float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
+        pixelProperties.setRefl(vgtReflectanceSaturationCorrected);
+
+        pixelProperties.setSmLand(smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_LAND));
+        return pixelProperties;
+    }
+
+    private AatsrPixelProperties createAatsrPixelProperties(Band band, Tile targetTile, Tile aatsrL1bFlagTile,
+                                                       Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
+                                                       Tile[] aatsrBtempTiles, float[] aatsrBtemp, int y, int x) {
+        AatsrPixelProperties pixelProperties = new AatsrPixelProperties();
+        for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
+            aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
+            if (band.getName().equals(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i])) {
+                targetTile.setSample(x, y, aatsrReflectance[i]);
+            }
+        }
+        for (int i = 0; i < IdepixConstants.AATSR_BTEMP_BAND_NAMES.length; i++) {
+            aatsrBtemp[i] = aatsrBtempTiles[i].getSampleFloat(x, y);
+            if (band.getName().equals(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i])) {
+                targetTile.setSample(x, y, aatsrBtemp[i]);
+            }
+        }
+
+        pixelProperties.setUseFwardViewForCloudMask(gaUseAatsrFwardForClouds);
+        pixelProperties.setRefl(aatsrReflectance);
+        pixelProperties.setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
+        pixelProperties.setL1FlagLand(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_LAND));
+        pixelProperties.setL1FlagGlintRisk(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_GLINT_RISK));
+        return pixelProperties;
+    }
+
+    private PixelProperties createMerisPixelProperties(Band band, Tile targetTile, Tile merisL1bFlagTile,
+                                                       Tile merisCombinedCloudFlagTile, Tile brr442Tile, Tile p1Tile,
+                                                       Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
+                                                       Tile[] merisReflectanceTiles, float[] merisReflectance,
+                                                       Tile[] merisBrrTiles, float[] merisBrr, int y, int x) {
+        MerisPixelProperties pixelProperties = new MerisPixelProperties();
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
+            if (band.getName().equals(EnvisatConstants.MERIS_L1B_BAND_NAMES[i])) {
+                targetTile.setSample(x, y, merisReflectance[i]);
+            }
+        }
+        pixelProperties.setRefl(merisReflectance);
+        for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
+            merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
+        }
+        pixelProperties.setBrr(merisBrr);
+        pixelProperties.setBrr442(brr442Tile.getSampleFloat(x, y));
+        pixelProperties.setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
+        pixelProperties.setP1(p1Tile.getSampleFloat(x, y));
+        pixelProperties.setPBaro(pbaroTile.getSampleFloat(x, y));
+        pixelProperties.setPscatt(pscattTile.getSampleFloat(x, y));
+        pixelProperties.setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
+        final int isShadowBitIndex = (int) (Math.log((double) CombinedCloudOp.FLAG_CLOUD_SHADOW)/Math.log(2.0));
+        if (merisCombinedCloudFlagTile != null) {
+         pixelProperties.setCombinedCloudFlagShadow(merisCombinedCloudFlagTile.getSampleBit(x, y, isShadowBitIndex));
+        }
+        return pixelProperties;
     }
 
     private void printCombinedCloudFlag(Tile merisCombinedCloudFlagTile, int y, int x) {
