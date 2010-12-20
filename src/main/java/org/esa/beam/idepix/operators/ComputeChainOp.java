@@ -33,7 +33,6 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
-import org.esa.beam.meris.cloud.CloudShadowOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.BeamConstants;
 import org.esa.beam.util.ProductUtils;
@@ -55,9 +54,7 @@ import java.util.Map;
                   description = "Pixel identification and classification. This operator just calls a chain of other operators.")
 public class ComputeChainOp extends BasisOp {
 
-    @SourceProduct(alias = "source",
-                   label = "Name (MERIS L1b product)",
-                   description = "The source product.")
+    @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
     private Product sourceProduct;
 
     @TargetProduct(description = "The target product.")
@@ -70,28 +67,22 @@ public class ComputeChainOp extends BasisOp {
 
 
     // IPF parameters
-    @Parameter(defaultValue = "false",
-               label = "TOA Reflectances")
+    @Parameter(defaultValue = "false", label = "TOA Reflectances")
     private boolean ipfOutputRad2Refl = false;
 
-    @Parameter(defaultValue = "false",
-               label = "Gas Absorption Corrected Reflectances")
+    @Parameter(defaultValue = "false", label = "Gas Absorption Corrected Reflectances")
     private boolean ipfOutputGaseous = false;
 
-    @Parameter(defaultValue = "false",
-               label = "Land/Water Reclassification Flags")
+    @Parameter(defaultValue = "false", label = "Land/Water Reclassification Flags")
     private boolean ipfOutputLandWater = false;
 
-    @Parameter(defaultValue = "false",
-               label = "Rayleigh Corrected Reflectances")
+    @Parameter(defaultValue = "false", label = "Rayleigh Corrected Reflectances")
     private boolean ipfOutputRayleigh = false;
 
-    @Parameter(defaultValue = "true",
-               label = "L2 Cloud Top Pressure and Surface Pressure")
+    @Parameter(defaultValue = "true", label = "L2 Cloud Top Pressure and Surface Pressure")
     private boolean ipfOutputL2Pressures = true;
 
-    @Parameter(defaultValue = "true",
-               label = "L2 Cloud Detection Flags")
+    @Parameter(defaultValue = "true", label = "L2 Cloud Detection Flags")
     private boolean ipfOutputL2CloudDetection = true;
 
     // QWG specific test options
@@ -114,54 +105,43 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Pressure product parameters
-    @Parameter(defaultValue = "true",
-               label = "Barometric Pressure")
+    @Parameter(defaultValue = "true", label = "Barometric Pressure")
     private boolean pressureOutputPbaro = true;
 
-    @Parameter(defaultValue = "false",
-               label = "Use GETASSE30 DEM for Barometric Pressure Computation")
+    @Parameter(defaultValue = "false", label = "Use GETASSE30 DEM for Barometric Pressure Computation")
     private boolean pressurePbaroGetasse = false;
 
-    @Parameter(defaultValue = "true",
-               label = "Surface Pressure (FUB, O2 project)")
+    @Parameter(defaultValue = "true", label = "Surface Pressure (FUB, O2 project)")
     private boolean pressureOutputPsurfFub = true;
 
-    @Parameter(defaultValue = "false",
-               label = "Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm")
+    @Parameter(defaultValue = "false", label = "Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm")
     private boolean pressureFubTropicalAtmosphere = false;
 
     @Parameter(defaultValue = "false",
                label = "L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
     private boolean pressureQWGOutputCtpStraylightCorrFub = false;
 
-    @Parameter(defaultValue = "true",
-               label = "'P1' (LISE, O2 project, all surfaces)")
+    @Parameter(defaultValue = "true", label = "'P1' (LISE, O2 project, all surfaces)")
     private boolean pressureOutputP1Lise = true;
 
-    @Parameter(defaultValue = "true",
-               label = "Surface Pressure (LISE, O2 project, land)")
+    @Parameter(defaultValue = "true", label = "Surface Pressure (LISE, O2 project, land)")
     private boolean pressureOutputPSurfLise = true;
 
-    @Parameter(defaultValue = "true",
-               label = "'P2' (LISE, O2 project, ocean)")
+    @Parameter(defaultValue = "true", label = "'P2' (LISE, O2 project, ocean)")
     private boolean pressureOutputP2Lise = true;
 
-    @Parameter(defaultValue = "true",
-               label = "'PScatt' (LISE, O2 project, ocean)")
+    @Parameter(defaultValue = "true", label = "'PScatt' (LISE, O2 project, ocean)")
     private boolean pressureOutputPScattLise = true;
 
 
     // Cloud product parameters
-    @Parameter(defaultValue = "false",
-               label = "Blue Band Flags")
+    @Parameter(defaultValue = "false", label = "Blue Band Flags")
     private boolean cloudOutputBlueBand = false;
 
-    @Parameter(defaultValue = "false",
-               label = "Cloud Probability")
+    @Parameter(defaultValue = "false", label = "Cloud Probability")
     private boolean cloudOutputCloudProbability = false;
 
-    @Parameter(defaultValue = "false",
-               label = "Combined Clouds Flags")
+    @Parameter(defaultValue = "false", label = "Combined Clouds Flags")
     private boolean cloudOutputCombinedCloud = false;
 
 
@@ -178,8 +158,7 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Coastcolour parameters
-    @Parameter(defaultValue = "false",
-               label = "Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
     private boolean ccCopyRadiances = false;
 
 
