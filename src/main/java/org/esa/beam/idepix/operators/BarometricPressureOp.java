@@ -1,9 +1,9 @@
 package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.dataop.dem.ElevationModel;
@@ -25,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
@@ -60,6 +61,8 @@ public class BarometricPressureOp extends MerisBasisOp {
 
     private WaterVapourPressureTable waterVapourPressureTable;
     private ElevationModel getasseElevationModel;
+    private Band pressureBand;
+    private Band getasseAltitudeBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -87,9 +90,9 @@ public class BarometricPressureOp extends MerisBasisOp {
 
     private void createTargetProduct() throws OperatorException {
         targetProduct = createCompatibleProduct(sourceProduct, "MER_PBARO", "MER_L2");
-        targetProduct.addBand(PRESSURE_BAROMETRIC, ProductData.TYPE_FLOAT32);
+        pressureBand = targetProduct.addBand(PRESSURE_BAROMETRIC, ProductData.TYPE_FLOAT32);
         if (useGetasseDem) {
-            targetProduct.addBand("getasse_alt", ProductData.TYPE_FLOAT32);
+            getasseAltitudeBand = targetProduct.addBand("getasse_alt", ProductData.TYPE_FLOAT32);
         }
 
         BandMathsOp bandArithmeticOp =
@@ -172,19 +175,14 @@ public class BarometricPressureOp extends MerisBasisOp {
     }
 
     @Override
-    public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-
-    	Rectangle rectangle = targetTile.getRectangle();
-        pm.beginTask("Processing frame...", rectangle.height);
-
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor ignored) throws OperatorException {
         try {
-        	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), rectangle, pm);
-        	Tile slpTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), rectangle, pm);    // MSLP
-            Tile longitudeTile = getSourceTile(sourceProduct.getTiePointGrid("longitude"), rectangle, pm);
-            Tile latitudeTile = getSourceTile(sourceProduct.getTiePointGrid("latitude"), rectangle, pm);
-            Tile altitudeTile = getSourceTile(sourceProduct.getTiePointGrid("dem_alt"), rectangle, pm);
+            // todo (mp 20.12.2010)  detector is never used
+//        	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), targetRectangle);
+        	Tile slpTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), targetRectangle);    // MSLP
+            Tile altitudeTile = getSourceTile(sourceProduct.getTiePointGrid("dem_alt"), targetRectangle);
 
-            Tile isInvalid = getSourceTile(invalidBand, rectangle, pm);
+            Tile isInvalid = getSourceTile(invalidBand, targetRectangle);
 
             // implement computation as follows:
             //                p_surf = p_sea / exp(gn*h/(R*(t+C*e+gam*h/2)))
@@ -205,23 +203,28 @@ public class BarometricPressureOp extends MerisBasisOp {
             final float C = 0.11f;       // 0.11 K/hPa (coefficient accounting for humidity, assumed to be constant)
             final float seaLevelTemp = 288.15f; // mean sea level temperature in U.S. standard, in deg. centigrade!
 
-            int i = 0;
-			for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-				for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-					if (pm.isCanceled()) {
-						break;
-					}
+            Tile getasseAltitudeTile = null;
+            if (useGetasseDem) {
+                getasseAltitudeTile = targetTiles.get(getasseAltitudeBand);
+            }
+            Tile pressureTile = targetTiles.get(pressureBand);
+			for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+                checkForCancellation();
+                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
 					if (isInvalid.getSampleBoolean(x, y)) {
-						targetTile.setSample(x, y, 0);
+                        if (useGetasseDem) {
+                            getasseAltitudeTile.setSample(x, y, 0);
+                        }
+                        pressureTile.setSample(x, y, 0);
 					} else {
 						final float slp = slpTile.getSampleFloat(x, y);
                         float alt;
                         if (useGetasseDem) {
                             // get altitude from GETASSE DEM
-                            final float lat = latitudeTile.getSampleFloat(x, y);
-                            final float lon = longitudeTile.getSampleFloat(x, y);
-                            GeoPos geoPos = new GeoPos(lat, lon);
+                            final PixelPos pixelPos = new PixelPos(x + 0.5f, y + 0.5f);
+                            GeoPos geoPos = sourceProduct.getGeoCoding().getGeoPos(pixelPos, null);
                             alt = getasseElevationModel.getElevation(geoPos);
+                            getasseAltitudeTile.setSample(x, y, alt);
                         } else {
                             // get altitude from tie point DEM
                             alt = altitudeTile.getSampleFloat(x, y);
@@ -236,22 +239,12 @@ public class BarometricPressureOp extends MerisBasisOp {
                         final double e = linearInterpol(surfaceTemp, t1, t2, p1, p2);
 
                         final double pbaro = slp / Math.exp(g * alt / (R * (surfaceTemp + C * e + gamma * alt / 2.0)));
-
-                        // if GETASSE DEM is used, write altitude in a separate band
-                        if ("getasse_alt".equals(band.getName())) {
-                             targetTile.setSample(x, y, alt);
-                        } else {
-						    targetTile.setSample(x, y, pbaro);
-                        }
-					}
-					i++;
+                        pressureTile.setSample(x, y, pbaro);
+                    }
 				}
-				pm.worked(1);
 			}
         } catch (Exception e) {
         	throw new OperatorException("Failed to process Barometric Pressure:\n" + e.getMessage(), e);
-		} finally {
-            pm.done();
         }
     }
 
