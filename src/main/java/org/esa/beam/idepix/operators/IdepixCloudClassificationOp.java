@@ -209,34 +209,34 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             sd.rhoToa[i] = (float[]) getSourceTile(
-                    rhoToaProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)), rectangle,
-                    pm).getRawSamples().getElems();
+                    rhoToaProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)),
+                    rectangle).getRawSamples().getElems();
         }
         sd.radiance[BAND_BRIGHT_N] = getSourceTile(
                 l1bProduct.getBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[auxData.band_bright_n]),
-                rectangle, pm);
+                rectangle);
         sd.radiance[BAND_SLOPE_N_1] = getSourceTile(
                 l1bProduct.getBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[auxData.band_slope_n_1]),
-                rectangle, pm);
+                rectangle);
         sd.radiance[BAND_SLOPE_N_2] = getSourceTile(
                 l1bProduct.getBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[auxData.band_slope_n_2]),
-                rectangle, pm);
+                rectangle);
         sd.detectorIndex = (short[]) getSourceTile(
                 l1bProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME),
-                rectangle, pm).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.sza = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
-                                         rectangle, pm).getRawSamples().getElems();
+                                         rectangle).getRawSamples().getElems();
         sd.vza = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
-                                         rectangle, pm).getRawSamples().getElems();
+                                         rectangle).getRawSamples().getElems();
         sd.saa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
-                                         rectangle, pm).getRawSamples().getElems();
+                                         rectangle).getRawSamples().getElems();
         sd.vaa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
-                                         rectangle, pm).getRawSamples().getElems();
+                                         rectangle).getRawSamples().getElems();
         sd.altitude = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME),
-                                              rectangle, pm).getRawSamples().getElems();
-        sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"), rectangle,
-                                                   pm).getRawSamples().getElems();
-        sd.l1Flags = getSourceTile(l1bProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME), rectangle, pm);
+                                              rectangle).getRawSamples().getElems();
+        sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
+                                                   rectangle).getRawSamples().getElems();
+        sd.l1Flags = getSourceTile(l1bProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME), rectangle);
 
         return sd;
     }
@@ -245,35 +245,31 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
 
         Rectangle rectangle = targetTile.getRectangle();
-        pm.beginTask("Processing frame...", rectangle.height + 1);
         try {
             SourceData sd = loadSourceTiles(rectangle, pm);
 
-            Tile ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), rectangle, pm);
-            Tile pbaroTile = getSourceTile(pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC), rectangle,
-                                           pm);
-            Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle,
-                                            pm);
+            Tile ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), rectangle);
+            Tile pbaroTile = getSourceTile(pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC), rectangle);
+            Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle);
             Tile lisePScattTile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT),
-                                                rectangle, pm);
+                                                rectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                checkForCancellation();
                 pixelInfo.y = y;
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                     if (!sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
                         pixelInfo.x = x;
                         pixelInfo.index = i;
-                        pixelInfo.airMass = HelperFunctions.calculateAirMass(
-                                sd.vza[i], sd.sza[i]);
+                        pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[i], sd.sza[i]);
                         if (sd.l1Flags.getSampleBit(x, y, L1_F_LAND)) {
                             // ECMWF pressure is only corrected for positive
                             // altitudes and only for land pixels
-                            pixelInfo.ecmwfPressure = HelperFunctions
-                                    .correctEcmwfPressure(sd.ecmwfPressure[i],
-                                                          sd.altitude[i],
-                                                          auxData.press_scale_height);
+                            pixelInfo.ecmwfPressure = HelperFunctions.correctEcmwfPressure(sd.ecmwfPressure[i],
+                                                                                           sd.altitude[i],
+                                                                                           auxData.press_scale_height);
                         } else {
                             pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
                         }
@@ -308,12 +304,9 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
                     }
                     i++;
                 }
-                pm.worked(1);
             }
         } catch (Exception e) {
             throw new OperatorException(e);
-        } finally {
-            pm.done();
         }
     }
 
@@ -470,7 +463,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
                                ReturnValue press) {
         double P; /* polynomial accumulator */
         double koeff; /* powers of eta_c */
-        int i;
         press.error = false;
         final FractIndex polcoeffShiftIndex = new FractIndex();
 
@@ -485,7 +477,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         /* DPM #2.1.16-2 */
         P = polcoeff[polcoeffShiftIndex.index][0];
         koeff = 1.0;
-        for (i = 1; i < PPOL_NUM_ORDER; i++) {
+        for (int i = 1; i < PPOL_NUM_ORDER; i++) {
             koeff *= eta_C;
             P += polcoeff[polcoeffShiftIndex.index][i] * koeff;
         }
@@ -557,16 +549,14 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         final double cosphi = Math.cos(deltaAzimuth * MathUtils.DTOR);
 
         // scattering angle in degree
-        final double thetaScatt = MathUtils.RTOD * Math.acos(-coss * cosv - sins * sinv * cosphi);
-        return thetaScatt;
+        return MathUtils.RTOD * Math.acos(-coss * cosv - sins * sinv * cosphi);
     }
 
     private double calcRhoToa442ThresholdTerm(SourceData dc, PixelInfo pixelInfo) {
         final double thetaScatt = calcScatteringAngle(dc, pixelInfo) * MathUtils.DTOR;
-        double rhoToa442ThresholdOffset = userDefinedRhoToa442Threshold + userDefinedDeltaRhoToa442Threshold *
-//                                                                            userDefinedDeltaRhoToa442ThresholdFactor *
-Math.cos(thetaScatt) * Math.cos(thetaScatt);
-        return rhoToa442ThresholdOffset;
+        return userDefinedRhoToa442Threshold + userDefinedDeltaRhoToa442Threshold *
+//                                             userDefinedDeltaRhoToa442ThresholdFactor *
+                                               Math.cos(thetaScatt) * Math.cos(thetaScatt);
     }
 
     /**
@@ -579,7 +569,6 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
      */
     private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags) {
         double rhorc_442_thr;   /* threshold on rayleigh corrected reflectance */
-        double slope1, slope2;
 
         //Rayleigh phase function coefficients, PR in DPM
         final double[] phaseR = new double[RAYSCATT_NUM_SER];
@@ -598,7 +587,8 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
                                                                              dc.saa[pixelInfo.index]);
 
         // scattering angle
-        final double thetaScatt = calcScatteringAngle(dc, pixelInfo);
+        // TODO (mp 20.12.2010) - result is never used
+//        final double thetaScatt = calcScatteringAngle(dc, pixelInfo);
 
         /* Rayleigh phase function Fourier decomposition */
         rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
@@ -620,34 +610,25 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
         final FractIndex[] rhoRC442index = FractIndex.createArray(3);
         /* Interpolate threshold on rayleigh corrected reflectance - DPM #2.1.7-9 */
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
-            Interp.interpCoord(dc.sza[pixelInfo.index],
-                               auxData.Rhorc_442_land_LUT.getTab(0),
-                               rhoRC442index[0]);
-            Interp.interpCoord(dc.vza[pixelInfo.index],
-                               auxData.Rhorc_442_land_LUT.getTab(1),
-                               rhoRC442index[1]);
-            Interp.interpCoord(deltaAzimuth,
-                               auxData.Rhorc_442_land_LUT.getTab(2),
-                               rhoRC442index[2]);
+            Interp.interpCoord(dc.sza[pixelInfo.index], auxData.Rhorc_442_land_LUT.getTab(0), rhoRC442index[0]);
+            Interp.interpCoord(dc.vza[pixelInfo.index], auxData.Rhorc_442_land_LUT.getTab(1), rhoRC442index[1]);
+            Interp.interpCoord(deltaAzimuth, auxData.Rhorc_442_land_LUT.getTab(2), rhoRC442index[2]);
             rhorc_442_thr = Interp.interpolate(auxData.Rhorc_442_land_LUT.getJavaArray(), rhoRC442index);
         } else {    /* water  pixel */
-            Interp.interpCoord(dc.sza[pixelInfo.index],
-                               auxData.Rhorc_442_ocean_LUT.getTab(0),
-                               rhoRC442index[0]);
-            Interp.interpCoord(dc.vza[pixelInfo.index],
-                               auxData.Rhorc_442_ocean_LUT.getTab(1),
-                               rhoRC442index[1]);
-            Interp.interpCoord(deltaAzimuth,
-                               auxData.Rhorc_442_ocean_LUT.getTab(2),
-                               rhoRC442index[2]);
+            Interp.interpCoord(dc.sza[pixelInfo.index], auxData.Rhorc_442_ocean_LUT.getTab(0), rhoRC442index[0]);
+            Interp.interpCoord(dc.vza[pixelInfo.index], auxData.Rhorc_442_ocean_LUT.getTab(1), rhoRC442index[1]);
+            Interp.interpCoord(deltaAzimuth, auxData.Rhorc_442_ocean_LUT.getTab(2), rhoRC442index[2]);
             rhorc_442_thr = Interp.interpolate(auxData.Rhorc_442_ocean_LUT.getJavaArray(), rhoRC442index);
         }
         /* END CHANGE 01 */
 
         /* Derive bright flag by reflectance comparison to threshold - DPM #2.1.7-10 */
-        boolean bright_f, slope1_f, slope2_f;
-        bright_f = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                   || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
+        boolean slope1_f;
+        boolean slope2_f;
+        boolean bright_f;
+        // TODO (20.12.2010) - assignment is never used
+//        boolean bright_f = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
+//                           || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
 
         /* Spectral slope processor.brr 1 */
         if (rhoAg[auxData.band_slope_d_1] <= 0.0) {
@@ -655,7 +636,7 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
             slope1_f = false; /* DPM #2.1.7-6 */
         } else {
             /* DPM #2.1.7-5 */
-            slope1 = rhoAg[auxData.band_slope_n_1] / rhoAg[auxData.band_slope_d_1];
+            double slope1 = rhoAg[auxData.band_slope_n_1] / rhoAg[auxData.band_slope_d_1];
             slope1_f = ((slope1 >= auxData.slope_1_low_thr) && (slope1 <= auxData.slope_1_high_thr))
                        || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_SLOPE_N_1, auxData.band_slope_n_1);
         }
@@ -666,16 +647,14 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
             slope2_f = false; /* DPM #2.1.7-8 */
         } else {
             /* DPM #2.1.7-7 */
-            slope2 = rhoAg[auxData.band_slope_n_2] / rhoAg[auxData.band_slope_d_2];
+            double slope2 = rhoAg[auxData.band_slope_n_2] / rhoAg[auxData.band_slope_d_2];
             slope2_f = ((slope2 >= auxData.slope_2_low_thr) && (slope2 <= auxData.slope_2_high_thr))
                        || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_SLOPE_N_2, auxData.band_slope_n_2);
         }
 
-        boolean bright_rc = false;
         boolean bright_toa_f = false;
-        boolean high_mdsi = false;
         // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
-        bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
+        boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
                     || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
@@ -688,7 +667,7 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
         }
 
         final float mdsi = computeMdsi(dc.rhoToa[bb865][pixelInfo.index], dc.rhoToa[bb890][pixelInfo.index]);
-        high_mdsi = (mdsi > userDefinedMDSIThreshold);
+        boolean high_mdsi = (mdsi > userDefinedMDSIThreshold);
 
         result_flags[0] = bright_f;
         result_flags[1] = slope1_f;
@@ -699,8 +678,7 @@ Math.cos(thetaScatt) * Math.cos(thetaScatt);
     }
 
     private float computeMdsi(float rhoToa865, float rhoToa885) {
-        final float mdsi = (rhoToa865 - rhoToa885) / (rhoToa865 + rhoToa885);
-        return mdsi;
+        return (rhoToa865 - rhoToa885) / (rhoToa865 + rhoToa885);
     }
 
     /**
