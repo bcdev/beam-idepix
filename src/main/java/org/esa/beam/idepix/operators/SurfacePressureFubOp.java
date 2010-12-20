@@ -48,56 +48,69 @@ import java.io.InputStreamReader;
  * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
  */
 @OperatorMetadata(alias = "idepix.SurfacePressureFub",
-        version = "1.0",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008 by Brockmann Consult",
-        description = "This operator computes surface pressure with FUB NN algorithm.")
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "This operator computes surface pressure with FUB NN algorithm.")
 public class SurfacePressureFubOp extends MerisBasisOp {
-	@SourceProduct(alias="l1b", description = "The source product.")
+
+    @SourceProduct(alias = "l1b", description = "The source product.")
     Product sourceProduct;
-	@SourceProduct(alias="cloud")
+    @SourceProduct(alias = "cloud")
     private Product cloudProduct;
     @TargetProduct(description = "The target product.")
     Product targetProduct;
-    @Parameter(description="If 'true' the algorithm will apply straylight correction.", defaultValue="false")
+    @Parameter(description = "If 'true' the algorithm will apply straylight correction.", defaultValue = "false")
     public boolean straylightCorr = false;
-    @Parameter(description="If 'true' the algorithm will apply Tropical instead of USS atmosphere model.", defaultValue="false")
+    @Parameter(description = "If 'true' the algorithm will apply Tropical instead of USS atmosphere model.",
+               defaultValue = "false")
     public boolean tropicalAtmosphere = false;
-    
-//    private static final String INVALID_EXPRESSION = "l1_flags.INVALID or not l1_flags.LAND_OCEAN";
+
+    //    private static final String INVALID_EXPRESSION = "l1_flags.INVALID or not l1_flags.LAND_OCEAN";
     private static final String INVALID_EXPRESSION = "l1_flags.INVALID";
-    
+
     private static final String NEURAL_NET_TRP_FILE_NAME = "SP_FUB_trp.nna";
     private static final String NEURAL_NET_USS_FILE_NAME = "SP_FUB_uss.nna";  // changed to US standard atm., 18/03/2009
     private static final String STRAYLIGHT_COEFF_FILE_NAME = "stray_ratio.d";
     private static final String STRAYLIGHT_CORR_WAVELENGTH_FILE_NAME = "lambda.d";
-    
+
     private static final int BB760 = 10;
     private static final int DETECTOR_LENGTH_RR = 925;
-    
+
     private float[] straylightCoefficients = new float[DETECTOR_LENGTH_RR]; // reduced resolution only!
     private float[] straylightCorrWavelengths = new float[DETECTOR_LENGTH_RR];
 
     private L2AuxData auxData;
     private Band invalidBand;
+    private ThreadLocal<JnnNet> neuralNet;
 
 
     @Override
     public void initialize() throws OperatorException {
         try {
-			initAuxData();
-			readStraylightCoeff();
-			readStraylightCorrWavelengths();
-		} catch (Exception e) {
-			throw new OperatorException("Failed to load aux data:\n" + e.getMessage());
-		}
+            initAuxData();
+            readStraylightCoeff();
+            readStraylightCorrWavelengths();
+        } catch (Exception e) {
+            throw new OperatorException("Failed to load aux data:\n" + e.getMessage());
+        }
+        try {
+            final JnnNet nn = loadNeuralNet();
+            neuralNet = new ThreadLocal<JnnNet>() {
+                @Override
+                protected JnnNet initialValue() {
+                    return nn.clone();
+                }
+            };
+        } catch (Exception e) {
+            throw new OperatorException("Failed to load neural net:\n" + e.getMessage());
+        }
         createTargetProduct();
     }
-    
+
     private JnnNet loadNeuralNet() throws IOException, JnnException {
 
         InputStream inputStream;
-        JnnNet neuralNet = null;
         if (tropicalAtmosphere) {
             inputStream = SurfacePressureFubOp.class.getResourceAsStream(NEURAL_NET_TRP_FILE_NAME);
         } else {
@@ -107,11 +120,10 @@ public class SurfacePressureFubOp extends MerisBasisOp {
 
         try {
             Jnn.setOptimizing(true);
-            neuralNet = Jnn.readNna(reader);
+            return Jnn.readNna(reader);
         } finally {
             reader.close();
         }
-        return neuralNet;
     }
 
     private void createTargetProduct() throws OperatorException {
@@ -119,10 +131,10 @@ public class SurfacePressureFubOp extends MerisBasisOp {
         targetProduct.addBand("surface_press_fub", ProductData.TYPE_FLOAT32);
 
         BandMathsOp bandArithmeticOp =
-            BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
+                BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
         invalidBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
     }
-    
+
     private void initAuxData() throws Exception {
         try {
             L2AuxdataProvider auxdataProvider = L2AuxdataProvider.getInstance();
@@ -130,146 +142,125 @@ public class SurfacePressureFubOp extends MerisBasisOp {
         } catch (Exception e) {
             throw new OperatorException("Failed to load L2AuxData:\n" + e.getMessage(), e);
         }
-
-    }
-    
-    /**
-     * This method reads the straylight correction coefficients (RR only!)
-     * 
-     * @throws IOException
-     */
-    private void readStraylightCoeff() throws IOException {
-        
-        final InputStream inputStream = SurfacePressureFubOp.class.getResourceAsStream(STRAYLIGHT_COEFF_FILE_NAME);
-        
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        for (int i = 0; i < straylightCoefficients.length; i++) {
-            String line = bufferedReader.readLine();
-            line = line.trim();
-            straylightCoefficients[i] = Float.parseFloat(line);
-        }
-        inputStream.close();
-    }
-    
-    /**
-     * This method reads the straylight correction wavelengths (RR only!)
-     * 
-     * @throws IOException
-     */
-    private void readStraylightCorrWavelengths() throws IOException {
-        
-        final InputStream inputStream = SurfacePressureFubOp.class.getResourceAsStream(STRAYLIGHT_CORR_WAVELENGTH_FILE_NAME);
-        
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        for (int i = 0; i < straylightCorrWavelengths.length; i++) {
-            String line = bufferedReader.readLine();
-            line = line.trim();
-            straylightCorrWavelengths[i] = Float.parseFloat(line);
-        }
-        inputStream.close();
     }
 
-//    @Override
+    @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-    	
-    	Rectangle rectangle = targetTile.getRectangle();
-        pm.beginTask("Processing frame...", rectangle.height);
+
 
         try {
-            // declare this locally since class JnnNet is not thread safe!!
-            JnnNet neuralNet;
-            try {
-                neuralNet = loadNeuralNet();
-            } catch (Exception e) {
-                if (tropicalAtmosphere) {
-                    throw new OperatorException("Failed to load neural net SP_FUB_trp.nna:\n" + e.getMessage());
-                } else {
-                    throw new OperatorException("Failed to load neural net SP_FUB_uss.nna:\n" + e.getMessage());
-                }
-            }
+            Rectangle rectangle = targetTile.getRectangle();
+            JnnNet jnnNet = neuralNet.get();
 
-        	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), rectangle, pm);
-        	Tile sza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME), rectangle, pm);
-			Tile saa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME), rectangle, pm);
-			Tile vza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME), rectangle, pm);
-			Tile vaa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME), rectangle, pm);
-			
-			Band band10 = sourceProduct.getBand("radiance_10");
-			Tile toar10 = getSourceTile(band10, rectangle, pm);
-			Band band11 = sourceProduct.getBand("radiance_11");
-			Tile toar11 = getSourceTile(band11, rectangle, pm);
-			Band band12 = sourceProduct.getBand("radiance_12");
-			Tile toar12 = getSourceTile(band12, rectangle, pm);
-			
-			Tile isInvalid = getSourceTile(invalidBand, rectangle, pm);
-			
-			Tile cloudFlags = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle, pm);
+            Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME),
+                                          rectangle);
+            Tile sza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
+                                     rectangle);
+            Tile saa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
+                                     rectangle);
+            Tile vza = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
+                                     rectangle);
+            Tile vaa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
+                                     rectangle);
+
+            Band band10 = sourceProduct.getBand("radiance_10");
+            Tile toar10 = getSourceTile(band10, rectangle);
+            Band band11 = sourceProduct.getBand("radiance_11");
+            Tile toar11 = getSourceTile(band11, rectangle);
+            Band band12 = sourceProduct.getBand("radiance_12");
+            Tile toar12 = getSourceTile(band12, rectangle);
+
+            Tile isInvalid = getSourceTile(invalidBand, rectangle);
+
+            // TODO (mp 20.12.2010) - cloudFlags is never used
+//			Tile cloudFlags = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
 
             final double[] nnIn = new double[7];
             final double[] nnOut = new double[1];
 
-            int i = 0;
-			for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-				for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-					if (pm.isCanceled()) {
-						break;
-					}
-					final int detectorXY = detector.getSampleInt(x, y);
-					if (isInvalid.getSampleBoolean(x, y)) {
-						targetTile.setSample(x, y, 0);
-					} else {
-						final float szaDeg = sza.getSampleFloat(x, y);
-						final double szaRad = szaDeg * MathUtils.DTOR;
-						final float vzaDeg = vza.getSampleFloat(x, y);
-						final double vzaRad = vzaDeg * MathUtils.DTOR;
-						
-						double lambda = auxData.central_wavelength[BB760][detectorXY];
-						final double fraction = (lambda - 753.75)/(778.0 - 753.75);
-						final double toar10XY = toar10.getSampleDouble(x, y)/band10.getSolarFlux();
-						final double toar11XY = toar11.getSampleDouble(x, y)/band11.getSolarFlux();
-						final double toar12XY = toar12.getSampleDouble(x, y)/band12.getSolarFlux();
-						final double toar11XY_na = (1.0 - fraction)*toar10XY + fraction*toar12XY;
-						
-						double stray = 0.0;
-						if (straylightCorr) {
-							// apply FUB straylight correction...
-							stray = straylightCoefficients[detectorXY] * toar10XY;
-							lambda = straylightCorrWavelengths[detectorXY];
-						}
-						
-						final double toar11XY_corrected = toar11XY + stray;
-						
-						// apply FUB NN...
-						nnIn[0] = toar10XY;
-						nnIn[1] = toar11XY_corrected / toar11XY_na;
-						nnIn[2] = 0.15; // AOT
-						nnIn[3] = Math.cos(szaRad);
-						nnIn[4] = Math.cos(vzaRad);
-						final float vaaDegXY = vaa.getSampleFloat(x, y);
-						final float saaDegXY = saa.getSampleFloat(x, y);
-						nnIn[5] = Math.sin(vzaRad)
-								* Math.cos(MathUtils.DTOR * (vaaDegXY - saaDegXY));
-						nnIn[6] = lambda;
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                checkForCancellation();
+                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                    if (isInvalid.getSampleBoolean(x, y)) {
+                        targetTile.setSample(x, y, 0);
+                    } else {
+                        final int detectorXY = detector.getSampleInt(x, y);
+                        final float szaDeg = sza.getSampleFloat(x, y);
+                        final double szaRad = szaDeg * MathUtils.DTOR;
+                        final float vzaDeg = vza.getSampleFloat(x, y);
+                        final double vzaRad = vzaDeg * MathUtils.DTOR;
 
-						neuralNet.process(nnIn, nnOut);
-						targetTile.setSample(x, y, nnOut[0]);
-					}
-					i++;
-				}
-				pm.worked(1);
-			}
+                        double lambda = auxData.central_wavelength[BB760][detectorXY];
+                        final double fraction = (lambda - 753.75) / (778.0 - 753.75);
+                        final double toar10XY = toar10.getSampleDouble(x, y) / band10.getSolarFlux();
+                        final double toar11XY = toar11.getSampleDouble(x, y) / band11.getSolarFlux();
+                        final double toar12XY = toar12.getSampleDouble(x, y) / band12.getSolarFlux();
+                        final double toar11XY_na = (1.0 - fraction) * toar10XY + fraction * toar12XY;
+
+                        double stray = 0.0;
+                        if (straylightCorr) {
+                            // apply FUB straylight correction...
+                            stray = straylightCoefficients[detectorXY] * toar10XY;
+                            lambda = straylightCorrWavelengths[detectorXY];
+                        }
+
+                        final double toar11XY_corrected = toar11XY + stray;
+
+                        // apply FUB NN...
+                        nnIn[0] = toar10XY;
+                        nnIn[1] = toar11XY_corrected / toar11XY_na;
+                        nnIn[2] = 0.15; // AOT
+                        nnIn[3] = Math.cos(szaRad);
+                        nnIn[4] = Math.cos(vzaRad);
+                        final float vaaDegXY = vaa.getSampleFloat(x, y);
+                        final float saaDegXY = saa.getSampleFloat(x, y);
+                        nnIn[5] = Math.sin(vzaRad) * Math.cos(MathUtils.DTOR * (vaaDegXY - saaDegXY));
+                        nnIn[6] = lambda;
+
+                        jnnNet.process(nnIn, nnOut);
+                        targetTile.setSample(x, y, nnOut[0]);
+                    }
+                }
+            }
         } catch (Exception e) {
-        	throw new OperatorException("Failed to process Surface Pressure FUB:\n" + e.getMessage(), e);
-		} finally {
-            pm.done();
+            throw new OperatorException("Failed to process Surface Pressure FUB:\n" + e.getMessage(), e);
         }
     }
-    
+
+    /*
+     * This method reads the straylight correction coefficients (RR only!)
+     */
+    private void readStraylightCoeff() throws IOException {
+        readAuxdataArray(STRAYLIGHT_COEFF_FILE_NAME, straylightCoefficients);
+    }
+
+    /*
+     * This method reads the straylight correction wavelengths (RR only!)
+     */
+    private void readStraylightCorrWavelengths() throws IOException {
+        readAuxdataArray(STRAYLIGHT_CORR_WAVELENGTH_FILE_NAME, straylightCorrWavelengths);
+    }
+
+    private void readAuxdataArray(String fileName, float[] array) throws IOException {
+        final InputStream inputStream = SurfacePressureFubOp.class.getResourceAsStream(fileName);
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        try {
+            for (int i = 0; i < array.length; i++) {
+                String line = bufferedReader.readLine();
+                line = line.trim();
+                array[i] = Float.parseFloat(line);
+            }
+        } finally {
+            bufferedReader.close();
+        }
+    }
+
     /**
      * The Service Provider Interface (SPI) for the operator.
      * It provides operator meta-data and is a factory for new operator instances.
      */
     public static class Spi extends OperatorSpi {
+
         public Spi() {
             super(SurfacePressureFubOp.class, "Meris.SurfacePressureFub");
         }
