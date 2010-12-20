@@ -76,24 +76,23 @@ public class MerisBrrCorrectionOp extends Operator {
 
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                final float brrCorr;
                 if (isInvalid.getSampleBoolean(x, y)) {
-                    targetTile.setSample(x, y, -1.0);
+                    brrCorr = -1.0f;
                 } else {
                     if (cloudFlagsTile.getSampleBit(x, y, IdepixCloudClassificationOp.F_CLOUD)) {
                         final float surfacePressure = surfacePressureTile.getSampleFloat(x, y);
                         final float cloudTopPressure = cloudTopPressureTile.getSampleFloat(x, y);
                         final float rad2refl = rad2reflTile.getSampleFloat(x, y);
-                        final float brrCorr = rad2refl * cloudTopPressure / surfacePressure;
-                        targetTile.setSample(x, y, brrCorr);
+                        brrCorr = rad2refl * cloudTopPressure / surfacePressure;
                     } else if (landFlagsTile.getSampleBit(x, y, LandClassificationOp.F_ICE)) {
-                        final float brrCorr = rad2reflTile.getSampleFloat(x, y);
-                        targetTile.setSample(x, y, brrCorr);
+                        brrCorr = rad2reflTile.getSampleFloat(x, y);
                     } else {
                         // leave original value
-                        final float brr = brrTile.getSampleFloat(x, y);
-                        targetTile.setSample(x, y, brr);
+                        brrCorr = brrTile.getSampleFloat(x, y);
                     }
                 }
+                targetTile.setSample(x, y, brrCorr);
             }
             checkForCancellation();
         }
