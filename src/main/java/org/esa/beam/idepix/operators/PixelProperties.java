@@ -15,7 +15,7 @@ interface PixelProperties {
 
     boolean isCloud();
     
-    boolean isCloudShadow();
+    boolean isCloudBuffer();
 
     boolean isClearLand();
 

@@ -154,7 +154,8 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
-
+    @Parameter(defaultValue = "1", label = "Width of cloud buffer (# of pixels)")
+    private int gaCloudBufferWidth;
 
 
     // Coastcolour parameters
@@ -169,7 +170,6 @@ public class ComputeChainOp extends BasisOp {
     private Product pressureLiseProduct;
     private Product rad2reflProduct;
     private Product pbaroProduct;
-    private Product cloudShadowProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -365,17 +365,6 @@ public class ComputeChainOp extends BasisOp {
             combinedCloudProduct = GPF.createProduct("Meris.CombinedCloud", emptyParams, combinedCloudInput);
         }
 
-        // Cloud Shadow (currently for GlobAlbedo only)
-//        if (cloudOutputBlueBand || CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
-//            Map<String, Product> cloudShadowInput = new HashMap<String, Product>(3);
-//            cloudShadowInput.put("l1b", sourceProduct);
-//            cloudShadowInput.put("cloud", combinedCloudProduct);
-//            cloudShadowInput.put("ctp", ctpProduct);
-//            Map<String, Object> cloudShadowParameters = new HashMap<String, Object>(1);
-//            cloudShadowParameters.put("shadowWidth", 64);
-//            cloudShadowProduct = GPF.createProduct("Idepix.CloudShadow", cloudShadowParameters, cloudShadowInput);
-//        }
-
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
         if (ipfOutputRad2Refl) {
@@ -523,15 +512,6 @@ public class ComputeChainOp extends BasisOp {
         Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
         l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
 
-//        FlagCoding flagCoding = IdepixCloudClassificationOp.createFlagCoding(CombinedCloudOp.FLAG_BAND_NAME);
-//        targetProduct.getFlagCodingGroup().add(flagCoding);
-//        for (Band band : cloudShadowProduct.getBands()) {
-//            if (band.getName().equals(CombinedCloudOp.FLAG_BAND_NAME)) {
-//                band.setSampleCoding(flagCoding);
-//                targetProduct.addBand(band);
-//            }
-//        }
-
         IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
 
     }
@@ -547,21 +527,16 @@ public class ComputeChainOp extends BasisOp {
         gaCloudInput.put("pressure", pressureLiseProduct);   // may be null
         gaCloudInput.put("pbaro", pbaroProduct);   // may be null
         gaCloudInput.put("refl", rad2reflProduct);   // may be null
-        gaCloudInput.put("cloudshadow", cloudShadowProduct);   // may be null
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
+        gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
         targetProduct = gaCloudProduct;
-
-        // add cloud shadow flag
-        // todo: MERIS: we need to put the gaCloudProduct into CloudShadowOp and THEN compute the shadow with this cloud mask
-        // then, add the shadow flag to the gaCloudProduct, which results in the target product
-        // todo: new cloud shadow operator for AATSR, VGT which is not MERIS-specific!
     }
 
     /**

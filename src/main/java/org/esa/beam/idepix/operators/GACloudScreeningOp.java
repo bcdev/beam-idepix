@@ -17,7 +17,6 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.Rad2ReflOp;
-import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 
@@ -42,8 +41,6 @@ public class GACloudScreeningOp extends Operator {
     Product sourceProduct;
     @SourceProduct(alias="cloud", optional=true)
     private Product cloudProduct;
-    @SourceProduct(alias="cloudshadow", optional=true)
-    private Product cloudShadowProduct;
     @SourceProduct(alias="rayleigh", optional=true)
     private Product rayleighProduct;
     @SourceProduct(alias="refl", optional=true)
@@ -63,10 +60,12 @@ public class GACloudScreeningOp extends Operator {
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
+    @Parameter(defaultValue = "1", label = "Width of cloud buffer (# of pixels)")
+    private int gaCloudBufferWidth;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
-    public static final int F_CLOUD_SHADOW = 2;
+    public static final int F_CLOUD_BUFFER = 2;
     public static final int F_CLEAR_LAND = 3;
     public static final int F_CLEAR_WATER = 4;
     public static final int F_CLEAR_SNOW = 5;
@@ -286,7 +285,7 @@ public class GACloudScreeningOp extends Operator {
         targetProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("CLOUD_SHADOW", "Cloud shadow pixels", w, h, "cloud_classif_flags.F_CLOUD_SHADOW", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h, "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("CLEAR_LAND", "Clear sky pixels over land", w, h, "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
@@ -327,7 +326,7 @@ public class GACloudScreeningOp extends Operator {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, F_INVALID), null);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
-        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
         flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, F_CLEAR_LAND), null);
         flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, F_CLEAR_WATER), null);
         flagCoding.addFlag("F_CLEAR_SNOW", BitSetter.setFlag(0, F_CLEAR_SNOW), null);
@@ -391,11 +390,6 @@ public class GACloudScreeningOp extends Operator {
 
                 merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
                 merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
-
-                if (cloudShadowProduct != null) {
-                    merisCombinedCloudFlagBand = cloudShadowProduct.getBand(CombinedCloudOp.FLAG_BAND_NAME);
-                    merisCombinedCloudFlagTile = getSourceTile(merisCombinedCloudFlagBand, rectangle);
-                }
 
                 merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
                 merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
@@ -482,7 +476,7 @@ public class GACloudScreeningOp extends Operator {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
                         targetTile.setSample(x, y, F_INVALID, pixelProperties.isInvalid());
                         targetTile.setSample(x, y, F_CLOUD, pixelProperties.isCloud());
-                        targetTile.setSample(x, y, F_CLOUD_SHADOW, pixelProperties.isCloudShadow());
+                        targetTile.setSample(x, y, F_CLOUD_BUFFER, pixelProperties.isCloudBuffer());
                         targetTile.setSample(x, y, F_CLEAR_LAND, pixelProperties.isClearLand());
                         targetTile.setSample(x, y, F_CLEAR_WATER, pixelProperties.isClearWater());
                         targetTile.setSample(x, y, F_CLEAR_SNOW, pixelProperties.isClearSnow());
@@ -521,6 +515,25 @@ public class GACloudScreeningOp extends Operator {
                     }
 				}
 			}
+            // set cloud buffer flag...
+            if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
+                for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                    for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                        if (targetTile.getSampleBit(x, y, F_CLOUD)) {
+                            int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x + gaCloudBufferWidth);
+                            int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - gaCloudBufferWidth);
+                            int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y + gaCloudBufferWidth);
+                            int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - gaCloudBufferWidth);
+                            for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                                for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                                    targetTile.setSample(i, j, F_CLOUD_BUFFER, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         } catch (Exception e) {
         	throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
         }
@@ -587,32 +600,7 @@ public class GACloudScreeningOp extends Operator {
         pixelProperties.setPBaro(pbaroTile.getSampleFloat(x, y));
         pixelProperties.setPscatt(pscattTile.getSampleFloat(x, y));
         pixelProperties.setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
-        final int isShadowBitIndex = (int) (Math.log((double) CombinedCloudOp.FLAG_CLOUD_SHADOW)/Math.log(2.0));
-        if (merisCombinedCloudFlagTile != null) {
-         pixelProperties.setCombinedCloudFlagShadow(merisCombinedCloudFlagTile.getSampleBit(x, y, isShadowBitIndex));
-        }
         return pixelProperties;
-    }
-
-    private void printCombinedCloudFlag(Tile merisCombinedCloudFlagTile, int y, int x) {
-        final int cfInt = merisCombinedCloudFlagTile.getSampleInt(x, y);
-        final boolean isInvalid = merisCombinedCloudFlagTile.getSampleBit(x, y, CombinedCloudOp.FLAG_INVALID);
-        final boolean isClear = merisCombinedCloudFlagTile.getSampleBit(x, y, CombinedCloudOp.FLAG_CLEAR);
-        final boolean isSnow = merisCombinedCloudFlagTile.getSampleBit(x, y, CombinedCloudOp.FLAG_SNOW);
-        final boolean isCloudEdge = merisCombinedCloudFlagTile.getSampleBit(x, y, CombinedCloudOp.FLAG_CLOUD_EDGE);
-        final int isCloudBitIndex = (int) (Math.log((double)CombinedCloudOp.FLAG_CLOUD)/Math.log(2.0));
-        final int isShadowBitIndex = (int) (Math.log((double)CombinedCloudOp.FLAG_CLOUD_SHADOW)/Math.log(2.0));
-        final boolean isCloud = merisCombinedCloudFlagTile.getSampleBit(x, y, isCloudBitIndex);
-        final boolean isShadow = merisCombinedCloudFlagTile.getSampleBit(x, y, isShadowBitIndex);
-        System.out.println("cf          = " + cfInt);
-        System.out.println("isInvalid   = " + isInvalid);
-        System.out.println("isClear     = " + isClear);
-        System.out.println("isCloud     = " + isCloud);
-        System.out.println("isSnow      = " + isSnow);
-        System.out.println("isCloudEdge = " + isCloudEdge);
-        System.out.println("isShadow    = " + isShadow);
-        System.out.println("isCloud INDEX    = " + isCloudBitIndex);
-        System.out.println("isShadow INDEX    = " + isShadowBitIndex);
     }
 
     private void printPixelFeatures(PixelProperties pixelProperties) {
@@ -624,7 +612,7 @@ public class GACloudScreeningOp extends Operator {
         System.out.println("ndsi              = " + pixelProperties.ndsiValue());
         System.out.println("pressure          = " + pixelProperties.pressureValue());
         System.out.println("cloudy            = " + pixelProperties.isCloud());
-        System.out.println("cloud shadow      = " + pixelProperties.isCloudShadow());
+        System.out.println("cloud buffer      = " + pixelProperties.isCloudBuffer());
         System.out.println("clear snow        = " + pixelProperties.isClearSnow());
         System.out.println("radiometric_land  = " + pixelProperties.radiometricLandValue());
         System.out.println("radiometric_water = " + pixelProperties.radiometricWaterValue());

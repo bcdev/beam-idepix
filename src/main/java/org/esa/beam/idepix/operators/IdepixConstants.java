@@ -10,7 +10,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
  */
 public class IdepixConstants {
 
-    public static final String IDEPIX_VERSION = "v1.2-SNAPSHOT";
+    public static final String IDEPIX_VERSION = "v1.3-SNAPSHOT";
 
     public static final String[] ipfParameterNames = new String[]{
             "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",
@@ -36,7 +36,8 @@ public class IdepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyAnnotations", "gaUseAatsrFwardForClouds"
+            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyAnnotations",
+            "gaUseAatsrFwardForClouds", "gaCloudBufferWidth"
     };
 
     public static final String[] coastcolourParameterNames = new String[]{

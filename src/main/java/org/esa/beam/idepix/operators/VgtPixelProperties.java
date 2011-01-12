@@ -55,7 +55,7 @@ class VgtPixelProperties implements PixelProperties {
     }
 
     @Override
-    public boolean isCloudShadow() {
+    public boolean isCloudBuffer() {
         // todo: define
         return false;
     }

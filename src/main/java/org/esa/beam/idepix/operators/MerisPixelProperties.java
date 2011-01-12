@@ -34,7 +34,6 @@ class MerisPixelProperties implements PixelProperties {
     private float pbaro;
 
     private boolean l1FlagLand;
-    private boolean combinedCloudFlagShadow;
     private float[] refl;
     private float[] brr;
 
@@ -50,7 +49,7 @@ class MerisPixelProperties implements PixelProperties {
     }
 
     @Override
-    public boolean isCloudShadow() {
+    public boolean isCloudBuffer() {
 //        return combinedCloudFlagShadow;  // todo: activate when ready
         return false;
     }
@@ -287,9 +286,4 @@ class MerisPixelProperties implements PixelProperties {
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
     }
-
-    public void setCombinedCloudFlagShadow(boolean combinedCloudFlagShadow) {
-        this.combinedCloudFlagShadow = combinedCloudFlagShadow;
-    }
-
 }
