@@ -33,12 +33,7 @@ public class IdepixUtils {
     }
 
     public static boolean isValidMerisProduct(Product product) {
-        if (product.getProductType().startsWith(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-            product.getProductType().startsWith(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
-            product.getProductType().startsWith(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME)) {
-            return true;
-        }
-        return false;
+        return EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(product.getProductType()).matches();
     }
 
     public static boolean isValidAatsrProduct(Product product) {
