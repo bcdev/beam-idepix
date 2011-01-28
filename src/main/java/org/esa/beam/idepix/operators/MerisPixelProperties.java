@@ -49,12 +49,6 @@ class MerisPixelProperties implements PixelProperties {
     }
 
     @Override
-    public boolean isCloudBuffer() {
-//        return combinedCloudFlagShadow;  // todo: activate when ready
-        return false;
-    }
-
-    @Override
     public boolean isClearLand() {
         if (isInvalid()) {
             return false;
@@ -139,6 +133,7 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
+        // todo: define conversion onto interval [0,1]
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
@@ -156,7 +151,7 @@ class MerisPixelProperties implements PixelProperties {
 
 
         final double flatness = 1.0f - Math.abs(1000.0 * (slope0 + slope1 + slope2) / 3.0);
-        float result = (float) Math.max(-1.0f, flatness);
+        float result = (float) Math.max(0.0f, flatness);
         return result;
     }
 
@@ -165,7 +160,7 @@ class MerisPixelProperties implements PixelProperties {
         if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
             return 2 * spectralFlatnessValue() - 1;
         } else {
-            return 0f;
+            return 0.0f;
         }
     }
 
@@ -176,27 +171,29 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float ndsiValue() {
+        // todo: define conversion onto interval [0,1]
         return (brr[11]-brr[12])/(brr[11]+brr[12]);
     }
 
     @Override
     public float ndviValue() {
+        // todo: define conversion onto interval [0,1]
         return (brr[9]-brr[4])/(brr[9]+brr[4]);
     }
 
     @Override
     public float pressureValue() {
+        double value;
         if (isLand()) {
-            return 1.0f - p1/1000.0f;
-            // test: use diff. pbaro - p1 instead:
-//            return (float) (Math.min(1.0, (pbaro - p1)/2,00.0f));
-            // this was checked, but we got many artifacts along coastlines.
-            // --> to be further investigated
+            value = 1.0 - p1 / 1000.0;
         } else if (isWater()) {
-            return 1.0f - pscatt/1000.0f;
+            value = 1.0 - pscatt / 1000.0;
         } else {
-            return UNCERTAINTY_VALUE;
+            value = UNCERTAINTY_VALUE;
         }
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float)value;
     }
     
     @Override
@@ -207,7 +204,7 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public float aPrioriLandValue() {
         if (isInvalid()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (l1FlagLand) {
             return 1.0f;
         } else {
@@ -218,7 +215,7 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public float aPrioriWaterValue() {
         if (isInvalid()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (!l1FlagLand) {
             return 1.0f;
         } else return 0.0f;

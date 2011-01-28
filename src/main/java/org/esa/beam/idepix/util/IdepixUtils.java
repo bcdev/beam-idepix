@@ -77,12 +77,6 @@ public class IdepixUtils {
         return (ch2 - ch1) / (wl2 - wl1);
     }
 
-    public static double scaleVgtSlope(float refl0, float refl1, float wl0, float wl1) {
-        float scaleValue = 0.5f;
-        float slope = 1.0f - Math.abs(1000.0f * IdepixUtils.spectralSlope(refl0, refl1, wl0, wl1));
-        return Math.max((slope - scaleValue) / (1.0 - scaleValue), 0);
-    }
-
     public static float[] correctSaturatedReflectances(float[] reflectance) {
 
         // if all reflectances are NaN, do not correct

@@ -15,11 +15,12 @@ class VgtPixelProperties implements PixelProperties {
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.72f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.3f;
+//    private static final float CLOUD_THRESH = 1.3f;  // changed 2011/01/28
+    private static final float CLOUD_THRESH = 1.65f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.5f;
+    private static final float BRIGHT_THRESH = 0.3f;
     private static final float WHITE_THRESH = 0.5f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
@@ -50,14 +51,9 @@ class VgtPixelProperties implements PixelProperties {
         if (isInvalid()) {
             return false;
         }
-        return (!isInvalid() && (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) &&
+        return (!isInvalid() &&
+                (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) &&
                 !isClearSnow());
-    }
-
-    @Override
-    public boolean isCloudBuffer() {
-        // todo: define
-        return false;
     }
 
     @Override
@@ -146,30 +142,30 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
+        double value;
         if (isLand()) {
-            return (refl[0] + refl[1]) / 2.0f;
+            value = (refl[0] + refl[1]) / 2.0f;
         } else if (isWater()) {
-            return (refl[1] + refl[2]);
+            value = (refl[1] + refl[2]);
         } else {
-            return (refl[0] + refl[1]) / 2.0f;
+            value = (refl[0] + refl[1]) / 2.0f;
         }
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float) value;
     }
 
     @Override
     public float spectralFlatnessValue() {
-        final double slope0 = IdepixUtils.scaleVgtSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
-                                                           IdepixConstants.VGT_WAVELENGTHS[1]);
-        final double slope1 = IdepixUtils.scaleVgtSlope(refl[1], refl[2], IdepixConstants.VGT_WAVELENGTHS[1],
-                                                           IdepixConstants.VGT_WAVELENGTHS[2]);
-
-        // maybe distinguish between water and land?
-        if (isLand()) {
-            return (float) ((slope0 + slope1) / 2.0);
-        } else if (isWater()) {
-            return (float) ((slope0 + slope1) / 2.0);     // currently all the same
-        } else {
-            return (float) ((slope0 + slope1) / 2.0);     // currently all the same
-        }
+        final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[1],
+                                                        IdepixConstants.VGT_WAVELENGTHS[0],
+                                                        IdepixConstants.VGT_WAVELENGTHS[1]);
+        final double slope1 = IdepixUtils.spectralSlope(refl[1], refl[2],
+                                                        IdepixConstants.VGT_WAVELENGTHS[1],
+                                                        IdepixConstants.VGT_WAVELENGTHS[2]);
+        final double flatness = 1.0f - Math.abs(2000.0 * (slope0 + slope1) / 2.0);
+        float result = (float) Math.max(0.0f, flatness);
+        return result;
     }
 
     public float whiteValue() {
@@ -187,30 +183,36 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public float ndsiValue() {
-        return (refl[2] - refl[3]) / (refl[2] + refl[3]);
+        double value = (refl[2] - refl[3]) / (refl[2] + refl[3]);
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float) value;
     }
 
     @Override
     public float ndviValue() {
-        return (refl[2] - refl[1]) / (refl[2] + refl[1]);
+        double value = (refl[2] - refl[1]) / (refl[2] + refl[1]);
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float) value;
     }
 
     @Override
     public float pressureValue() {
-        return 0.5f;
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
     public float glintRiskValue() {
         // todo: define conversion onto interval [0,1]
         return IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
-                                          IdepixConstants.VGT_WAVELENGTHS[1]);
+                                         IdepixConstants.VGT_WAVELENGTHS[1]);
     }
 
     @Override
     public float aPrioriLandValue() {
         if (isInvalid()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (smLand) {
             return 1.0f;
         } else {
@@ -221,7 +223,7 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public float aPrioriWaterValue() {
         if (isInvalid()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (!smLand) {
             return 1.0f;
         } else {
@@ -232,7 +234,7 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public float radiometricLandValue() {
         if (isInvalid() || isCloud()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (refl[2] > refl[1] && refl[2] > REFL835_LAND_THRESH) {
             return 1.0f;
         } else if (refl[2] > REFL835_LAND_THRESH) {
@@ -245,7 +247,7 @@ class VgtPixelProperties implements PixelProperties {
     @Override
     public float radiometricWaterValue() {
         if (isInvalid() || isCloud()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (refl[0] > refl[1] && refl[1] > refl[2] && refl[2] < REFL835_WATER_THRESH) {
             return 1.0f;
         } else {

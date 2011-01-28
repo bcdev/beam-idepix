@@ -18,16 +18,16 @@ public class AatsrPixelPropertiesTest extends TestCase {
 
 
     public void testBrightValue() {
-        assertEquals(7.06667f, aatsrPixelProperties.brightValue(), 1.0E-3);
+        assertEquals(1.0f, aatsrPixelProperties.brightValue(), 1.0E-3);
     }
 
     public void testSpectralFlatnessValue() {
-        assertEquals(-1.0f, aatsrPixelProperties.spectralFlatnessValue(), 1.0E-3);
+        assertEquals(0.0f, aatsrPixelProperties.spectralFlatnessValue(), 1.0E-3);
     }
 
     public void testWhiteValue() {
         // bright value > BRIGHT_FOR_WHITE_THRESH
-        assertEquals(-1.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
+        assertEquals(0.0f, aatsrPixelProperties.whiteValue(), 1.0E-3);
 
         // bright value = 0
         float[] refl = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
@@ -37,17 +37,17 @@ public class AatsrPixelPropertiesTest extends TestCase {
 
     public void testTemperature() {
         aatsrPixelProperties.setBtemp1200(200.0f);
-        assertEquals(0.9f, aatsrPixelProperties.temperatureValue());
+        assertEquals(0.99f, aatsrPixelProperties.temperatureValue());
         aatsrPixelProperties.setBtemp1200(240.0f);
-        assertEquals(0.767f, aatsrPixelProperties.temperatureValue(), 1.E-3);
+        assertEquals(0.7869f, aatsrPixelProperties.temperatureValue(), 1.E-3);
         aatsrPixelProperties.setBtemp1200(255.0f);
-        assertEquals(0.633f, aatsrPixelProperties.temperatureValue(), 1.E-3);
+        assertEquals(0.6738f, aatsrPixelProperties.temperatureValue(), 1.E-3);
         aatsrPixelProperties.setBtemp1200(270.0f);
-        assertEquals(0.5f, aatsrPixelProperties.temperatureValue());
+        assertEquals(0.5608f, aatsrPixelProperties.temperatureValue(), 1.E-3);
         aatsrPixelProperties.setBtemp1200(275.0f);
-        assertEquals(0.3f, aatsrPixelProperties.temperatureValue());
+        assertEquals(0.52308f, aatsrPixelProperties.temperatureValue(), 1.E-3);
         aatsrPixelProperties.setBtemp1200(285.0f);
-        assertEquals(0.1f, aatsrPixelProperties.temperatureValue());
+        assertEquals(0.4477f, aatsrPixelProperties.temperatureValue(), 1.E-3);
     }
 
     public void testGlintRiskValue() {
