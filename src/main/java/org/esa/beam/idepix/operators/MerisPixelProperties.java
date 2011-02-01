@@ -12,16 +12,21 @@ import org.esa.beam.util.math.MathUtils;
 class MerisPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 1.5f;
-    private static final float NDSI_THRESH = 0.014f;
+//    private static final float NDSI_THRESH = 0.014f;    // changed 2010/02/01
+    private static final float NDSI_THRESH = 0.68f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.65f;
+//    private static final float CLOUD_THRESH = 1.65f;     // changed 2010/02/01
+    private static final float CLOUD_THRESH = 1.15f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.5f;
+//    private static final float BRIGHT_THRESH = 0.5f;     // changed 2010/02/01
+    private static final float BRIGHT_THRESH = 0.25f;
     private static final float WHITE_THRESH = 0.9f;
-    private static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;
-    private static final float NDVI_THRESH = 0.4f;
+//    private static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;  // changed 2010/02/01
+    private static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+//    private static final float NDVI_THRESH = 0.4f;         // changed 2010/02/01
+    private static final float NDVI_THRESH = 0.7f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
     private static final float GLINT_THRESH =  0.9f;
@@ -133,11 +138,13 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
-        // todo: define conversion onto interval [0,1]
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
-        return brr442 / brr442Thresh;
+        double value =  0.5 * brr442 / brr442Thresh;
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float)value;
     }
 
     @Override
@@ -158,7 +165,8 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public float whiteValue() {
         if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
-            return 2 * spectralFlatnessValue() - 1;
+//            return 2 * spectralFlatnessValue() - 1;
+            return spectralFlatnessValue();
         } else {
             return 0.0f;
         }
@@ -170,15 +178,29 @@ class MerisPixelProperties implements PixelProperties {
     }
 
     @Override
+//    public float ndsiValue() {
+//        todo: define conversion onto interval [0,1]
+//        return (brr[11]-brr[12])/(brr[11]+brr[12]);
+//    }
     public float ndsiValue() {
-        // todo: define conversion onto interval [0,1]
-        return (brr[11]-brr[12])/(brr[11]+brr[12]);
+        double value =  (brr[11]-brr[12])/(brr[11]+brr[12]);
+        value = 20.0*(value + 0.02);
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float)value;
     }
 
     @Override
+//    public float ndviValue() {
+//        todo: define conversion onto interval [0,1]
+//        return (brr[9]-brr[4])/(brr[9]+brr[4]);
+//    }
     public float ndviValue() {
-        // todo: define conversion onto interval [0,1]
-        return (brr[9]-brr[4])/(brr[9]+brr[4]);
+        double value = (brr[9]-brr[4])/(brr[9]+brr[4]);
+        value = 0.5*(value + 1);
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float)value;
     }
 
     @Override

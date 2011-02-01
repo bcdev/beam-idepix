@@ -13,7 +13,8 @@ import org.esa.beam.util.math.MathUtils;
 class VgtPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
-    private static final float NDSI_THRESH = 0.72f;
+//    private static final float NDSI_THRESH = 0.72f;  // changed 2011/02/01
+    private static final float NDSI_THRESH = 0.50f;
     private static final float PRESSURE_THRESH = 0.9f;
 //    private static final float CLOUD_THRESH = 1.3f;  // changed 2011/01/28
     private static final float CLOUD_THRESH = 1.65f;

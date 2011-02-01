@@ -26,10 +26,10 @@ public class MerisPixelPropertiesTest extends TestCase {
         assertEquals((float) IdepixConstants.NO_DATA_VALUE, merisPixelProperties.brightValue());
 
         merisPixelProperties.setBrr442(0.5f);
-        assertEquals(5.0f, merisPixelProperties.brightValue());
+        assertEquals(1.0f, merisPixelProperties.brightValue());
 
         merisPixelProperties.setBrr442(1.1f);
-        assertEquals(11.0f, merisPixelProperties.brightValue());
+        assertEquals(1.0f, merisPixelProperties.brightValue());
     }
 
     public void testSpectralFlatnessValue() {
@@ -45,7 +45,7 @@ public class MerisPixelPropertiesTest extends TestCase {
         // bright value > BRIGHT_FOR_WHITE_THRESH
         merisPixelProperties.setBrr442(0.5f);
         merisPixelProperties.setBrr442Thresh(0.1f);
-        assertEquals(-1.0f, merisPixelProperties.whiteValue(), 1.0E-3);
+        assertEquals(0.0f, merisPixelProperties.whiteValue(), 1.0E-3);
     }
 
     public void testTemperature() {
@@ -62,7 +62,7 @@ public class MerisPixelPropertiesTest extends TestCase {
         brr[11] = 1.0f;
         brr[12] = 0.2f;
         merisPixelProperties.setBrr(brr);
-        assertEquals(0.666f, merisPixelProperties.ndsiValue(), 1.E-3);
+        assertEquals(1.0f, merisPixelProperties.ndsiValue(), 1.E-3);
     }
 
     public void testNdvi() {
@@ -71,7 +71,7 @@ public class MerisPixelPropertiesTest extends TestCase {
         brr[4] = 0.5f;
         brr[9] = 1.0f;
         merisPixelProperties.setBrr(brr);
-        assertEquals(0.333f, merisPixelProperties.ndviValue(), 1.E-3);
+        assertEquals(0.666f, merisPixelProperties.ndviValue(), 1.E-3);
     }
 
     public void testPressure() {
