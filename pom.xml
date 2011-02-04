@@ -10,7 +10,8 @@
     <packaging>jar</packaging>
 
     <name>BEAM pixel identification</name>
-    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.</description>
+    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
+    </description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,7 +20,7 @@
 
     <repositories>
         <repository>
-            <id>bc-mvn-repo-http</id>            
+            <id>bc-mvn-repo-http</id>
             <name>Public Maven Repository at Brockmann-Consult</name>
             <url>http://www.brockmann-consult.de/mvn/os</url>
             <releases>
@@ -155,6 +156,21 @@
                     <jdkName>1.6</jdkName>
                     <jdkLevel>1.6</jdkLevel>
                     <exclude>target</exclude>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Source JARs are used in IDEs only, we don't need resources -->
+                    <excludeResources>true</excludeResources>
                 </configuration>
             </plugin>
             <plugin>
