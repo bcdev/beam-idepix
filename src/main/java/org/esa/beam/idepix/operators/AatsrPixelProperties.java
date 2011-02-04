@@ -12,11 +12,9 @@ import org.esa.beam.util.math.MathUtils;
 class AatsrPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
-//    private static final float NDSI_THRESH = 0.65f;   // changed 2011/02/01
     private static final float NDSI_THRESH = 0.50f;
     private static final float PRESSURE_THRESH = 0.9f;
-//    private static final float CLOUD_THRESH = 1.15f;
-    private static final float CLOUD_THRESH = 1.3f; // changed 2011/01/27
+    private static final float CLOUD_THRESH = 1.3f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;

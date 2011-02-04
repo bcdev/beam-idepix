@@ -13,10 +13,8 @@ import org.esa.beam.util.math.MathUtils;
 class VgtPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
-//    private static final float NDSI_THRESH = 0.72f;  // changed 2011/02/01
     private static final float NDSI_THRESH = 0.50f;
     private static final float PRESSURE_THRESH = 0.9f;
-//    private static final float CLOUD_THRESH = 1.3f;  // changed 2011/01/28
     private static final float CLOUD_THRESH = 1.65f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
@@ -30,14 +28,7 @@ class VgtPixelProperties implements PixelProperties {
     private static final float GLINT_THRESH = -3.65E-4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
-    public static final int SM_F_B0_GOOD = 7;
-    public static final int SM_F_B2_GOOD = 6;
-    public static final int SM_F_B3_GOOD = 5;
-    public static final int SM_F_MIR_GOOD = 4;
     public static final int SM_F_LAND = 3;
-    public static final int SM_F_ICE_SNOW = 2;
-    public static final int SM_F_CLOUD_2 = 1;
-    public static final int SM_F_CLOUD_1 = 0;
 
     private float[] refl;
     private boolean smLand;
