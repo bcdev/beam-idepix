@@ -144,7 +144,7 @@
                     <target>1.6</target>
                     <debug>true</debug>
                     <fork>false</fork>
-                    <encoding>ISO-8859-1</encoding>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>
