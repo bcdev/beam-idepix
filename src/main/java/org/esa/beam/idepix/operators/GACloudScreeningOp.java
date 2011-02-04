@@ -133,6 +133,10 @@ public class GACloudScreeningOp extends Operator {
                     aatsrBtempBands = new Band[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
                     for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
                         aatsrBtempBands[i] = sourceProduct.getBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i]);
+                        if (aatsrBtempBands[i] == null) {
+                            throw new OperatorException
+                                    ("AATSR temperature bands missing or incomplete in source product - cannot proceed.");
+                        }
                     }
 
                     break;
@@ -197,6 +201,8 @@ public class GACloudScreeningOp extends Operator {
             IdepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", IdepixConstants.NO_DATA_VALUE, true);
             Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndsiBand, "NDSI", "dl", IdepixConstants.NO_DATA_VALUE, true);
+            Band glintRiskBand = targetProduct.addBand("glint_risk_value", ProductData.TYPE_FLOAT32);
+            IdepixUtils.setNewBandProperties(glintRiskBand, "GLINT_RISK", "dl", IdepixConstants.NO_DATA_VALUE, true);
             Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
             Band radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
@@ -476,7 +482,6 @@ public class GACloudScreeningOp extends Operator {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
                         targetTile.setSample(x, y, F_INVALID, pixelProperties.isInvalid());
                         targetTile.setSample(x, y, F_CLOUD, pixelProperties.isCloud());
-                        targetTile.setSample(x, y, F_CLOUD_BUFFER, pixelProperties.isCloudBuffer());
                         targetTile.setSample(x, y, F_CLEAR_LAND, pixelProperties.isClearLand());
                         targetTile.setSample(x, y, F_CLEAR_WATER, pixelProperties.isClearWater());
                         targetTile.setSample(x, y, F_CLEAR_SNOW, pixelProperties.isClearSnow());
@@ -506,6 +511,8 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
                     } else if ("ndsi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndsiValue());
+                    } else if ("glint_risk_value".equals(band.getName())) {
+                        targetTile.setSample(x, y, pixelProperties.ndsiValue());
                     } else if ("pressure_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.pressureValue());
                     } else if ("radiometric_land_value".equals(band.getName())) {
@@ -520,10 +527,10 @@ public class GACloudScreeningOp extends Operator {
                 for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                     for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                         if (targetTile.getSampleBit(x, y, F_CLOUD)) {
-                            int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x + gaCloudBufferWidth);
-                            int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - gaCloudBufferWidth);
-                            int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y + gaCloudBufferWidth);
-                            int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - gaCloudBufferWidth);
+                            int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x);
+                            int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - 1);
+                            int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y);
+                            int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - 1);
                             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                                     targetTile.setSample(i, j, F_CLOUD_BUFFER, true);
@@ -612,7 +619,6 @@ public class GACloudScreeningOp extends Operator {
         System.out.println("ndsi              = " + pixelProperties.ndsiValue());
         System.out.println("pressure          = " + pixelProperties.pressureValue());
         System.out.println("cloudy            = " + pixelProperties.isCloud());
-        System.out.println("cloud buffer      = " + pixelProperties.isCloudBuffer());
         System.out.println("clear snow        = " + pixelProperties.isClearSnow());
         System.out.println("radiometric_land  = " + pixelProperties.radiometricLandValue());
         System.out.println("radiometric_water = " + pixelProperties.radiometricWaterValue());

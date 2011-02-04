@@ -96,22 +96,6 @@ public class IdepixUtilsTest extends TestCase {
         assertTrue(Float.isInfinite(slope));
     }
 
-    public void testScaleVgtSlope() {
-        float wvl1 = 450.0f;
-        float wvl2 = 460.0f;
-        float refl1 = 1.0f;
-        float refl2 = 2.0f;
-        double vgtSlope = IdepixUtils.scaleVgtSlope(refl1, refl2, wvl1, wvl2);
-        assertEquals(0.0, vgtSlope);
-
-        wvl1 = 450.0f;
-        wvl2 = 460.0f;
-        refl1 = 1.0f;
-        refl2 = 1.002f;
-        vgtSlope = IdepixUtils.scaleVgtSlope(refl1, refl2, wvl1, wvl2);
-        assertEquals(0.6, vgtSlope, 1.E-5);
-    }
-
     public void testSetNewBandProperties() {
         Band band1 = new Band("test", ProductData.TYPE_FLOAT32, 10, 10);
         IdepixUtils.setNewBandProperties(band1, "bla", "km", -999.0, false);

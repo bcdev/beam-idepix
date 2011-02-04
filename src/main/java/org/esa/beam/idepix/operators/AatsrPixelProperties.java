@@ -12,9 +12,9 @@ import org.esa.beam.util.math.MathUtils;
 class AatsrPixelProperties implements PixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
-    private static final float NDSI_THRESH = 0.65f;
+    private static final float NDSI_THRESH = 0.50f;
     private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.15f;
+    private static final float CLOUD_THRESH = 1.3f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
     private static final float LAND_THRESH = 0.9f;
     private static final float WATER_THRESH = 0.9f;
@@ -43,12 +43,6 @@ class AatsrPixelProperties implements PixelProperties {
     @Override
     public boolean isCloud() {
         return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
-    }
-
-    @Override
-    public boolean isCloudBuffer() {
-        // todo: define
-        return false;
     }
 
     @Override
@@ -137,7 +131,10 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float brightValue() {
-        return ((refl[0] + refl[1] + refl[2]) / 300.0f);
+        double value = (refl[0] + refl[1] + refl[2]) / 300.0f;
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float)value;
     }
 
     @Override
@@ -149,8 +146,8 @@ class AatsrPixelProperties implements PixelProperties {
                                                           IdepixConstants.AATSR_REFL_WAVELENGTHS[1],
                                                           IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
 
-        final double flatness = (1.0f - Math.abs(1000.0*(slope0 + slope1)/200.0));
-        float result = (float) Math.max(-1.0f, flatness);
+        final double flatness = (1.0f - Math.abs(20.0*(slope0 + slope1)/2.0));
+        float result = (float) Math.max(0.0f, flatness);
         return result;
     }
 
@@ -159,21 +156,22 @@ class AatsrPixelProperties implements PixelProperties {
         if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
             return spectralFlatnessValue();
         } else {
-            return 0f;
+            return 0.0f;
         }
     }
 
     @Override
     public float temperatureValue() {
         float temperature;
+
         if (btemp1200 < 225f) {
-            temperature = 0.9f;
-        } else if (225f <= btemp1200 && 270f > btemp1200) {
-            temperature = 0.9f - 0.4f * ((btemp1200 - 225f) / (270f - 225f));
-        } else if (270f <= btemp1200 && 280f > btemp1200) {
-            temperature = 0.5f - 0.4f * ((btemp1200 - 270f) / (280f - 270f));
+            temperature = 0.99f;
+        } else if (225f <= btemp1200 && 290f > btemp1200) {
+            temperature = 0.9f - 0.49f * ((btemp1200 - 225f) / (290f - 225f));
+        } else if (290f <= btemp1200 && 300f > btemp1200) {
+            temperature = 0.5f - 0.49f * ((btemp1200 - 290f) / (300f - 290f));
         } else {
-            temperature =  0.1f;
+            temperature =  0.01f;
         }
 
         return temperature;
@@ -181,12 +179,18 @@ class AatsrPixelProperties implements PixelProperties {
 
     @Override
     public float ndsiValue() {
-        return (refl[2] - refl[3]) / (refl[2] + refl[3]);
+        double value = (refl[2] - refl[3]) / (refl[2] + refl[3]);
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float) value;
     }
 
     @Override
     public float ndviValue() {
-        return (refl[2] - refl[1]) / (refl[2] + refl[1]);
+        double value = (refl[2] - refl[1]) / (refl[2] + refl[1]);
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float) value;
     }
 
     @Override
@@ -202,7 +206,7 @@ class AatsrPixelProperties implements PixelProperties {
     @Override
     public float aPrioriLandValue() {
         if (isInvalid()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (l1FlagLand) {
             return 1.0f;
         } else {
@@ -213,7 +217,7 @@ class AatsrPixelProperties implements PixelProperties {
     @Override
     public float aPrioriWaterValue() {
         if (isInvalid()) {
-            return 0.5f;
+            return UNCERTAINTY_VALUE;
         } else if (!l1FlagLand) {
             return 1.0f;
         } else return 0.0f;

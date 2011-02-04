@@ -18,7 +18,7 @@ public class VgtPixelPropertiesTest extends TestCase {
 
     public void testBrightValue() {
 
-        assertEquals(1670.0f, vgtPixelProperties.brightValue(), 1.0E-3);
+        assertEquals(1.0f, vgtPixelProperties.brightValue(), 1.0E-3);
     }
 
     public void testSpectralFlatnessValue() {
