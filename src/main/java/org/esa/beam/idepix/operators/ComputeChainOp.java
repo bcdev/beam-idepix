@@ -156,6 +156,8 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "1", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
+    @Parameter(defaultValue = "true", label = "Whether to use Ana's Approach")
+    boolean anasApproach;
 
 
     // Coastcolour parameters
@@ -533,10 +535,19 @@ public class ComputeChainOp extends BasisOp {
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
+        gaCloudClassificationParameters.put("anasApproach", anasApproach);
 
-        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
+        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
-        targetProduct = gaCloudProduct;
+
+
+        if (ipfOutputRayleigh) {
+            for (Band band : correctedRayleighProduct.getBands()) {
+                if (band.getName().startsWith("reflec_")) {
+                    targetProduct.addBand(band);
+                }
+            }
+        }
     }
 
     /**

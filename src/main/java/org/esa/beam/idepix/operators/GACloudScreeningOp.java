@@ -31,37 +31,39 @@ import java.util.Random;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.GACloudScreening",
-        version = "1.0",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008 by Brockmann Consult",
-        description = "This operator provides cloud screening from SPOT VGT data.")
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "This operator provides cloud screening from SPOT VGT data.")
 public class GACloudScreeningOp extends Operator {
 
-    @SourceProduct(alias="gal1b", description = "The source product.")
+    @SourceProduct(alias = "gal1b", description = "The source product.")
     Product sourceProduct;
-    @SourceProduct(alias="cloud", optional=true)
+    @SourceProduct(alias = "cloud", optional = true)
     private Product cloudProduct;
-    @SourceProduct(alias="rayleigh", optional=true)
+    @SourceProduct(alias = "rayleigh", optional = true)
     private Product rayleighProduct;
-    @SourceProduct(alias="refl", optional=true)
+    @SourceProduct(alias = "refl", optional = true)
     private Product rad2reflProduct;
-    @SourceProduct(alias="pressure", optional=true)
+    @SourceProduct(alias = "pressure", optional = true)
     private Product pressureProduct;
-    @SourceProduct(alias="pbaro", optional=true)
+    @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    @Parameter(defaultValue="false", label = "Copy input radiance bands")
+    @Parameter(defaultValue = "false", label = "Copy input radiance bands")
     private boolean gaCopyRadiances;
-    @Parameter(defaultValue="false", label = "Compute only the flag band")
+    @Parameter(defaultValue = "false", label = "Compute only the flag band")
     private boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue="false", label = "Copy input annotation bands (VGT)")
+    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
-    @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
+    @Parameter(defaultValue = "true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "1", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
+    @Parameter(defaultValue = "true", label = "Whether to use Ana's Approach")
+    boolean anasApproach;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
@@ -77,12 +79,12 @@ public class GACloudScreeningOp extends Operator {
     private static final int F_COLD = 11;
     public static final int F_HIGH = 12;
     public static final int F_VEG_RISK = 13;
+
     public static final int F_GLINT_RISK = 14;
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
 
     private int sourceProductTypeId;
-
     // MERIS bands:
     private Band[] merisRadianceBands;
     private Band[] merisReflBands;
@@ -91,15 +93,18 @@ public class GACloudScreeningOp extends Operator {
     private Band brr442ThreshBand;
     private Band p1Band;
     private Band pbaroBand;
-    private Band pscattBand;
 
+    private Band pscattBand;
     // AATSR bands:
     private Band[] aatsrReflectanceBands;
-    private Band[] aatsrBtempBands;
 
+    private Band[] aatsrBtempBands;
     // VGT bands:
     private Band[] vgtReflectanceBands;
+    private Band temperatureBand;
 
+
+    private Band cloudFlagBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -108,14 +113,14 @@ public class GACloudScreeningOp extends Operator {
 
             switch (sourceProductTypeId) {
                 case IdepixConstants.PRODUCT_TYPE_MERIS:
-                    merisRadianceBands= new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-                    merisReflBands= new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
+                    merisRadianceBands = new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
+                    merisReflBands = new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                         merisRadianceBands[i] = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]);
                         merisReflBands[i] = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1));
                     }
                     brr442Band = rayleighProduct.getBand("brr_2");
-                    merisBrrBands= new Band[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
+                    merisBrrBands = new Band[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
                     for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
                         merisBrrBands[i] = rayleighProduct.getBand(IdepixConstants.MERIS_BRR_BAND_NAMES[i]);
                     }
@@ -174,7 +179,7 @@ public class GACloudScreeningOp extends Operator {
 
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
 
-        Band cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = createFlagCoding(GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -193,7 +198,7 @@ public class GACloudScreeningOp extends Operator {
             IdepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
             Band brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
-            Band temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
+            temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", IdepixConstants.NO_DATA_VALUE, true);
             Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl", IdepixConstants.NO_DATA_VALUE, true);
@@ -248,7 +253,7 @@ public class GACloudScreeningOp extends Operator {
 
             // copy flag bands
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-            for (Band sb:sourceProduct.getBands()) {
+            for (Band sb : sourceProduct.getBands()) {
                 if (sb.isFlagBand()) {
                     Band tb = targetProduct.getBand(sb.getName());
                     tb.setSourceImage(sb.getSourceImage());
@@ -256,7 +261,7 @@ public class GACloudScreeningOp extends Operator {
             }
 
             // copy bit masks from source product:
-            for (int i=0; i<sourceProduct.getMaskGroup().getNodeCount(); i++) {
+            for (int i = 0; i < sourceProduct.getMaskGroup().getNodeCount(); i++) {
                 Mask mask = sourceProduct.getMaskGroup().get(i);
                 targetProduct.getMaskGroup().add(bitmaskIndex + i, mask);
             }
@@ -349,11 +354,12 @@ public class GACloudScreeningOp extends Operator {
         return flagCoding;
     }
 
+    // todo - don't use String.equals() to find out which target tile to set, it's inefficient
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
 
-    	Rectangle rectangle = targetTile.getRectangle();
+        Rectangle rectangle = targetTile.getRectangle();
 
         // MERIS variables
         Band merisL1bFlagBand;
@@ -427,8 +433,8 @@ public class GACloudScreeningOp extends Operator {
                     aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle);
                 }
 
-                aatsrBtempTiles= new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
-                aatsrBtemp= new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
+                aatsrBtempTiles = new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
+                aatsrBtemp = new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
                 for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
                     aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
                 }
@@ -449,7 +455,7 @@ public class GACloudScreeningOp extends Operator {
         }
 
         try {
-			for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
@@ -478,7 +484,7 @@ public class GACloudScreeningOp extends Operator {
                             break;
                     }
 
-                    if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
+                    if (band == cloudFlagBand) {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
                         targetTile.setSample(x, y, F_INVALID, pixelProperties.isInvalid());
                         targetTile.setSample(x, y, F_CLOUD, pixelProperties.isCloud());
@@ -497,17 +503,17 @@ public class GACloudScreeningOp extends Operator {
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
-                    if ("bright_value".equals(band.getName())) {
+                    else if ("bright_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.brightValue());
                     } else if ("white_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.whiteValue());
                     } else if ("bright_white_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.brightValue() + pixelProperties.whiteValue());
-                    }else if ("temperature_value".equals(band.getName())) {
+                    } else if (band == temperatureBand) {
                         targetTile.setSample(x, y, pixelProperties.temperatureValue());
-                    }else if ("spectral_flatness_value".equals(band.getName())) {
+                    } else if ("spectral_flatness_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
-                    }else if ("ndvi_value".equals(band.getName())) {
+                    } else if ("ndvi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
                     } else if ("ndsi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndsiValue());
@@ -520,8 +526,8 @@ public class GACloudScreeningOp extends Operator {
                     } else if ("radiometric_water_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
                     }
-				}
-			}
+                }
+            }
             // set cloud buffer flag...
             if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
                 for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
@@ -542,12 +548,12 @@ public class GACloudScreeningOp extends Operator {
             }
 
         } catch (Exception e) {
-        	throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
         }
     }
 
     private VgtPixelProperties createVgtPixelProperties(Tile smFlagTile, Tile[] vgtReflectanceTiles,
-                                                     float[] vgtReflectance, int y, int x) {
+                                                        float[] vgtReflectance, int y, int x) {
         VgtPixelProperties pixelProperties = new VgtPixelProperties();
         for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
             vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
@@ -560,8 +566,8 @@ public class GACloudScreeningOp extends Operator {
     }
 
     private AatsrPixelProperties createAatsrPixelProperties(Band band, Tile targetTile, Tile aatsrL1bFlagTile,
-                                                       Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
-                                                       Tile[] aatsrBtempTiles, float[] aatsrBtemp, int y, int x) {
+                                                            Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
+                                                            Tile[] aatsrBtempTiles, float[] aatsrBtemp, int y, int x) {
         AatsrPixelProperties pixelProperties = new AatsrPixelProperties();
         for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
             aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
@@ -589,7 +595,13 @@ public class GACloudScreeningOp extends Operator {
                                                        Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
                                                        Tile[] merisReflectanceTiles, float[] merisReflectance,
                                                        Tile[] merisBrrTiles, float[] merisBrr, int y, int x) {
-        MerisPixelProperties pixelProperties = new MerisPixelProperties();
+        // todo - Exchanged by a version of Ana, uses this in the future?
+        MerisPixelProperties pixelProperties;
+        if (anasApproach) {
+            pixelProperties = new AnasMerisPixelProperties();
+        } else {
+            pixelProperties = new MerisPixelProperties();
+        }
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
             if (band.getName().equals(EnvisatConstants.MERIS_L1B_BAND_NAMES[i])) {

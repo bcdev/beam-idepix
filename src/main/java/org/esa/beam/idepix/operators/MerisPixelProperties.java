@@ -11,31 +11,31 @@ import org.esa.beam.util.math.MathUtils;
  */
 class MerisPixelProperties implements PixelProperties {
 
-    private static final float BRIGHTWHITE_THRESH = 1.5f;
-    private static final float NDSI_THRESH = 0.68f;
-    private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.15f;
-    private static final float UNCERTAINTY_VALUE = 0.5f;
-    private static final float LAND_THRESH = 0.9f;
-    private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.25f;
-    private static final float WHITE_THRESH = 0.9f;
-    private static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
-    private static final float NDVI_THRESH = 0.7f;
-    private static final float TEMPERATURE_THRESH = 0.9f;
+    protected static final float BRIGHTWHITE_THRESH = 1.5f;
+    protected static final float NDSI_THRESH = 0.68f;
+    protected static final float PRESSURE_THRESH = 0.9f;
+    protected static final float CLOUD_THRESH = 1.15f;
+    protected static final float UNCERTAINTY_VALUE = 0.5f;
+    protected static final float LAND_THRESH = 0.9f;
+    protected static final float WATER_THRESH = 0.9f;
+    protected static final float BRIGHT_THRESH = 0.25f;
+    protected static final float WHITE_THRESH = 0.9f;
+    protected static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+    protected static final float NDVI_THRESH = 0.7f;
+    protected static final float TEMPERATURE_THRESH = 0.9f;
 
-    private static final float GLINT_THRESH =  0.9f;
+    protected static final float GLINT_THRESH =  0.9f;
 
-    public static final int L1B_F_LAND = 4;
-    private float brr442;
-    private float brr442Thresh;
-    private float p1;
-    private float pscatt;
-    private float pbaro;
+    protected static final int L1B_F_LAND = 4;
+    protected float brr442;
+    protected float brr442Thresh;
+    protected float p1;
+    protected float pscatt;
+    protected float pbaro;
 
-    private boolean l1FlagLand;
-    private float[] refl;
-    private float[] brr;
+    protected boolean l1FlagLand;
+    protected float[] refl;
+    protected float[] brr;
 
 
     @Override
