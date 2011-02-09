@@ -72,7 +72,7 @@ class IdepixForm extends JTabbedPane {
         PropertyPane parametersPane = new PropertyPane(context);
         JPanel paremetersPanel = parametersPane.createPanel();
         paremetersPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
-        final Component component1 = this.add(title, new JScrollPane(paremetersPanel));
+        this.add(title, new JScrollPane(paremetersPanel));
     }
 
     private PropertyContainer createPanelSpecificValueContainer(String[] thisPanelIDs) {
@@ -82,7 +82,7 @@ class IdepixForm extends JTabbedPane {
 
         try {
             pc.setDefaultValues();
-        } catch (ValidationException e) {
+        } catch (IllegalStateException e) {
             JOptionPane.showOptionDialog(null, e.getMessage(), "IDEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
                                              JOptionPane.ERROR_MESSAGE, null, null, null);
         }

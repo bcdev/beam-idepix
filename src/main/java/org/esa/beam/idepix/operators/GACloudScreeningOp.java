@@ -60,7 +60,7 @@ public class GACloudScreeningOp extends Operator {
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
-    @Parameter(defaultValue = "1", label = "Width of cloud buffer (# of pixels)")
+    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
 
     public static final int F_INVALID = 0;
