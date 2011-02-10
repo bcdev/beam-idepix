@@ -2,6 +2,8 @@ package org.esa.beam.idepix.operators;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -10,7 +12,7 @@ public class AatsrPixelPropertiesTest extends TestCase {
 
     private AatsrPixelProperties aatsrPixelProperties;
 
-    public void setUp() {
+    public void setUp() throws IOException {
         aatsrPixelProperties = new AatsrPixelProperties();
         float[] refl = setSpectralFlatnessTestValues();
         aatsrPixelProperties.setRefl(refl);

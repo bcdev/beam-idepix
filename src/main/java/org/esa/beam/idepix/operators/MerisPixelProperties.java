@@ -9,20 +9,20 @@ import org.esa.beam.util.math.MathUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-class MerisPixelProperties implements PixelProperties {
+class MerisPixelProperties extends AbstractPixelProperties {
 
-    private static final float BRIGHTWHITE_THRESH = 1.5f;
-    private static final float NDSI_THRESH = 0.68f;
-    private static final float PRESSURE_THRESH = 0.9f;
-    private static final float CLOUD_THRESH = 1.15f;
-    private static final float UNCERTAINTY_VALUE = 0.5f;
-    private static final float LAND_THRESH = 0.9f;
-    private static final float WATER_THRESH = 0.9f;
-    private static final float BRIGHT_THRESH = 0.25f;
-    private static final float WHITE_THRESH = 0.9f;
-    private static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
-    private static final float NDVI_THRESH = 0.7f;
-    private static final float TEMPERATURE_THRESH = 0.9f;
+    static final float BRIGHTWHITE_THRESH = 1.5f;
+    static final float NDSI_THRESH = 0.68f;
+    static final float PRESSURE_THRESH = 0.9f;
+    static final float CLOUD_THRESH = 1.15f;
+    static final float UNCERTAINTY_VALUE = 0.5f;
+    static final float LAND_THRESH = 0.9f;
+    static final float WATER_THRESH = 0.9f;
+    static final float BRIGHT_THRESH = 0.25f;
+    static final float WHITE_THRESH = 0.9f;
+    static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+    static final float NDVI_THRESH = 0.7f;
+    static final float TEMPERATURE_THRESH = 0.9f;
 
     private static final float GLINT_THRESH =  0.9f;
 
@@ -84,16 +84,6 @@ class MerisPixelProperties implements PixelProperties {
     @Override
     public boolean isClearSnow() {
         return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
-    }
-
-    @Override
-    public boolean isLand() {
-        return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
-    }
-
-    @Override
-    public boolean isWater() {
-        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
     }
 
     @Override
@@ -257,6 +247,16 @@ class MerisPixelProperties implements PixelProperties {
 //        } else {
 //            return 0.5f;
 //        }
+    }
+
+    @Override
+    public boolean isLand() {
+        return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
+    }
+
+    @Override
+    public boolean isL1Water() {
+        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
     }
 
     // setters for MERIS specific quantities

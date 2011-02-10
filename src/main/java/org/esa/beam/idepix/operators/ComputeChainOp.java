@@ -144,7 +144,6 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false", label = "Combined Clouds Flags")
     private boolean cloudOutputCombinedCloud = false;
 
-
     // Globalbedo parameters
     @Parameter(defaultValue = "true", label = "Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = true;

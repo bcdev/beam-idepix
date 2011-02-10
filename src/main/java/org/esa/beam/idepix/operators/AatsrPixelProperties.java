@@ -9,7 +9,7 @@ import org.esa.beam.util.math.MathUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-class AatsrPixelProperties implements PixelProperties {
+class AatsrPixelProperties extends AbstractPixelProperties {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.50f;
@@ -79,18 +79,18 @@ class AatsrPixelProperties implements PixelProperties {
     }
 
     @Override
-    public boolean isClearSnow() {
-        return (!isInvalid() && !isCold() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
-    }
-
-    @Override
     public boolean isLand() {
         return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
     }
 
     @Override
-    public boolean isWater() {
+    public boolean isL1Water() {
         return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
+    }
+
+    @Override
+    public boolean isClearSnow() {
+        return (!isInvalid() && !isCold() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
     }
 
     @Override

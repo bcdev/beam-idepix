@@ -2,6 +2,8 @@ package org.esa.beam.idepix.operators;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -10,14 +12,13 @@ public class VgtPixelPropertiesTest extends TestCase {
 
     private VgtPixelProperties vgtPixelProperties;
 
-    public void setUp() {
+    public void setUp() throws IOException {
         vgtPixelProperties = new VgtPixelProperties();
         float[] refl = setSpectralFlatnessTestValues();
         vgtPixelProperties.setRefl(refl);
     }
 
     public void testBrightValue() {
-
         assertEquals(1.0f, vgtPixelProperties.brightValue(), 1.0E-3);
     }
 
