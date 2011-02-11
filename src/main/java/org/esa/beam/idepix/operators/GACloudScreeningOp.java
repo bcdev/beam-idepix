@@ -67,11 +67,11 @@ public class GACloudScreeningOp extends Operator {
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
-    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution in m/pixel",
+    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue = "true", label = "Automatically fill pixels where no shapefile exists",
-               description = "Automatically fill pixels where no shapefile exists")
+    @Parameter(defaultValue = "true", label = "Fill pixels where no shapefiles exist",
+               description = "Automatically fill pixels where no shapefiles exist or use L1 flags")
     private boolean wmFill;
 
     public static final int F_INVALID = 0;

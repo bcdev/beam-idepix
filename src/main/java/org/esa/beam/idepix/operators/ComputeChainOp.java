@@ -155,7 +155,12 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
-
+    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
+               description = "Resolution in m/pixel")
+    private int wmResolution;
+    @Parameter(defaultValue = "true", label = "Fill pixels where no shapefiles exist",
+               description = "Automatically fill pixels where no shapefiles exist or use L1 flags")
+    private boolean wmFill;
 
     // Coastcolour parameters
     @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
@@ -532,6 +537,8 @@ public class ComputeChainOp extends BasisOp {
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
+        gaCloudClassificationParameters.put("wmResolution", wmResolution);
+        gaCloudClassificationParameters.put("wmFill", wmFill);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
