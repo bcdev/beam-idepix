@@ -4,7 +4,6 @@ package org.esa.beam.idepix.ui;
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertyDescriptor;
-import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.swing.binding.BindingContext;
 import com.bc.ceres.swing.binding.PropertyPane;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -16,7 +15,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
-import java.awt.Component;
 import java.util.Map;
 
 /**
@@ -70,9 +68,10 @@ class IdepixForm extends JTabbedPane {
         BindingContext context = new BindingContext(propertyContainer);
 
         PropertyPane parametersPane = new PropertyPane(context);
-        JPanel paremetersPanel = parametersPane.createPanel();
-        paremetersPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
-        this.add(title, new JScrollPane(paremetersPanel));
+        JPanel parametersPanel = parametersPane.createPanel();
+        parametersPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
+
+        this.add(title, new JScrollPane(parametersPanel));
     }
 
     private PropertyContainer createPanelSpecificValueContainer(String[] thisPanelIDs) {

@@ -70,9 +70,6 @@ public class GACloudScreeningOp extends Operator {
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue = "true", label = "Fill pixels where no shapefiles exist",
-               description = "Automatically fill pixels where no shapefiles exist or use L1 flags")
-    private boolean wmFill;
     @Parameter(defaultValue="false", label = "Use land-water flag from L1b product instead (faster)")
     private boolean gaUseL1bLandWaterFlag;
 
@@ -119,7 +116,7 @@ public class GACloudScreeningOp extends Operator {
     public void initialize() throws OperatorException {
         setSourceProductTypeId();
         try {
-            classifier = new WatermaskClassifier(wmResolution, wmFill);
+            classifier = new WatermaskClassifier(wmResolution, false);
         } catch (IOException e) {
             getLogger().warning("Watermask classifier could not be initialized - fallback mode is used.");
         }
@@ -661,7 +658,6 @@ public class GACloudScreeningOp extends Operator {
             isWater = pixelProperties.isL1Water();
         } else {
             isWater = watermask == WatermaskClassifier.WATER_VALUE;
-//            System.out.println("accurate watermask has been used");
         }
         pixelProperties.setIsWater(isWater);
     }
