@@ -73,6 +73,8 @@ public class GACloudScreeningOp extends Operator {
     @Parameter(defaultValue = "true", label = "Fill pixels where no shapefiles exist",
                description = "Automatically fill pixels where no shapefiles exist or use L1 flags")
     private boolean wmFill;
+    @Parameter(defaultValue="false", label = "Use land-water flag from L1b product instead (faster)")
+    private boolean gaUseL1bLandWaterFlag;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
@@ -483,13 +485,13 @@ public class GACloudScreeningOp extends Operator {
                             break;
                     }
 
-                    byte waterMaskSample;
-                    final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-                    if (geoCoding.canGetGeoPos()) {
-                        geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
-                        waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                    } else {
-                        waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+                    if (!gaUseL1bLandWaterFlag) {
+                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                        if (geoCoding.canGetGeoPos()) {
+                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
+                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+                        }
                     }
 
                     // set up pixel properties for given instruments...
@@ -659,7 +661,7 @@ public class GACloudScreeningOp extends Operator {
             isWater = pixelProperties.isL1Water();
         } else {
             isWater = watermask == WatermaskClassifier.WATER_VALUE;
-            System.out.println("accurate watermask has been used");
+//            System.out.println("accurate watermask has been used");
         }
         pixelProperties.setIsWater(isWater);
     }

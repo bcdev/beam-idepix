@@ -161,6 +161,8 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "true", label = "Fill pixels where no shapefiles exist",
                description = "Automatically fill pixels where no shapefiles exist or use L1 flags")
     private boolean wmFill;
+    @Parameter(defaultValue="false", label = "Use land-water flag from L1b product instead (faster)")
+    private boolean gaUseL1bLandWaterFlag;
 
     // Coastcolour parameters
     @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
@@ -539,6 +541,7 @@ public class ComputeChainOp extends BasisOp {
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
         gaCloudClassificationParameters.put("wmFill", wmFill);
+        gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
