@@ -275,7 +275,6 @@ public class ComputeChainOp extends BasisOp {
             gasInput.put("cloud", merisCloudProduct);
             Map<String, Object> gasParameters = new HashMap<String, Object>(2);
             gasParameters.put("correctWater", true);
-            gasParameters.put("exportTg", true);
             gasProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), gasParameters,
                                            gasInput);
         }
@@ -298,7 +297,6 @@ public class ComputeChainOp extends BasisOp {
             rayleighInput.put("input", gasProduct);
             Map<String, Object> rayleighParameters = new HashMap<String, Object>(2);
             rayleighParameters.put("correctWater", true);
-            rayleighParameters.put("exportRayCoeffs", true);
             rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RayleighCorrectionOp.class),
                                                 rayleighParameters, rayleighInput);
         }
