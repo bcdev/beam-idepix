@@ -44,8 +44,7 @@ class VgtPixelProperties implements PixelProperties {
             return false;
         }
         return (!isInvalid() &&
-                (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) &&
-                !isClearSnow());
+                (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && !isClearSnow());
     }
 
     @Override

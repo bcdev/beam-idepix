@@ -6,11 +6,11 @@
 
     <groupId>org.esa.beam</groupId>
     <artifactId>beam-idepix</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3-SNAPSHOT_experimental</version>
     <packaging>jar</packaging>
 
     <name>BEAM pixel identification</name>
-    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.</description>
+    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors. TÄTÄAAA!</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

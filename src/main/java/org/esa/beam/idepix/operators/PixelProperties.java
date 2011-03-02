@@ -62,4 +62,6 @@ interface PixelProperties {
     float radiometricLandValue();
 
     float radiometricWaterValue();
+
+
 }

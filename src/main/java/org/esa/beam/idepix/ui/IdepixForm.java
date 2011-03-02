@@ -4,14 +4,12 @@ package org.esa.beam.idepix.ui;
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertyDescriptor;
-import com.bc.ceres.binding.ValidationException;
 import com.bc.ceres.swing.binding.BindingContext;
 import com.bc.ceres.swing.binding.PropertyPane;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.beam.idepix.operators.IdepixConstants;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -53,17 +51,17 @@ class IdepixForm extends JTabbedPane {
                 createPanelSpecificValueContainer(IdepixConstants.cloudProductParameterNames);
         addParameterPane(propertyContainerCloud, "Cloud Products");
 
-        final PropertyContainer propertyContainerGlobalbedo=
+        final PropertyContainer propertyContainerGlobalbedo =
                 createPanelSpecificValueContainer(IdepixConstants.globalbedoParameterNames);
         addParameterPane(propertyContainerGlobalbedo, "GlobAlbedo");
 
-        final PropertyContainer propertyContainerCoastcolour=
+        final PropertyContainer propertyContainerCoastcolour =
                 createPanelSpecificValueContainer(IdepixConstants.coastcolourParameterNames);
         addParameterPane(propertyContainerCoastcolour, "CoastColour");
         setEnabledAt(IdepixConstants.COASTCOLOUR_TAB_INDEX, false); // todo: enable later
     }
 
-     ///////////// END OF PUBLIC //////////////
+    ///////////// END OF PUBLIC //////////////
 
     private void addParameterPane(PropertyContainer propertyContainer, String title) {
 
@@ -80,24 +78,19 @@ class IdepixForm extends JTabbedPane {
         PropertyContainer pc = PropertyContainer.createMapBacked(parameterMap, operatorSpi.getOperatorClass(),
                                                                  parameterDescriptorFactory);
 
-        try {
-            pc.setDefaultValues();
-        } catch (ValidationException e) {
-            JOptionPane.showOptionDialog(null, e.getMessage(), "IDEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
-                                             JOptionPane.ERROR_MESSAGE, null, null, null);
-        }
+        pc.setDefaultValues();
 
         for (Property property : pc.getProperties()) {
             PropertyDescriptor propertyDescriptor = property.getDescriptor();
-                if (!panelContainsProperty(propertyDescriptor.getName(), thisPanelIDs)) {
-                    removeProperty(pc, propertyDescriptor);
-                }
+            if (!panelContainsProperty(propertyDescriptor.getName(), thisPanelIDs)) {
+                removeProperty(pc, propertyDescriptor);
+            }
         }
         return pc;
     }
 
     private boolean panelContainsProperty(String thisPropertyName, String[] propertyNames) {
-        for (String name:propertyNames) {
+        for (String name : propertyNames) {
             if (name.equals(thisPropertyName)) {
                 return true;
             }
@@ -106,8 +99,9 @@ class IdepixForm extends JTabbedPane {
     }
 
     private void removeProperty(final PropertyContainer propertyContainer, PropertyDescriptor propertyDescriptor) {
-		Property property = propertyContainer.getProperty(propertyDescriptor.getName());
-		if (property != null)
-			propertyContainer.removeProperty(property);
-	}
+        Property property = propertyContainer.getProperty(propertyDescriptor.getName());
+        if (property != null) {
+            propertyContainer.removeProperty(property);
+        }
+    }
 }
