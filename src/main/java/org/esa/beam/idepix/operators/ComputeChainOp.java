@@ -37,6 +37,7 @@ import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.BeamConstants;
 import org.esa.beam.util.ProductUtils;
 
+import javax.media.jai.JAI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -149,6 +150,8 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaCopyRadiances = true;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
     private boolean gaComputeFlagsOnly;
+    @Parameter(defaultValue="false", label = "Copy pressure bands (MERIS)")
+    private boolean gaCopyPressure;
     @Parameter(defaultValue="false", label = "Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
@@ -158,7 +161,7 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue="false", label = "Use land-water flag from L1b product instead")
+    @Parameter(defaultValue="true", label = "Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
 
     // Coastcolour parameters
@@ -176,6 +179,8 @@ public class ComputeChainOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
+
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, algorithm);
         if (!inputProductIsValid) {
@@ -531,6 +536,7 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
+        gaCloudClassificationParameters.put("gaCopyPressure", gaCopyPressure);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);

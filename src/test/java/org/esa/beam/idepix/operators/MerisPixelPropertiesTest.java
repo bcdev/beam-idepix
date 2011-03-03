@@ -81,11 +81,13 @@ public class MerisPixelPropertiesTest extends TestCase {
         // land:
         merisPixelProperties.setL1FlagLand(true);
         merisPixelProperties.setP1(300.0f);
+        merisPixelProperties.setPBaro(1000.0f);
         assertEquals(0.7f, merisPixelProperties.pressureValue());
         // water:
         merisPixelProperties.setL1FlagLand(false);
         merisPixelProperties.setIsWater(true);
         merisPixelProperties.setPscatt(400.0f);
+        merisPixelProperties.setPBaro(1000.0f);
         assertEquals(0.6f, merisPixelProperties.pressureValue());
     }
 

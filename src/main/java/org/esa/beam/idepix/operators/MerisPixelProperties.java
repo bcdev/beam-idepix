@@ -183,9 +183,11 @@ class MerisPixelProperties extends AbstractPixelProperties {
     public float pressureValue() {
         double value;
         if (isLand()) {
-            value = 1.0 - p1 / 1000.0;
+//            value = 1.0 - p1 / 1000.0;
+            value = pbaro/1000.0 - p1 / 1000.0;         // we need to take into account the height of the land, e.g. in Himalaya!
         } else if (isWater()) {
-            value = 1.0 - pscatt / 1000.0;
+//            value = 1.0 - pscatt / 1000.0;
+            value = pbaro/1000.0 - pscatt / 1000.0;    // we even need to take into account the height of the water, e.g. small lakes in Himalaya!
         } else {
             value = UNCERTAINTY_VALUE;
         }

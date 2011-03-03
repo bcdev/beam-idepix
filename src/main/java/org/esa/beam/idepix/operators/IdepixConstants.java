@@ -36,7 +36,7 @@ public class IdepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyAnnotations",
+            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyPressure", "gaCopyAnnotations",
             "gaUseAatsrFwardForClouds", "gaCloudBufferWidth", "wmResolution", "wmFill", "gaUseL1bLandWaterFlag"
     };
 
