@@ -37,6 +37,7 @@ import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.BeamConstants;
 import org.esa.beam.util.ProductUtils;
 
+import javax.media.jai.JAI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +53,7 @@ import java.util.Map;
                   authors = "Olaf Danne, Carsten Brockmann",
                   copyright = "(c) 2010 by Brockmann Consult",
                   description = "Pixel identification and classification. This operator just calls a chain of other operators.")
+
 public class ComputeChainOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
@@ -90,8 +92,8 @@ public class ComputeChainOp extends BasisOp {
     private double ipfQWGUserDefinedP1PressureThreshold = 125.0;
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ipfQWGUserDefinedPScattPressureThreshold = 700.0;
-    @Parameter(label = " RhoTOA442 Threshold ", defaultValue = "0.17")
-    private double ipfQWGUserDefinedRhoToa442Threshold = 0.17;
+    @Parameter(label = " RhoTOA442 Threshold ", defaultValue = "0.185")
+    private double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
 
     @Parameter(label = " User Defined Delta RhoTOA442 Threshold ", defaultValue = "0.03")
     private double ipfQWGUserDefinedDeltaRhoToa442Threshold;
@@ -144,21 +146,26 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false", label = "Combined Clouds Flags")
     private boolean cloudOutputCombinedCloud = false;
 
-
     // Globalbedo parameters
     @Parameter(defaultValue = "true", label = "Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = true;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
     private boolean gaComputeFlagsOnly;
+    @Parameter(defaultValue="false", label = "Copy pressure bands (MERIS)")
+    private boolean gaCopyPressure;
     @Parameter(defaultValue="false", label = "Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
-    @Parameter(defaultValue = "1", label = "Width of cloud buffer (# of pixels)")
+    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
+    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
+               description = "Resolution in m/pixel")
+    private int wmResolution;
+    @Parameter(defaultValue="true", label = "Use land-water flag from L1b product instead")
+    private boolean gaUseL1bLandWaterFlag;
     @Parameter(defaultValue = "true", label = "Whether to use Ana's Approach")
     boolean anasApproach;
-
 
     // Coastcolour parameters
     @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
@@ -274,7 +281,6 @@ public class ComputeChainOp extends BasisOp {
             gasInput.put("cloud", merisCloudProduct);
             Map<String, Object> gasParameters = new HashMap<String, Object>(2);
             gasParameters.put("correctWater", true);
-            gasParameters.put("exportTg", true);
             gasProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), gasParameters,
                                            gasInput);
         }
@@ -297,7 +303,6 @@ public class ComputeChainOp extends BasisOp {
             rayleighInput.put("input", gasProduct);
             Map<String, Object> rayleighParameters = new HashMap<String, Object>(2);
             rayleighParameters.put("correctWater", true);
-            rayleighParameters.put("exportRayCoeffs", true);
             rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RayleighCorrectionOp.class),
                                                 rayleighParameters, rayleighInput);
         }
@@ -532,22 +537,17 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
+        gaCloudClassificationParameters.put("gaCopyPressure", gaCopyPressure);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
+        gaCloudClassificationParameters.put("wmResolution", wmResolution);
+        gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
         gaCloudClassificationParameters.put("anasApproach", anasApproach);
 
-        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
+        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
-
-
-        if (ipfOutputRayleigh) {
-            for (Band band : correctedRayleighProduct.getBands()) {
-                if (band.getName().startsWith("reflec_")) {
-                    targetProduct.addBand(band);
-                }
-            }
-        }
+        targetProduct = gaCloudProduct;
     }
 
     /**

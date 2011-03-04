@@ -10,7 +10,7 @@ import org.esa.beam.util.math.MathUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-class VgtPixelProperties implements PixelProperties {
+class VgtPixelProperties extends AbstractPixelProperties  {
 
     private static final float BRIGHTWHITE_THRESH = 0.65f;
     private static final float NDSI_THRESH = 0.50f;
@@ -93,6 +93,11 @@ class VgtPixelProperties implements PixelProperties {
 
     @Override
     public boolean isWater() {
+        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
+    }
+
+    @Override
+    public boolean isL1Water() {
         return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
     }
 

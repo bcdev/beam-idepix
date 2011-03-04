@@ -9,7 +9,7 @@ import org.esa.beam.util.math.MathUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-class MerisPixelProperties implements PixelProperties {
+class MerisPixelProperties extends AbstractPixelProperties {
 
     protected static final float BRIGHTWHITE_THRESH = 1.5f;
     protected static final float NDSI_THRESH = 0.68f;
@@ -96,6 +96,11 @@ class MerisPixelProperties implements PixelProperties {
 
     @Override
     public boolean isWater() {
+        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
+    }
+
+    @Override
+    public boolean isL1Water() {
         return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
     }
 

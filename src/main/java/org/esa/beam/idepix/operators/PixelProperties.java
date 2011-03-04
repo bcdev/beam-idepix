@@ -25,6 +25,8 @@ interface PixelProperties {
 
     boolean isWater();
 
+    boolean isL1Water();
+
     boolean isBright();
 
     boolean isWhite();

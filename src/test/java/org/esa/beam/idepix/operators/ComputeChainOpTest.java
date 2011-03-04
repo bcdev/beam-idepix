@@ -103,7 +103,7 @@ public class ComputeChainOpTest extends TestCase {
     	
     	LisePressureOp op = new LisePressureOp();
     	try {
-    		op.readLiseAuxdata();
+            op.readLiseAuxdata();
 		} catch (IOException e) {
 			fail();
 		}

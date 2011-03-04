@@ -37,6 +37,9 @@
     <dependency>
         <module>beam-meris-sdr</module>
     </dependency>
+    <dependency>
+        <module>beam-watermask</module>
+    </dependency>
 
     <categories>Application,Processor,MERIS,AATSR</categories>
 
