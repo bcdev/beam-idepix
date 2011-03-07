@@ -521,7 +521,16 @@ public class GACloudScreeningOp extends Operator {
                         final GeoCoding geoCoding = sourceProduct.getGeoCoding();
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
+                            if (x == 50 && y == 50)  {  // water
+                                System.out.println();
+                            }
+                            if (x == 262 && y == 439)  {   // land
+                                System.out.println();
+                            }
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+//                            if (waterMaskSample == WatermaskClassifier.WATER_VALUE) {
+//                                System.out.println("x,y = " + x + "," + y);
+//                            }
                         }
                     }
 
@@ -682,6 +691,9 @@ public class GACloudScreeningOp extends Operator {
         pixelProperties.setPBaro(pbaroTile.getSampleFloat(x, y));
         pixelProperties.setPscatt(pscattTile.getSampleFloat(x, y));
         pixelProperties.setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
+        if (watermask == WatermaskClassifier.WATER_VALUE) {
+            System.out.println("x,y = " + x + "," + y);
+        }
         setIsWater(watermask, pixelProperties);
         return pixelProperties;
     }

@@ -183,6 +183,7 @@ public class ComputeChainOp extends BasisOp {
     @Override
     public void initialize() throws OperatorException {
 
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, algorithm);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);

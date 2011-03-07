@@ -31,7 +31,7 @@ import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
-import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
+import org.esa.beam.meris.l2auxdata.L2AuxdataProvider;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.LUT;
@@ -180,7 +180,7 @@ public class LisePressureOp extends BasisOp {
 
         try {
             initL2AuxData();
-            readLiseAuxData();
+            readLiseAuxdata();
             if (straylightCorr) {
                 readStraylightCoeff();
                 readStraylightCorrWavelengths();
@@ -189,177 +189,27 @@ public class LisePressureOp extends BasisOp {
             throw new OperatorException("Failed to load aux data:\n" + e.getMessage());
         }
     }
-    /**
-     * This method computes the different Lise pressures for a given pixel
-     *
-     * @param rayleighCorrection
-     * @param pressureIndex: - 0: press_toa
-     *                       - 1: press_surface
-     *                       - 2: press_bottom_rayleigh
-     *                       - 3: press_bottom_fresnel
-     * @param szaDeg         - sun zenith angle (degrees)
-     * @param vzaDeg         - view zenith angle (degrees)
-     * @param csza           - cosine of sza
-     * @param cvza           - cosine of vza
-     * @param ssza           - sine of sza
-     * @param svza           - sine of vza
-     * @param azimDiff       - difference sun-view azimuth
-     * @param rhoToa10       - reflectance band 10
-     * @param rhoToa11       - reflectance band 11
-     * @param rhoToa12       - reflectance band 12
-     * @param w0
-     * @param altitude
-     * @param ecmwfPressure
-     * @param pressureScaleHeight
-     * @param airMass
-     *
-     * @return
-     */
-    public double computeLisePressures(RayleighCorrection rayleighCorrection,
-                                       final int pressureIndex,
-                                       final double szaDeg, final double vzaDeg, final double csza, final double cvza,
-                                       final double ssza, final double svza, final double azimDiff,
-                                       final double rhoToa10, final double rhoToa11, final double rhoToa12,
-                                       final double w0,
-                                       final float altitude, final float ecmwfPressure, double pressureScaleHeight,
-                                       final double airMass) {
-
-        // Determine nearest filter
-        int filterIndex = getNearestFilterIndex(w0);
-
-        // Compute the geometric conditions
-        final double cosphi = Math.cos(azimDiff);
-
-        // scattering angle
-        final double theta = MathUtils.RTOD * Math.acos(-csza * cvza - ssza * svza * cosphi);
-        // scattering angle for the coupling scattering-Fresnel reflection
-        final double xsi = MathUtils.RTOD * Math.acos(csza * cvza - ssza * svza * cosphi);
-
-        final int indsza = (int) Math.round(szaDeg);
-        final int indvza = (int) Math.round(vzaDeg);
-        final int indtheta = (int) Math.round(theta);
-        final int indxsi = (int) Math.round(xsi);
-
-        // Determine nearest angle for SZA & VZA
-        final int gaussIndexS = getNearestGaussIndex(szaDeg);
-        final int gaussIndexV = getNearestGaussIndex(vzaDeg);
-
-        // Compute the reference RO_TOA at 761
-        final double rhoRef = linearInterpol(761.0d, 753.0d,
-                                             778.0d, rhoToa10, rhoToa12);
-
-        // Ratio of the two bands
-        double to2Ratio = rhoToa11 / rhoRef;
-
-        // Computation of the apparent pressure P1
-        // (an intermediate result - not needed to proceed)
-        if (pressureIndex == 0) {
-            return getPressure(o2FilterWavelengths[filterIndex],
-                               o2FilterWavelengths[filterIndex + 1],
-                               w0, szaDeg, vzaDeg,
-                               filterIndex, gaussIndexS, gaussIndexV, to2Ratio);
-        }
-
-        // get pSurf using 21x6x6 C coefficients:
-        if (pressureIndex == 1) {
-            final FractIndex[] cIndex = FractIndex.createArray(2);
-            Interp.interpCoord(airMass, coeffLUT.getTab(2), cIndex[1]);
-            Interp.interpCoord(rhoToa10, coeffLUT.getTab(1), cIndex[0]);
-            double[][][] cLut = (double[][][]) coeffLUT.getJavaArray();
-            double cCoeffResult = Interp.interpolate(cLut[filterIndex], cIndex);
-            double eta = rhoToa11 / rhoToa10;
-            eta *= cCoeffResult;
-            // Computation of the surface pressure pSurf
-            return getPressure(o2FilterWavelengths[filterIndex],
-                               o2FilterWavelengths[filterIndex + 1],
-                               w0, szaDeg, vzaDeg,
-                               filterIndex, gaussIndexS, gaussIndexV, eta);
-        }
-
-        // Compute Rayleigh reflectance at 761
-        double ray761 = 0.0d;
-        if (rayleighCorrection != null && rayleighCorrection.getAuxdata() != null) {
-            final double press = HelperFunctions.correctEcmwfPressure(
-                    ecmwfPressure, altitude, pressureScaleHeight); /* DPM #2.6.15.1-3 */
-            ray761 = computeRayleighReflectanceCh11(rayleighCorrection,
-                                                    szaDeg, vzaDeg, azimDiff, press);
-        } else {
-            ray761 = computeRayleighReflectance(
-                    szaDeg, vzaDeg, theta,
-                    standardSeaSurfacePressure);
-        }
-
-        // Compute the Rayleigh O2 transmittance
-        final double trO2 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
-                                                   o2FilterWavelengths[filterIndex + 1], to2Ray,
-                                                   w0, szaDeg, vzaDeg,
-                                                   filterIndex, gaussIndexS, gaussIndexV);
-
-        // // Rayleigh correction on the O2 transmittance
-        final double to2RCorrected = (rhoToa11 - ray761 * trO2)
-                                     / (rhoRef - ray761);
-
-        // Determination of the aerosol apparent pressure
-        // after Rayleigh correction
-        // (an intermediate result - not needed to proceed)
-        if (pressureIndex == 2) {
-            return getPressure(o2FilterWavelengths[filterIndex],
-                               o2FilterWavelengths[filterIndex + 1],
-                               w0, szaDeg, vzaDeg,
-                               filterIndex, gaussIndexS, gaussIndexV,
-                               to2RCorrected);
-        }
-
-        // Determination of the aerosol pressure after surface
-        // correction:
-
-        // Compute the aerosol O2 transmittance
-        final double trAerosol = computeO2Transmittance(o2FilterWavelengths[filterIndex],
-                                                        o2FilterWavelengths[filterIndex + 1],
-                                                        to2AtmAerosol, w0,
-                                                        szaDeg, vzaDeg, filterIndex, gaussIndexS,
-                                                        gaussIndexV);
-
-        // Compute the aerosol fresnel O2 transmittance for direct to diffuse
-        final double trFresnel1 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
-                                                         o2FilterWavelengths[filterIndex + 1],
-                                                         to2Fresnel, w0,
-                                                         szaDeg, vzaDeg, filterIndex, gaussIndexS,
-                                                         gaussIndexV);
-
-        // Compute the aerosol fresnel O2 transmittance for diffuse to direct
-        final double trFresnel2 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
-                                                         o2FilterWavelengths[filterIndex + 1],
-                                                         to2Fresnel, w0,
-//				vzaDeg, szaDeg, filterIndex, gaussIndexS,     // LB, 02.10.09
-                                                         szaDeg, vzaDeg, filterIndex, gaussIndexS,
-                                                         gaussIndexV);
-
-        // Compute the APF ratio between forward and backward scattering
-        final double pfb = apfJunge[indxsi] / apfJunge[indtheta];
-
-        // Compute the contribution of the aerosol-Fresnel
-        // This contribution is an output for further flag
-        final double caf = 1.0 + pfb * (fresnelCoefficients[indsza] + fresnelCoefficients[indvza]);
-
-        // Correction of the O2 transmittance by the coupling
-        //   aerosol-Fresnel
-        final double xx = (trAerosol + pfb *
-                                       (trFresnel2 * fresnelCoefficients[indvza] + trFresnel1 * fresnelCoefficients[indsza])) / caf;
-
-        final double to2Rf = to2RCorrected * trAerosol / xx;
-
-        return getPressure(o2FilterWavelengths[filterIndex],
-                           o2FilterWavelengths[filterIndex + 1],
-                           w0, szaDeg, vzaDeg,
-                           filterIndex, gaussIndexS, gaussIndexV,
-                           to2Rf);
-    }
 
     /*
+    * This method initialises the L2 auxdata.
+    */
+    private void initL2AuxData() throws OperatorException {
+        try {
+            L2AuxdataProvider auxdataProvider = L2AuxdataProvider.getInstance();
+            auxData = auxdataProvider.getAuxdata(sourceProduct);
+//            rayleighCorrection = new RayleighCorrection(auxData);
+        } catch (Exception e) {
+            throw new OperatorException("Failed to load L2AuxData:\n" + e.getMessage(), e);
+        }
+
+    }
+
+    /**
      * This method reads additional auxdata provided by LISE.
+     *
+     * @throws IOException
      */
-    void readLiseAuxData() throws IOException {
+    void readLiseAuxdata() throws IOException {
         readSpectralCoefficients();
         readFresnelCoefficients();
         readCCoefficients();
@@ -368,20 +218,6 @@ public class LisePressureOp extends BasisOp {
         readO2AtmTransmittances();
         readO2FresnelTransmittances();
         readO2AtmAerosolTransmittances();
-    }
-
-    /*
-    * This method initialises the L2 auxdata.
-    */
-    private void initL2AuxData() throws OperatorException {
-        try {
-            L2AuxDataProvider auxdataProvider = L2AuxDataProvider.getInstance();
-            auxData = auxdataProvider.getAuxdata(sourceProduct);
-//            rayleighCorrection = new RayleighCorrection(auxData);
-        } catch (Exception e) {
-            throw new OperatorException("Failed to load L2AuxData:\n" + e.getMessage(), e);
-        }
-
     }
 
     /*
@@ -697,7 +533,7 @@ public class LisePressureOp extends BasisOp {
         return index;
     }
 
-    /*
+    /**
      * This method computes the pressure for:
      * 1) The geometrical conditions (SZA, VZA) by interpolation on the 24 Gaussian angles
      * 2) at the central wavelength of the detector by interpolation on 21 filters
@@ -710,6 +546,7 @@ public class LisePressureOp extends BasisOp {
      * @param ivza        - index of nearest gaussian angle for thetaV
      * @param ratio       - toa11/toa10
      *
+     * @return
      */
     private double getPressure(double centralWvl1, double centralWvl2,
                                double w0, double thetaS, double thetaV, int filterIndex, int isza, int ivza,
@@ -752,9 +589,15 @@ public class LisePressureOp extends BasisOp {
         return linearInterpol(w0, centralWvl1, centralWvl2, s1, s2);
     }
 
-    /*
+    /**
      * This method returns the value of the pressure from the 761/753 ratio
      *
+     * @param filterIndex
+     * @param isza2
+     * @param ivza2
+     * @param ratio
+     *
+     * @return surfacePressure
      */
     private double computePressure(int filterIndex, int isza2, int ivza2, double ratio) {
         double surfacePressure = 0.0; // surface pressure to compute
@@ -903,7 +746,7 @@ public class LisePressureOp extends BasisOp {
         return rayleighReflectanceCh11;
     }
 
-    /*
+    /**
      * This method computes the O2 transmittance for:
      * (i) The geometrical conditions (SZA and VZA) by interpolation
      * on the 24 Gaussian angles
@@ -916,6 +759,15 @@ public class LisePressureOp extends BasisOp {
      * (ii) the O2 aerosol-reflection transmittance
      * (iii) the O2 aerosol transmittance
      *
+     * @param to2
+     * @param w0
+     * @param thetaS
+     * @param thetaV
+     * @param filterIndex
+     * @param isza
+     * @param ivza
+     *
+     * @return
      */
     private double computeO2Transmittance(double centralWvl1, double centralWvl2,
                                           double[][][] to2, double w0, double thetaS, double thetaV, int filterIndex,
@@ -964,8 +816,16 @@ public class LisePressureOp extends BasisOp {
         return linearInterpol(w0, centralWvl1, centralWvl2, s1, s2);
     }
 
-    /*
+    /**
      * This method provides a simple linear interpolation
+     *
+     * @param x
+     * @param x1
+     * @param x2
+     * @param y1
+     * @param y2
+     *
+     * @return double
      */
     private double linearInterpol(double x, double x1, double x2, double y1, double y2) {
         if (x1 == x2) {
@@ -976,6 +836,167 @@ public class LisePressureOp extends BasisOp {
         }
     }
 
+    /**
+     * This method computes the different Lise pressures for a given pixel
+     *
+     * @param pressureIndex: - 0: press_toa
+     *                       - 1: press_surface
+     *                       - 2: press_bottom_rayleigh
+     *                       - 3: press_bottom_fresnel
+     * @param szaDeg         - sun zenith angle (degrees)
+     * @param vzaDeg         - view zenith angle (degrees)
+     * @param csza           - cosine of sza
+     * @param cvza           - cosine of vza
+     * @param ssza           - sine of sza
+     * @param svza           - sine of vza
+     * @param azimDiff       - difference sun-view azimuth
+     * @param rhoToa10       - reflectance band 10
+     * @param rhoToa11       - reflectance band 11
+     * @param rhoToa12       - reflectance band 12
+     * @param w0
+     *
+     * @return
+     */
+    public double computeLisePressures(RayleighCorrection rayleighCorrection,
+                                       final int pressureIndex,
+                                       final double szaDeg, final double vzaDeg, final double csza, final double cvza,
+                                       final double ssza, final double svza, final double azimDiff,
+                                       final double rhoToa10, final double rhoToa11, final double rhoToa12,
+                                       final double w0,
+                                       final float altitude, final float ecmwfPressure, double pressureScaleHeight,
+                                       final double airMass) {
+
+        // Determine nearest filter
+        int filterIndex = getNearestFilterIndex(w0);
+
+        // Compute the geometric conditions
+        final double cosphi = Math.cos(azimDiff);
+
+        // scattering angle
+        final double theta = MathUtils.RTOD * Math.acos(-csza * cvza - ssza * svza * cosphi);
+        // scattering angle for the coupling scattering-Fresnel reflection
+        final double xsi = MathUtils.RTOD * Math.acos(csza * cvza - ssza * svza * cosphi);
+
+        final int indsza = (int) Math.round(szaDeg);
+        final int indvza = (int) Math.round(vzaDeg);
+        final int indtheta = (int) Math.round(theta);
+        final int indxsi = (int) Math.round(xsi);
+
+        // Determine nearest angle for SZA & VZA
+        final int gaussIndexS = getNearestGaussIndex(szaDeg);
+        final int gaussIndexV = getNearestGaussIndex(vzaDeg);
+
+        // Compute the reference RO_TOA at 761
+        final double rhoRef = linearInterpol(761.0d, 753.0d,
+                                             778.0d, rhoToa10, rhoToa12);
+
+        // Ratio of the two bands
+        double to2Ratio = rhoToa11 / rhoRef;
+
+        // Computation of the apparent pressure P1
+        // (an intermediate result - not needed to proceed)
+        if (pressureIndex == 0) {
+            return getPressure(o2FilterWavelengths[filterIndex],
+                               o2FilterWavelengths[filterIndex + 1],
+                               w0, szaDeg, vzaDeg,
+                               filterIndex, gaussIndexS, gaussIndexV, to2Ratio);
+        }
+
+        // get pSurf using 21x6x6 C coefficients:
+        if (pressureIndex == 1) {
+            final FractIndex[] cIndex = FractIndex.createArray(2);
+            Interp.interpCoord(airMass, coeffLUT.getTab(2), cIndex[1]);
+            Interp.interpCoord(rhoToa10, coeffLUT.getTab(1), cIndex[0]);
+            double[][][] cLut = (double[][][]) coeffLUT.getJavaArray();
+            double cCoeffResult = Interp.interpolate(cLut[filterIndex], cIndex);
+            double eta = rhoToa11 / rhoToa10;
+            eta *= cCoeffResult;
+            // Computation of the surface pressure pSurf
+            return getPressure(o2FilterWavelengths[filterIndex],
+                               o2FilterWavelengths[filterIndex + 1],
+                               w0, szaDeg, vzaDeg,
+                               filterIndex, gaussIndexS, gaussIndexV, eta);
+        }
+
+        // Compute Rayleigh reflectance at 761
+        double ray761 = 0.0d;
+        if (rayleighCorrection != null && rayleighCorrection.getAuxdata() != null) {
+            final double press = HelperFunctions.correctEcmwfPressure(
+                    ecmwfPressure, altitude, pressureScaleHeight); /* DPM #2.6.15.1-3 */
+            ray761 = computeRayleighReflectanceCh11(rayleighCorrection,
+                                                    szaDeg, vzaDeg, azimDiff, press);
+        } else {
+            ray761 = computeRayleighReflectance(
+                    szaDeg, vzaDeg, theta,
+                    standardSeaSurfacePressure);
+        }
+
+        // Compute the Rayleigh O2 transmittance
+        final double trO2 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                   o2FilterWavelengths[filterIndex + 1], to2Ray,
+                                                   w0, szaDeg, vzaDeg,
+                                                   filterIndex, gaussIndexS, gaussIndexV);
+
+        // // Rayleigh correction on the O2 transmittance
+        final double to2RCorrected = (rhoToa11 - ray761 * trO2)
+                                     / (rhoRef - ray761);
+
+        // Determination of the aerosol apparent pressure
+        // after Rayleigh correction
+        // (an intermediate result - not needed to proceed)
+        if (pressureIndex == 2) {
+            return getPressure(o2FilterWavelengths[filterIndex],
+                               o2FilterWavelengths[filterIndex + 1],
+                               w0, szaDeg, vzaDeg,
+                               filterIndex, gaussIndexS, gaussIndexV,
+                               to2RCorrected);
+        }
+
+        // Determination of the aerosol pressure after surface
+        // correction:
+
+        // Compute the aerosol O2 transmittance
+        final double trAerosol = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                        o2FilterWavelengths[filterIndex + 1],
+                                                        to2AtmAerosol, w0,
+                                                        szaDeg, vzaDeg, filterIndex, gaussIndexS,
+                                                        gaussIndexV);
+
+        // Compute the aerosol fresnel O2 transmittance for direct to diffuse
+        final double trFresnel1 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                         o2FilterWavelengths[filterIndex + 1],
+                                                         to2Fresnel, w0,
+                                                         szaDeg, vzaDeg, filterIndex, gaussIndexS,
+                                                         gaussIndexV);
+
+        // Compute the aerosol fresnel O2 transmittance for diffuse to direct
+        final double trFresnel2 = computeO2Transmittance(o2FilterWavelengths[filterIndex],
+                                                         o2FilterWavelengths[filterIndex + 1],
+                                                         to2Fresnel, w0,
+//				vzaDeg, szaDeg, filterIndex, gaussIndexS,     // LB, 02.10.09 
+                                                         szaDeg, vzaDeg, filterIndex, gaussIndexS,
+                                                         gaussIndexV);
+
+        // Compute the APF ratio between forward and backward scattering
+        final double pfb = apfJunge[indxsi] / apfJunge[indtheta];
+
+        // Compute the contribution of the aerosol-Fresnel
+        // This contribution is an output for further flag
+        final double caf = 1.0 + pfb * (fresnelCoefficients[indsza] + fresnelCoefficients[indvza]);
+
+        // Correction of the O2 transmittance by the coupling
+        //   aerosol-Fresnel
+        final double xx = (trAerosol + pfb *
+                                       (trFresnel2 * fresnelCoefficients[indvza] + trFresnel1 * fresnelCoefficients[indsza])) / caf;
+
+        final double to2Rf = to2RCorrected * trAerosol / xx;
+
+        return getPressure(o2FilterWavelengths[filterIndex],
+                           o2FilterWavelengths[filterIndex + 1],
+                           w0, szaDeg, vzaDeg,
+                           filterIndex, gaussIndexS, gaussIndexV,
+                           to2Rf);
+    }
 
 
     private void computeP1(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,

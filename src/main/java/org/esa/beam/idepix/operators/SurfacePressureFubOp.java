@@ -32,7 +32,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
-import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
+import org.esa.beam.meris.l2auxdata.L2AuxdataProvider;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Rectangle;
@@ -137,7 +137,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
 
     private void initAuxData() throws Exception {
         try {
-            L2AuxDataProvider auxdataProvider = L2AuxDataProvider.getInstance();
+            L2AuxdataProvider auxdataProvider = L2AuxdataProvider.getInstance();
             auxData = auxdataProvider.getAuxdata(sourceProduct);
         } catch (Exception e) {
             throw new OperatorException("Failed to load L2AuxData:\n" + e.getMessage(), e);

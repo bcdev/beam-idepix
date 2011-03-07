@@ -94,10 +94,10 @@ class MerisPixelProperties extends AbstractPixelProperties {
         return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
     }
 
-    @Override
-    public boolean isWater() {
-        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
-    }
+//    @Override
+//    public boolean isWater() {
+//        return (!isInvalid() && aPrioriWaterValue() > WATER_THRESH);
+//    }
 
     @Override
     public boolean isL1Water() {
@@ -223,6 +223,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
         if (isInvalid()) {
             return UNCERTAINTY_VALUE;
         } else if (l1FlagLand) {
+//        } else if (!isWater()) {
             return 1.0f;
         } else {
             return 0.0f;
@@ -234,6 +235,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
         if (isInvalid()) {
             return UNCERTAINTY_VALUE;
         } else if (!l1FlagLand) {
+//        } else if (isWater()) {
             return 1.0f;
         } else return 0.0f;
     }
