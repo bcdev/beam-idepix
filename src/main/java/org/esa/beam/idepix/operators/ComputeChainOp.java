@@ -68,17 +68,17 @@ public class ComputeChainOp extends BasisOp {
 
 
     // IPF parameters
-    @Parameter(defaultValue = "false", label = "TOA Reflectances")
-    private boolean ipfOutputRad2Refl = false;
+    @Parameter(defaultValue = "true", label = "TOA Reflectances")
+    private boolean ipfOutputRad2Refl = true;
 
     @Parameter(defaultValue = "false", label = "Gas Absorption Corrected Reflectances")
     private boolean ipfOutputGaseous = false;
 
-    @Parameter(defaultValue = "false", label = "Land/Water Reclassification Flags")
-    private boolean ipfOutputLandWater = false;
+    @Parameter(defaultValue = "true", label = "Land/Water Reclassification Flags")
+    private boolean ipfOutputLandWater = true;
 
-    @Parameter(defaultValue = "false", label = "Rayleigh Corrected Reflectances")
-    private boolean ipfOutputRayleigh = false;
+    @Parameter(defaultValue = "true", label = "Rayleigh Corrected Reflectances")
+    private boolean ipfOutputRayleigh = true;
 
     @Parameter(defaultValue = "true", label = "L2 Cloud Top Pressure and Surface Pressure")
     private boolean ipfOutputL2Pressures = true;
@@ -96,6 +96,8 @@ public class ComputeChainOp extends BasisOp {
 
     @Parameter(label = " User Defined Delta RhoTOA442 Threshold ", defaultValue = "0.03")
     private double ipfQWGUserDefinedDeltaRhoToa442Threshold;
+    @Parameter(label ="Theoretical Glint Threshold", defaultValue="0.015")
+    public double ipfQWGUserDefinedGlintThreshold;
 
     @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
     private double ipfQWGUserDefinedRhoToa753Threshold = 0.1;
@@ -188,17 +190,14 @@ public class ComputeChainOp extends BasisOp {
         }
 
 
-        if (CloudScreeningSelector.QWG.equals(algorithm)) {
+        if (isQWGAlgo() || isCoastColourAlgo()) {
             processQwg();
-        } else if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+        } else if (isGlobAlbedoAlgo()) {
             // GA cloud classification
             if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
                 processQwg();
             }
             processGlobAlbedo();
-        } else if (CloudScreeningSelector.CoastColour.equals(algorithm)) {
-            // todo - not yet implemented
-            throw new OperatorException("This algorithm is not yet supported.");
         }
     }
 
@@ -244,8 +243,7 @@ public class ComputeChainOp extends BasisOp {
         // Cloud Classification
         merisCloudProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection ||
-            CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection || isGlobAlbedoAlgo()) {
             Map<String, Product> cloudInput = new HashMap<String, Product>(4);
             cloudInput.put("l1b", sourceProduct);
             cloudInput.put("rhotoa", rad2reflProduct);
@@ -258,6 +256,7 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("userDefinedP1PressureThreshold", ipfQWGUserDefinedP1PressureThreshold);
             cloudClassificationParameters.put("userDefinedPScattPressureThreshold",
                                               ipfQWGUserDefinedPScattPressureThreshold);
+            cloudClassificationParameters.put("userDefinedGlintThreshold", ipfQWGUserDefinedGlintThreshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
             cloudClassificationParameters.put("userDefinedDeltaRhoToa442Threshold",
                                               ipfQWGUserDefinedDeltaRhoToa442Threshold);
@@ -266,14 +265,19 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold",
                                               ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
-            merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),
-                                                  cloudClassificationParameters, cloudInput);
+            if (isQWGAlgo() || isGlobAlbedoAlgo()) {
+                merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),
+                                                      cloudClassificationParameters, cloudInput);
+            } else if (isCoastColourAlgo()) {
+                merisCloudProduct = GPF.createProduct(
+                        OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
+                        cloudClassificationParameters, cloudInput);
+            }
         }
 
         // Gaseous Correction
         Product gasProduct = null;
-        if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-            CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+        if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous || isGlobAlbedoAlgo()) {
             Map<String, Product> gasInput = new HashMap<String, Product>(3);
             gasInput.put("l1b", sourceProduct);
             gasInput.put("rhotoa", rad2reflProduct);
@@ -286,7 +290,7 @@ public class ComputeChainOp extends BasisOp {
 
         // Land Water Reclassification
         Product landProduct = null;
-        if (ipfOutputRayleigh || ipfOutputLandWater || CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+        if (ipfOutputRayleigh || ipfOutputLandWater || isGlobAlbedoAlgo()) {
             Map<String, Product> landInput = new HashMap<String, Product>(2);
             landInput.put("l1b", sourceProduct);
             landInput.put("gascor", gasProduct);
@@ -295,7 +299,7 @@ public class ComputeChainOp extends BasisOp {
         }
 
         // Rayleigh Correction
-        if (ipfOutputRayleigh || CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+        if (ipfOutputRayleigh || isGlobAlbedoAlgo() || isCoastColourAlgo()) {
             Map<String, Product> rayleighInput = new HashMap<String, Product>(3);
             rayleighInput.put("l1b", sourceProduct);
             rayleighInput.put("land", landProduct);
@@ -520,6 +524,18 @@ public class ComputeChainOp extends BasisOp {
 
         IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
 
+    }
+
+    private boolean isQWGAlgo() {
+        return CloudScreeningSelector.QWG.equals(algorithm);
+    }
+
+    private boolean isGlobAlbedoAlgo() {
+        return CloudScreeningSelector.GlobAlbedo.equals(algorithm);
+    }
+
+    private boolean isCoastColourAlgo() {
+        return CloudScreeningSelector.CoastColour.equals(algorithm);
     }
 
     private void processGlobAlbedo() {

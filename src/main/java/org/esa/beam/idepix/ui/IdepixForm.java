@@ -58,7 +58,7 @@ class IdepixForm extends JTabbedPane {
         final PropertyContainer propertyContainerCoastcolour=
                 createPanelSpecificValueContainer(IdepixConstants.coastcolourParameterNames);
         addParameterPane(propertyContainerCoastcolour, "CoastColour");
-        setEnabledAt(IdepixConstants.COASTCOLOUR_TAB_INDEX, false); // todo: enable later
+//        setEnabledAt(IdepixConstants.COASTCOLOUR_TAB_INDEX, false);
     }
 
      ///////////// END OF PUBLIC //////////////

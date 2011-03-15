@@ -34,7 +34,7 @@ import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
-import org.esa.beam.meris.brr.dpm.DpmPixel;
+import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
@@ -52,19 +52,20 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
 /**
  * This class provides the Mepix QWG cloud classification.
  */
-@OperatorMetadata(alias = "Meris.IdepixCloudClassification",
+@OperatorMetadata(alias = "Meris.CoastColourCloudClassification",
                   version = "1.0",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
                   description = "MERIS L2 cloud classification (version from MEPIX processor).")
-public class IdepixCloudClassificationOp extends MerisBasisOp {
+public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
     public static final String CLOUD_FLAGS = "cloud_classif_flags";
     public static final String PRESSURE_CTP = "cloud_top_press";
     public static final String PRESSURE_SURFACE = "surface_press";
     public static final String SCATT_ANGLE = "scattering_angle";
     public static final String RHO_THRESH_TERM = "rho442_thresh_term";
+    public static final String RHO_GLINT = "rho_glint";
     public static final String MDSI = "mdsi";
 
     private static final int BAND_BRIGHT_N = 0;
@@ -126,6 +127,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     private double userDefinedRhoToaRatio753775Threshold;
     @Parameter(description = "User Defined MDSI Threshold.", defaultValue = "0.01")
     private double userDefinedMDSIThreshold;
+    private double[] rhoAg;
 
 
     @Override
@@ -150,6 +152,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         targetProduct.addBand(PRESSURE_SURFACE, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
     }
 
@@ -236,6 +239,13 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
                                               rectangle).getRawSamples().getElems();
         sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
                                                    rectangle).getRawSamples().getElems();
+
+        sd.windu = (float[]) getSourceTile(l1bProduct.getTiePointGrid("zonal_wind"),
+                                                   rectangle).getRawSamples().getElems();
+
+        sd.windv = (float[]) getSourceTile(l1bProduct.getTiePointGrid("merid_wind"),
+                                                   rectangle).getRawSamples().getElems();
+
         sd.l1Flags = getSourceTile(l1bProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME), rectangle);
 
         return sd;
@@ -301,6 +311,11 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
                         if (band.getName().equals(MDSI)) {
                             setMdsi(sd, pixelInfo, targetTile);
                         }
+
+                        if (band.getName().equals(RHO_GLINT)) {
+                            final double rhoGlint = computeRhoGlint(sd, pixelInfo);
+                            targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoGlint);
+                        }
                     }
                     i++;
                 }
@@ -337,48 +352,101 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         /* apply thresholds on pressure- step 2.1.2 */
         press_thresh(sd, pixelInfo, press.value, inputPressure, resultFlags);
 
+        if (pixelInfo.x == 56 && pixelInfo.y == 203) {
+            System.out.println();
+        }
         // Compute slopes- step 2.1.7
         spec_slopes(sd, pixelInfo, resultFlags);
         boolean bright_f = resultFlags[0];
         boolean slope_1_f = resultFlags[1];
         boolean slope_2_f = resultFlags[2];
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright_f);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_1, slope_1_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_2, slope_2_f);
 
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
         boolean land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
-        boolean is_cloud;
+        boolean is_cloud = false;
+        boolean is_snow_ice = false;
 
-        boolean bright_toa_f = resultFlags[3];
+        boolean bright_toa_f = resultFlags[3];  // bright_2
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_TOA, bright_toa_f);
         boolean high_mdsi = resultFlags[4];
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_HIGH_MDSI, high_mdsi);
-        boolean bright_rc = resultFlags[5];
+        boolean bright_rc = resultFlags[5];    // bright_1
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_RC, bright_rc);
 
-        // new #2.1.8:
-        if (!land_f) {
-            boolean low_p_p1 = (pixelInfo.p1Pressure < pixelInfo.pbaroPressure - userDefinedP1PressureThreshold) &&
+        boolean bright = bright_rc || bright_toa_f;
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright);
+
+        double p1Scaled = 1.0 - pixelInfo.p1Pressure / 1000.0;
+        boolean is_glint = p1Scaled < 0.15;
+
+        final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
+        final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
+
+        boolean low_p_pscatt = (pixelInfo.pscattPressure < userDefinedPScattPressureThreshold) &&
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
-            is_cloud = (bright_f || low_p_p1) && (!high_mdsi);
-            targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_P_P1, low_p_p1);
+        if (!land_f) {
+            // over water
+            if (is_glint && is_glint_2) {
+                is_snow_ice = bright_rc && high_mdsi;
+                is_cloud = (bright_rc || low_p_pscatt);
+            } else {
+                is_snow_ice = bright_rc && high_mdsi;
+                is_cloud = (bright || low_p_pscatt) && !(is_snow_ice);
+            }
         } else {
-            float rhoToaRatio = sd.rhoToa[bb753][pixelInfo.index] / sd.rhoToa[bb775][pixelInfo.index];
-            boolean low_p_pscatt = (pixelInfo.pscattPressure < userDefinedPScattPressureThreshold) &&
-                                   (rhoToaRatio > userDefinedRhoToaRatio753775Threshold);
-            is_cloud = (bright_f || low_p_pscatt) && (!(high_mdsi && bright_f));
-            targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_P_PSCATT, low_p_pscatt);
+            is_snow_ice = (high_mdsi && bright_f);
+            is_cloud = (bright_f || low_p_pscatt) && !(is_snow_ice);
         }
-        boolean snow_ice = (high_mdsi && bright_f);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, snow_ice);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_P_PSCATT, low_p_pscatt);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
+    }
+
+    private double computeRhoGlint(SourceData sd, PixelInfo pixelInfo) {
+        final double windm = Math.sqrt(sd.windu[pixelInfo.index] * sd.windu[pixelInfo.index] +
+                                 sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
+        /* then wind azimuth */
+        final double phiw = azimuth(sd.windu[pixelInfo.index], sd.windv[pixelInfo.index]);
+        /* and "scattering" angle */
+        final double chiw = MathUtils.RTOD * (Math.acos(Math.cos(sd.saa[pixelInfo.index] - phiw)));
+        final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(sd.vaa[pixelInfo.index],
+                                                                       sd.saa[pixelInfo.index]);
+        /* allows to retrieve Glint reflectance for wurrent geometry and wind */
+        return glintRef(sd.sza[pixelInfo.index], sd.vza[pixelInfo.index], deltaAzimuth, windm, chiw);
     }
 
     private void setMdsi(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         final float mdsi = computeMdsi(sd.rhoToa[bb865][pixelInfo.index], sd.rhoToa[bb890][pixelInfo.index]);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, mdsi);
+    }
+
+    private double azimuth(double x, double y) {
+        if (y > 0.0) {
+            // DPM #2.6.5.1.1-1
+            return (MathUtils.RTOD * Math.atan(x / y));
+        } else if (y < 0.0) {
+            // DPM #2.6.5.1.1-5
+            return (180.0 + MathUtils.RTOD * Math.atan(x / y));
+        } else {
+            // DPM #2.6.5.1.1-6
+            return (x >= 0.0 ? 90.0 : 270.0);
+        }
+    }
+
+    private double glintRef(double thetas, double thetav, double delta, double windm, double chiw) {
+        FractIndex[] rogIndex = FractIndex.createArray(5);
+
+        Interp.interpCoord(chiw, auxData.rog.getTab(0), rogIndex[0]);
+        Interp.interpCoord(thetav, auxData.rog.getTab(1), rogIndex[1]);
+        Interp.interpCoord(delta, auxData.rog.getTab(2), rogIndex[2]);
+        Interp.interpCoord(windm, auxData.rog.getTab(3), rogIndex[3]);
+        Interp.interpCoord(thetas, auxData.rog.getTab(4), rogIndex[4]);
+        double rhoGlint = Interp.interpolate(auxData.rog.getJavaArray(), rogIndex);
+        return rhoGlint;
     }
 
     /**
@@ -498,16 +566,16 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     /**
      * Compares pressure estimates with ECMWF data.
      * <p/>
-     * <b>Uses:</b> {@link DpmPixel#l2flags}, {@link DpmPixel#sun_zenith}, {@link DpmPixel#view_zenith},
-     * {@link DpmPixel#press_ecmwf}, {@link L2AuxData#DPthresh_land},
-     * {@link L2AuxData#DPthresh_ocean},
-     * {@link L2AuxData#press_confidence}<br> <b>Sets:</b> nothing <br> <b>DPM
+     * <b>Uses:</b> {@link org.esa.beam.meris.brr.dpm.DpmPixel#l2flags}, {@link org.esa.beam.meris.brr.dpm.DpmPixel#sun_zenith}, {@link org.esa.beam.meris.brr.dpm.DpmPixel#view_zenith},
+     * {@link org.esa.beam.meris.brr.dpm.DpmPixel#press_ecmwf}, {@link org.esa.beam.meris.l2auxdata.L2AuxData#DPthresh_land},
+     * {@link org.esa.beam.meris.l2auxdata.L2AuxData#DPthresh_ocean},
+     * {@link org.esa.beam.meris.l2auxdata.L2AuxData#press_confidence}<br> <b>Sets:</b> nothing <br> <b>DPM
      * Ref.:</b> MERIS Level 2 DPM, step 2.1 <br> <b>MEGS Ref.:</b> file pixelid.c, function press_thresh  <br>
      *
      * @param pixelInfo     the pixel structure
      * @param pressure      the pressure of the pixel
      * @param inputPressure can be either cloud top pressure from CloudTopPressureOp,
-     *                      or PScatt from {@link LisePressureOp} (new!), or -1 if not given
+     *                      or PScatt from {@link org.esa.beam.idepix.operators.LisePressureOp} (new!), or -1 if not given
      * @param result_flags  the return values, <code>resultFlags[0]</code> contains low NN pressure flag (low_P_nn),
      *                      <code>resultFlags[1]</code> contains low polynomial pressure flag (low_P_poly),
      *                      <code>resultFlags[2]</code> contains pressure range flag (delta_p).
@@ -575,7 +643,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         //Rayleigh optical thickness, tauR0 in DPM
         final double[] tauR = new double[L1_BAND_NUM];
         //Rayleigh corrected reflectance
-        final double[] rhoAg = new double[L1_BAND_NUM];
+        rhoAg = new double[L1_BAND_NUM];
         //Rayleigh correction
         final double[] rhoRay = new double[L1_BAND_NUM];
 
@@ -655,14 +723,15 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         boolean bright_toa_f = false;
         // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                    || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
+                            || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {
 
             // test, 30.10.09:
             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
-            bright_toa_f = (dc.rhoToa[bb442][pixelInfo.index] > rhoThreshOffsetTerm);
+//            bright_toa_f = (dc.rhoToa[bb442][pixelInfo.index] > rhoThreshOffsetTerm);
+            bright_toa_f = (rhoAg[bb442] > rhoThreshOffsetTerm);
             bright_f = bright_rc || bright_toa_f;
         }
 
@@ -752,12 +821,15 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     private static class SourceData {
 
         private float[][] rhoToa;
+//        private float[][] brr;
         private Tile[] radiance;
         private short[] detectorIndex;
         private float[] sza;
         private float[] vza;
         private float[] saa;
         private float[] vaa;
+        private float[] windu;
+        private float[] windv;
         private float[] altitude;
         private float[] ecmwfPressure;
         private Tile l1Flags;
@@ -786,7 +858,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixCloudClassificationOp.class);
+            super(CoastColourCloudClassificationOp.class);
         }
     }
 }

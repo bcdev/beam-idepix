@@ -42,7 +42,7 @@ class SourceProductSelectionListener implements SelectionChangeListener {
                 form.setEnabledAt(IdepixConstants.IPF_TAB_INDEX, true);
                 form.setEnabledAt(IdepixConstants.PRESSURE_TAB_INDEX, true);
                 form.setEnabledAt(IdepixConstants.CLOUDS_TAB_INDEX, true);
-                form.setEnabledAt(IdepixConstants.COASTCOLOUR_TAB_INDEX, false);
+                form.setEnabledAt(IdepixConstants.COASTCOLOUR_TAB_INDEX, true);
             } else if (IdepixUtils.isValidAatsrProduct(selectedProduct)) {
                 // check for AATSR:
                 idepixName = selectedProduct.getName() + "_IDEPIX";  // todo: discuss
