@@ -973,11 +973,11 @@ public class LisePressureOp extends BasisOp {
                            Tile isInvalidOcean, Tile isInvalidLand) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                final int detectorIndex = detector.getSampleInt(x, y);
 
                 if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
                     targetTile.setSample(x, y, 0);
                 } else {
+                    final int detectorIndex = detector.getSampleInt(x, y);
                     // Compute the geometric conditions
                     final double pressureResult = getPressureResult(rayleighCorrection,
                                                                     pressureResultIndex, sza, vza, saa, vaa,
@@ -1029,11 +1029,11 @@ public class LisePressureOp extends BasisOp {
                               Tile isInvalidOcean, Tile isInvalidLand) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                final int detectorIndex = detector.getSampleInt(x, y);
 
                 if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
                     targetTile.setSample(x, y, 0);
                 } else {
+                    final int detectorIndex = detector.getSampleInt(x, y);
                     // Compute the geometric conditions
                     final double pressureResult = getPressureResult(rayleighCorrection,
                                                                     pressureResultIndex, sza, vza, saa, vaa,
@@ -1053,11 +1053,11 @@ public class LisePressureOp extends BasisOp {
                            Tile isInvalidOcean, Tile isInvalidLand) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                final int detectorIndex = detector.getSampleInt(x, y);
 
                 if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
                     targetTile.setSample(x, y, 0);
                 } else {
+                    final int detectorIndex = detector.getSampleInt(x, y);
                     final double pressureResult = getPressureResult(rayleighCorrection,
                                                                     pressureResultIndex, sza, vza, saa, vaa,
                                                                     altitudeTile, ecmwfPressureTile, rhoToa, y, x,
@@ -1076,11 +1076,10 @@ public class LisePressureOp extends BasisOp {
                                Tile isInvalidOcean, Tile isInvalidLand) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                final int detectorIndex = detector.getSampleInt(x, y);
-
                 if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
                     targetTile.setSample(x, y, 0);
                 } else {
+                    final int detectorIndex = detector.getSampleInt(x, y);
                     final double pressureResult = getPressureResult(rayleighCorrection,
                                                                     pressureResultIndex, sza, vza, saa, vaa,
                                                                     altitudeTile, ecmwfPressureTile, rhoToa, y, x,
