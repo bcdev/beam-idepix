@@ -26,7 +26,8 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.jai.ResolutionLevel;
+import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
@@ -38,6 +39,7 @@ import org.esa.beam.util.math.LUT;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -166,9 +168,9 @@ public class LisePressureOp extends BasisOp {
 
 
     private L2AuxData auxData;
-    private Band invalidBand;
-    private Band invalidBandOcean;
-    private Band invalidBandLand;
+    private VirtualBandOpImage invalidImage;
+    private VirtualBandOpImage invalidOceanImage;
+    private VirtualBandOpImage invalidLandImage;
     private LUT coeffLUT;
 
 
@@ -966,30 +968,6 @@ public class LisePressureOp extends BasisOp {
     }
 
 
-    private void computeP1(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
-                           int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
-                           Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                           Tile ecmwfPressureTile, Tile[] rhoToa, Tile isInvalid,
-                           Tile isInvalidOcean, Tile isInvalidLand) {
-        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-
-                if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
-                    targetTile.setSample(x, y, 0);
-                } else {
-                    final int detectorIndex = detector.getSampleInt(x, y);
-                    // Compute the geometric conditions
-                    final double pressureResult = getPressureResult(rayleighCorrection,
-                                                                    pressureResultIndex, sza, vza, saa, vaa,
-                                                                    altitudeTile, ecmwfPressureTile, rhoToa, y, x,
-                                                                    detectorIndex);
-
-                    targetTile.setSample(x, y, pressureResult);
-                }
-            }
-        }
-    }
-
     private double getPressureResult(RayleighCorrection rayleighCorrection, int pressureResultIndex, Tile sza,
                                      Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
                                      Tile ecmwfPressureTile, Tile[] rhoToa, int y, int x,
@@ -1022,61 +1000,13 @@ public class LisePressureOp extends BasisOp {
                                     auxData.press_scale_height, airMass);
     }
 
-    private void computePSurf(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
-                              int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
-                              Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                              Tile ecmwfPressureTile, Tile[] rhoToa, Tile isInvalid,
-                              Tile isInvalidOcean, Tile isInvalidLand) {
+    private void computePressureResult(RayleighCorrection rayleighCorrection, Tile targetTile,
+                                       int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
+                                       Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
+                                       Tile ecmwfPressureTile, Tile[] rhoToa, Raster isInvalid) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-
-                if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
-                    targetTile.setSample(x, y, 0);
-                } else {
-                    final int detectorIndex = detector.getSampleInt(x, y);
-                    // Compute the geometric conditions
-                    final double pressureResult = getPressureResult(rayleighCorrection,
-                                                                    pressureResultIndex, sza, vza, saa, vaa,
-                                                                    altitudeTile, ecmwfPressureTile, rhoToa, y, x,
-                                                                    detectorIndex);
-
-                    targetTile.setSample(x, y, pressureResult);
-                }
-            }
-        }
-    }
-
-    private void computeP2(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
-                           int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
-                           Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                           Tile ecmwfPressureTile, Tile[] rhoToa, Tile isInvalid,
-                           Tile isInvalidOcean, Tile isInvalidLand) {
-        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-
-                if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
-                    targetTile.setSample(x, y, 0);
-                } else {
-                    final int detectorIndex = detector.getSampleInt(x, y);
-                    final double pressureResult = getPressureResult(rayleighCorrection,
-                                                                    pressureResultIndex, sza, vza, saa, vaa,
-                                                                    altitudeTile, ecmwfPressureTile, rhoToa, y, x,
-                                                                    detectorIndex);
-
-                    targetTile.setSample(x, y, pressureResult);
-                }
-            }
-        }
-    }
-
-    private void computePScatt(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
-                               int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
-                               Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                               Tile ecmwfPressureTile, Tile[] rhoToa, Tile isInvalid,
-                               Tile isInvalidOcean, Tile isInvalidLand) {
-        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
+                if (isInvalid.getSample(x, y, 0) != 0) {
                     targetTile.setSample(x, y, 0);
                 } else {
                     final int detectorIndex = detector.getSampleInt(x, y);
@@ -1110,17 +1040,11 @@ public class LisePressureOp extends BasisOp {
             targetProduct.addBand("pscatt_lise", ProductData.TYPE_FLOAT32);
         }
 
-        BandMathsOp bandArithmeticOpInvalid =
-                BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
-        invalidBand = bandArithmeticOpInvalid.getTargetProduct().getBandAt(0);
+        invalidImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION, sourceProduct, ResolutionLevel.MAXRES);
 
-        BandMathsOp bandArithmeticOpInvalidOcean =
-                BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION_OCEAN, sourceProduct);
-        invalidBandOcean = bandArithmeticOpInvalidOcean.getTargetProduct().getBandAt(0);
+        invalidOceanImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION_OCEAN, sourceProduct, ResolutionLevel.MAXRES);
 
-        BandMathsOp bandArithmeticOpInvalidLand =
-                BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION_LAND, sourceProduct);
-        invalidBandLand = bandArithmeticOpInvalidLand.getTargetProduct().getBandAt(0);
+        invalidLandImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION_LAND, sourceProduct, ResolutionLevel.MAXRES);
     }
 
     private double applyStraylightCorr(final int detectorIndex, final double rhoToa10, double rhoToa11) {
@@ -1129,15 +1053,6 @@ public class LisePressureOp extends BasisOp {
             rhoToa11 += straylightCoefficients[detectorIndex] * rhoToa10;
         }
         return rhoToa11;
-    }
-
-    private boolean isInvalidPixel(Band band, Tile isInvalid, Tile isInvalidOcean,
-                                   Tile isInvalidLand, int y, int x) {
-        return (("p1_lise".equals(band.getName()) && isInvalid.getSampleBoolean(x, y)) ||
-                ("surface_press_lise".equals(band.getName()) && isInvalidLand.getSampleBoolean(x, y)) ||
-                ((("p2_lise".equals(band.getName())) ||
-//								("pscatt_lise".equals(band.getName()))) && isInvalidOcean.getSampleBoolean(x, y)));
-                  ("pscatt_lise".equals(band.getName()))) && isInvalid.getSampleBoolean(x, y)));
     }
 
     @Override
@@ -1167,30 +1082,32 @@ public class LisePressureOp extends BasisOp {
                                            rectangle);
             }
 
-            Tile isInvalid = getSourceTile(invalidBand, rectangle);
-            Tile isInvalidOcean = getSourceTile(invalidBandOcean, rectangle);
-            Tile isInvalidLand = getSourceTile(invalidBandLand, rectangle);
+            Raster isInvalid = null;
 
             // TODO: set band names as constants
+            int pressureResultIndex = -1;
             if ("p1_lise".equals(band.getName()) && outputP1) {
-                computeP1(rayleighCorrection, band, targetTile, 0, rectangle, detector, sza,
-                          vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
-                          isInvalid, isInvalidOcean, isInvalidLand);
+                pressureResultIndex = 0;
+                isInvalid = invalidImage.getData(rectangle);
             }
             if ("surface_press_lise".equals(band.getName()) && outputPressureSurface) {
-                computePSurf(rayleighCorrection, band, targetTile, 1, rectangle, detector, sza,
-                             vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
-                             isInvalid, isInvalidOcean, isInvalidLand);
+                pressureResultIndex = 1;
+                isInvalid = invalidLandImage.getData(rectangle);
             }
             if ("p2_lise".equals(band.getName()) && outputP2) {
-                computeP2(rayleighCorrection, band, targetTile, 2, rectangle, detector, sza,
-                          vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
-                          isInvalid, isInvalidOcean, isInvalidLand);
+                pressureResultIndex = 2;
+                isInvalid = invalidImage.getData(rectangle);
             }
             if ("pscatt_lise".equals(band.getName()) && (outputPScatt || l2CloudDetection)) {
-                computePScatt(rayleighCorrection, band, targetTile, 3, rectangle, detector, sza,
-                              vza, saa, vaa, altitudeTile, ecmwfPressureTile, rhoToa,
-                              isInvalid, isInvalidOcean, isInvalidLand);
+                pressureResultIndex = 3;
+                // invalidOceanImage.getData(rectangle)
+                isInvalid = invalidImage.getData(rectangle);
+            }
+            if (pressureResultIndex >= 0) {
+                computePressureResult(rayleighCorrection, targetTile, pressureResultIndex, rectangle, detector,
+                                      sza, vza, saa, vaa,
+                                      altitudeTile, ecmwfPressureTile, rhoToa,
+                                      isInvalid);
             }
         } catch (RuntimeException e) {
             if ((straylightCorr) && (!sourceProduct.getProductType().equals(
