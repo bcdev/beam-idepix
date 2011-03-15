@@ -243,7 +243,9 @@ public class ComputeChainOp extends BasisOp {
         // Cloud Classification
         merisCloudProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection || isGlobAlbedoAlgo()) {
+            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection
+            || isGlobAlbedoAlgo()
+            || isCoastColourAlgo()) {
             Map<String, Product> cloudInput = new HashMap<String, Product>(4);
             cloudInput.put("l1b", sourceProduct);
             cloudInput.put("rhotoa", rad2reflProduct);

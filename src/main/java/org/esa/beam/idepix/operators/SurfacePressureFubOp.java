@@ -30,12 +30,14 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.jai.ResolutionLevel;
+import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,7 +83,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
     private float[] straylightCorrWavelengths = new float[DETECTOR_LENGTH_RR];
 
     private L2AuxData auxData;
-    private Band invalidBand;
+    private VirtualBandOpImage invalidImage;
     private ThreadLocal<JnnNet> neuralNet;
 
 
@@ -130,9 +132,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
         targetProduct = createCompatibleProduct(sourceProduct, "MER_PSURF_NN", "MER_L2");
         targetProduct.addBand("surface_press_fub", ProductData.TYPE_FLOAT32);
 
-        BandMathsOp bandArithmeticOp =
-                BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
-        invalidBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
+        invalidImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION, sourceProduct, ResolutionLevel.MAXRES);
     }
 
     private void initAuxData() throws Exception {
@@ -170,8 +170,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
             Band band12 = sourceProduct.getBand("radiance_12");
             Tile toar12 = getSourceTile(band12, rectangle);
 
-            Tile isInvalid = getSourceTile(invalidBand, rectangle);
-
+            final Raster isInvalid = invalidImage.getData(rectangle);
             // TODO (mp 20.12.2010) - cloudFlags is never used
 //			Tile cloudFlags = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
 
@@ -181,7 +180,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                    if (isInvalid.getSampleBoolean(x, y)) {
+                    if (isInvalid.getSample(x, y,0 ) != 0) {
                         targetTile.setSample(x, y, 0);
                     } else {
                         final int detectorXY = detector.getSampleInt(x, y);

@@ -18,9 +18,11 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.jai.ResolutionLevel;
+import org.esa.beam.jai.VirtualBandOpImage;
 
 import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,26 +36,26 @@ import java.util.StringTokenizer;
  * @author Olaf Danne
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  */
-@OperatorMetadata(alias = "idepix.BarometricPressure",
-        version = "1.0",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008 by Brockmann Consult",
-        description = "This operator computes barometric pressure assuming US standard atmosphere.")
+@OperatorMetadata(alias = "Meris.BarometricPressure",
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "This operator computes barometric pressure assuming US standard atmosphere.")
 public class BarometricPressureOp extends MerisBasisOp {
-    @SourceProduct(alias="l1b", description = "The source product.")
+
+    @SourceProduct(alias = "l1b", description = "The source product.")
     private Product sourceProduct;
 
     @SuppressWarnings({"FieldCanBeLocal"})
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
 
-    @Parameter(description="If 'true' the algorithm will use altitudes from GETASSE30 DEM.", defaultValue="false")
+    @Parameter(description = "If 'true' the algorithm will use altitudes from GETASSE30 DEM.", defaultValue = "false")
     private boolean useGetasseDem = false;
 
     public static final String PRESSURE_BAROMETRIC = "barometric_press";
 
     private static final String INVALID_EXPRESSION = "l1_flags.INVALID";
-    private Band invalidBand;
 
     private static final String WATER_VAPOUR_PRESSURE_TABLE_FILE_NAME = "water_vapour_pressure.d";
     private static final int WATER_VAPOUR_PRESSURE_TABLE_LENGTH = 22;
@@ -63,6 +65,8 @@ public class BarometricPressureOp extends MerisBasisOp {
     private ElevationModel getasseElevationModel;
     private Band pressureBand;
     private Band getasseAltitudeBand;
+    private VirtualBandOpImage invalidImage;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -95,13 +99,12 @@ public class BarometricPressureOp extends MerisBasisOp {
             getasseAltitudeBand = targetProduct.addBand("getasse_alt", ProductData.TYPE_FLOAT32);
         }
 
-        BandMathsOp bandArithmeticOp =
-            BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
-        invalidBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
+        invalidImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION, sourceProduct, ResolutionLevel.MAXRES);
     }
 
     private void readWaterVapourPressureTable() throws IOException {
-        final InputStream inputStream = BarometricPressureOp.class.getResourceAsStream(WATER_VAPOUR_PRESSURE_TABLE_FILE_NAME);
+        final InputStream inputStream = BarometricPressureOp.class.getResourceAsStream(
+                WATER_VAPOUR_PRESSURE_TABLE_FILE_NAME);
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         try {
@@ -137,10 +140,11 @@ public class BarometricPressureOp extends MerisBasisOp {
 
 
     private int getSurfaceTemperatureIndex(double temperature) {
-        int surfaceTemperatureIndex = WATER_VAPOUR_PRESSURE_TABLE_LENGTH-2;
+        int surfaceTemperatureIndex = WATER_VAPOUR_PRESSURE_TABLE_LENGTH - 2;
 
-        for (int i = 0; i < WATER_VAPOUR_PRESSURE_TABLE_LENGTH-1; i++) {
-            if (temperature < waterVapourPressureTable.getTemperature()[i]) {
+        final double[] wvpTemperatures = waterVapourPressureTable.getTemperature();
+        for (int i = 0; i < WATER_VAPOUR_PRESSURE_TABLE_LENGTH - 1; i++) {
+            if (temperature < wvpTemperatures[i]) {
                 surfaceTemperatureIndex = i;
                 break;
             }
@@ -175,15 +179,13 @@ public class BarometricPressureOp extends MerisBasisOp {
     }
 
     @Override
-    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor ignored) throws OperatorException {
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor ignored) throws
+                                                                                                                  OperatorException {
         try {
-            // todo (mp 20.12.2010)  detector is never used
-//        	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), targetRectangle);
-        	Tile slpTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), targetRectangle);    // MSLP
+            Tile slpTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), targetRectangle);    // MSLP
             Tile altitudeTile = getSourceTile(sourceProduct.getTiePointGrid("dem_alt"), targetRectangle);
 
-            Tile isInvalid = getSourceTile(invalidBand, targetRectangle);
-
+            final Raster isInvalid = invalidImage.getData(targetRectangle);
             // implement computation as follows:
             //                p_surf = p_sea / exp(gn*h/(R*(t+C*e+gam*h/2)))
             //                    with
@@ -197,7 +199,7 @@ public class BarometricPressureOp extends MerisBasisOp {
             //
             // as used by German Weather Service (Rasmus Lindstrot, FU Berlin, PN 2009/02/20)
 
-            final float g =  9.80665f; // 9.80665 m/s2 (acceleration of gravity)
+            final float g = 9.80665f; // 9.80665 m/s2 (acceleration of gravity)
             final float gamma = 0.0065f; // gamma = 0.0065 K/gpm (temperature lapse rate in U.S. standard)
             final float R = 287.05f;     // gas constant
             final float C = 0.11f;       // 0.11 K/hPa (coefficient accounting for humidity, assumed to be constant)
@@ -208,16 +210,15 @@ public class BarometricPressureOp extends MerisBasisOp {
                 getasseAltitudeTile = targetTiles.get(getasseAltitudeBand);
             }
             Tile pressureTile = targetTiles.get(pressureBand);
-			for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
                 checkForCancellation();
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-					if (isInvalid.getSampleBoolean(x, y)) {
+                    if (isInvalid.getSample(x, y, 0) != 0) {
                         if (useGetasseDem) {
                             getasseAltitudeTile.setSample(x, y, 0);
                         }
                         pressureTile.setSample(x, y, 0);
-					} else {
-						final float slp = slpTile.getSampleFloat(x, y);
+                    } else {
                         float alt;
                         if (useGetasseDem) {
                             // get altitude from GETASSE DEM
@@ -230,25 +231,29 @@ public class BarometricPressureOp extends MerisBasisOp {
                             alt = altitudeTile.getSampleFloat(x, y);
                         }
 
-                        double surfaceTemp = seaLevelTemp - gamma*alt;
-                        int surfaceTempIndex = getSurfaceTemperatureIndex(surfaceTemp-273.15);
-                        double t1 = waterVapourPressureTable.getTemperature()[surfaceTempIndex];
-                        double t2 = waterVapourPressureTable.getTemperature()[surfaceTempIndex+1];
-                        double p1 = waterVapourPressureTable.getPressure()[surfaceTempIndex];
-                        double p2 = waterVapourPressureTable.getPressure()[surfaceTempIndex+1];
+                        double surfaceTemp = seaLevelTemp - gamma * alt;
+                        final double[] temperature = waterVapourPressureTable.getTemperature();
+                        final double[] pressure = waterVapourPressureTable.getPressure();
+                        int surfaceTempIndex = getSurfaceTemperatureIndex(surfaceTemp - 273.15);
+                        double t1 = temperature[surfaceTempIndex];
+                        double t2 = temperature[surfaceTempIndex + 1];
+                        double p1 = pressure[surfaceTempIndex];
+                        double p2 = pressure[surfaceTempIndex + 1];
                         final double e = linearInterpol(surfaceTemp, t1, t2, p1, p2);
 
+                        final float slp = slpTile.getSampleFloat(x, y);
                         final double pbaro = slp / Math.exp(g * alt / (R * (surfaceTemp + C * e + gamma * alt / 2.0)));
                         pressureTile.setSample(x, y, pbaro);
                     }
-				}
-			}
+                }
+            }
         } catch (Exception e) {
-        	throw new OperatorException("Failed to process Barometric Pressure:\n" + e.getMessage(), e);
+            throw new OperatorException("Failed to process Barometric Pressure:\n" + e.getMessage(), e);
         }
     }
 
     private static class WaterVapourPressureTable {
+
         private double[] temperature = new double[WATER_VAPOUR_PRESSURE_TABLE_LENGTH];
         private double[] pressure = new double[WATER_VAPOUR_PRESSURE_TABLE_LENGTH];
 
@@ -274,6 +279,7 @@ public class BarometricPressureOp extends MerisBasisOp {
      * It provides operator meta-data and is a factory for new operator instances.
      */
     public static class Spi extends OperatorSpi {
+
         public Spi() {
             super(BarometricPressureOp.class, "Meris.BarometricPressure");
         }
