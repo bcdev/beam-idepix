@@ -1055,8 +1055,6 @@ public class LisePressureOp extends BasisOp {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                 final int detectorIndex = detector.getSampleInt(x, y);
 
-                isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x);
-
                 if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
                     targetTile.setSample(x, y, 0);
                 } else {
