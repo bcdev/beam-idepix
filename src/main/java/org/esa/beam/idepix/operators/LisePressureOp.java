@@ -29,7 +29,6 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.meris.brr.HelperFunctions;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
@@ -970,7 +969,8 @@ public class LisePressureOp extends BasisOp {
 
     private double getPressureResult(RayleighCorrection rayleighCorrection, int pressureResultIndex, Tile sza,
                                      Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                                     Tile ecmwfPressureTile, Tile[] rhoToa, int y, int x,
+                                     Tile ecmwfPressureTile, Tile rhoToa10Tile, Tile rhoToa11Tile, Tile rhoToa12Tile,
+                                     int y, int x,
                                      final int detectorIndex) {
         final float szaDeg = sza.getSampleFloat(x, y);
         final float vzaDeg = vza.getSampleFloat(x, y);
@@ -981,9 +981,9 @@ public class LisePressureOp extends BasisOp {
         final double svza = Math.sin(MathUtils.DTOR * vzaDeg);
         final double azimDiff = MathUtils.DTOR * (vaa.getSampleFloat(x, y) - saa.getSampleFloat(x, y));
 
-        final double rhoToa10 = rhoToa[9].getSampleDouble(x, y);
-        double rhoToa11 = rhoToa[10].getSampleDouble(x, y);
-        final double rhoToa12 = rhoToa[11].getSampleDouble(x, y);
+        final double rhoToa10 = rhoToa10Tile.getSampleDouble(x, y);
+        double rhoToa11 = rhoToa11Tile.getSampleDouble(x, y);
+        final double rhoToa12 = rhoToa12Tile.getSampleDouble(x, y);
 
         final float altitude = altitudeTile.getSampleFloat(x, y);
         final float ecmwfPressure = ecmwfPressureTile.getSampleFloat(x, y);
@@ -1003,7 +1003,8 @@ public class LisePressureOp extends BasisOp {
     private void computePressureResult(RayleighCorrection rayleighCorrection, Tile targetTile,
                                        int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
                                        Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                                       Tile ecmwfPressureTile, Tile[] rhoToa, Raster isInvalid) {
+                                       Tile ecmwfPressureTile, Tile rhoToa10Tile, Tile rhoToa11Tile, Tile rhoToa12Tile,
+                                       Raster isInvalid) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                 if (isInvalid.getSample(x, y, 0) != 0) {
@@ -1012,7 +1013,8 @@ public class LisePressureOp extends BasisOp {
                     final int detectorIndex = detector.getSampleInt(x, y);
                     final double pressureResult = getPressureResult(rayleighCorrection,
                                                                     pressureResultIndex, sza, vza, saa, vaa,
-                                                                    altitudeTile, ecmwfPressureTile, rhoToa, y, x,
+                                                                    altitudeTile, ecmwfPressureTile, rhoToa10Tile,
+                                                                    rhoToa11Tile, rhoToa12Tile, y, x,
                                                                     detectorIndex);
 
                     targetTile.setSample(x, y, pressureResult);
@@ -1076,11 +1078,9 @@ public class LisePressureOp extends BasisOp {
                     sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME), rectangle);
             Tile ecmwfPressureTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), rectangle);
 
-            Tile[] rhoToa = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-            for (int i1 = 0; i1 < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i1++) {
-                rhoToa[i1] = getSourceTile(rhoToaProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i1 + 1)),
-                                           rectangle);
-            }
+            Tile rhoToa10 = getSourceTile(rhoToaProduct.getBand("rho_toa_10"),rectangle);
+            Tile rhoToa11 = getSourceTile(rhoToaProduct.getBand("rho_toa_11"),rectangle);
+            Tile rhoToa12 = getSourceTile(rhoToaProduct.getBand("rho_toa_12"),rectangle);
 
             Raster isInvalid = null;
 
@@ -1106,8 +1106,8 @@ public class LisePressureOp extends BasisOp {
             if (pressureResultIndex >= 0) {
                 computePressureResult(rayleighCorrection, targetTile, pressureResultIndex, rectangle, detector,
                                       sza, vza, saa, vaa,
-                                      altitudeTile, ecmwfPressureTile, rhoToa,
-                                      isInvalid);
+                                      altitudeTile, ecmwfPressureTile,
+                                      rhoToa10, rhoToa11, rhoToa12, isInvalid);
             }
         } catch (RuntimeException e) {
             if ((straylightCorr) && (!sourceProduct.getProductType().equals(
