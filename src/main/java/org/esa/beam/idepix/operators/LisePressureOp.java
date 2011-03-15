@@ -51,7 +51,7 @@ import java.util.StringTokenizer;
  * @author Olaf Danne
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  */
-@OperatorMetadata(alias = "idepix.LisePressure",
+@OperatorMetadata(alias = "Meris.LisePressure",
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -189,24 +189,25 @@ public class LisePressureOp extends BasisOp {
             throw new OperatorException("Failed to load aux data:\n" + e.getMessage());
         }
     }
+
     /**
      * This method computes the different Lise pressures for a given pixel
      *
      * @param rayleighCorrection
-     * @param pressureIndex: - 0: press_toa
-     *                       - 1: press_surface
-     *                       - 2: press_bottom_rayleigh
-     *                       - 3: press_bottom_fresnel
-     * @param szaDeg         - sun zenith angle (degrees)
-     * @param vzaDeg         - view zenith angle (degrees)
-     * @param csza           - cosine of sza
-     * @param cvza           - cosine of vza
-     * @param ssza           - sine of sza
-     * @param svza           - sine of vza
-     * @param azimDiff       - difference sun-view azimuth
-     * @param rhoToa10       - reflectance band 10
-     * @param rhoToa11       - reflectance band 11
-     * @param rhoToa12       - reflectance band 12
+     * @param pressureIndex:      - 0: press_toa
+     *                            - 1: press_surface
+     *                            - 2: press_bottom_rayleigh
+     *                            - 3: press_bottom_fresnel
+     * @param szaDeg              - sun zenith angle (degrees)
+     * @param vzaDeg              - view zenith angle (degrees)
+     * @param csza                - cosine of sza
+     * @param cvza                - cosine of vza
+     * @param ssza                - sine of sza
+     * @param svza                - sine of vza
+     * @param azimDiff            - difference sun-view azimuth
+     * @param rhoToa10            - reflectance band 10
+     * @param rhoToa11            - reflectance band 11
+     * @param rhoToa12            - reflectance band 12
      * @param w0
      * @param altitude
      * @param ecmwfPressure
@@ -245,8 +246,7 @@ public class LisePressureOp extends BasisOp {
         final int gaussIndexV = getNearestGaussIndex(vzaDeg);
 
         // Compute the reference RO_TOA at 761
-        final double rhoRef = linearInterpol(761.0d, 753.0d,
-                                             778.0d, rhoToa10, rhoToa12);
+        final double rhoRef = linearInterpol(761.0d, 753.0d, 778.0d, rhoToa10, rhoToa12);
 
         // Ratio of the two bands
         double to2Ratio = rhoToa11 / rhoRef;
@@ -277,16 +277,13 @@ public class LisePressureOp extends BasisOp {
         }
 
         // Compute Rayleigh reflectance at 761
-        double ray761 = 0.0d;
+        double ray761;
         if (rayleighCorrection != null && rayleighCorrection.getAuxdata() != null) {
             final double press = HelperFunctions.correctEcmwfPressure(
                     ecmwfPressure, altitude, pressureScaleHeight); /* DPM #2.6.15.1-3 */
-            ray761 = computeRayleighReflectanceCh11(rayleighCorrection,
-                                                    szaDeg, vzaDeg, azimDiff, press);
+            ray761 = computeRayleighReflectanceCh11(rayleighCorrection, szaDeg, vzaDeg, azimDiff, press);
         } else {
-            ray761 = computeRayleighReflectance(
-                    szaDeg, vzaDeg, theta,
-                    standardSeaSurfacePressure);
+            ray761 = computeRayleighReflectance(szaDeg, vzaDeg, theta, standardSeaSurfacePressure);
         }
 
         // Compute the Rayleigh O2 transmittance
@@ -296,8 +293,7 @@ public class LisePressureOp extends BasisOp {
                                                    filterIndex, gaussIndexS, gaussIndexV);
 
         // // Rayleigh correction on the O2 transmittance
-        final double to2RCorrected = (rhoToa11 - ray761 * trO2)
-                                     / (rhoRef - ray761);
+        final double to2RCorrected = (rhoToa11 - ray761 * trO2) / (rhoRef - ray761);
 
         // Determination of the aerosol apparent pressure
         // after Rayleigh correction
@@ -757,19 +753,20 @@ public class LisePressureOp extends BasisOp {
      *
      */
     private double computePressure(int filterIndex, int isza2, int ivza2, double ratio) {
-        double surfacePressure = 0.0; // surface pressure to compute
+
+        final double[][][] to2AtmFilterIndex = to2Atm[filterIndex];
+        double t1 = Math.log(to2AtmFilterIndex[0][isza2][ivza2]);
+        double p1 = pressureLevels[0];
+        double t = Math.log(ratio);
 
         double slope;
-        double t1, t2, t;
-        double p1, p2;
-
-        t1 = Math.log(to2Atm[filterIndex][0][isza2][ivza2]);
-        p1 = pressureLevels[0];
-        t = Math.log(ratio);
+        double t2;
+        double p2;
+        double surfacePressure; // surface pressure to compute
 
         for (int i = 1; i < NLAYER; i++) {
             p2 = pressureLevels[i];
-            t2 = Math.log(to2Atm[filterIndex][i][isza2][ivza2]);
+            t2 = Math.log(to2AtmFilterIndex[i][isza2][ivza2]);
             if (t >= t2) {
                 slope = (p2 - p1) / (t2 - t1);
                 surfacePressure = p2 + slope * (t - t2);
@@ -781,8 +778,8 @@ public class LisePressureOp extends BasisOp {
         }
         p1 = pressureLevels[NLAYER - 2];
         p2 = pressureLevels[NLAYER - 1];
-        t1 = Math.log(to2Atm[filterIndex][NLAYER - 2][isza2][ivza2]);
-        t2 = Math.log(to2Atm[filterIndex][NLAYER - 1][isza2][ivza2]);
+        t1 = Math.log(to2AtmFilterIndex[NLAYER - 2][isza2][ivza2]);
+        t2 = Math.log(to2AtmFilterIndex[NLAYER - 1][isza2][ivza2]);
 
         slope = (p2 - p1) / (t2 - t1);
         surfacePressure = p2 + slope * (t - t2);
@@ -791,21 +788,17 @@ public class LisePressureOp extends BasisOp {
     }
 
     private double computeRayleighReflectance(double thetas, double thetav, double theta, double pressure) {
-        double rayleighReflectance = 0.0d;
 
         final double conv = Math.acos(-1.0d) / 180.0;
         final double xx = 4.0 * Math.cos(thetas * conv) * Math.cos(thetav * conv);
         final double nPressure = pressure / 1013.25;
         final double l1 = 0.0246 * 0.75 * (1.0 + Math.pow(Math.cos(theta * conv), 2.0));
 
-        rayleighReflectance = nPressure * l1 / xx;
-
-        return rayleighReflectance;
+        return nPressure * l1 / xx;
     }
 
     private double computeRayleighReflectanceCh11(RayleighCorrection rayleighCorrection, double szaDeg, double vzaDeg,
                                                   double azimDiff, double pressure) {
-        double rayleighReflectance;
 
         final double sza = szaDeg * MathUtils.DTOR;
         final double vza = vzaDeg * MathUtils.DTOR;
@@ -827,23 +820,20 @@ public class LisePressureOp extends BasisOp {
         rayleighCorrection.phase_rayleigh(mus, muv, sins, sinv, phaseR);
 
         /* Rayleigh reflectance*/
-        rayleighReflectance = ref_rayleigh_ch11(rayleighCorrection, azimDiffDeg, sza, vza, mus, muv,
-                                                airMass, phaseR, tauRayleighCh11);
-
-        return rayleighReflectance;
+        return ref_rayleigh_ch11(rayleighCorrection, azimDiffDeg, sza, vza, mus, muv,
+                                 airMass, phaseR, tauRayleighCh11);
     }
 
     private double ref_rayleigh_ch11(RayleighCorrection rayleighCorrection, double delta_azimuth, double sun_zenith,
                                      double view_zenith, double mus, double muv, double airMass,
                                      double[] phaseRayl, double tauRayl) {
 
-        double rayleighReflectanceCh11;
-
-        FractIndex tsi = rayleighCorrection.getLh().getRef_rayleigh_i()[0]; /*
+        final RayleighCorrection.LocalHelperVariables localHelper = rayleighCorrection.getLh();
+        FractIndex tsi = localHelper.getRef_rayleigh_i()[0]; /*
 												 * interp coordinates for thetas
 												 * in LUT scale
 												 */
-        FractIndex tvi = rayleighCorrection.getLh().getRef_rayleigh_i()[1]; /*
+        FractIndex tvi = localHelper.getRef_rayleigh_i()[1]; /*
 												 * interp coordinates for thetav
 												 * in LUT scale
 												 */
@@ -866,41 +856,40 @@ public class LisePressureOp extends BasisOp {
            * pre-computation of multiple scatt coefficients, wavelength
            * independent
            */
+        final double[][] lhAbcd = localHelper.getAbcd();
         for (int is = 0; is < RAYSCATT_NUM_SER; is++) {
             /* DPM #2.1.17-4 to 2.1.17-7 */
+            final double[] abcdAtIS = lhAbcd[is];
             for (int ik = 0; ik < RAYSCATT_NUM_ORD; ik++) {
-                rayleighCorrection.getLh().getAbcd()[is][ik] = Interp.interpolate(Rayscatt_coeff_s[ik][is],
-                                                                                  rayleighCorrection.getLh().getRef_rayleigh_i());
+                abcdAtIS[ik] = Interp.interpolate(Rayscatt_coeff_s[ik][is], localHelper.getRef_rayleigh_i());
             }
         }
 
         double constTerm = (1.0 - Math.exp(-tauRayl * airMass)) / (4.0 * (mus + muv));
+        final double[] rhoRayl = localHelper.getRhoRayl();
         for (int is = 0; is < RAYSCATT_NUM_SER; is++) {
             /* primary scattering reflectance */
-            rayleighCorrection.getLh().getRhoRayl()[is] = phaseRayl[is] * constTerm; /*
+            rhoRayl[is] = phaseRayl[is] * constTerm; /*
 														 * DPM #2.1.17-8
 														 * CORRECTED
 														 */
 
             /* coefficient for multiple scattering correction */
             double multiScatteringCoeff = 0.0;
+            final double[] lhAbcdIS = lhAbcd[is];
             for (int ik = RAYSCATT_NUM_ORD - 1; ik >= 0; ik--) {
-                multiScatteringCoeff = 0.0246
-                                       * multiScatteringCoeff + rayleighCorrection.getLh().getAbcd()[is][ik]; /*
+                multiScatteringCoeff = 0.0246 * multiScatteringCoeff + lhAbcdIS[ik]; /*
 																	 * DPM
 																	 * #2.1.17.9
 																	 */
             }
 
             /* Fourier component of Rayleigh reflectance */
-            rayleighCorrection.getLh().getRhoRayl()[is] *= multiScatteringCoeff; /* DPM #2.1.17-10 */
+            rhoRayl[is] *= multiScatteringCoeff; /* DPM #2.1.17-10 */
         }
 
         /* Rayleigh reflectance */
-        rayleighReflectanceCh11 = rayleighCorrection.getLh().getRhoRayl()[0] + 2.0 * mud * rayleighCorrection.getLh().getRhoRayl()[1] + 2.0
-                                                                                                                                        * mu2d * rayleighCorrection.getLh().getRhoRayl()[2]; /* DPM #2.1.17-11 */
-
-        return rayleighReflectanceCh11;
+        return rhoRayl[0] + 2.0 * mud * rhoRayl[1] + 2.0 * mu2d * rhoRayl[2];   /* DPM #2.1.17-11 */
     }
 
     /*
@@ -977,7 +966,6 @@ public class LisePressureOp extends BasisOp {
     }
 
 
-
     private void computeP1(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
                            int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
                            Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
@@ -1028,10 +1016,10 @@ public class LisePressureOp extends BasisOp {
         rhoToa11 = applyStraylightCorr(detectorIndex, rhoToa10, rhoToa11);
 
         return computeLisePressures(rayleighCorrection, pressureResultIndex,
-                                                           szaDeg, vzaDeg, csza, cvza, ssza, svza, azimDiff, rhoToa10,
-                                                           rhoToa11, rhoToa12,
-                                                           centralWvl760, altitude, ecmwfPressure,
-                                                           auxData.press_scale_height, airMass);
+                                    szaDeg, vzaDeg, csza, cvza, ssza, svza, azimDiff, rhoToa10,
+                                    rhoToa11, rhoToa12,
+                                    centralWvl760, altitude, ecmwfPressure,
+                                    auxData.press_scale_height, airMass);
     }
 
     private void computePSurf(RayleighCorrection rayleighCorrection, Band band, Tile targetTile,
@@ -1067,8 +1055,7 @@ public class LisePressureOp extends BasisOp {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                 final int detectorIndex = detector.getSampleInt(x, y);
 
-                isInvalidPixel(band, isInvalid, isInvalidOcean,
-                               isInvalidLand, y, x);
+                isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x);
 
                 if (isInvalidPixel(band, isInvalid, isInvalidOcean, isInvalidLand, y, x)) {
                     targetTile.setSample(x, y, 0);
