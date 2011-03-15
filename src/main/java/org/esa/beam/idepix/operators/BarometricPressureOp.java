@@ -34,7 +34,7 @@ import java.util.StringTokenizer;
  * @author Olaf Danne
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  */
-@OperatorMetadata(alias = "idepix.BarometricPressure",
+@OperatorMetadata(alias = "Meris.BarometricPressure",
         version = "1.0",
         authors = "Olaf Danne",
         copyright = "(c) 2008 by Brockmann Consult",
@@ -95,8 +95,7 @@ public class BarometricPressureOp extends MerisBasisOp {
             getasseAltitudeBand = targetProduct.addBand("getasse_alt", ProductData.TYPE_FLOAT32);
         }
 
-        BandMathsOp bandArithmeticOp =
-            BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
+        BandMathsOp bandArithmeticOp = BandMathsOp.createBooleanExpressionBand(INVALID_EXPRESSION, sourceProduct);
         invalidBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
     }
 
@@ -139,8 +138,9 @@ public class BarometricPressureOp extends MerisBasisOp {
     private int getSurfaceTemperatureIndex(double temperature) {
         int surfaceTemperatureIndex = WATER_VAPOUR_PRESSURE_TABLE_LENGTH-2;
 
-        for (int i = 0; i < WATER_VAPOUR_PRESSURE_TABLE_LENGTH-1; i++) {
-            if (temperature < waterVapourPressureTable.getTemperature()[i]) {
+        final double[] wvpTemperatures = waterVapourPressureTable.getTemperature();
+        for (int i = 0; i < WATER_VAPOUR_PRESSURE_TABLE_LENGTH - 1; i++) {
+            if (temperature < wvpTemperatures[i]) {
                 surfaceTemperatureIndex = i;
                 break;
             }
@@ -177,8 +177,6 @@ public class BarometricPressureOp extends MerisBasisOp {
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor ignored) throws OperatorException {
         try {
-            // todo (mp 20.12.2010)  detector is never used
-//        	Tile detector = getSourceTile(sourceProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME), targetRectangle);
         	Tile slpTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), targetRectangle);    // MSLP
             Tile altitudeTile = getSourceTile(sourceProduct.getTiePointGrid("dem_alt"), targetRectangle);
 
