@@ -213,9 +213,6 @@ public class ComputeChainOp extends BasisOp {
         pbaroParameters.put("useGetasseDem", pressurePbaroGetasse);
         pbaroProduct = GPF.createProduct("Meris.BarometricPressure", pbaroParameters, sourceProduct);
 
-        // Cloud Top Pressure
-        Product ctpProduct = GPF.createProduct("Meris.CloudTopPressureOp", emptyParams, sourceProduct);
-
         // Cloud Top Pressure with FUB Straylight Correction
         Product ctpProductStraylight = null;
         // currently, apply straylight correction for RR products only...
@@ -246,6 +243,9 @@ public class ComputeChainOp extends BasisOp {
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
             pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection ||
             CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+            // Cloud Top Pressure
+            Product ctpProduct = GPF.createProduct("Meris.CloudTopPressureOp", emptyParams, sourceProduct);
+
             Map<String, Product> cloudInput = new HashMap<String, Product>(4);
             cloudInput.put("l1b", sourceProduct);
             cloudInput.put("rhotoa", rad2reflProduct);
