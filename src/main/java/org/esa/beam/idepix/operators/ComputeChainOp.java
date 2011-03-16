@@ -68,22 +68,22 @@ public class ComputeChainOp extends BasisOp {
 
 
     // IPF parameters
-    @Parameter(defaultValue = "true", label = "TOA Reflectances")
+    @Parameter(defaultValue = "true", label = " TOA Reflectances")
     private boolean ipfOutputRad2Refl = true;
 
-    @Parameter(defaultValue = "false", label = "Gas Absorption Corrected Reflectances")
+    @Parameter(defaultValue = "false", label = " Gas Absorption Corrected Reflectances")
     private boolean ipfOutputGaseous = false;
 
-    @Parameter(defaultValue = "true", label = "Land/Water Reclassification Flags")
+    @Parameter(defaultValue = "true", label = " Land/Water Reclassification Flags")
     private boolean ipfOutputLandWater = true;
 
-    @Parameter(defaultValue = "true", label = "Rayleigh Corrected Reflectances")
+    @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances")
     private boolean ipfOutputRayleigh = true;
 
-    @Parameter(defaultValue = "true", label = "L2 Cloud Top Pressure and Surface Pressure")
+    @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
     private boolean ipfOutputL2Pressures = true;
 
-    @Parameter(defaultValue = "true", label = "L2 Cloud Detection Flags")
+    @Parameter(defaultValue = "true", label = " L2 Cloud Detection Flags")
     private boolean ipfOutputL2CloudDetection = true;
 
     // QWG specific test options
@@ -91,12 +91,10 @@ public class ComputeChainOp extends BasisOp {
     private double ipfQWGUserDefinedP1PressureThreshold = 125.0;
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ipfQWGUserDefinedPScattPressureThreshold = 700.0;
-    @Parameter(label = " RhoTOA442 Threshold ", defaultValue = "0.185")
-    private double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
 
     @Parameter(label = " User Defined Delta RhoTOA442 Threshold ", defaultValue = "0.03")
     private double ipfQWGUserDefinedDeltaRhoToa442Threshold;
-    @Parameter(label ="Theoretical Glint Threshold", defaultValue="0.015")
+    @Parameter(label =" Theoretical Glint Threshold", defaultValue="0.015")
     public double ipfQWGUserDefinedGlintThreshold;
 
     @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
@@ -105,72 +103,76 @@ public class ComputeChainOp extends BasisOp {
     private double ipfQWGUserDefinedRhoToaRatio753775Threshold = 0.15;
     @Parameter(label = " MDSI Threshold ", defaultValue = "0.01")
     private double ipfQWGUserDefinedMDSIThreshold = 0.01;
+    @Parameter(label = " NDVI Threshold ", defaultValue = "0.1")
+    private double userDefinedNDVIThreshold;
 
-    @Parameter(label = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
+    @Parameter(label = " Bright Test Threshold ", defaultValue = "0.185")
+    private double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
+    @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "442",
                valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
     private int rhoAgReferenceWavelength;
 
     // Pressure product parameters
-    @Parameter(defaultValue = "true", label = "Barometric Pressure")
+    @Parameter(defaultValue = "true", label = " Barometric Pressure")
     private boolean pressureOutputPbaro = true;
 
-    @Parameter(defaultValue = "false", label = "Use GETASSE30 DEM for Barometric Pressure Computation")
+    @Parameter(defaultValue = "false", label = " Use GETASSE30 DEM for Barometric Pressure Computation")
     private boolean pressurePbaroGetasse = false;
 
-    @Parameter(defaultValue = "true", label = "Surface Pressure (FUB, O2 project)")
+    @Parameter(defaultValue = "true", label = " Surface Pressure (FUB, O2 project)")
     private boolean pressureOutputPsurfFub = true;
 
-    @Parameter(defaultValue = "false", label = "Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm")
+    @Parameter(defaultValue = "false", label = " Apply Tropical Atmosphere (instead of USS standard) in FUB algorithm")
     private boolean pressureFubTropicalAtmosphere = false;
 
     @Parameter(defaultValue = "false",
-               label = "L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
+               label = " L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
     private boolean pressureQWGOutputCtpStraylightCorrFub = false;
 
-    @Parameter(defaultValue = "true", label = "'P1' (LISE, O2 project, all surfaces)")
+    @Parameter(defaultValue = "true", label = " 'P1' (LISE, O2 project, all surfaces)")
     private boolean pressureOutputP1Lise = true;
 
-    @Parameter(defaultValue = "true", label = "Surface Pressure (LISE, O2 project, land)")
+    @Parameter(defaultValue = "true", label = " Surface Pressure (LISE, O2 project, land)")
     private boolean pressureOutputPSurfLise = true;
 
-    @Parameter(defaultValue = "true", label = "'P2' (LISE, O2 project, ocean)")
+    @Parameter(defaultValue = "true", label = " 'P2' (LISE, O2 project, ocean)")
     private boolean pressureOutputP2Lise = true;
 
-    @Parameter(defaultValue = "true", label = "'PScatt' (LISE, O2 project, ocean)")
+    @Parameter(defaultValue = "true", label = " 'PScatt' (LISE, O2 project, ocean)")
     private boolean pressureOutputPScattLise = true;
 
 
     // Cloud product parameters
-    @Parameter(defaultValue = "false", label = "Blue Band Flags")
+    @Parameter(defaultValue = "false", label = " Blue Band Flags")
     private boolean cloudOutputBlueBand = false;
 
-    @Parameter(defaultValue = "false", label = "Cloud Probability")
+    @Parameter(defaultValue = "false", label = " Cloud Probability")
     private boolean cloudOutputCloudProbability = false;
 
-    @Parameter(defaultValue = "false", label = "Combined Clouds Flags")
+    @Parameter(defaultValue = "false", label = " Combined Clouds Flags")
     private boolean cloudOutputCombinedCloud = false;
 
     // Globalbedo parameters
-    @Parameter(defaultValue = "true", label = "Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = true;
-    @Parameter(defaultValue = "false", label = "Compute only the flag band")
+    @Parameter(defaultValue = "false", label = " Compute only the flag band")
     private boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue="false", label = "Copy pressure bands (MERIS)")
+    @Parameter(defaultValue="false", label = " Copy pressure bands (MERIS)")
     private boolean gaCopyPressure;
-    @Parameter(defaultValue="false", label = "Copy input annotation bands (VGT)")
+    @Parameter(defaultValue="false", label = " Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
-    @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
+    @Parameter(defaultValue="true", label = " Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
+    @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
-    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
+    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue="true", label = "Use land-water flag from L1b product instead")
+    @Parameter(defaultValue="true", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
 
     // Coastcolour parameters
-    @Parameter(defaultValue = "false", label = "Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "false", label = " Copy input radiance/reflectance bands")
     private boolean ccCopyRadiances = false;
 
 
@@ -270,6 +272,7 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold",
                                               ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
+            cloudClassificationParameters.put("userDefinedNDVIThreshold", userDefinedNDVIThreshold);
             cloudClassificationParameters.put("rhoAgReferenceWavelength", rhoAgReferenceWavelength);
             if (isQWGAlgo() || isGlobAlbedoAlgo()) {
                 merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),

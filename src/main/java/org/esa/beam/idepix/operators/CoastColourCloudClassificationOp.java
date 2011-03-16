@@ -68,6 +68,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final String SCATT_ANGLE = "scattering_angle";
     public static final String RHO_THRESH_TERM = "rho442_thresh_term";
     public static final String RHO_GLINT = "rho_glint";
+    public static final String RHO_AG = "rho_ag";
     public static final String MDSI = "mdsi";
 
     private static final int BAND_BRIGHT_N = 0;
@@ -135,6 +136,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedRhoToaRatio753775Threshold;
     @Parameter(description = "User Defined MDSI Threshold.", defaultValue = "0.01")
     private double userDefinedMDSIThreshold;
+    @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
+    private double userDefinedNDVIThreshold;
     private double[] rhoAg;
 
 
@@ -165,6 +168,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(RHO_AG + "_" + rhoAgReferenceWavelength, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
     }
 
@@ -309,7 +313,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                             setCloudTopPressure(pixelInfo, targetTile);
                         }
 
-                        // test, 30.10.09
                         if (band.getName().equals(SCATT_ANGLE)) {
                             final double thetaScatt = calcScatteringAngle(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, thetaScatt);
@@ -318,7 +321,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoThreshOffsetTerm);
                         }
-                        // end test
 
                         if (band.getName().equals(MDSI)) {
                             setMdsi(sd, pixelInfo, targetTile);
@@ -327,6 +329,12 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         if (band.getName().equals(RHO_GLINT)) {
                             final double rhoGlint = computeRhoGlint(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoGlint);
+                        }
+
+                        if (band.getName().equals(RHO_AG + "_" + rhoAgReferenceWavelength)) {
+                            final Integer wavelengthIndex = merisWavelengthIndexMap.get(rhoAgReferenceWavelength);
+                            final double rhoAg = computeRhoAg(wavelengthIndex, sd, pixelInfo);
+                            targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoAg);
                         }
                     }
                     i++;
@@ -647,41 +655,12 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags) {
         double rhorc_442_thr;   /* threshold on rayleigh corrected reflectance */
 
-        //Rayleigh phase function coefficients, PR in DPM
-        final double[] phaseR = new double[RAYSCATT_NUM_SER];
-        //Rayleigh optical thickness, tauR0 in DPM
-        final double[] tauR = new double[L1_BAND_NUM];
-        //Rayleigh corrected reflectance
-        rhoAg = new double[L1_BAND_NUM];
-        //Rayleigh correction
-        final double[] rhoRay = new double[L1_BAND_NUM];
-
-        double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
-        double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
-        double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
-        double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
                                                                              dc.saa[pixelInfo.index]);
 
-        // scattering angle
-        // TODO (mp 20.12.2010) - result is never used
-//        final double thetaScatt = calcScatteringAngle(dc, pixelInfo);
-
-        /* Rayleigh phase function Fourier decomposition */
-        rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
-
-        double press = pixelInfo.ecmwfPressure; /* DPM #2.1.7-1 v1.1 */
-
-        /* Rayleigh optical thickness */
-        rayleighCorrection.tau_rayleigh(press, tauR); /* DPM #2.1.7-2 */
-
-        /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
-        rayleighCorrection.ref_rayleigh(deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
-                                        coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
-
         /* DPM #2.1.7-4 */
         for (int band = bb412; band <= bb900; band++) {
-            rhoAg[band] = dc.rhoToa[band][pixelInfo.index] - rhoRay[band];
+            rhoAg[band] = computeRhoAg(band, dc, pixelInfo);
         }
 
         final FractIndex[] rhoRC442index = FractIndex.createArray(3);
@@ -736,13 +715,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {
-
-            // test, 30.10.09:
             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
 //            bright_toa_f = (dc.rhoToa[bb442][pixelInfo.index] > rhoThreshOffsetTerm);
 //            bright_toa_f = (rhoAg[bb442] > rhoThreshOffsetTerm);
             final Integer wavelengthIndex = merisWavelengthIndexMap.get(rhoAgReferenceWavelength);
-            bright_toa_f = (rhoAg[wavelengthIndex] > rhoThreshOffsetTerm);
+            final double ndvi = (rhoAg[bb10] - rhoAg[bb7])/(rhoAg[bb10] + rhoAg[bb7]);
+            bright_toa_f = (rhoAg[wavelengthIndex] > rhoThreshOffsetTerm) &&
+                            ndvi > userDefinedNDVIThreshold;
             bright_f = bright_rc || bright_toa_f;
         }
 
@@ -759,6 +738,42 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
     private float computeMdsi(float rhoToa865, float rhoToa885) {
         return (rhoToa865 - rhoToa885) / (rhoToa865 + rhoToa885);
+    }
+
+    private double computeRhoAg(int band, SourceData dc, PixelInfo pixelInfo) {
+        //Rayleigh phase function coefficients, PR in DPM
+        final double[] phaseR = new double[RAYSCATT_NUM_SER];
+        //Rayleigh optical thickness, tauR0 in DPM
+        final double[] tauR = new double[L1_BAND_NUM];
+        //Rayleigh corrected reflectance
+        rhoAg = new double[L1_BAND_NUM];
+        //Rayleigh correction
+        final double[] rhoRay = new double[L1_BAND_NUM];
+
+        double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
+                                                                             dc.saa[pixelInfo.index]);
+
+        // scattering angle
+        // TODO (mp 20.12.2010) - result is never used
+//        final double thetaScatt = calcScatteringAngle(dc, pixelInfo);
+
+        /* Rayleigh phase function Fourier decomposition */
+        rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
+
+        double press = pixelInfo.ecmwfPressure; /* DPM #2.1.7-1 v1.1 */
+
+        /* Rayleigh optical thickness */
+        rayleighCorrection.tau_rayleigh(press, tauR); /* DPM #2.1.7-2 */
+
+        /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
+        rayleighCorrection.ref_rayleigh(deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
+                                        coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
+
+        return (dc.rhoToa[band][pixelInfo.index] - rhoRay[band]);
     }
 
     /**

@@ -130,6 +130,8 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     private double userDefinedRhoToaRatio753775Threshold;
     @Parameter(description = "User Defined MDSI Threshold.", defaultValue = "0.01")
     private double userDefinedMDSIThreshold;
+    @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
+    private double userDefinedNDVIThreshold;
 
 
     @Override
