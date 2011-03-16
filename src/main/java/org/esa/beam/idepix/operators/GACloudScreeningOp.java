@@ -289,11 +289,6 @@ public class GACloudScreeningOp extends Operator {
                 }
             }
 
-            // copy bit masks from source product:
-            for (int i=0; i<sourceProduct.getMaskGroup().getNodeCount(); i++) {
-                Mask mask = sourceProduct.getMaskGroup().get(i);
-                targetProduct.getMaskGroup().add(bitmaskIndex + i, mask);
-            }
         }
 
         if (gaCopyAnnotations) {
