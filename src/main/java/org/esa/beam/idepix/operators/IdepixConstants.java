@@ -50,7 +50,8 @@ public class IdepixConstants {
             "ipfQWGUserDefinedRhoToa753Threshold",
 //            "ipfQWGUserDefinedRhoToaRatio753775Threshold",
             "ipfQWGUserDefinedMDSIThreshold",
-            "ipfQWGUserDefinedGlintThreshold"
+            "ipfQWGUserDefinedGlintThreshold",
+            "rhoAgReferenceWavelength"
     };
 
 

@@ -106,6 +106,9 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = " MDSI Threshold ", defaultValue = "0.01")
     private double ipfQWGUserDefinedMDSIThreshold = 0.01;
 
+    @Parameter(label = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
+               valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
+    private int rhoAgReferenceWavelength;
 
     // Pressure product parameters
     @Parameter(defaultValue = "true", label = "Barometric Pressure")
@@ -267,6 +270,7 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold",
                                               ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
+            cloudClassificationParameters.put("rhoAgReferenceWavelength", rhoAgReferenceWavelength);
             if (isQWGAlgo() || isGlobAlbedoAlgo()) {
                 merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),
                                                       cloudClassificationParameters, cloudInput);

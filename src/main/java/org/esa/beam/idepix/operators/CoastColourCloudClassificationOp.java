@@ -31,6 +31,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
@@ -45,6 +46,7 @@ import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.util.HashMap;
 
 import static org.esa.beam.meris.l2auxdata.Constants.*;
 
@@ -87,6 +89,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
     private RayleighCorrection rayleighCorrection;
 
+    HashMap<Integer, Integer> merisWavelengthIndexMap;
+
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
     @SourceProduct(alias = "rhotoa")
@@ -121,6 +125,10 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     @Parameter(description="User Defined Glint Threshold.", defaultValue="0.015")
     public double userDefinedGlintThreshold;
 
+    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
+               valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
+    private int rhoAgReferenceWavelength;
+
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
     @Parameter(description = "User Defined RhoTOA Ratio 753/775 Threshold.", defaultValue = "0.15")
@@ -139,6 +147,10 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         }
         rayleighCorrection = new RayleighCorrection(auxData);
         createTargetProduct();
+
+        if (merisWavelengthIndexMap == null) {
+            merisWavelengthIndexMap = IdepixUtils.setupMerisWavelengthIndexMap();
+        }
     }
 
     private void createTargetProduct() {
@@ -352,9 +364,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         /* apply thresholds on pressure- step 2.1.2 */
         press_thresh(sd, pixelInfo, press.value, inputPressure, resultFlags);
 
-        if (pixelInfo.x == 56 && pixelInfo.y == 203) {
-            System.out.println();
-        }
         // Compute slopes- step 2.1.7
         spec_slopes(sd, pixelInfo, resultFlags);
         boolean bright_f = resultFlags[0];
@@ -731,7 +740,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             // test, 30.10.09:
             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
 //            bright_toa_f = (dc.rhoToa[bb442][pixelInfo.index] > rhoThreshOffsetTerm);
-            bright_toa_f = (rhoAg[bb442] > rhoThreshOffsetTerm);
+//            bright_toa_f = (rhoAg[bb442] > rhoThreshOffsetTerm);
+            final Integer wavelengthIndex = merisWavelengthIndexMap.get(rhoAgReferenceWavelength);
+            bright_toa_f = (rhoAg[wavelengthIndex] > rhoThreshOffsetTerm);
             bright_f = bright_rc || bright_toa_f;
         }
 

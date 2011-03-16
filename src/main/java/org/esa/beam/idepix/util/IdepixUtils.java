@@ -7,6 +7,8 @@ import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.IdepixConstants;
 
 import javax.swing.JOptionPane;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Olaf Danne
@@ -122,6 +124,27 @@ public class IdepixUtils {
         band.setUnit(unit);
         band.setNoDataValue(noDataValue);
         band.setNoDataValueUsed(useNoDataValue);
+    }
+
+    public static HashMap setupMerisWavelengthIndexMap() {
+        HashMap<Integer, Integer> merisWavelengthIndexMap = new HashMap<Integer, Integer>();
+        merisWavelengthIndexMap.put(412, 0);
+        merisWavelengthIndexMap.put(442, 1);
+        merisWavelengthIndexMap.put(490, 2);
+        merisWavelengthIndexMap.put(510, 3);
+        merisWavelengthIndexMap.put(560, 4);
+        merisWavelengthIndexMap.put(620, 5);
+        merisWavelengthIndexMap.put(665, 6);
+        merisWavelengthIndexMap.put(681, 7);
+        merisWavelengthIndexMap.put(705, 8);
+        merisWavelengthIndexMap.put(753, 9);
+        merisWavelengthIndexMap.put(760, 10);
+        merisWavelengthIndexMap.put(775, 11);
+        merisWavelengthIndexMap.put(865, 12);
+        merisWavelengthIndexMap.put(890, 13);
+        merisWavelengthIndexMap.put(900, 14);
+
+        return merisWavelengthIndexMap;
     }
 
 }

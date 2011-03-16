@@ -120,6 +120,10 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     @Parameter(description="User Defined Glint Threshold.", defaultValue="0.015")
     public double userDefinedGlintThreshold;
 
+    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
+               valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
+    private int rhoAgReferenceWavelength;
+
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
     @Parameter(description = "User Defined RhoTOA Ratio 753/775 Threshold.", defaultValue = "0.15")
