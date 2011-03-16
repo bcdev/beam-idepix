@@ -138,7 +138,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedMDSIThreshold;
     @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
     private double userDefinedNDVIThreshold;
-    private double[] rhoAg;
 
 
     @Override
@@ -659,6 +658,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                                                              dc.saa[pixelInfo.index]);
 
         /* DPM #2.1.7-4 */
+        double[] rhoAg = new double[L1_BAND_NUM];
         for (int band = bb412; band <= bb900; band++) {
             rhoAg[band] = computeRhoAg(band, dc, pixelInfo);
         }
@@ -745,8 +745,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         final double[] phaseR = new double[RAYSCATT_NUM_SER];
         //Rayleigh optical thickness, tauR0 in DPM
         final double[] tauR = new double[L1_BAND_NUM];
-        //Rayleigh corrected reflectance
-        rhoAg = new double[L1_BAND_NUM];
         //Rayleigh correction
         final double[] rhoRay = new double[L1_BAND_NUM];
 
