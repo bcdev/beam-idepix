@@ -126,7 +126,7 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-watermask</artifactId>
+            <artifactId>beam-watermask-operator</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
