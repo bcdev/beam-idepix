@@ -36,43 +36,43 @@ import java.util.Random;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.GACloudScreening",
-        version = "1.0",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008 by Brockmann Consult",
-        description = "This operator provides cloud screening from SPOT VGT data.")
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "This operator provides cloud screening from SPOT VGT data.")
 public class GACloudScreeningOp extends Operator {
 
-    @SourceProduct(alias="gal1b", description = "The source product.")
+    @SourceProduct(alias = "gal1b", description = "The source product.")
     Product sourceProduct;
-    @SourceProduct(alias="cloud", optional=true)
+    @SourceProduct(alias = "cloud", optional = true)
     private Product cloudProduct;
-    @SourceProduct(alias="rayleigh", optional=true)
+    @SourceProduct(alias = "rayleigh", optional = true)
     private Product rayleighProduct;
-    @SourceProduct(alias="refl", optional=true)
+    @SourceProduct(alias = "refl", optional = true)
     private Product rad2reflProduct;
-    @SourceProduct(alias="pressure", optional=true)
+    @SourceProduct(alias = "pressure", optional = true)
     private Product pressureProduct;
-    @SourceProduct(alias="pbaro", optional=true)
+    @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    @Parameter(defaultValue="false", label = "Copy input radiance bands")
+    @Parameter(defaultValue = "false", label = "Copy input radiance bands")
     private boolean gaCopyRadiances;
-    @Parameter(defaultValue="false", label = "Compute only the flag band")
+    @Parameter(defaultValue = "false", label = "Compute only the flag band")
     private boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue="false", label = "Copy pressure bands (MERIS)")
+    @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")
     private boolean gaCopyPressure;
-    @Parameter(defaultValue="false", label = "Copy input annotation bands (VGT)")
+    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
-    @Parameter(defaultValue="true", label = "Use forward view for cloud flag determination (AATSR)")
+    @Parameter(defaultValue = "true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue="true", label = "Use land-water flag from L1b product instead (faster)")
+    @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
     private boolean gaUseL1bLandWaterFlag;
 
     public static final int F_INVALID = 0;
@@ -118,12 +118,11 @@ public class GACloudScreeningOp extends Operator {
     private Band cloudFlagBand;
 
 
-
     @Override
     public void initialize() throws OperatorException {
         setSourceProductTypeId();
         try {
-            classifier = new WatermaskClassifier(wmResolution, false);
+            classifier = new WatermaskClassifier(wmResolution);
         } catch (IOException e) {
             getLogger().warning("Watermask classifier could not be initialized - fallback mode is used.");
         }
@@ -212,11 +211,13 @@ public class GACloudScreeningOp extends Operator {
             Band whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
             Band brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
+            IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE,
+                                             true);
             temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", IdepixConstants.NO_DATA_VALUE, true);
             Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl", IdepixConstants.NO_DATA_VALUE, true);
+            IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl",
+                                             IdepixConstants.NO_DATA_VALUE, true);
             Band ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", IdepixConstants.NO_DATA_VALUE, true);
             Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
@@ -224,19 +225,23 @@ public class GACloudScreeningOp extends Operator {
             Band glintRiskBand = targetProduct.addBand("glint_risk_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(glintRiskBand, "GLINT_RISK", "dl", IdepixConstants.NO_DATA_VALUE, true);
             Band radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", IdepixConstants.NO_DATA_VALUE, true);
+            IdepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", IdepixConstants.NO_DATA_VALUE,
+                                             true);
             Band radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "", IdepixConstants.NO_DATA_VALUE, true);
+            IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "",
+                                             IdepixConstants.NO_DATA_VALUE, true);
 
             if (sourceProductTypeId == IdepixConstants.PRODUCT_TYPE_MERIS && gaCopyPressure) {
                 Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
                 IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
                 Band pbaroBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pbaroBand, "Barometric Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
+                IdepixUtils.setNewBandProperties(pbaroBand, "Barometric Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                                                 true);
                 Band p1Band = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
                 IdepixUtils.setNewBandProperties(p1Band, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
                 Band pscattBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pscattBand, "PScatt Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
+                IdepixUtils.setNewBandProperties(pscattBand, "PScatt Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                                                 true);
             }
         }
         // new bit masks:
@@ -246,11 +251,14 @@ public class GACloudScreeningOp extends Operator {
             switch (sourceProductTypeId) {
                 case IdepixConstants.PRODUCT_TYPE_MERIS:
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                        Band b = ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct);
-                        b.setSourceImage(sourceProduct.getBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]).getSourceImage());
+                        Band b = ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
+                                                       targetProduct);
+                        b.setSourceImage(sourceProduct.getBand(
+                                EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]).getSourceImage());
                     }
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                        Band b = ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct, targetProduct);
+                        Band b = ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
+                                                       targetProduct);
                         b.setSourceImage(rad2reflProduct.getBand(
                                 Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)).getSourceImage());
                     }
@@ -272,8 +280,10 @@ public class GACloudScreeningOp extends Operator {
                 case IdepixConstants.PRODUCT_TYPE_VGT:
                     for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
                         // write the original reflectance bands:
-                        Band b = ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct, targetProduct);
-                        b.setSourceImage(sourceProduct.getBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i]).getSourceImage());
+                        Band b = ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct,
+                                                       targetProduct);
+                        b.setSourceImage(
+                                sourceProduct.getBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i]).getSourceImage());
                     }
                     break;
                 default:
@@ -282,7 +292,7 @@ public class GACloudScreeningOp extends Operator {
 
             // copy flag bands
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-            for (Band sb:sourceProduct.getBands()) {
+            for (Band sb : sourceProduct.getBands()) {
                 if (sb.isFlagBand()) {
                     Band tb = targetProduct.getBand(sb.getName());
                     tb.setSourceImage(sb.getSourceImage());
@@ -316,35 +326,50 @@ public class GACloudScreeningOp extends Operator {
         Mask mask;
         Random r = new Random();
 
-        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h, "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
+                                         "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h, "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
+                                         "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h, "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h,
+                                         "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h, "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
+                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h, "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
+                                         "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h, "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
+                                         "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
+                                         getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h, "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h,
+                                         "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h, "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
+        mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h,
+                                         "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
         targetProduct.getMaskGroup().add(index++, mask);
 
         return index;
@@ -382,7 +407,7 @@ public class GACloudScreeningOp extends Operator {
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
 
-    	Rectangle rectangle = targetTile.getRectangle();
+        Rectangle rectangle = targetTile.getRectangle();
 
         // MERIS variables
         Band merisL1bFlagBand;
@@ -454,8 +479,8 @@ public class GACloudScreeningOp extends Operator {
                     aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle);
                 }
 
-                aatsrBtempTiles= new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
-                aatsrBtemp= new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
+                aatsrBtempTiles = new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
+                aatsrBtemp = new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
                 for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
                     aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
                 }
@@ -477,7 +502,7 @@ public class GACloudScreeningOp extends Operator {
 
         GeoPos geoPos = null;
         try {
-			for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
@@ -513,7 +538,8 @@ public class GACloudScreeningOp extends Operator {
                                                                          brr442Tile, p1Tile,
                                                                          pbaroTile, pscattTile, brr442ThreshTile,
                                                                          merisReflectance,
-                                                                         merisBrrTiles, merisBrr, waterMaskSample, y, x);
+                                                                         merisBrrTiles, merisBrr, waterMaskSample, y,
+                                                                         x);
 
                             break;
                         case IdepixConstants.PRODUCT_TYPE_AATSR:
@@ -523,7 +549,8 @@ public class GACloudScreeningOp extends Operator {
                                                                          aatsrBtemp, waterMaskSample, y, x);
                             break;
                         case IdepixConstants.PRODUCT_TYPE_VGT:
-                            pixelProperties = createVgtPixelProperties(band, smFlagTile, vgtReflectanceTiles, vgtReflectance,
+                            pixelProperties = createVgtPixelProperties(band, smFlagTile, vgtReflectanceTiles,
+                                                                       vgtReflectance,
                                                                        waterMaskSample, y, x);
                             break;
                         default:
@@ -579,7 +606,7 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
                     }
                 }
-			}
+            }
             // set cloud buffer flag...
             if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
                 for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
@@ -600,7 +627,7 @@ public class GACloudScreeningOp extends Operator {
             }
 
         } catch (Exception e) {
-        	throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
         }
     }
 
@@ -619,8 +646,9 @@ public class GACloudScreeningOp extends Operator {
     }
 
     private AatsrPixelProperties createAatsrPixelProperties(Band band, Tile targetTile, Tile aatsrL1bFlagTile,
-                                                       Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
-                                                       Tile[] aatsrBtempTiles, float[] aatsrBtemp, byte watermaskSample, int y, int x) {
+                                                            Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
+                                                            Tile[] aatsrBtempTiles, float[] aatsrBtemp,
+                                                            byte watermaskSample, int y, int x) {
         AatsrPixelProperties pixelProperties = new AatsrPixelProperties();
         for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
             aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
@@ -648,7 +676,8 @@ public class GACloudScreeningOp extends Operator {
                                                        Tile brr442Tile, Tile p1Tile,
                                                        Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
                                                        float[] merisReflectance,
-                                                       Tile[] merisBrrTiles, float[] merisBrr, byte watermask, int y, int x) {
+                                                       Tile[] merisBrrTiles, float[] merisBrr, byte watermask, int y,
+                                                       int x) {
         MerisPixelProperties pixelProperties = new MerisPixelProperties();
 
         pixelProperties.setRefl(merisReflectance);
@@ -668,7 +697,7 @@ public class GACloudScreeningOp extends Operator {
 
     private void setIsWater(byte watermask, AbstractPixelProperties pixelProperties) {
         boolean isWater;
-        if(watermask == WatermaskClassifier.INVALID_VALUE) {
+        if (watermask == WatermaskClassifier.INVALID_VALUE) {
             // fallback
             isWater = pixelProperties.isL1Water();
         } else {
@@ -697,12 +726,14 @@ public class GACloudScreeningOp extends Operator {
      * It provides operator meta-data and is a factory for new operator instances.
      */
     public static class Spi extends OperatorSpi {
+
         public Spi() {
             super(GACloudScreeningOp.class, "idepix.GACloudScreening");
         }
     }
 
     private interface WatermaskStrategy {
+
         byte getWatermaskSample(float lat, float lon);
     }
 
