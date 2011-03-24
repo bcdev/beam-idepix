@@ -29,6 +29,14 @@ import java.awt.Rectangle;
  */
 public class IdepixCloudShadowOp extends MerisBasisOp {
 
+     // todo:
+    //  - call this Op just behind gaCloudProduct computation
+    //  - take as input the gaCloudProduct and the ctp product
+    //  - copy all bands to target product except cloud_classif_flags
+    //  - add a new flag band with same entries as ga cloud_classif_flags but with additional cloud shadow bit
+    //  - set cloud shadow bit as computed by this Op, set all other bits as in cloud_classif_flags
+
+
     private static final int MEAN_EARTH_RADIUS = 6372000;
 
     private static final int MAX_ITER = 5;
