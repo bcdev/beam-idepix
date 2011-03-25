@@ -6,8 +6,10 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -16,12 +18,17 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
+import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
+import java.awt.Color;
 import java.awt.Rectangle;
+import java.util.Random;
 
 /**
  * @author Olaf Danne
@@ -47,6 +54,10 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
     private GeoCoding geoCoding;
     private RasterDataNode altitudeRDN;
 
+    public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
+
+    private Band cloudFlagBand;
+
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
     @SourceProduct(alias = "cloud")
@@ -59,6 +70,26 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
     private int shadowWidth;
     @Parameter(description = "CTP constant value", defaultValue = "500.0")
     private float ctpConstantValue;
+
+    public static final int F_INVALID = 0;
+    public static final int F_CLOUD = 1;
+    public static final int F_CLOUD_BUFFER = 2;
+    public static final int F_CLOUD_SHADOW = 3;
+    public static final int F_CLEAR_LAND = 4;
+    public static final int F_CLEAR_WATER = 5;
+    public static final int F_CLEAR_SNOW = 6;
+    public static final int F_LAND = 7;
+    public static final int F_WATER = 8;
+    public static final int F_BRIGHT = 9;
+    public static final int F_WHITE = 10;
+    private static final int F_BRIGHTWHITE = 11;
+    private static final int F_COLD = 12;
+    public static final int F_HIGH = 13;
+    public static final int F_VEG_RISK = 14;
+    public static final int F_GLINT_RISK = 15;
+
+    private int sourceProductTypeId;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -85,6 +116,159 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
                                                shadowWidth, shadowWidth);
         geoCoding = l1bProduct.getGeoCoding();
     }
+
+    private void createTargetProduct() throws OperatorException {
+        int sceneWidth = l1bProduct.getSceneRasterWidth();
+        int sceneHeight = l1bProduct.getSceneRasterHeight();
+
+        targetProduct = new Product(l1bProduct.getName(), l1bProduct.getProductType(), sceneWidth, sceneHeight);
+
+        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = createFlagCoding(GA_CLOUD_FLAGS);
+        cloudFlagBand.setSampleCoding(flagCoding);
+        targetProduct.getFlagCodingGroup().add(flagCoding);
+
+        ProductUtils.copyTiePointGrids(l1bProduct, targetProduct);
+
+        ProductUtils.copyGeoCoding(l1bProduct, targetProduct);
+        targetProduct.setStartTime(l1bProduct.getStartTime());
+        targetProduct.setEndTime(l1bProduct.getEndTime());
+        ProductUtils.copyMetadata(l1bProduct, targetProduct);
+
+
+        // new bit masks:
+        int bitmaskIndex = setupGlobAlbedoCloudscreeningBitmasks();
+
+            switch (sourceProductTypeId) {
+                case IdepixConstants.PRODUCT_TYPE_MERIS:
+                    for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+                        Band b = ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], l1bProduct,
+                                                       targetProduct);
+                        b.setSourceImage(l1bProduct.getBand(
+                                EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]).getSourceImage());
+                    }
+                    break;
+                case IdepixConstants.PRODUCT_TYPE_AATSR:
+                    // nothing to do yet
+                    break;
+                case IdepixConstants.PRODUCT_TYPE_VGT:
+                    // nothing to do yet
+                    break;
+                default:
+                    break;
+            }
+
+            // copy flag bands
+            ProductUtils.copyFlagBands(l1bProduct, targetProduct);
+            for (Band sb : l1bProduct.getBands()) {
+                if (sb.isFlagBand()) {
+                    Band tb = targetProduct.getBand(sb.getName());
+                    tb.setSourceImage(sb.getSourceImage());
+                }
+            }
+
+
+    }
+
+    private void setSourceProductTypeId() {
+        if (l1bProduct.getProductType().startsWith("MER")) {
+            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_MERIS;
+        } else if (l1bProduct.getProductType().startsWith("ATS")) {
+            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_AATSR;
+        } else if (l1bProduct.getProductType().startsWith("VGT")) {
+            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_VGT;
+        } else {
+            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_INVALID;
+        }
+    }
+
+
+    private int setupGlobAlbedoCloudscreeningBitmasks() {
+
+        int index = 0;
+        int w = l1bProduct.getSceneRasterWidth();
+        int h = l1bProduct.getSceneRasterHeight();
+        Mask mask;
+        Random r = new Random();
+
+        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
+                                         "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
+                                         "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h,
+                                         "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
+                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
+                                         "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
+                                         "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
+                                         getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h,
+                                         "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h,
+                                         "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
+        targetProduct.getMaskGroup().add(index++, mask);
+
+        return index;
+    }
+
+    private Color getRandomColour(Random random) {
+        int rColor = random.nextInt(256);
+        int gColor = random.nextInt(256);
+        int bColor = random.nextInt(256);
+        return new Color(rColor, gColor, bColor);
+    }
+
+    private FlagCoding createFlagCoding(String flagIdentifier) {
+        FlagCoding flagCoding = new FlagCoding(flagIdentifier);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, F_INVALID), null);
+        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, F_CLEAR_LAND), null);
+        flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, F_CLEAR_WATER), null);
+        flagCoding.addFlag("F_CLEAR_SNOW", BitSetter.setFlag(0, F_CLEAR_SNOW), null);
+        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
+        flagCoding.addFlag("F_WATER", BitSetter.setFlag(0, F_WATER), null);
+        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
+        flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, F_WHITE), null);
+        flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, F_BRIGHTWHITE), null);
+        flagCoding.addFlag("F_COLD", BitSetter.setFlag(0, F_COLD), null);
+        flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, F_HIGH), null);
+        flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, F_VEG_RISK), null);
+        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, F_GLINT_RISK), null);
+
+        return flagCoding;
+    }
+
+
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {

@@ -106,11 +106,11 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = " NDVI Threshold ", defaultValue = "0.1")
     private double userDefinedNDVIThreshold;
 
-    @Parameter(label = " Bright Test Threshold ", defaultValue = "0.185")
-    private double ipfQWGUserDefinedRhoToa442Threshold = 0.185;
-    @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "442",
+    @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
+    private double ipfQWGUserDefinedRhoToa442Threshold = 0.03;   // default changed from 0.185, 2011/03/25
+    @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
                valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
-    private int rhoAgReferenceWavelength;
+    private int rhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
 
     // Pressure product parameters
     @Parameter(defaultValue = "true", label = " Barometric Pressure")

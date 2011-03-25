@@ -122,13 +122,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedRhoToa442Threshold;
 
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
-    private double userDefinedDeltaRhoToa442Threshold;
+    private double userDefinedDeltaRhoToa442Threshold;   // default changed from 0.185, 2011/03/25
     @Parameter(description="User Defined Glint Threshold.", defaultValue="0.015")
     public double userDefinedGlintThreshold;
 
-    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
+    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "865",
                valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
-    private int rhoAgReferenceWavelength;
+    private int rhoAgReferenceWavelength;     // default changed from 442, 2011/03/25
 
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
