@@ -2,13 +2,17 @@ package org.esa.beam.idepix.util;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.IdepixConstants;
+import org.esa.beam.util.BitSetter;
 
 import javax.swing.JOptionPane;
+import java.awt.Color;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Random;
 
 /**
  * @author Olaf Danne
@@ -145,6 +149,96 @@ public class IdepixUtils {
         merisWavelengthIndexMap.put(900, 14);
 
         return merisWavelengthIndexMap;
+    }
+
+    public static FlagCoding createGAFlagCoding(String flagIdentifier) {
+        FlagCoding flagCoding = new FlagCoding(flagIdentifier);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, IdepixConstants.F_INVALID), null);
+        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, IdepixConstants.F_CLOUD), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, IdepixConstants.F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, IdepixConstants.F_CLOUD_SHADOW), null);
+        flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, IdepixConstants.F_CLEAR_LAND), null);
+        flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, IdepixConstants.F_CLEAR_WATER), null);
+        flagCoding.addFlag("F_CLEAR_SNOW", BitSetter.setFlag(0, IdepixConstants.F_CLEAR_SNOW), null);
+        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, IdepixConstants.F_LAND), null);
+        flagCoding.addFlag("F_WATER", BitSetter.setFlag(0, IdepixConstants.F_WATER), null);
+        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, IdepixConstants.F_BRIGHT), null);
+        flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, IdepixConstants.F_WHITE), null);
+        flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, IdepixConstants.F_BRIGHTWHITE), null);
+        flagCoding.addFlag("F_COLD", BitSetter.setFlag(0, IdepixConstants.F_COLD), null);
+        flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, IdepixConstants.F_HIGH), null);
+        flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, IdepixConstants.F_VEG_RISK), null);
+        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, IdepixConstants.F_GLINT_RISK), null);
+
+        return flagCoding;
+    }
+
+
+    public static int setupGlobAlbedoCloudscreeningBitmasks(Product gaCloudProduct) {
+
+        int index = 0;
+        int w = gaCloudProduct.getSceneRasterWidth();
+        int h = gaCloudProduct.getSceneRasterHeight();
+        Mask mask;
+        Random r = new Random();
+
+        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
+                                         "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD_SHADOW", "Cloud shadow pixels", w, h,
+                                         "cloud_classif_flags.F_CLOUD_SHADOW", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
+                                         "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h,
+                                         "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
+                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
+                                         "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
+                                         "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h,
+                                         "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h,
+                                         "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+
+        return index;
+    }
+
+    private static Color getRandomColour(Random random) {
+        int rColor = random.nextInt(256);
+        int gColor = random.nextInt(256);
+        int bColor = random.nextInt(256);
+        return new Color(rColor, gColor, bColor);
     }
 
 }

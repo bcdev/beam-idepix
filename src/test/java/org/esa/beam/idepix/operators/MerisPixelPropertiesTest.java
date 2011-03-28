@@ -28,7 +28,7 @@ public class MerisPixelPropertiesTest extends TestCase {
         assertEquals((float) IdepixConstants.NO_DATA_VALUE, merisPixelProperties.brightValue());
 
         merisPixelProperties.setBrr442(0.5f);
-        assertEquals(1.0f, merisPixelProperties.brightValue());
+        assertEquals(0.83333f, merisPixelProperties.brightValue(), 1.E-3);
 
         merisPixelProperties.setBrr442(1.1f);
         assertEquals(1.0f, merisPixelProperties.brightValue());

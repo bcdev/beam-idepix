@@ -12,6 +12,23 @@ public class IdepixConstants {
 
     public static final String IDEPIX_VERSION = "v1.3-SNAPSHOT";
 
+    public static final int F_INVALID = 0;
+    public static final int F_CLOUD = 1;
+    public static final int F_CLOUD_BUFFER = 2;
+    public static final int F_CLOUD_SHADOW = 3;
+    public static final int F_CLEAR_LAND = 4;
+    public static final int F_CLEAR_WATER = 5;
+    public static final int F_CLEAR_SNOW = 6;
+    public static final int F_LAND = 7;
+    public static final int F_WATER = 8;
+    public static final int F_BRIGHT = 9;
+    public static final int F_WHITE = 10;
+    public static final int F_BRIGHTWHITE = 11;
+    public static final int F_COLD = 12;
+    public static final int F_HIGH = 13;
+    public static final int F_VEG_RISK = 14;
+    public static final int F_GLINT_RISK = 15;
+
     public static final String[] ipfParameterNames = new String[]{
             "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",
             "ipfOutputL2Pressures", "ipfOutputL2CloudDetection",
@@ -36,7 +53,7 @@ public class IdepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyPressure", "gaCopyAnnotations",
+            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyPressure", "gaComputeMerisCloudShadow", "gaCopyAnnotations",
             "gaUseAatsrFwardForClouds", "gaCloudBufferWidth", "wmResolution", "wmFill", "gaUseL1bLandWaterFlag"
     };
 

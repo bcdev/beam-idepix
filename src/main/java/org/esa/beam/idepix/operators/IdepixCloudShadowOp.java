@@ -6,37 +6,38 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
-import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Color;
 import java.awt.Rectangle;
-import java.util.Random;
 
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class IdepixCloudShadowOp extends MerisBasisOp {
+@OperatorMetadata(alias = "idepix.CloudShadow",
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "This operator provides cloud screening from SPOT VGT data.")
+public class IdepixCloudShadowOp extends Operator {
 
-     // todo:
+    // todo:
     //  - call this Op just behind gaCloudProduct computation
     //  - take as input the gaCloudProduct and the ctp product
     //  - copy all bands to target product except cloud_classif_flags
@@ -54,11 +55,9 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
     private GeoCoding geoCoding;
     private RasterDataNode altitudeRDN;
 
-    public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
-
     private Band cloudFlagBand;
 
-    @SourceProduct(alias = "l1b")
+    @SourceProduct(alias = "gal1b")
     private Product l1bProduct;
     @SourceProduct(alias = "cloud")
     private Product cloudProduct;
@@ -71,33 +70,13 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
     @Parameter(description = "CTP constant value", defaultValue = "500.0")
     private float ctpConstantValue;
 
-    public static final int F_INVALID = 0;
-    public static final int F_CLOUD = 1;
-    public static final int F_CLOUD_BUFFER = 2;
-    public static final int F_CLOUD_SHADOW = 3;
-    public static final int F_CLEAR_LAND = 4;
-    public static final int F_CLEAR_WATER = 5;
-    public static final int F_CLEAR_SNOW = 6;
-    public static final int F_LAND = 7;
-    public static final int F_WATER = 8;
-    public static final int F_BRIGHT = 9;
-    public static final int F_WHITE = 10;
-    private static final int F_BRIGHTWHITE = 11;
-    private static final int F_COLD = 12;
-    public static final int F_HIGH = 13;
-    public static final int F_VEG_RISK = 14;
-    public static final int F_GLINT_RISK = 15;
-
     private int sourceProductTypeId;
 
 
     @Override
     public void initialize() throws OperatorException {
-        targetProduct = createCompatibleProduct(cloudProduct, "MER_CLOUD_SHADOW", "MER_L2");
-        Band cloudBand = ProductUtils.copyBand(CombinedCloudOp.FLAG_BAND_NAME, cloudProduct, targetProduct);
-        FlagCoding sourceFlagCoding = cloudProduct.getBand(CombinedCloudOp.FLAG_BAND_NAME).getFlagCoding();
-        ProductUtils.copyFlagCoding(sourceFlagCoding, targetProduct);
-        cloudBand.setSampleCoding(targetProduct.getFlagCodingGroup().get(sourceFlagCoding.getName()));
+        setSourceProductTypeId();
+        createTargetProduct();
 
         if (l1bProduct.getProductType().equals(
                 EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
@@ -111,63 +90,62 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
             }
             altitudeRDN = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
         }
-        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                             l1bProduct.getSceneRasterHeight()),
+        rectCalculator = new RectangleExtender(new Rectangle(cloudProduct.getSceneRasterWidth(),
+                                                             cloudProduct.getSceneRasterHeight()),
                                                shadowWidth, shadowWidth);
         geoCoding = l1bProduct.getGeoCoding();
     }
 
     private void createTargetProduct() throws OperatorException {
-        int sceneWidth = l1bProduct.getSceneRasterWidth();
-        int sceneHeight = l1bProduct.getSceneRasterHeight();
+        int sceneWidth = cloudProduct.getSceneRasterWidth();
+        int sceneHeight = cloudProduct.getSceneRasterHeight();
 
-        targetProduct = new Product(l1bProduct.getName(), l1bProduct.getProductType(), sceneWidth, sceneHeight);
+        targetProduct = new Product(cloudProduct.getName(), cloudProduct.getProductType(), sceneWidth, sceneHeight);
 
-        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = createFlagCoding(GA_CLOUD_FLAGS);
+        cloudFlagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
-        ProductUtils.copyTiePointGrids(l1bProduct, targetProduct);
+        ProductUtils.copyTiePointGrids(cloudProduct, targetProduct);
 
         ProductUtils.copyGeoCoding(l1bProduct, targetProduct);
-        targetProduct.setStartTime(l1bProduct.getStartTime());
-        targetProduct.setEndTime(l1bProduct.getEndTime());
-        ProductUtils.copyMetadata(l1bProduct, targetProduct);
+        targetProduct.setStartTime(cloudProduct.getStartTime());
+        targetProduct.setEndTime(cloudProduct.getEndTime());
+        ProductUtils.copyMetadata(cloudProduct, targetProduct);
 
 
         // new bit masks:
-        int bitmaskIndex = setupGlobAlbedoCloudscreeningBitmasks();
+        IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
 
-            switch (sourceProductTypeId) {
-                case IdepixConstants.PRODUCT_TYPE_MERIS:
-                    for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                        Band b = ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], l1bProduct,
-                                                       targetProduct);
-                        b.setSourceImage(l1bProduct.getBand(
-                                EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]).getSourceImage());
+        switch (sourceProductTypeId) {
+            case IdepixConstants.PRODUCT_TYPE_MERIS:
+                for (Band b : cloudProduct.getBands()) {
+                    if (!b.isFlagBand()) {
+                        Band bCopy = ProductUtils.copyBand(b.getName(), cloudProduct,
+                                                           targetProduct);
+                        bCopy.setSourceImage(b.getSourceImage());
                     }
-                    break;
-                case IdepixConstants.PRODUCT_TYPE_AATSR:
-                    // nothing to do yet
-                    break;
-                case IdepixConstants.PRODUCT_TYPE_VGT:
-                    // nothing to do yet
-                    break;
-                default:
-                    break;
-            }
-
-            // copy flag bands
-            ProductUtils.copyFlagBands(l1bProduct, targetProduct);
-            for (Band sb : l1bProduct.getBands()) {
-                if (sb.isFlagBand()) {
-                    Band tb = targetProduct.getBand(sb.getName());
-                    tb.setSourceImage(sb.getSourceImage());
                 }
+                break;
+            case IdepixConstants.PRODUCT_TYPE_AATSR:
+                // nothing to do yet
+                break;
+            case IdepixConstants.PRODUCT_TYPE_VGT:
+                // nothing to do yet
+                break;
+            default:
+                break;
+        }
+
+        // copy L1b flags
+        ProductUtils.copyFlagBands(l1bProduct, targetProduct);
+        for (Band sb : l1bProduct.getBands()) {
+            if (sb.isFlagBand() && sb.getName().equals(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME)) {
+                Band tb = targetProduct.getBand(sb.getName());
+                tb.setSourceImage(sb.getSourceImage());
             }
-
-
+        }
     }
 
     private void setSourceProductTypeId() {
@@ -182,159 +160,61 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
         }
     }
 
-
-    private int setupGlobAlbedoCloudscreeningBitmasks() {
-
-        int index = 0;
-        int w = l1bProduct.getSceneRasterWidth();
-        int h = l1bProduct.getSceneRasterHeight();
-        Mask mask;
-        Random r = new Random();
-
-        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
-                                         "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
-                                         "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h,
-                                         "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
-                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
-                                         "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
-                                         "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h,
-                                         "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h,
-                                         "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-
-        return index;
-    }
-
-    private Color getRandomColour(Random random) {
-        int rColor = random.nextInt(256);
-        int gColor = random.nextInt(256);
-        int bColor = random.nextInt(256);
-        return new Color(rColor, gColor, bColor);
-    }
-
-    private FlagCoding createFlagCoding(String flagIdentifier) {
-        FlagCoding flagCoding = new FlagCoding(flagIdentifier);
-        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, F_INVALID), null);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
-        flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, F_CLEAR_LAND), null);
-        flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, F_CLEAR_WATER), null);
-        flagCoding.addFlag("F_CLEAR_SNOW", BitSetter.setFlag(0, F_CLEAR_SNOW), null);
-        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
-        flagCoding.addFlag("F_WATER", BitSetter.setFlag(0, F_WATER), null);
-        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
-        flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, F_WHITE), null);
-        flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, F_BRIGHTWHITE), null);
-        flagCoding.addFlag("F_COLD", BitSetter.setFlag(0, F_COLD), null);
-        flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, F_HIGH), null);
-        flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, F_VEG_RISK), null);
-        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, F_GLINT_RISK), null);
-
-        return flagCoding;
-    }
-
-
-
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
 
-        Rectangle targetRectangle = targetTile.getRectangle();
-        Rectangle sourceRectangle = rectCalculator.extend(targetRectangle);
-        Tile szaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
-                                     sourceRectangle);
-        Tile saaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
-                                     sourceRectangle);
-        Tile vzaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
-                                     sourceRectangle);
-        Tile vaaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
-                                     sourceRectangle);
-        Tile cloudTile = getSourceTile(cloudProduct.getBand(CombinedCloudOp.FLAG_BAND_NAME), sourceRectangle);
-        Tile altTile = getSourceTile(altitudeRDN, sourceRectangle);
-        Tile ctpTile = null;
-        if (ctpProduct != null) {
-            ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), sourceRectangle);
-        }
+        if (band == cloudFlagBand) {
 
-        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                targetTile.setSample(x, y, cloudTile.getSampleInt(x, y));
+            // copy flags from input cloud band...
+            Rectangle targetRectangle = targetTile.getRectangle();
+            Rectangle sourceRectangle = rectCalculator.extend(targetRectangle);
+
+            Tile inputCloudTile = getSourceTile(cloudProduct.getBand(GACloudScreeningOp.GA_CLOUD_FLAGS),
+                                                sourceRectangle);
+            copyInputCloudFlags(targetTile, targetRectangle, inputCloudTile);
+
+            // compute cloud shadow and add to cloud classification band...
+            Tile szaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
+                                         sourceRectangle);
+            Tile saaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
+                                         sourceRectangle);
+            Tile vzaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
+                                         sourceRectangle);
+            Tile vaaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
+                                         sourceRectangle);
+
+            Tile altTile = getSourceTile(altitudeRDN, sourceRectangle);
+            Tile ctpTile = null;
+            if (ctpProduct != null) {
+                ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), sourceRectangle);
             }
-        }
 
-        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
-            for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
-                if (x == 122 && y == 1014) {
-                    System.out.println("x = " + x);
-                }
-                if (x == 123 && y == 1014) {
-                    System.out.println("x = " + x);
-                }
-                if ((cloudTile.getSampleInt(x, y) & CombinedCloudOp.FLAG_CLOUD) != 0) {
-                    final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-                    final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-                    final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-                    final float vaa = vaaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
+            for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
+                for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
+                    if ((inputCloudTile.getSampleInt(x, y) & IdepixConstants.F_CLOUD) != 0) {
+                        final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
+                        final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
+                        final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
+                        final float vaa = vaaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
 
-                    PixelPos pixelPos = new PixelPos(x, y);
-                    final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
-                    float ctp;
-                    if (ctpTile != null) {
-                        ctp = ctpTile.getSampleFloat(x, y);
-                    } else {
-                        ctp = ctpConstantValue;
-                    }
-                    if (ctp > 0) {
-                        float cloudAlt = computeHeightFromPressure(ctp);
-                        GeoPos shadowPos = getCloudShadow2(altTile, sza, saa, vza, vaa, cloudAlt, geoPos);
-                        if (shadowPos != null) {
-                            pixelPos = geoCoding.getPixelPos(shadowPos, pixelPos);
+                        PixelPos pixelPos = new PixelPos(x, y);
+                        final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
+                        float ctp;
+                        if (ctpTile != null) {
+                            ctp = ctpTile.getSampleFloat(x, y);
+                        } else {
+                            ctp = ctpConstantValue;
+                        }
+                        if (ctp > 0) {
+                            float cloudAlt = computeHeightFromPressure(ctp);
+                            GeoPos shadowPos = getCloudShadow(altTile, sza, saa, vza, vaa, cloudAlt, geoPos);
+                            if (shadowPos != null) {
+                                pixelPos = geoCoding.getPixelPos(shadowPos, pixelPos);
 
-                            if (targetRectangle.contains(pixelPos)) {
-                                final int pixelX = MathUtils.floorInt(pixelPos.x);
-                                final int pixelY = MathUtils.floorInt(pixelPos.y);
-                                if (pixelX == 120 && pixelY == 1012) {
-                                    System.out.println("pixelX = " + pixelX);
-                                    System.out.println("pixelY = " + pixelY);
-                                }
-                                int flagValue = cloudTile.getSampleInt(pixelX, pixelY);
-                                if ((flagValue & CombinedCloudOp.FLAG_CLOUD_SHADOW) == 0) {
-                                    flagValue += CombinedCloudOp.FLAG_CLOUD_SHADOW;
-                                    targetTile.setSample(pixelX, pixelY, flagValue);
+                                if (targetRectangle.contains(pixelPos)) {
+                                    final int pixelX = MathUtils.floorInt(pixelPos.x);
+                                    final int pixelY = MathUtils.floorInt(pixelPos.y);
+                                    targetTile.setSample(pixelX, pixelY, IdepixConstants.F_CLOUD_SHADOW, true);
                                 }
                             }
                         }
@@ -344,12 +224,23 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
         }
     }
 
+    private void copyInputCloudFlags(Tile targetTile, Rectangle targetRectangle, Tile inputCloudTile) {
+        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                targetTile.setSample(x, y, inputCloudTile.getSampleInt(x, y));
+            }
+        }
+    }
+
     private float computeHeightFromPressure(float pressure) {
         return (float) (-8000 * Math.log(pressure / 1013.0f));
     }
 
-    private GeoPos getCloudShadow2(Tile altTile, float sza, float saa, float vza,
-                                   float vaa, float cloudAlt, GeoPos appCloud) {
+    private GeoPos getCloudShadow(Tile altTile, float sza, float saa, float vza,
+                                  float vaa, float cloudAlt, GeoPos appCloud) {
+
+        // NOTE:
+        // this is the same MERIS cloud shadow algorithm as implemented SDR module...
 
         double surfaceAlt = getAltitude(altTile, appCloud);
 
@@ -417,7 +308,7 @@ public class IdepixCloudShadowOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixCloudShadowOp.class, "Idepix.CloudShadow");
+            super(IdepixCloudShadowOp.class, "idepix.CloudShadow");
         }
     }
 }

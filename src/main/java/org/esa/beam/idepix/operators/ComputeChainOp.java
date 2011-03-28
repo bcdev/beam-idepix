@@ -63,7 +63,7 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Cloud screening parameters
-    @Parameter(defaultValue = "GlobAlbedo", valueSet = {"GlobAlbedo", "QWG",  "CoastColour"})
+    @Parameter(defaultValue = "GlobAlbedo", valueSet = {"GlobAlbedo", "QWG", "CoastColour"})
     private CloudScreeningSelector algorithm;
 
 
@@ -94,7 +94,7 @@ public class ComputeChainOp extends BasisOp {
 
     @Parameter(label = " User Defined Delta RhoTOA442 Threshold ", defaultValue = "0.03")
     private double ipfQWGUserDefinedDeltaRhoToa442Threshold;
-    @Parameter(label =" Theoretical Glint Threshold", defaultValue="0.015")
+    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
     public double ipfQWGUserDefinedGlintThreshold;
 
     @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
@@ -109,7 +109,23 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
     private double ipfQWGUserDefinedRhoToa442Threshold = 0.03;   // default changed from 0.185, 2011/03/25
     @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
-               valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
+               valueSet = {
+                       "412",
+                       "442",
+                       "490",
+                       "510",
+                       "560",
+                       "620",
+                       "665",
+                       "681",
+                       "705",
+                       "753",
+                       "760",
+                       "775",
+                       "865",
+                       "890",
+                       "900"
+               })
     private int rhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
 
     // Pressure product parameters
@@ -157,18 +173,20 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaCopyRadiances = true;
     @Parameter(defaultValue = "false", label = " Compute only the flag band")
     private boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue="false", label = " Copy pressure bands (MERIS)")
+    @Parameter(defaultValue = "false", label = " Copy pressure bands (MERIS)")
     private boolean gaCopyPressure;
-    @Parameter(defaultValue="false", label = " Copy input annotation bands (VGT)")
+    @Parameter(defaultValue = "true", label = " Compute cloud shadow (MERIS)")
+    private boolean gaComputeMerisCloudShadow;
+    @Parameter(defaultValue = "false", label = " Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
-    @Parameter(defaultValue="true", label = " Use forward view for cloud flag determination (AATSR)")
+    @Parameter(defaultValue = "true", label = " Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue="true", label = " Use land-water flag from L1b product instead")
+    @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
 
     // Coastcolour parameters
@@ -183,6 +201,7 @@ public class ComputeChainOp extends BasisOp {
     private Product pressureLiseProduct;
     private Product rad2reflProduct;
     private Product pbaroProduct;
+    private Product ctpProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -210,7 +229,7 @@ public class ComputeChainOp extends BasisOp {
         // Radiance to Reflectance
         Map<String, Object> emptyParams = new HashMap<String, Object>();
         rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams,
-                                                    sourceProduct);
+                                            sourceProduct);
 
         // Barometric Pressure
         Map<String, Object> pbaroParameters = new HashMap<String, Object>(1);
@@ -218,7 +237,7 @@ public class ComputeChainOp extends BasisOp {
         pbaroProduct = GPF.createProduct("Meris.BarometricPressure", pbaroParameters, sourceProduct);
 
         // Cloud Top Pressure
-        Product ctpProduct = GPF.createProduct("Meris.CloudTopPressureOp", emptyParams, sourceProduct);
+        ctpProduct = GPF.createProduct("Meris.CloudTopPressureOp", emptyParams, sourceProduct);
 
         // Cloud Top Pressure with FUB Straylight Correction
         Product ctpProductStraylight = null;
@@ -399,7 +418,8 @@ public class ComputeChainOp extends BasisOp {
             }
         }
         if (ipfOutputL2CloudDetection) {
-            FlagCoding flagCoding = IdepixCloudClassificationOp.createFlagCoding(IdepixCloudClassificationOp.CLOUD_FLAGS);
+            FlagCoding flagCoding = IdepixCloudClassificationOp.createFlagCoding(
+                    IdepixCloudClassificationOp.CLOUD_FLAGS);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : merisCloudProduct.getBands()) {
                 if (band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
@@ -570,6 +590,18 @@ public class ComputeChainOp extends BasisOp {
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
+
+        // add cloud shadow flag to the cloud product computed above...
+        if (gaComputeMerisCloudShadow) {
+            Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
+            gaFinalCloudInput.put("gal1b", sourceProduct);
+            gaFinalCloudInput.put("cloud", gaCloudProduct);
+            gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
+            Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
+            gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
+                                               gaFinalCloudClassificationParameters, gaFinalCloudInput);
+        }
+
         targetProduct = gaCloudProduct;
     }
 

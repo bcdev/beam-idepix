@@ -14,13 +14,15 @@ class MerisPixelProperties extends AbstractPixelProperties {
     static final float BRIGHTWHITE_THRESH = 1.5f;
     static final float NDSI_THRESH = 0.68f;
     static final float PRESSURE_THRESH = 0.9f;
-    static final float CLOUD_THRESH = 1.15f;
+    static final float CLOUD_THRESH = 1.65f;  // test, 20110328
+//    static final float CLOUD_THRESH = 1.15f;
     static final float UNCERTAINTY_VALUE = 0.5f;
     static final float LAND_THRESH = 0.9f;
     static final float WATER_THRESH = 0.9f;
     static final float BRIGHT_THRESH = 0.25f;
     static final float WHITE_THRESH = 0.9f;
-    static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+//    static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+    static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;   // test, 20110328
     static final float NDVI_THRESH = 0.7f;
     static final float TEMPERATURE_THRESH = 0.9f;
 
@@ -127,6 +129,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
             return IdepixConstants.NO_DATA_VALUE;
         }
         double value =  0.5 * brr442 / brr442Thresh;
+        value /= 3.0; // test
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
         return (float)value;
@@ -158,7 +161,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
     @Override
     public float temperatureValue() {
-        return UNCERTAINTY_VALUE; 
+        return UNCERTAINTY_VALUE;
     }
 
     @Override
@@ -195,7 +198,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
         value = Math.max(value, 0.0);
         return (float)value;
     }
-    
+
     @Override
     public float glintRiskValue() {
         return UNCERTAINTY_VALUE;

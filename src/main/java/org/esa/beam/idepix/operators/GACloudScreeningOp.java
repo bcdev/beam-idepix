@@ -6,7 +6,6 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -20,14 +19,11 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.Rad2ReflOp;
-import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.IOException;
-import java.util.Random;
 
 /**
  * Operator for GlobAlbedo cloud screening
@@ -75,21 +71,6 @@ public class GACloudScreeningOp extends Operator {
     @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
     private boolean gaUseL1bLandWaterFlag;
 
-    public static final int F_INVALID = 0;
-    public static final int F_CLOUD = 1;
-    public static final int F_CLOUD_BUFFER = 2;
-    public static final int F_CLEAR_LAND = 3;
-    public static final int F_CLEAR_WATER = 4;
-    public static final int F_CLEAR_SNOW = 5;
-    public static final int F_LAND = 6;
-    public static final int F_WATER = 7;
-    public static final int F_BRIGHT = 8;
-    public static final int F_WHITE = 9;
-    private static final int F_BRIGHTWHITE = 10;
-    private static final int F_COLD = 11;
-    public static final int F_HIGH = 12;
-    public static final int F_VEG_RISK = 13;
-    public static final int F_GLINT_RISK = 14;
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
 
@@ -194,7 +175,7 @@ public class GACloudScreeningOp extends Operator {
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
 
         cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = createFlagCoding(GA_CLOUD_FLAGS);
+        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
@@ -245,7 +226,7 @@ public class GACloudScreeningOp extends Operator {
             }
         }
         // new bit masks:
-        int bitmaskIndex = setupGlobAlbedoCloudscreeningBitmasks();
+        int bitmaskIndex = IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
 
         if (gaCopyRadiances) {
             switch (sourceProductTypeId) {
@@ -317,92 +298,6 @@ public class GACloudScreeningOp extends Operator {
         }
 
     }
-
-    private int setupGlobAlbedoCloudscreeningBitmasks() {
-
-        int index = 0;
-        int w = sourceProduct.getSceneRasterWidth();
-        int h = sourceProduct.getSceneRasterHeight();
-        Mask mask;
-        Random r = new Random();
-
-        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
-                                         "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
-                                         "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h,
-                                         "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
-                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
-                                         "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
-                                         "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
-                                         getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h,
-                                         "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h,
-                                         "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
-        targetProduct.getMaskGroup().add(index++, mask);
-
-        return index;
-    }
-
-    private Color getRandomColour(Random random) {
-        int rColor = random.nextInt(256);
-        int gColor = random.nextInt(256);
-        int bColor = random.nextInt(256);
-        return new Color(rColor, gColor, bColor);
-    }
-
-    private FlagCoding createFlagCoding(String flagIdentifier) {
-        FlagCoding flagCoding = new FlagCoding(flagIdentifier);
-        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, F_INVALID), null);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
-        flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, F_CLEAR_LAND), null);
-        flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, F_CLEAR_WATER), null);
-        flagCoding.addFlag("F_CLEAR_SNOW", BitSetter.setFlag(0, F_CLEAR_SNOW), null);
-        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
-        flagCoding.addFlag("F_WATER", BitSetter.setFlag(0, F_WATER), null);
-        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
-        flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, F_WHITE), null);
-        flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, F_BRIGHTWHITE), null);
-        flagCoding.addFlag("F_COLD", BitSetter.setFlag(0, F_COLD), null);
-        flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, F_HIGH), null);
-        flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, F_VEG_RISK), null);
-        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, F_GLINT_RISK), null);
-
-        return flagCoding;
-    }
-
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
@@ -507,6 +402,9 @@ public class GACloudScreeningOp extends Operator {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
                     WatermaskStrategy strategy = null;
+                     if (x == 330 && y == 220) {
+                            System.out.println();
+                        }
 
                     switch (sourceProductTypeId) {
                         // todo - put different sensor computations into different strategy modules
@@ -537,6 +435,7 @@ public class GACloudScreeningOp extends Operator {
                             pixelProperties = createMerisPixelProperties(merisL1bFlagTile,
                                                                          brr442Tile, p1Tile,
                                                                          pbaroTile, pscattTile, brr442ThreshTile,
+                                                                         merisReflectanceTiles,
                                                                          merisReflectance,
                                                                          merisBrrTiles, merisBrr, waterMaskSample, y,
                                                                          x);
@@ -559,20 +458,21 @@ public class GACloudScreeningOp extends Operator {
 
                     if (band == cloudFlagBand) {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
-                        targetTile.setSample(x, y, F_INVALID, pixelProperties.isInvalid());
-                        targetTile.setSample(x, y, F_CLOUD, pixelProperties.isCloud());
-                        targetTile.setSample(x, y, F_CLEAR_LAND, pixelProperties.isClearLand());
-                        targetTile.setSample(x, y, F_CLEAR_WATER, pixelProperties.isClearWater());
-                        targetTile.setSample(x, y, F_CLEAR_SNOW, pixelProperties.isClearSnow());
-                        targetTile.setSample(x, y, F_LAND, pixelProperties.isLand());
-                        targetTile.setSample(x, y, F_WATER, pixelProperties.isWater());
-                        targetTile.setSample(x, y, F_BRIGHT, pixelProperties.isBright());
-                        targetTile.setSample(x, y, F_WHITE, pixelProperties.isWhite());
-                        targetTile.setSample(x, y, F_BRIGHTWHITE, pixelProperties.isBrightWhite());
-                        targetTile.setSample(x, y, F_COLD, pixelProperties.isCold());
-                        targetTile.setSample(x, y, F_HIGH, pixelProperties.isHigh());
-                        targetTile.setSample(x, y, F_VEG_RISK, pixelProperties.isVegRisk());
-                        targetTile.setSample(x, y, F_GLINT_RISK, pixelProperties.isGlintRisk());
+                        targetTile.setSample(x, y, IdepixConstants.F_INVALID, pixelProperties.isInvalid());
+                        targetTile.setSample(x, y, IdepixConstants.F_CLOUD, pixelProperties.isCloud());
+                        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false); // not computed here
+                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, pixelProperties.isClearLand());
+                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, pixelProperties.isClearWater());
+                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, pixelProperties.isClearSnow());
+                        targetTile.setSample(x, y, IdepixConstants.F_LAND, pixelProperties.isLand());
+                        targetTile.setSample(x, y, IdepixConstants.F_WATER, pixelProperties.isWater());
+                        targetTile.setSample(x, y, IdepixConstants.F_BRIGHT, pixelProperties.isBright());
+                        targetTile.setSample(x, y, IdepixConstants.F_WHITE, pixelProperties.isWhite());
+                        targetTile.setSample(x, y, IdepixConstants.F_BRIGHTWHITE, pixelProperties.isBrightWhite());
+                        targetTile.setSample(x, y, IdepixConstants.F_COLD, pixelProperties.isCold());
+                        targetTile.setSample(x, y, IdepixConstants.F_HIGH, pixelProperties.isHigh());
+                        targetTile.setSample(x, y, IdepixConstants.F_VEG_RISK, pixelProperties.isVegRisk());
+                        targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, pixelProperties.isGlintRisk());
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
@@ -585,6 +485,9 @@ public class GACloudScreeningOp extends Operator {
                     } else if (band == temperatureBand) {
                         targetTile.setSample(x, y, pixelProperties.temperatureValue());
                     } else if ("spectral_flatness_value".equals(band.getName())) {
+                         if (x == 330 && y == 220) {
+                            System.out.println();
+                        }
                         targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
                     } else if ("ndvi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
@@ -611,14 +514,14 @@ public class GACloudScreeningOp extends Operator {
             if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
                 for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                     for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                        if (targetTile.getSampleBit(x, y, F_CLOUD)) {
+                        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
                             int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x);
                             int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - 1);
                             int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y);
                             int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - 1);
                             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                    targetTile.setSample(i, j, F_CLOUD_BUFFER, true);
+                                    targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                                 }
                             }
                         }
@@ -675,10 +578,21 @@ public class GACloudScreeningOp extends Operator {
     private PixelProperties createMerisPixelProperties(Tile merisL1bFlagTile,
                                                        Tile brr442Tile, Tile p1Tile,
                                                        Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
+                                                       Tile[] merisReflectanceTiles,
                                                        float[] merisReflectance,
                                                        Tile[] merisBrrTiles, float[] merisBrr, byte watermask, int y,
                                                        int x) {
         MerisPixelProperties pixelProperties = new MerisPixelProperties();
+
+
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
+//            if (band.getName().equals(EnvisatConstants.MERIS_L1B_BAND_NAMES[i])) {
+//                targetTile.setSample(x, y, merisReflectance[i]);
+//            }
+        }
+
+
 
         pixelProperties.setRefl(merisReflectance);
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
@@ -706,6 +620,7 @@ public class GACloudScreeningOp extends Operator {
         pixelProperties.setIsWater(isWater);
     }
 
+    // currently not used
     private void printPixelFeatures(PixelProperties pixelProperties) {
         System.out.println("bright            = " + pixelProperties.brightValue());
         System.out.println("white             = " + pixelProperties.whiteValue());
