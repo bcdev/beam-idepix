@@ -19,7 +19,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
@@ -34,16 +33,8 @@ import java.awt.Rectangle;
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
-                  description = "This operator provides cloud screening from SPOT VGT data.")
+                  description = "This operator provides a sensor-dependent cloud shadow algorithm.")
 public class IdepixCloudShadowOp extends Operator {
-
-    // todo:
-    //  - call this Op just behind gaCloudProduct computation
-    //  - take as input the gaCloudProduct and the ctp product
-    //  - copy all bands to target product except cloud_classif_flags
-    //  - add a new flag band with same entries as ga cloud_classif_flags but with additional cloud shadow bit
-    //  - set cloud shadow bit as computed by this Op, set all other bits as in cloud_classif_flags
-
 
     private static final int MEAN_EARTH_RADIUS = 6372000;
 
@@ -69,6 +60,9 @@ public class IdepixCloudShadowOp extends Operator {
     private int shadowWidth;
     @Parameter(description = "CTP constant value", defaultValue = "500.0")
     private float ctpConstantValue;
+
+    @Parameter(description = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net")
+    private String ctpMode;
 
     private int sourceProductTypeId;
 
@@ -114,8 +108,7 @@ public class IdepixCloudShadowOp extends Operator {
         targetProduct.setEndTime(cloudProduct.getEndTime());
         ProductUtils.copyMetadata(cloudProduct, targetProduct);
 
-
-        // new bit masks:
+        // set bit masks:
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
 
         switch (sourceProductTypeId) {
@@ -128,14 +121,11 @@ public class IdepixCloudShadowOp extends Operator {
                     }
                 }
                 break;
+            // todo: define and implement algorithms for AATSR, VGT
             case IdepixConstants.PRODUCT_TYPE_AATSR:
-                // nothing to do yet
-                break;
+                throw new OperatorException("No cloud shadow algorithm available for AATSR");
             case IdepixConstants.PRODUCT_TYPE_VGT:
-                // nothing to do yet
-                break;
-            default:
-                break;
+                throw new OperatorException("No cloud shadow algorithm available for VGT");
         }
 
         // copy L1b flags
@@ -191,7 +181,7 @@ public class IdepixCloudShadowOp extends Operator {
 
             for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
-                    if ((inputCloudTile.getSampleInt(x, y) & IdepixConstants.F_CLOUD) != 0) {
+                    if ((inputCloudTile.getSampleInt(x, y) & (int) Math.pow(2.0, IdepixConstants.F_CLOUD)) != 0) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
@@ -199,11 +189,12 @@ public class IdepixCloudShadowOp extends Operator {
 
                         PixelPos pixelPos = new PixelPos(x, y);
                         final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
-                        float ctp;
-                        if (ctpTile != null) {
+                        float ctp = 500.0f;
+                        // use ctp as taken from user option (value set)
+                        if (ctpTile != null && ctpMode.equals(IdepixConstants.ctpModeDefault)) {
                             ctp = ctpTile.getSampleFloat(x, y);
-                        } else {
-                            ctp = ctpConstantValue;
+                        } else if (!ctpMode.equals(IdepixConstants.ctpModeDefault)) {
+                            ctp = Integer.parseInt(ctpMode.substring(0,3));
                         }
                         if (ctp > 0) {
                             float cloudAlt = computeHeightFromPressure(ctp);

@@ -53,7 +53,7 @@ public class IdepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyPressure", "gaComputeMerisCloudShadow", "gaCopyAnnotations",
+            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyPressure", "gaComputeMerisCloudShadow", "ctpMode", "gaCopyAnnotations",
             "gaUseAatsrFwardForClouds", "gaCloudBufferWidth", "wmResolution", "wmFill", "gaUseL1bLandWaterFlag"
     };
 
@@ -176,4 +176,6 @@ public class IdepixConstants {
     public static final int CLOUDS_TAB_INDEX = 4;
     public static final int GLOBALBEDO_TAB_INDEX = 5;
     public static final int COASTCOLOUR_TAB_INDEX = 6;
+
+    public static final String ctpModeDefault = "Derive from Neural Net";
 }

@@ -177,6 +177,16 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaCopyPressure;
     @Parameter(defaultValue = "true", label = " Compute cloud shadow (MERIS)")
     private boolean gaComputeMerisCloudShadow;
+    @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
+               valueSet = {
+                       IdepixConstants.ctpModeDefault,
+                       "850 hPa",
+                       "700 hPa",
+                       "500 hPa",
+                       "400 hPa",
+                       "300 hPa"
+               })
+    private String ctpMode;
     @Parameter(defaultValue = "false", label = " Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue = "true", label = " Use forward view for cloud flag determination (AATSR)")
@@ -592,12 +602,13 @@ public class ComputeChainOp extends BasisOp {
                                            gaCloudClassificationParameters, gaCloudInput);
 
         // add cloud shadow flag to the cloud product computed above...
-        if (gaComputeMerisCloudShadow) {
+        if (gaComputeMerisCloudShadow && sourceProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
             Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
             gaFinalCloudInput.put("gal1b", sourceProduct);
             gaFinalCloudInput.put("cloud", gaCloudProduct);
             gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
             Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
+            gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
             gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
                                                gaFinalCloudClassificationParameters, gaFinalCloudInput);
         }

@@ -186,13 +186,13 @@ public class IdepixUtils {
                                          getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
-                                         getRandomColour(r), 0.5f);
+                                         Color.yellow, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
-                                         "cloud_classif_flags.F_CLOUD_BUFFER", getRandomColour(r), 0.5f);
+                                         "cloud_classif_flags.F_CLOUD_BUFFER", Color.red, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_SHADOW", "Cloud shadow pixels", w, h,
-                                         "cloud_classif_flags.F_CLOUD_SHADOW", getRandomColour(r), 0.5f);
+                                         "cloud_classif_flags.F_CLOUD_SHADOW", Color.cyan, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
                                          "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
@@ -201,7 +201,7 @@ public class IdepixUtils {
                                          "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
-                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
+                                         "cloud_classif_flags.F_CLEAR_SNOW", Color.magenta, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
                                          getRandomColour(r), 0.5f);

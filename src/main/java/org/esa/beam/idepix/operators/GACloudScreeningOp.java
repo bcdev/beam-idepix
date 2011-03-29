@@ -402,9 +402,6 @@ public class GACloudScreeningOp extends Operator {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
                     WatermaskStrategy strategy = null;
-                     if (x == 330 && y == 220) {
-                            System.out.println();
-                        }
 
                     switch (sourceProductTypeId) {
                         // todo - put different sensor computations into different strategy modules
@@ -485,9 +482,6 @@ public class GACloudScreeningOp extends Operator {
                     } else if (band == temperatureBand) {
                         targetTile.setSample(x, y, pixelProperties.temperatureValue());
                     } else if ("spectral_flatness_value".equals(band.getName())) {
-                         if (x == 330 && y == 220) {
-                            System.out.println();
-                        }
                         targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
                     } else if ("ndvi_value".equals(band.getName())) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
