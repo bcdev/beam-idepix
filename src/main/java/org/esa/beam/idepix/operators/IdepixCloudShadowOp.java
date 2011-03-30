@@ -175,8 +175,11 @@ public class IdepixCloudShadowOp extends Operator {
 
             Tile altTile = getSourceTile(altitudeRDN, sourceRectangle);
             Tile ctpTile = null;
-            if (ctpProduct != null) {
+            float ctp = 500.0f;
+            if (ctpProduct != null && ctpMode.equals(IdepixConstants.ctpModeDefault)) {
                 ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), sourceRectangle);
+            } else if (!ctpMode.equals(IdepixConstants.ctpModeDefault)) {
+                ctp = Integer.parseInt(ctpMode.substring(0, 3));
             }
 
             for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
@@ -189,12 +192,9 @@ public class IdepixCloudShadowOp extends Operator {
 
                         PixelPos pixelPos = new PixelPos(x, y);
                         final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
-                        float ctp = 500.0f;
                         // use ctp as taken from user option (value set)
-                        if (ctpTile != null && ctpMode.equals(IdepixConstants.ctpModeDefault)) {
+                        if (ctpTile != null ) {
                             ctp = ctpTile.getSampleFloat(x, y);
-                        } else if (!ctpMode.equals(IdepixConstants.ctpModeDefault)) {
-                            ctp = Integer.parseInt(ctpMode.substring(0,3));
                         }
                         if (ctp > 0) {
                             float cloudAlt = computeHeightFromPressure(ctp);
