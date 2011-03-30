@@ -184,7 +184,7 @@ public class IdepixCloudShadowOp extends Operator {
 
             for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
-                    if ((inputCloudTile.getSampleInt(x, y) & (int) Math.pow(2.0, IdepixConstants.F_CLOUD)) != 0) {
+                    if (inputCloudTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
