@@ -602,7 +602,7 @@ public class ComputeChainOp extends BasisOp {
                                            gaCloudClassificationParameters, gaCloudInput);
 
         // add cloud shadow flag to the cloud product computed above...
-        if (gaComputeMerisCloudShadow && sourceProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
+        if (gaComputeMerisCloudShadow && IdepixUtils.isValidMerisProduct(sourceProduct)) {
             Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
             gaFinalCloudInput.put("gal1b", sourceProduct);
             gaFinalCloudInput.put("cloud", gaCloudProduct);
