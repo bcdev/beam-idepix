@@ -16,13 +16,12 @@ import org.esa.beam.util.ProductUtils;
 
 import java.awt.Rectangle;
 
-import static org.esa.beam.idepix.util.OperatorUtils.*;
-
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 public class MerisBrrCorrectionOp extends Operator {
+
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
     @SourceProduct(alias = "brr")
@@ -46,10 +45,12 @@ public class MerisBrrCorrectionOp extends Operator {
 
         targetProduct = OperatorUtils.createCompatibleProduct(l1bProduct, "MER", productType);
         for (String bandName : brrProduct.getBandNames()) {
-            if (!brrProduct.getBand(bandName).isFlagBand()) {
-                Band targetBand = ProductUtils.copyBand(bandName, brrProduct, targetProduct);
-                if (!bandName.startsWith("brr")) {
-                    targetBand.setSourceImage(brrProduct.getBand(bandName).getSourceImage());
+            if (!targetProduct.containsBand(bandName)) {
+                if (!brrProduct.getBand(bandName).isFlagBand()) {
+                    Band targetBand = ProductUtils.copyBand(bandName, brrProduct, targetProduct);
+                    if (!bandName.startsWith("brr")) {
+                        targetBand.setSourceImage(brrProduct.getBand(bandName).getSourceImage());
+                    }
                 }
             }
         }
@@ -69,8 +70,10 @@ public class MerisBrrCorrectionOp extends Operator {
         Tile rad2reflTile = getSourceTile(rad2reflProduct.getBand("rho_toa_" + bandNumber), rectangle);
         Tile isInvalid = getSourceTile(invalidBand, rectangle);
 
-        Tile surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE), rectangle);
-        Tile cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP), rectangle);
+        Tile surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE),
+                                                 rectangle);
+        Tile cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP),
+                                                  rectangle);
         Tile cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
         Tile landFlagsTile = getSourceTile(landProduct.getBand(LandClassificationOp.LAND_FLAGS), rectangle);
 
@@ -99,6 +102,7 @@ public class MerisBrrCorrectionOp extends Operator {
     }
 
     public static class Spi extends OperatorSpi {
+
         public Spi() {
             super(MerisBrrCorrectionOp.class);
         }

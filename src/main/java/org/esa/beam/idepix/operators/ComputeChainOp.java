@@ -417,13 +417,17 @@ public class ComputeChainOp extends BasisOp {
 
         if (ipfOutputRad2Refl) {
             for (Band band : rad2reflProduct.getBands()) {
-                targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    targetProduct.addBand(band);
+                }
             }
         }
         if (ipfOutputL2Pressures) {
             for (Band band : merisCloudProduct.getBands()) {
-                if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
-                    targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
+                        targetProduct.addBand(band);
+                    }
                 }
             }
         }
@@ -454,71 +458,89 @@ public class ComputeChainOp extends BasisOp {
             FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : rayleighProduct.getBands()) {
-                if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
-                    band.setSampleCoding(flagCoding);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
+                        band.setSampleCoding(flagCoding);
+                    }
+                    targetProduct.addBand(band);
                 }
-                targetProduct.addBand(band);
             }
         }
         if (ipfOutputLandWater) {
             FlagCoding flagCoding = LandClassificationOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : landProduct.getBands()) {
-                if (band.getName().equals(LandClassificationOp.LAND_FLAGS)) {
-                    band.setSampleCoding(flagCoding);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(LandClassificationOp.LAND_FLAGS)) {
+                        band.setSampleCoding(flagCoding);
+                    }
+                    targetProduct.addBand(band);
                 }
-                targetProduct.addBand(band);
             }
         }
 
         if (straylightCorr && pressureQWGOutputCtpStraylightCorrFub) {
             for (Band band : ctpProductStraylight.getBands()) {
-                if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
-                    targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
+                        targetProduct.addBand(band);
+                    }
                 }
             }
         }
 
         if (pressureOutputPbaro) {
             for (Band band : pbaroProduct.getBands()) {
-                targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    targetProduct.addBand(band);
+                }
             }
         }
 
         if (pressureOutputPsurfFub) {
             for (Band band : psurfNNProduct.getBands()) {
-                targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    targetProduct.addBand(band);
+                }
             }
         }
 
         if (pressureOutputP1Lise) {
             for (Band band : pressureLiseProduct.getBands()) {
-                if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P1)) {
-                    targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P1)) {
+                        targetProduct.addBand(band);
+                    }
                 }
             }
         }
 
         if (pressureOutputPSurfLise) {
             for (Band band : pressureLiseProduct.getBands()) {
-                if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSURF)) {
-                    targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSURF)) {
+                        targetProduct.addBand(band);
+                    }
                 }
             }
         }
 
         if (pressureOutputP2Lise) {
             for (Band band : pressureLiseProduct.getBands()) {
-                if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P2)) {
-                    targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P2)) {
+                        targetProduct.addBand(band);
+                    }
                 }
             }
         }
 
         if (pressureOutputPScattLise) {
             for (Band band : pressureLiseProduct.getBands()) {
-                if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSCATT)) {
-                    targetProduct.addBand(band);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSCATT)) {
+                        targetProduct.addBand(band);
+                    }
                 }
             }
         }
@@ -527,10 +549,12 @@ public class ComputeChainOp extends BasisOp {
             FlagCoding flagCoding = BlueBandOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : blueBandProduct.getBands()) {
-                if (band.getName().equals(BlueBandOp.BLUE_FLAG_BAND)) {
-                    band.setSampleCoding(flagCoding);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(BlueBandOp.BLUE_FLAG_BAND)) {
+                        band.setSampleCoding(flagCoding);
+                    }
+                    targetProduct.addBand(band);
                 }
-                targetProduct.addBand(band);
             }
         }
 
@@ -538,10 +562,12 @@ public class ComputeChainOp extends BasisOp {
             FlagCoding flagCoding = CloudProbabilityOp.createCloudFlagCoding(targetProduct);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : cloudProbabilityProduct.getBands()) {
-                if (band.getName().equals(CloudProbabilityOp.CLOUD_FLAG_BAND)) {
-                    band.setSampleCoding(flagCoding);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(CloudProbabilityOp.CLOUD_FLAG_BAND)) {
+                        band.setSampleCoding(flagCoding);
+                    }
+                    targetProduct.addBand(band);
                 }
-                targetProduct.addBand(band);
             }
         }
 
@@ -549,10 +575,12 @@ public class ComputeChainOp extends BasisOp {
             FlagCoding flagCoding = CombinedCloudOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : combinedCloudProduct.getBands()) {
-                if (band.getName().equals(CombinedCloudOp.FLAG_BAND_NAME)) {
-                    band.setSampleCoding(flagCoding);
+                if (!targetProduct.containsBand(band.getName())) {
+                    if (band.getName().equals(CombinedCloudOp.FLAG_BAND_NAME)) {
+                        band.setSampleCoding(flagCoding);
+                    }
+                    targetProduct.addBand(band);
                 }
-                targetProduct.addBand(band);
             }
         }
 
