@@ -21,13 +21,13 @@
             Reflectance) modules, which provide additional Java classes used by IDEPIX:
             <itemizedlist mark='bullet'>
                 <listitem>
-                    beam-idepix-1.2-SNAPSHOT.jar
+                    beam-idepix-1.3.jar
                 </listitem>
                 <listitem>
-                    beam-meris-brr-2.2.1.jar
+                    beam-meris-brr-2.3.jar
                 </listitem>
                 <listitem>
-                    beam-meris-sdr-2.2.1.jar
+                    beam-meris-sdr-2.3.jar
                 </listitem>
             </itemizedlist>
             These files need to be copied into the 'modules' folder of the BEAM
