@@ -800,7 +800,7 @@ public class LisePressureOp extends BasisOp {
 
     private double computeRayleighReflectanceCh11(RayleighCorrection rayleighCorrection, L2AuxData auxData, double szaDeg, double vzaDeg,
                                                   double azimDiff, double pressure) {
-
+        // todo: refactor: code duplication R1
         final double sza = szaDeg * MathUtils.DTOR;
         final double vza = vzaDeg * MathUtils.DTOR;
         final double sins = Math.sin(sza);
@@ -980,7 +980,7 @@ public class LisePressureOp extends BasisOp {
                                      final int detectorIndex) {
         final float szaDeg = sza.getSampleFloat(x, y);
         final float vzaDeg = vza.getSampleFloat(x, y);
-
+        // todo: refactor: code duplication R1
         final double csza = Math.cos(MathUtils.DTOR * szaDeg);
         final double cvza = Math.cos(MathUtils.DTOR * vzaDeg);
         final double ssza = Math.sin(MathUtils.DTOR * szaDeg);
@@ -1091,6 +1091,7 @@ public class LisePressureOp extends BasisOp {
             Raster isInvalid = null;
 
             // TODO: set band names as constants
+            // todo: optimize: use band == p1LiseBand instead
             int pressureResultIndex = -1;
             if ("p1_lise".equals(band.getName()) && outputP1) {
                 pressureResultIndex = 0;

@@ -543,11 +543,14 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     }
 
     private double calcScatteringAngle(SourceData dc, PixelInfo pixelInfo) {
+        // todo: refactor: code duplication R1
+        // todo: optimize: compute value once, store as dc.sins, dc.sinv, etc.
         double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
         double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
         double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         // delta azimuth in degree
+        // todo: optimize: compute value once, store as dc.deltaAzimuth
         final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
                                                                              dc.saa[pixelInfo.index]);
 
@@ -585,10 +588,13 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         //Rayleigh correction
         final double[] rhoRay = new double[L1_BAND_NUM];
 
+        // todo: refactor: code duplication R1
+        // todo: optimize: compute value once, store as dc.sins, dc.sinv, etc.
         double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
         double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
         double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        // todo: optimize: compute value once, store as dc.deltaAzimuth
         final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
                                                                              dc.saa[pixelInfo.index]);
 
