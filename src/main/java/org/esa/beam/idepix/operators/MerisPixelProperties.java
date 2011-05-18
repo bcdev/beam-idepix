@@ -11,23 +11,31 @@ import org.esa.beam.util.math.MathUtils;
  */
 class MerisPixelProperties extends AbstractPixelProperties {
 
+    // todo: test changes introduced on 18/07/2011 by AR and activate if ok
+
     static final float BRIGHTWHITE_THRESH = 1.5f;
     static final float NDSI_THRESH = 0.68f;
     static final float PRESSURE_THRESH = 0.9f;
-    static final float CLOUD_THRESH = 1.65f;  // test, 20110328
-//    static final float CLOUD_THRESH = 1.15f;
+        static final float CLOUD_THRESH = 1.65f;  // test, 20110328
+//    protected static final float CLOUD_THRESH = 0.2875f;   // AR, 18/05/11
+    //    static final float CLOUD_THRESH = 1.15f;
     static final float UNCERTAINTY_VALUE = 0.5f;
     static final float LAND_THRESH = 0.9f;
     static final float WATER_THRESH = 0.9f;
     static final float BRIGHT_THRESH = 0.25f;
     static final float WHITE_THRESH = 0.9f;
-//    static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+    //    static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
     static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;   // test, 20110328
     static final float NDVI_THRESH = 0.7f;
     static final float TEMPERATURE_THRESH = 0.9f;
 
-    private static final float GLINT_THRESH =  0.9f;
+    //    private static final float GLINT_THRESH =  0.9f;
+    protected static final float GLINT_THRESH = 0.5f;        // AR, 18/05/11
 
+    protected static final float P1_THRESH = 0.15f;
+
+
+    public static final int F_BRIGHT_RC = 2;
     public static final int L1B_F_LAND = 4;
     private float brr442;
     private float brr442Thresh;
@@ -35,6 +43,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
     private float pscatt;
     private float pbaro;
 
+    protected boolean qwgCloudClassifFlagBrightRc;
     private boolean l1FlagLand;
     private float[] refl;
     private float[] brr;
@@ -49,6 +58,10 @@ class MerisPixelProperties extends AbstractPixelProperties {
     public boolean isCloud() {
         return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
     }
+    // AR, 18/05/11:
+//    public boolean isCloud() {
+//        return ((whiteValue() + brightValue() + pressureValue() + temperatureValue()) / 4.0f > CLOUD_THRESH && !isClearSnow());
+//    }
 
     @Override
     public boolean isClearLand() {
@@ -72,7 +85,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
         if (isInvalid()) {
             return false;
         }
-         float waterValue;
+        float waterValue;
         if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
             waterValue = radiometricWaterValue();
         } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
@@ -112,6 +125,11 @@ class MerisPixelProperties extends AbstractPixelProperties {
     public boolean isGlintRisk() {
         return (isWater() && isCloud() && (glintRiskValue() > GLINT_THRESH));
     }
+    // AR, 18/05/11:
+//    public boolean isGlintRisk() {
+//        return (isWater() && glintRiskValue() > GLINT_THRESH);
+//    }
+
 
     @Override
     public boolean isHigh() {
@@ -128,21 +146,45 @@ class MerisPixelProperties extends AbstractPixelProperties {
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
-        double value =  0.5 * brr442 / brr442Thresh;
+        double value = 0.5 * brr442 / brr442Thresh;
         value /= 3.0; // test
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
-        return (float)value;
+        return (float) value;
     }
+
+    // AR, 18/05/11:
+//    public float brightValue() {
+//        if (isGlintRisk()) {
+//            if (qwgCloudClassifFlagBrightRc) {
+//                return 1.0f;
+//            } else {
+//                return 0.0f;
+//            }
+//        } else {
+//            if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
+//                return IdepixConstants.NO_DATA_VALUE;
+//            }
+//            double value = 0.5 * brr442 / brr442Thresh;
+//            value /= 3.0; // test
+//            value = Math.min(value, 1.0);
+//            value = Math.max(value, 0.0);
+//            return (float) value;
+//        }
+//    }
+
 
     @Override
     public float spectralFlatnessValue() {
         final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[2],
-                                                          IdepixConstants. MERIS_WAVELENGTHS[0], IdepixConstants. MERIS_WAVELENGTHS[2]);
+                                                        IdepixConstants.MERIS_WAVELENGTHS[0],
+                                                        IdepixConstants.MERIS_WAVELENGTHS[2]);
         final double slope1 = IdepixUtils.spectralSlope(refl[4], refl[5],
-                                                                  IdepixConstants. MERIS_WAVELENGTHS[4], IdepixConstants. MERIS_WAVELENGTHS[5]);
+                                                        IdepixConstants.MERIS_WAVELENGTHS[4],
+                                                        IdepixConstants.MERIS_WAVELENGTHS[5]);
         final double slope2 = IdepixUtils.spectralSlope(refl[6], refl[9],
-                                                                  IdepixConstants. MERIS_WAVELENGTHS[6], IdepixConstants. MERIS_WAVELENGTHS[9]);
+                                                        IdepixConstants.MERIS_WAVELENGTHS[6],
+                                                        IdepixConstants.MERIS_WAVELENGTHS[9]);
 
 
         final double flatness = 1.0f - Math.abs(1000.0 * (slope0 + slope1 + slope2) / 3.0);
@@ -166,20 +208,20 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
     @Override
     public float ndsiValue() {
-        double value =  (brr[11]-brr[12])/(brr[11]+brr[12]);
-        value = 20.0*(value + 0.02);
+        double value = (brr[11] - brr[12]) / (brr[11] + brr[12]);
+        value = 20.0 * (value + 0.02);
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
-        return (float)value;
+        return (float) value;
     }
 
     @Override
     public float ndviValue() {
-        double value = (brr[9]-brr[4])/(brr[9]+brr[4]);
-        value = 0.5*(value + 1);
+        double value = (brr[9] - brr[4]) / (brr[9] + brr[4]);
+        value = 0.5 * (value + 1);
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
-        return (float)value;
+        return (float) value;
     }
 
     @Override
@@ -187,22 +229,59 @@ class MerisPixelProperties extends AbstractPixelProperties {
         double value;
         if (isLand()) {
 //            value = 1.0 - p1 / 1000.0;
-            value = pbaro/1000.0 - p1 / 1000.0;         // we need to take into account the height of the land, e.g. in Himalaya!
+            value = pbaro / 1000.0 - p1 / 1000.0;         // we need to take into account the height of the land, e.g. in Himalaya!
         } else if (isWater()) {
 //            value = 1.0 - pscatt / 1000.0;
-            value = pbaro/1000.0 - pscatt / 1000.0;    // we even need to take into account the height of the water, e.g. small lakes in Himalaya!
+            value = pbaro / 1000.0 - pscatt / 1000.0;    // we even need to take into account the height of the water, e.g. small lakes in Himalaya!
         } else {
             value = UNCERTAINTY_VALUE;
         }
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
-        return (float)value;
+        return (float) value;
     }
+    // AR, 18/05/11:
+//    public float pressureValue() {
+//        double value;
+//        if (isGlintRisk()) {
+//            value = 1.00 - p1 / 1000.0;
+//        } else if (isLand()) {
+//            value = 1.0 - p1 / 1000.0;
+//        } else if (isWater()) {
+//            value = 1.25 - pscatt / 800.0;
+//        } else {
+//            value = UNCERTAINTY_VALUE;
+//        }
+//        value = Math.min(value, 1.0);
+//        value = Math.max(value, 0.0);
+//        return (float) value;
+//    }
+
 
     @Override
+//    public float glintRiskValue() {
+//        return UNCERTAINTY_VALUE;
+//    }
+    // AR, 18/05/11:
     public float glintRiskValue() {
-        return UNCERTAINTY_VALUE;
+        if (p1Value() < P1_THRESH) {
+            return p1Value() * (1.0f / 0.15f);
+        } else {
+            return 0.0f;
+        }
     }
+
+
+    //P1 to calculate pressure value for glint
+    // AR, 18/05/11:
+    private float p1Value() {
+        double value;
+        value = 1.0 - p1 / 1000.0;
+        value = Math.min(value, 1.0);
+        value = Math.max(value, 0.0);
+        return (float) value;
+    }
+
 
     @Override
     public float aPrioriLandValue() {
@@ -221,7 +300,9 @@ class MerisPixelProperties extends AbstractPixelProperties {
             return UNCERTAINTY_VALUE;
         } else if (!l1FlagLand) {
             return 1.0f;
-        } else return 0.0f;
+        } else {
+            return 0.0f;
+        }
     }
 
     @Override
@@ -241,7 +322,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
     @Override
     public float radiometricWaterValue() {
-         return UNCERTAINTY_VALUE;
+        return UNCERTAINTY_VALUE;
 
         // todo: clarify value for REFL620_WATER_THRESH (not yet in ATBD) then implement the following
 //        if (isCloud()) {
@@ -296,4 +377,9 @@ class MerisPixelProperties extends AbstractPixelProperties {
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
     }
+
+    public void setQwgCloudClassifFlagBrightRc(boolean qwgCloudClassifFlagBrightRc) {
+        this.qwgCloudClassifFlagBrightRc = qwgCloudClassifFlagBrightRc;
+    }
+
 }

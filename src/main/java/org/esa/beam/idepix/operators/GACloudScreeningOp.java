@@ -97,6 +97,19 @@ public class GACloudScreeningOp extends Operator {
 
 
     private Band cloudFlagBand;
+    private Band brightBand;
+    private Band whiteBand;
+    private Band brightWhiteBand;
+    private Band spectralFlatnessBand;
+    private Band ndviBand;
+    private Band ndsiBand;
+    private Band glintRiskBand;
+    private Band radioLandBand;
+    private Band radioWaterBand;
+    private Band pressureBand;
+    private Band pbaroOutputBand;
+    private Band p1OutputBand;
+    private Band pscattOutputBand;
 
 
     @Override
@@ -187,41 +200,41 @@ public class GACloudScreeningOp extends Operator {
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
 
         if (!gaComputeFlagsOnly) {
-            Band brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
+            brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightBand, "Brightness", "dl", IdepixConstants.NO_DATA_VALUE, true);
-            Band whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
+            whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
-            Band brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
+            brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE,
                                              true);
             temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", IdepixConstants.NO_DATA_VALUE, true);
-            Band spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
+            spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl",
                                              IdepixConstants.NO_DATA_VALUE, true);
-            Band ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
+            ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", IdepixConstants.NO_DATA_VALUE, true);
-            Band ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
+            ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndsiBand, "NDSI", "dl", IdepixConstants.NO_DATA_VALUE, true);
-            Band glintRiskBand = targetProduct.addBand("glint_risk_value", ProductData.TYPE_FLOAT32);
+            glintRiskBand = targetProduct.addBand("glint_risk_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(glintRiskBand, "GLINT_RISK", "dl", IdepixConstants.NO_DATA_VALUE, true);
-            Band radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
+            radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", IdepixConstants.NO_DATA_VALUE,
                                              true);
-            Band radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
+            radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "",
                                              IdepixConstants.NO_DATA_VALUE, true);
 
             if (sourceProductTypeId == IdepixConstants.PRODUCT_TYPE_MERIS && gaCopyPressure) {
-                Band pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
+                pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
                 IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
-                Band pbaroBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pbaroBand, "Barometric Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
+                IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
                                                  true);
-                Band p1Band = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(p1Band, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
-                Band pscattBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pscattBand, "PScatt Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
+                IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
+                pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
+                IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
                                                  true);
             }
         }
@@ -307,6 +320,8 @@ public class GACloudScreeningOp extends Operator {
         // MERIS variables
         Band merisL1bFlagBand;
         Tile merisL1bFlagTile = null;
+        Band merisQwgCloudClassifFlagBand;
+        Tile merisQwgCloudClassifFlagTile = null;
         Tile brr442Tile = null;
         Tile p1Tile = null;
         Tile pbaroTile = null;
@@ -343,6 +358,8 @@ public class GACloudScreeningOp extends Operator {
 
                 merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
                 merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
+                merisQwgCloudClassifFlagBand = cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS);
+                merisQwgCloudClassifFlagTile = getSourceTile(merisQwgCloudClassifFlagBand, rectangle);
 
                 merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
                 merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
@@ -429,7 +446,7 @@ public class GACloudScreeningOp extends Operator {
                     PixelProperties pixelProperties = null;
                     switch (sourceProductTypeId) {
                         case IdepixConstants.PRODUCT_TYPE_MERIS:
-                            pixelProperties = createMerisPixelProperties(merisL1bFlagTile,
+                            pixelProperties = createMerisPixelProperties(merisL1bFlagTile, merisQwgCloudClassifFlagTile,
                                                                          brr442Tile, p1Tile,
                                                                          pbaroTile, pscattTile, brr442ThreshTile,
                                                                          merisReflectanceTiles,
@@ -473,33 +490,33 @@ public class GACloudScreeningOp extends Operator {
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
-                    if ("bright_value".equals(band.getName())) {
+                    if (band == brightBand) {
                         targetTile.setSample(x, y, pixelProperties.brightValue());
-                    } else if ("white_value".equals(band.getName())) {
+                    } else if (band == whiteBand) {
                         targetTile.setSample(x, y, pixelProperties.whiteValue());
-                    } else if ("bright_white_value".equals(band.getName())) {
+                    } else if (band == brightWhiteBand) {
                         targetTile.setSample(x, y, pixelProperties.brightValue() + pixelProperties.whiteValue());
                     } else if (band == temperatureBand) {
                         targetTile.setSample(x, y, pixelProperties.temperatureValue());
-                    } else if ("spectral_flatness_value".equals(band.getName())) {
+                    } else if (band == spectralFlatnessBand) {
                         targetTile.setSample(x, y, pixelProperties.spectralFlatnessValue());
-                    } else if ("ndvi_value".equals(band.getName())) {
+                    } else if (band == ndviBand) {
                         targetTile.setSample(x, y, pixelProperties.ndviValue());
-                    } else if ("ndsi_value".equals(band.getName())) {
+                    } else if (band == ndsiBand) {
                         targetTile.setSample(x, y, pixelProperties.ndsiValue());
-                    } else if ("glint_risk_value".equals(band.getName())) {
-                        targetTile.setSample(x, y, pixelProperties.ndsiValue());
-                    } else if ("pressure_value".equals(band.getName())) {
+                    } else if (band == glintRiskBand) {
+                        targetTile.setSample(x, y, pixelProperties.glintRiskValue());
+                    } else if (band == pressureBand) {
                         targetTile.setSample(x, y, pixelProperties.pressureValue());
-                    } else if ("pbaro_value".equals(band.getName())) {
+                    } else if (band == pbaroBand) {
                         targetTile.setSample(x, y, pbaroTile.getSampleFloat(x, y));
-                    } else if ("p1_value".equals(band.getName())) {
+                    } else if (band == p1Band) {
                         targetTile.setSample(x, y, p1Tile.getSampleFloat(x, y));
-                    } else if ("pscatt_value".equals(band.getName())) {
+                    } else if (band == pscattBand) {
                         targetTile.setSample(x, y, pscattTile.getSampleFloat(x, y));
-                    } else if ("radiometric_land_value".equals(band.getName())) {
+                    } else if (band == radioLandBand) {
                         targetTile.setSample(x, y, pixelProperties.radiometricLandValue());
-                    } else if ("radiometric_water_value".equals(band.getName())) {
+                    } else if (band == radioWaterBand) {
                         targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
                     }
                 }
@@ -569,7 +586,7 @@ public class GACloudScreeningOp extends Operator {
         return pixelProperties;
     }
 
-    private PixelProperties createMerisPixelProperties(Tile merisL1bFlagTile,
+    private PixelProperties createMerisPixelProperties(Tile merisL1bFlagTile, Tile merisQwgCloudClassifFlagTile,
                                                        Tile brr442Tile, Tile p1Tile,
                                                        Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
                                                        Tile[] merisReflectanceTiles,
@@ -599,6 +616,8 @@ public class GACloudScreeningOp extends Operator {
         pixelProperties.setPBaro(pbaroTile.getSampleFloat(x, y));
         pixelProperties.setPscatt(pscattTile.getSampleFloat(x, y));
         pixelProperties.setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
+        pixelProperties.setQwgCloudClassifFlagBrightRc
+                (merisQwgCloudClassifFlagTile.getSampleBit(x, y, MerisPixelProperties.F_BRIGHT_RC));
         setIsWater(watermask, pixelProperties);
         return pixelProperties;
     }

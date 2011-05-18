@@ -86,6 +86,14 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
 
     private RayleighCorrection rayleighCorrection;
 
+    private Band ctpOutputBand;
+    private Band psurfOutputBand;
+    private Band scattAngleOutputBand;
+    private Band rhoThreshOutputBand;
+    private Band rhoGlintOutputBand;
+    private Band rhoAgOutputBand;
+    private Band mdsiOutputBand;
+
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
     @SourceProduct(alias = "rhotoa")
@@ -117,11 +125,27 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
 
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold;
-    @Parameter(description="User Defined Glint Threshold.", defaultValue="0.015")
+    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
     public double userDefinedGlintThreshold;
 
     @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
-               valueSet = {"412", "442", "490", "510", "560", "620", "665", "681", "705", "753", "760", "775", "865", "890", "900"})
+               valueSet = {
+                       "412",
+                       "442",
+                       "490",
+                       "510",
+                       "560",
+                       "620",
+                       "665",
+                       "681",
+                       "705",
+                       "753",
+                       "760",
+                       "775",
+                       "865",
+                       "890",
+                       "900"
+               })
     private int rhoAgReferenceWavelength;
 
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
@@ -132,6 +156,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     private double userDefinedMDSIThreshold;
     @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
     private double userDefinedNDVIThreshold;
+    private Band cloudFlagBand;
 
 
     @Override
@@ -148,15 +173,15 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     private void createTargetProduct() {
         targetProduct = createCompatibleProduct(l1bProduct, "MER", "MER_L2");
 
-        Band cloudFlagBand = targetProduct.addBand(CLOUD_FLAGS, ProductData.TYPE_INT16);
+        cloudFlagBand = targetProduct.addBand(CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = createFlagCoding(CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
-        targetProduct.addBand(PRESSURE_CTP, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(PRESSURE_SURFACE, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
+        ctpOutputBand = targetProduct.addBand(PRESSURE_CTP, ProductData.TYPE_FLOAT32);
+        psurfOutputBand = targetProduct.addBand(PRESSURE_SURFACE, ProductData.TYPE_FLOAT32);
+        scattAngleOutputBand = targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
+        rhoThreshOutputBand = targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
+        mdsiOutputBand = targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
     }
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {
@@ -283,28 +308,30 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
                         pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
                         pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
-                        if (band.getName().equals(CLOUD_FLAGS)) {
+
+                        if (band == cloudFlagBand) {
                             classifyCloud(sd, pixelInfo, targetTile);
                         }
-                        if (band.getName().equals(PRESSURE_SURFACE) && l2Pressures) {
+                        if (band == psurfOutputBand && l2Pressures) {
                             setCloudPressureSurface(sd, pixelInfo, targetTile);
                         }
-                        if (band.getName().equals(PRESSURE_CTP) && l2Pressures) {
+                        if (band == ctpOutputBand && l2Pressures) {
                             setCloudTopPressure(pixelInfo, targetTile);
                         }
 
                         // test, 30.10.09
-                        if (band.getName().equals(SCATT_ANGLE)) {
+                        // todo: check with CB if we still need these
+                        if (band == scattAngleOutputBand) {
                             final double thetaScatt = calcScatteringAngle(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, thetaScatt);
                         }
-                        if (band.getName().equals(RHO_THRESH_TERM)) {
+                        if (band == rhoThreshOutputBand) {
                             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoThreshOffsetTerm);
                         }
                         // end test
 
-                        if (band.getName().equals(MDSI)) {
+                        if (band == mdsiOutputBand) {
                             setMdsi(sd, pixelInfo, targetTile);
                         }
                     }
@@ -667,7 +694,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         boolean bright_toa_f = false;
         // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                    || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
+                            || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {

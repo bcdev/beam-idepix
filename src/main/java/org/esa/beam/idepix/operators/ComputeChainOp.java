@@ -145,17 +145,17 @@ public class ComputeChainOp extends BasisOp {
                label = " L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
     private boolean pressureQWGOutputCtpStraylightCorrFub = false;
 
-    @Parameter(defaultValue = "true", label = " 'P1' (LISE, O2 project, all surfaces)")
-    private boolean pressureOutputP1Lise = true;
+    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
+    private boolean pressureOutputP1Lise = false;
 
-    @Parameter(defaultValue = "true", label = " Surface Pressure (LISE, O2 project, land)")
-    private boolean pressureOutputPSurfLise = true;
+    @Parameter(defaultValue = "false", label = " Surface Pressure (LISE, O2 project, land)")
+    private boolean pressureOutputPSurfLise = false;
 
-    @Parameter(defaultValue = "true", label = " 'P2' (LISE, O2 project, ocean)")
-    private boolean pressureOutputP2Lise = true;
+    @Parameter(defaultValue = "false", label = " 'P2' (LISE, O2 project, ocean)")
+    private boolean pressureOutputP2Lise = false;
 
-    @Parameter(defaultValue = "true", label = " 'PScatt' (LISE, O2 project, ocean)")
-    private boolean pressureOutputPScattLise = true;
+    @Parameter(defaultValue = "false", label = " 'PScatt' (LISE, O2 project, ocean)")
+    private boolean pressureOutputPScattLise = false;
 
 
     // Cloud product parameters

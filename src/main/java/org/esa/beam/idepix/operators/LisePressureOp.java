@@ -79,10 +79,14 @@ public class LisePressureOp extends BasisOp {
     @Parameter(description = "If 'true' the algorithm will compute LISE PScatt.", defaultValue = "true")
     public boolean l2CloudDetection = true;
 
-    public static final String PRESSURE_LISE_P1 = "p1_lise";
-    public static final String PRESSURE_LISE_PSURF = "surface_press_lise";
-    public static final String PRESSURE_LISE_P2 = "p2_lise";
-    public static final String PRESSURE_LISE_PSCATT = "pscatt_lise";
+    private static final String P_1_LISE = "p1_lise";
+    public static final String PRESSURE_LISE_P1 = P_1_LISE;
+    private static final String SURFACE_PRESS_LISE = "surface_press_lise";
+    public static final String PRESSURE_LISE_PSURF = SURFACE_PRESS_LISE;
+    private static final String P_2_LISE = "p2_lise";
+    public static final String PRESSURE_LISE_P2 = P_2_LISE;
+    private static final String PSCATT_LISE = "pscatt_lise";
+    public static final String PRESSURE_LISE_PSCATT = PSCATT_LISE;
 
     //    private static final String INVALID_EXPRESSION = "l1_flags.INVALID or l1_flags.LAND_OCEAN";
     private static final String INVALID_EXPRESSION = "l1_flags.INVALID";
@@ -171,6 +175,10 @@ public class LisePressureOp extends BasisOp {
     private VirtualBandOpImage invalidOceanImage;
     private VirtualBandOpImage invalidLandImage;
     private LUT coeffLUT;
+    private Band psurfLiseBand;
+    private Band p1LiseBand;
+    private Band p2LiseBand;
+    private Band pscattLiseBand;
 
 
     @Override
@@ -282,7 +290,8 @@ public class LisePressureOp extends BasisOp {
         double ray761;
         if (rayleighCorrection != null && auxData != null) {
             final double press = HelperFunctions.correctEcmwfPressure(ecmwfPressure, altitude, pressureScaleHeight); /* DPM #2.6.15.1-3 */
-            ray761 = computeRayleighReflectanceCh11(rayleighCorrection, auxData, szaDeg, vzaDeg, azimDiff, press);
+            ray761 = computeRayleighReflectanceCh11(rayleighCorrection, auxData, szaDeg, vzaDeg,
+                                                    ssza, svza, csza, cvza, azimDiff, press);
         } else {
             ray761 = computeRayleighReflectance(szaDeg, vzaDeg, theta, standardSeaSurfacePressure);
         }
@@ -798,16 +807,13 @@ public class LisePressureOp extends BasisOp {
         return nPressure * l1 / xx;
     }
 
-    private double computeRayleighReflectanceCh11(RayleighCorrection rayleighCorrection, L2AuxData auxData, double szaDeg, double vzaDeg,
+    private double computeRayleighReflectanceCh11(RayleighCorrection rayleighCorrection, L2AuxData auxData,
+                                                  double szaDeg,
+                                                  double vzaDeg,
+                                                  double sins, double sinv, double mus, double muv,
                                                   double azimDiff, double pressure) {
-        // todo: refactor: code duplication R1
         final double sza = szaDeg * MathUtils.DTOR;
         final double vza = vzaDeg * MathUtils.DTOR;
-        final double sins = Math.sin(sza);
-        final double sinv = Math.sin(vza);
-        final double mus = Math.cos(sza);
-        final double muv = Math.cos(vza);
-
         final double azimDiffDeg = azimDiff * MathUtils.RTOD;
 
         final double airMass = HelperFunctions.calculateAirMassMusMuv(muv, mus);
@@ -980,7 +986,6 @@ public class LisePressureOp extends BasisOp {
                                      final int detectorIndex) {
         final float szaDeg = sza.getSampleFloat(x, y);
         final float vzaDeg = vza.getSampleFloat(x, y);
-        // todo: refactor: code duplication R1
         final double csza = Math.cos(MathUtils.DTOR * szaDeg);
         final double cvza = Math.cos(MathUtils.DTOR * vzaDeg);
         final double ssza = Math.sin(MathUtils.DTOR * szaDeg);
@@ -1033,19 +1038,19 @@ public class LisePressureOp extends BasisOp {
         targetProduct = createCompatibleProduct(sourceProduct, "MER_CTP", "MER_L2");
         // Surface pressure, land:
         if (outputPressureSurface) {
-            targetProduct.addBand("surface_press_lise", ProductData.TYPE_FLOAT32);
+            psurfLiseBand = targetProduct.addBand(SURFACE_PRESS_LISE, ProductData.TYPE_FLOAT32);
         }
         // TOA pressure, land+ocean:
         if (outputP1) {
-            targetProduct.addBand("p1_lise", ProductData.TYPE_FLOAT32);
+            p1LiseBand = targetProduct.addBand(P_1_LISE, ProductData.TYPE_FLOAT32);
         }
         // Bottom pressure, ocean, Rayleigh multiple scattering at 761nm considered:
         if (outputP2) {
-            targetProduct.addBand("p2_lise", ProductData.TYPE_FLOAT32);
+            p2LiseBand = targetProduct.addBand(P_2_LISE, ProductData.TYPE_FLOAT32);
         }
         // Bottom pressure, ocean, Rayleigh multiple scattering at 761nm and Fresnel transmittance considered:
         if (outputPScatt || l2CloudDetection) {
-            targetProduct.addBand("pscatt_lise", ProductData.TYPE_FLOAT32);
+            pscattLiseBand = targetProduct.addBand(PSCATT_LISE, ProductData.TYPE_FLOAT32);
         }
 
         invalidImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION, sourceProduct, ResolutionLevel.MAXRES);
@@ -1090,22 +1095,20 @@ public class LisePressureOp extends BasisOp {
 
             Raster isInvalid = null;
 
-            // TODO: set band names as constants
-            // todo: optimize: use band == p1LiseBand instead
             int pressureResultIndex = -1;
-            if ("p1_lise".equals(band.getName()) && outputP1) {
+            if (band == p1LiseBand && outputP1) {
                 pressureResultIndex = 0;
                 isInvalid = invalidImage.getData(rectangle);
             }
-            if ("surface_press_lise".equals(band.getName()) && outputPressureSurface) {
+            if (band == psurfLiseBand && outputPressureSurface) {
                 pressureResultIndex = 1;
                 isInvalid = invalidLandImage.getData(rectangle);
             }
-            if ("p2_lise".equals(band.getName()) && outputP2) {
+            if (band == p2LiseBand && outputP2) {
                 pressureResultIndex = 2;
                 isInvalid = invalidImage.getData(rectangle);
             }
-            if ("pscatt_lise".equals(band.getName()) && (outputPScatt || l2CloudDetection)) {
+            if (band == pscattLiseBand && (outputPScatt || l2CloudDetection)) {
                 pressureResultIndex = 3;
                 // invalidOceanImage.getData(rectangle)
                 isInvalid = invalidImage.getData(rectangle);
