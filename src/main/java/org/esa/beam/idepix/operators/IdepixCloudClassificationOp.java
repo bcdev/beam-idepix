@@ -111,9 +111,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
 
     @Parameter(description = "If 'true' the algorithm will compute L2 Pressures.", defaultValue = "true")
     private boolean l2Pressures;
-    // todo (mp 2010/10/04)- parameter is never used
-    @Parameter(description = "If 'true' the algorithm will compute L2 Cloud detection flags.", defaultValue = "true")
-    private boolean l2CloudDetection;
     @Parameter(label = "L2 Cloud Detection Flags with LISE 'PScatt'", defaultValue = "false")
     private boolean pressureOutputL2CloudDetectionLisePScatt;
     @Parameter(description = "User Defined P1 Pressure Threshold.", defaultValue = "125.0")
@@ -125,28 +122,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
 
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold;
-    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
-    public double userDefinedGlintThreshold;
-
-    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "442",
-               valueSet = {
-                       "412",
-                       "442",
-                       "490",
-                       "510",
-                       "560",
-                       "620",
-                       "665",
-                       "681",
-                       "705",
-                       "753",
-                       "760",
-                       "775",
-                       "865",
-                       "890",
-                       "900"
-               })
-    private int rhoAgReferenceWavelength;
 
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
@@ -263,20 +238,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
                                          rectangle).getRawSamples().getElems();
         sd.vaa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
                                          rectangle).getRawSamples().getElems();
-
-        sd.sins = new float[sd.sza.length];
-        sd.sinv = new float[sd.vza.length];
-        sd.coss = new float[sd.sza.length];
-        sd.cosv = new float[sd.vza.length];
-        sd.deltaAzimuth = new float[sd.vza.length];
-        for (int i = 0; i < sd.sza.length; i++) {
-            sd.sins[i] = (float) Math.sin(sd.sza[i] * MathUtils.DTOR);
-            sd.sinv[i] = (float) Math.sin(sd.vza[i] * MathUtils.DTOR);
-            sd.coss[i] = (float) Math.cos(sd.sza[i] * MathUtils.DTOR);
-            sd.cosv[i] = (float) Math.cos(sd.vza[i] * MathUtils.DTOR);
-            sd.deltaAzimuth[i] = (float) HelperFunctions.computeAzimuthDifference(sd.vaa[i], sd.saa[i]);
-        }
-
         sd.altitude = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME),
                                               rectangle).getRawSamples().getElems();
         sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
@@ -584,14 +545,16 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     }
 
     private double calcScatteringAngle(SourceData dc, PixelInfo pixelInfo) {
-        final double sins = dc.sins[pixelInfo.index];
-               final double sinv = dc.sinv[pixelInfo.index];
-               final double coss = dc.coss[pixelInfo.index];
-               final double cosv = dc.cosv[pixelInfo.index];
-
-               // delta azimuth in degree
-               final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
-
+        // todo: refactor: code duplication R1
+        // todo: optimize: compute value once, store as dc.sins, dc.sinv, etc.
+        double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        // delta azimuth in degree
+        // todo: optimize: compute value once, store as dc.deltaAzimuth
+        final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
+                                                                             dc.saa[pixelInfo.index]);
 
         // Compute the geometric conditions
         final double cosphi = Math.cos(deltaAzimuth * MathUtils.DTOR);
@@ -617,7 +580,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
      */
     private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags) {
         double rhorc_442_thr;   /* threshold on rayleigh corrected reflectance */
-        final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
 
         //Rayleigh phase function coefficients, PR in DPM
         final double[] phaseR = new double[RAYSCATT_NUM_SER];
@@ -630,11 +592,13 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
 
         // todo: refactor: code duplication R1
         // todo: optimize: compute value once, store as dc.sins, dc.sinv, etc.
-        double sins = dc.sins[pixelInfo.index];
-        double sinv = dc.sinv[pixelInfo.index];
-        double coss = dc.coss[pixelInfo.index];
-        double cosv = dc.cosv[pixelInfo.index];
+        double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         // todo: optimize: compute value once, store as dc.deltaAzimuth
+        final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
+                                                                             dc.saa[pixelInfo.index]);
 
         // scattering angle
         // TODO (mp 20.12.2010) - result is never used
@@ -808,13 +772,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         private float[] vza;
         private float[] saa;
         private float[] vaa;
-        private float[] sins;
-        private float[] sinv;
-        private float[] coss;
-        private float[] cosv;
-        private float[] deltaAzimuth;
-        private float[] windu;
-        private float[] windv;
         private float[] altitude;
         private float[] ecmwfPressure;
         private Tile l1Flags;

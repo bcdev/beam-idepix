@@ -58,18 +58,15 @@ public class IdepixConstants {
     };
 
     public static final String[] coastcolourParameterNames = new String[]{
-             "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",
-            "ipfOutputL2Pressures", "ipfOutputL2CloudDetection",
-//            "ipfQWGUserDefinedP1PressureThreshold",
-            "ipfQWGUserDefinedPScattPressureThreshold",
-            "ipfQWGUserDefinedRhoToa442Threshold",
-//            "ipfQWGUserDefinedDeltaRhoToa442Threshold",
-            "ipfQWGUserDefinedRhoToa753Threshold",
-//            "ipfQWGUserDefinedRhoToaRatio753775Threshold",
-            "ipfQWGUserDefinedMDSIThreshold",
-            "userDefinedNDVIThreshold",
-            "ipfQWGUserDefinedGlintThreshold",
-            "rhoAgReferenceWavelength"
+             "ccOutputRad2Refl", "ccOutputGaseous", "ccOutputLandWater", "ccOutputRayleigh",
+            "ccOutputL2Pressures", "ccOutputL2CloudDetection",
+            "ccUserDefinedPScattPressureThreshold",
+            "ccUserDefinedGlintThreshold",
+            "ccUserDefinedRhoToa753Threshold",
+            "ccUserDefinedMDSIThreshold",
+            "ccUserDefinedNDVIThreshold",
+            "ccUserDefinedRhoToa442Threshold",
+            "ccRhoAgReferenceWavelength"
     };
 
 

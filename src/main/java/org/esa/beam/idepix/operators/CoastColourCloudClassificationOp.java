@@ -99,8 +99,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Product ctpProduct;
     @SourceProduct(alias = "pressureOutputLise")
     private Product lisePressureProduct;
-    @SourceProduct(alias = "pressureBaro")
-    private Product pbaroProduct;
 
     @SuppressWarnings({"FieldCanBeLocal"})
     @TargetProduct
@@ -313,7 +311,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             SourceData sd = loadSourceTiles(rectangle, pm);
 
             Tile ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), rectangle);
-            Tile pbaroTile = getSourceTile(pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC), rectangle);
             Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle);
             Tile lisePScattTile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT),
                                                 rectangle);
@@ -337,7 +334,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         } else {
                             pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
                         }
-                        pixelInfo.pbaroPressure = pbaroTile.getSampleFloat(x, y);
                         pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
                         pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
@@ -910,7 +906,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         int y;
         double airMass;
         float ecmwfPressure;
-        float pbaroPressure;
         float p1Pressure;
         float pscattPressure;
         float ctp;

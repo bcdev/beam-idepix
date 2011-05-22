@@ -17,19 +17,19 @@ class MerisPixelProperties extends AbstractPixelProperties {
     static final float NDSI_THRESH = 0.68f;
     static final float PRESSURE_THRESH = 0.9f;
         static final float CLOUD_THRESH = 1.65f;  // test, 20110328
-//    protected static final float CLOUD_THRESH = 0.2875f;   // AR, 18/05/11
-    //    static final float CLOUD_THRESH = 1.15f;
+//    static final float CLOUD_THRESH = 0.2875f;   // AR, 18/05/11
+//        static final float CLOUD_THRESH = 1.15f;  // GA delivery, Jan. 2011
     static final float UNCERTAINTY_VALUE = 0.5f;
     static final float LAND_THRESH = 0.9f;
     static final float WATER_THRESH = 0.9f;
     static final float BRIGHT_THRESH = 0.25f;
     static final float WHITE_THRESH = 0.9f;
-    //    static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;
+//        static final float BRIGHT_FOR_WHITE_THRESH = 0.4f;   // GA delivery, Jan. 2011
     static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;   // test, 20110328
     static final float NDVI_THRESH = 0.7f;
     static final float TEMPERATURE_THRESH = 0.9f;
 
-    //    private static final float GLINT_THRESH =  0.9f;
+    //    private static final float GLINT_THRESH =  0.9f;  // GA delivery, Jan. 2011
     protected static final float GLINT_THRESH = 0.5f;        // AR, 18/05/11
 
     protected static final float P1_THRESH = 0.15f;
@@ -146,7 +146,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
-        double value = 0.5 * brr442 / brr442Thresh;
+        double value = 0.5 * brr442 / brr442Thresh;    // GA delivery, Jan. 2011
         value /= 3.0; // test
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
@@ -259,17 +259,17 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
 
     @Override
-//    public float glintRiskValue() {
-//        return UNCERTAINTY_VALUE;
-//    }
-    // AR, 18/05/11:
     public float glintRiskValue() {
-        if (p1Value() < P1_THRESH) {
-            return p1Value() * (1.0f / 0.15f);
-        } else {
-            return 0.0f;
-        }
+        return UNCERTAINTY_VALUE;
     }
+    // AR, 18/05/11:
+//    public float glintRiskValue() {
+//        if (p1Value() < P1_THRESH) {
+//            return p1Value() * (1.0f / 0.15f);
+//        } else {
+//            return 0.0f;
+//        }
+//    }
 
 
     //P1 to calculate pressure value for glint

@@ -2,6 +2,7 @@ org.esa.beam.idepix.operators.ComputeChainOp$Spi
 org.esa.beam.idepix.operators.SurfacePressureFubOp$Spi
 org.esa.beam.idepix.operators.LisePressureOp$Spi
 org.esa.beam.idepix.operators.IdepixCloudClassificationOp$Spi
+org.esa.beam.idepix.operators.IdepixRayleighCorrectionOp$Spi
 org.esa.beam.idepix.operators.CoastColourCloudClassificationOp$Spi
 org.esa.beam.idepix.operators.GACloudScreeningOp$Spi
 org.esa.beam.idepix.operators.BarometricPressureOp$Spi

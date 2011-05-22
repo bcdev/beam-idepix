@@ -55,7 +55,7 @@ public class MerisPixelPropertiesTest extends TestCase {
     }
 
     public void testGlintRiskValue() {
-        assertEquals(0.0f, merisPixelProperties.glintRiskValue());
+        assertEquals(0.5f, merisPixelProperties.glintRiskValue());
     }
 
     public void testNdsi() {

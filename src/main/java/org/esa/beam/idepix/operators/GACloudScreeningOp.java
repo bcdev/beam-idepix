@@ -598,12 +598,7 @@ public class GACloudScreeningOp extends Operator {
 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
-//            if (band.getName().equals(EnvisatConstants.MERIS_L1B_BAND_NAMES[i])) {
-//                targetTile.setSample(x, y, merisReflectance[i]);
-//            }
         }
-
-
 
         pixelProperties.setRefl(merisReflectance);
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
