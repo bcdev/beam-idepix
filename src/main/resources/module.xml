@@ -1,9 +1,10 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix</symbolicName>
-    <version>1.3</version>
+    <version>1.3.1</version>
     <name>Generic classification of pixels</name>
-    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.</description>
+    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
+    </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>
@@ -15,20 +16,20 @@
 
     <changelog/>
 
-	<dependency>
+    <dependency>
         <module>beam-core</module>
     </dependency>
-	<dependency>
+    <dependency>
         <module>beam-gpf</module>
     </dependency>
-	 <dependency>
+    <dependency>
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>
-	<dependency>
+    <dependency>
         <module>beam-envisat-reader</module>
-    </dependency>	
-	<dependency>
+    </dependency>
+    <dependency>
         <module>beam-meris-brr</module>
     </dependency>
     <dependency>
@@ -49,7 +50,8 @@
             <class>org.esa.beam.idepix.ui.ComputeChainAction</class>
             <text>IDEPIX Generic classification of pixels...</text>
             <shortDescr>
-                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
+                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
+                sensors.
             </shortDescr>
             <mnemonic/>
             <parent>tool</parent>
