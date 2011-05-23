@@ -118,6 +118,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.185")
     private double userDefinedRhoToa442Threshold;
 
+    @Parameter(description = "Ana optimisation for CoastColour.", defaultValue = "true")
+    private boolean enableAnasOptimisation;
+
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold;   // default changed from 0.185, 2011/03/25
     @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
@@ -436,7 +439,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
         final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
 
-        boolean low_p_pscatt = (pixelInfo.pscattPressure < userDefinedPScattPressureThreshold) &&
+        double pscattPressure;
+        if (enableAnasOptimisation) {
+            pscattPressure = 1.25 - pixelInfo.pscattPressure / 800.0;
+        } else {
+            pscattPressure = pixelInfo.pscattPressure;
+        }
+        boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
         if (!land_f) {
             // over water
@@ -445,7 +454,11 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 is_cloud = (bright_rc || low_p_pscatt);
             } else {
                 is_snow_ice = bright_rc && high_mdsi;
-                is_cloud = (bright || low_p_pscatt) && !(is_snow_ice);
+                if (enableAnasOptimisation) {
+                    is_cloud = (sd.rhoToa[bb442][pixelInfo.index] == 0.17f || low_p_pscatt) && !(is_snow_ice);
+                } else {
+                    is_cloud = (bright || low_p_pscatt) && !(is_snow_ice);
+                }
             }
         } else {
             is_snow_ice = (high_mdsi && bright_f);

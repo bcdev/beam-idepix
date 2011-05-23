@@ -53,12 +53,21 @@ public class IdepixConstants {
     };
 
     public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances", "gaComputeFlagsOnly", "gaCopyPressure", "gaComputeMerisCloudShadow", "ctpMode", "gaCopyAnnotations",
-            "gaUseAatsrFwardForClouds", "gaCloudBufferWidth", "wmResolution", "wmFill", "gaUseL1bLandWaterFlag"
+            "gaCopyRadiances",
+            "gaComputeFlagsOnly",
+            "gaCopyPressure",
+            "gaComputeMerisCloudShadow",
+            "ctpMode",
+            "gaCopyAnnotations",
+            "gaUseAatsrFwardForClouds",
+            "gaCloudBufferWidth",
+            "wmResolution",
+            "wmFill",
+            "gaUseL1bLandWaterFlag"
     };
 
     public static final String[] coastcolourParameterNames = new String[]{
-             "ccOutputRad2Refl", "ccOutputGaseous", "ccOutputLandWater", "ccOutputRayleigh",
+            "ccOutputRad2Refl", "ccOutputGaseous", "ccOutputLandWater", "ccOutputRayleigh",
             "ccOutputL2Pressures", "ccOutputL2CloudDetection",
             "ccUserDefinedPScattPressureThreshold",
             "ccUserDefinedGlintThreshold",
@@ -66,7 +75,8 @@ public class IdepixConstants {
             "ccUserDefinedMDSIThreshold",
             "ccUserDefinedNDVIThreshold",
             "ccUserDefinedRhoToa442Threshold",
-            "ccRhoAgReferenceWavelength"
+            "ccRhoAgReferenceWavelength",
+            "enableAnasOptimisation"
     };
 
 
@@ -128,7 +138,16 @@ public class IdepixConstants {
             EnvisatConstants.AATSR_L1B_BTEMP_FWARD_1200_BAND_NAME, // 5
     };
 
-    public static final float[] AATSR_REFL_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f, 450.0f, 645.0f, 835.0f, 1670.0f};
+    public static final float[] AATSR_REFL_WAVELENGTHS = {
+            450.0f,
+            645.0f,
+            835.0f,
+            1670.0f,
+            450.0f,
+            645.0f,
+            835.0f,
+            1670.0f
+    };
     public static final float[] AATSR_TEMP_WAVELENGTHS = {370.0f, 1100.0f, 1200.0f, 370.0f, 1100.0f, 1200.0f};
 
     public static String[] AATSR_FLAG_BAND_NAMES = {
@@ -139,8 +158,10 @@ public class IdepixConstants {
     };
 
     public static final float[] MERIS_WAVELENGTHS =
-            {412.7f, 442.5f, 489.9f, 509.8f, 559.7f, 619.6f, 664.6f, 680.8f,
-            708.3f, 753.3f, 761.5f, 778.4f, 864.9f, 884.9f, 900.0f};
+            {
+                    412.7f, 442.5f, 489.9f, 509.8f, 559.7f, 619.6f, 664.6f, 680.8f,
+                    708.3f, 753.3f, 761.5f, 778.4f, 864.9f, 884.9f, 900.0f
+            };
 
     public static String[] MERIS_BRR_BAND_NAMES = {
             "brr_1", // 0
