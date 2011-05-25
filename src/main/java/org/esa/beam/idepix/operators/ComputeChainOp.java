@@ -221,6 +221,8 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Anas cloud optimisation")
     private boolean enableAnasOptimisation;
 
+    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
+    private int ccCloudBufferWidth;
 
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ccUserDefinedPScattPressureThreshold = 700.0;
@@ -423,7 +425,7 @@ public class ComputeChainOp extends BasisOp {
         Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
         l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
 
-        CoastColourCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
+        CoastColourCloudClassificationOp.addBitmasks(targetProduct);
     }
 
 
@@ -600,6 +602,7 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("userDefinedNDVIThreshold", ccUserDefinedNDVIThreshold);
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
         cloudClassificationParameters.put("enableAnasOptimisation", enableAnasOptimisation);
+        cloudClassificationParameters.put("ccCloudBufferWidth", ccCloudBufferWidth);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
                 cloudClassificationParameters, cloudInput);
@@ -804,11 +807,11 @@ public class ComputeChainOp extends BasisOp {
 
     private void addCloudClassificationFlagBand() {
         if ((isQWGAlgo() && ipfOutputL2CloudDetection) || (isCoastColourAlgo() && ccOutputL2CloudDetection)) {
-            FlagCoding flagCoding = IdepixCloudClassificationOp.createFlagCoding(
-                    IdepixCloudClassificationOp.CLOUD_FLAGS);
+            FlagCoding flagCoding = CoastColourCloudClassificationOp.createFlagCoding(
+                    CoastColourCloudClassificationOp.CLOUD_FLAGS);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : merisCloudProduct.getBands()) {
-                if (band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
+                if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                     targetProduct.addBand(band);
                 }
