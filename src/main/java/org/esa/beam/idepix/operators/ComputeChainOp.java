@@ -305,7 +305,9 @@ public class ComputeChainOp extends BasisOp {
 
     private void prefixMask(String coastline) {
         Mask coastlineMask = targetProduct.getMaskGroup().get(coastline);
-        coastlineMask.setName("l1b_" + coastlineMask.getName());
+        if (coastlineMask != null) {
+            coastlineMask.setName("l1b_" + coastlineMask.getName());
+        }
     }
 
     private void processQwg() {
