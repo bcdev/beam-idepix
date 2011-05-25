@@ -17,6 +17,7 @@ package org.esa.beam.idepix.operators;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -286,6 +287,25 @@ public class ComputeChainOp extends BasisOp {
         } else if (isGlobAlbedoAlgo()) {
             processGlobAlbedo();
         }
+
+        renameL1bMaskNames();
+    }
+
+    private void renameL1bMaskNames() {
+        prefixMask("coastline");
+        prefixMask("land");
+        prefixMask("water");
+        prefixMask("cosmetic");
+        prefixMask("duplicated");
+        prefixMask("glint_risk");
+        prefixMask("suspect");
+        prefixMask("bright");
+        prefixMask("invalid");
+    }
+
+    private void prefixMask(String coastline) {
+        Mask coastlineMask = targetProduct.getMaskGroup().get(coastline);
+        coastlineMask.setName("l1b_" + coastlineMask.getName());
     }
 
     private void processQwg() {
@@ -385,6 +405,7 @@ public class ComputeChainOp extends BasisOp {
 
         // Land Water Reclassification
         Product landProduct = computeLandClassificationProduct(gasProduct);
+//        Product landProduct = computeCoastColourLandClassificationProduct(gasProduct);
 
         // Rayleigh Correction
         if (ccOutputRayleigh) {
@@ -400,7 +421,7 @@ public class ComputeChainOp extends BasisOp {
         Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
         l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
 
-        IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
+        CoastColourCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
     }
 
 

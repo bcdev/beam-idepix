@@ -77,13 +77,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
     public static final int F_BRIGHT_RC = 2;
-    public static final int F_LOW_P_PSCATT = 3;
-    public static final int F_LOW_P_P1 = 4;
+    public static final int F_LOW_PSCATT = 3;
     public static final int F_SLOPE_1 = 5;
     public static final int F_SLOPE_2 = 6;
     public static final int F_BRIGHT_TOA = 7;
     public static final int F_HIGH_MDSI = 8;
     public static final int F_SNOW_ICE = 9;
+    public static final int F_GLINTRISK = 10;
 
     private L2AuxData auxData;
 
@@ -202,44 +202,49 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
         flagCoding.addFlag("F_BRIGHT_RC", BitSetter.setFlag(0, F_BRIGHT_RC), null);
-        flagCoding.addFlag("F_LOW_P_PSCATT", BitSetter.setFlag(0, F_LOW_P_PSCATT), null);
-        flagCoding.addFlag("F_LOW_P_P1", BitSetter.setFlag(0, F_LOW_P_P1), null);
+        flagCoding.addFlag("F_LOW_PSCATT", BitSetter.setFlag(0, F_LOW_PSCATT), null);
         flagCoding.addFlag("F_SLOPE_1", BitSetter.setFlag(0, F_SLOPE_1), null);
         flagCoding.addFlag("F_SLOPE_2", BitSetter.setFlag(0, F_SLOPE_2), null);
         flagCoding.addFlag("F_BRIGHT_TOA", BitSetter.setFlag(0, F_BRIGHT_TOA), null);
         flagCoding.addFlag("F_HIGH_MDSI", BitSetter.setFlag(0, F_HIGH_MDSI), null);
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
+        flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
         return flagCoding;
     }
 
     private static Mask[] createBitmaskDefs(Product sourceProduct) {
 
-        Mask[] bitmaskDefs = new Mask[10];
+        Mask[] bitmaskDefs = new Mask[6];
 
         int w = sourceProduct.getSceneRasterWidth();
         int h = sourceProduct.getSceneRasterHeight();
 
-        bitmaskDefs[0] = Mask.BandMathsType.create("f_cloud", "IDEPIX final cloud flag", w, h, CLOUD_FLAGS + ".F_CLOUD",
-                                                   Color.CYAN, 0.5f);
-        bitmaskDefs[1] = Mask.BandMathsType.create("f_bright", "IDEPIX combined of old and second bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT", new Color(0, 153, 153), 0.5f);
-        bitmaskDefs[2] = Mask.BandMathsType.create("f_bright_rc", "IDEPIX old bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204, 255, 204), 0.5f);
-        bitmaskDefs[3] = Mask.BandMathsType.create("f_low_p_pscatt", "IDEPIX test on apparent scattering (over ocean)",
-                                                   w, h, CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153, 153, 0), 0.5f);
-        bitmaskDefs[4] = Mask.BandMathsType.create("f_low_p_p1", "IDEPIX test on P1 (over land)", w, h,
-                                                   CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f);
-        bitmaskDefs[5] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
-                                                   CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
-        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_2", "IDEPIX old slope 2 test", w, h,
-                                                   CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
-        bitmaskDefs[7] = Mask.BandMathsType.create("f_bright_toa", "IDEPIX second bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
-        bitmaskDefs[8] = Mask.BandMathsType.create("f_high_mdsi",
-                                                   "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
-                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
-        bitmaskDefs[9] = Mask.BandMathsType.create("f_snow_ice", "IDEPIX snow/ice flag", w, h,
-                                                   CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f);
+        bitmaskDefs[0] = Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h, CLOUD_FLAGS + ".F_CLOUD",
+                                                   Color.YELLOW, 0.5f);
+        bitmaskDefs[1] = Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
+                                                   CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f);
+        bitmaskDefs[2] = Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
+                                                   CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f);
+
+        bitmaskDefs[3] = Mask.BandMathsType.create("cc_interm_bright", "IDEPIX CC result of bright test", w, h,
+                                                   CLOUD_FLAGS + ".F_BRIGHT", Color.YELLOW.darker(), 0.5f);
+        bitmaskDefs[4] = Mask.BandMathsType.create("cc_interm_low_pscatt",
+                                                   "IDEPIX CC result of test on apparent scattering (over ocean)",
+                                                   w, h, CLOUD_FLAGS + ".F_LOW_PSCATT", Color.YELLOW.brighter(), 0.5f);
+        bitmaskDefs[5] = Mask.BandMathsType.create("cc_interm_prel_bright",
+                                                   "IDEPIX CC result of preliminary bright test", w, h,
+                                                   CLOUD_FLAGS + ".F_BRIGHT_RC", Color.YELLOW.darker().darker(), 0.5f);
+
+        // not used as masks but still available as flag
+//        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
+//                                                   CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
+//        bitmaskDefs[7] = Mask.BandMathsType.create("f_slope_2", "IDEPIX old slope 2 test", w, h,
+//                                                   CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
+//        bitmaskDefs[8] = Mask.BandMathsType.create("f_bright_toa", "IDEPIX second bright test", w, h,
+//                                                   CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
+//        bitmaskDefs[9] = Mask.BandMathsType.create("f_high_mdsi",
+//                                                   "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
+//                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
 
         return bitmaskDefs;
     }
@@ -449,7 +454,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
         if (!land_f) {
             // over water
-            if (is_glint && is_glint_2) {
+            boolean is_glint_risk = is_glint && is_glint_2;
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
+            if (is_glint_risk) {
                 is_snow_ice = bright_rc && high_mdsi;
                 is_cloud = (bright_rc || low_p_pscatt);
             } else {
@@ -464,7 +471,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             is_snow_ice = (high_mdsi && bright_f);
             is_cloud = (bright_f || low_p_pscatt) && !(is_snow_ice);
         }
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_P_PSCATT, low_p_pscatt);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
     }
