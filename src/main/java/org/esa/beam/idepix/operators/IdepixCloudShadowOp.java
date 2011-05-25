@@ -61,7 +61,8 @@ public class IdepixCloudShadowOp extends Operator {
     @Parameter(description = "CTP constant value", defaultValue = "500.0")
     private float ctpConstantValue;
 
-    @Parameter(description = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net")
+    @Parameter(description = " CTP value to use in MERIS cloud shadow algorithm",
+               defaultValue = "Derive from Neural Net")
     private String ctpMode;
 
     private int sourceProductTypeId;
@@ -192,12 +193,12 @@ public class IdepixCloudShadowOp extends Operator {
                         PixelPos pixelPos = new PixelPos(x, y);
                         final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
                         // use ctp as taken from user option (value set)
-                        if (ctpTile != null ) {
+                        if (ctpTile != null) {
                             ctp = ctpTile.getSampleFloat(x, y);
                         }
                         if (ctp > 0) {
                             float cloudAlt = computeHeightFromPressure(ctp);
-                            GeoPos shadowPos = getCloudShadow(altTile, sza, saa, vza, vaa, cloudAlt, geoPos);
+                            GeoPos shadowPos = getCloudShadow(altTile, geoCoding, sza, saa, vza, vaa, cloudAlt, geoPos);
                             if (shadowPos != null) {
                                 pixelPos = geoCoding.getPixelPos(shadowPos, pixelPos);
 
@@ -226,13 +227,13 @@ public class IdepixCloudShadowOp extends Operator {
         return (float) (-8000 * Math.log(pressure / 1013.0f));
     }
 
-    private GeoPos getCloudShadow(Tile altTile, float sza, float saa, float vza,
-                                  float vaa, float cloudAlt, GeoPos appCloud) {
+    public static GeoPos getCloudShadow(Tile altTile, GeoCoding geoCoding, float sza, float saa, float vza,
+                                        float vaa, float cloudAlt, GeoPos appCloud) {
 
         // NOTE:
         // this is the same MERIS cloud shadow algorithm as implemented SDR module...
 
-        double surfaceAlt = getAltitude(altTile, appCloud);
+        double surfaceAlt = getAltitude(altTile, geoCoding, appCloud);
 
         // deltaX and deltaY are the corrections to apply to get the
         // real cloud position from the apparent one
@@ -266,7 +267,7 @@ public class IdepixCloudShadowOp extends Operator {
             if (!(pixelPos.isValid() && altTile.getRectangle().contains(pixelPos))) {
                 return null;
             }
-            surfaceAlt = getAltitude(altTile, pos);
+            surfaceAlt = getAltitude(altTile, geoCoding, pos);
 
             double deltaProjX = (cloudAlt - surfaceAlt) * Math.tan(sza) * Math.sin(saa);
             double deltaProjY = (cloudAlt - surfaceAlt) * Math.tan(sza) * Math.cos(saa);
@@ -287,7 +288,7 @@ public class IdepixCloudShadowOp extends Operator {
         return null;
     }
 
-    private float getAltitude(Tile altTile, GeoPos geoPos) {
+    private static float getAltitude(Tile altTile, GeoCoding geoCoding, GeoPos geoPos) {
         final PixelPos pixelPos = geoCoding.getPixelPos(geoPos, null);
         Rectangle rectangle = altTile.getRectangle();
         final int x = MathUtils.roundAndCrop(pixelPos.x, rectangle.x, rectangle.x + rectangle.width - 1);

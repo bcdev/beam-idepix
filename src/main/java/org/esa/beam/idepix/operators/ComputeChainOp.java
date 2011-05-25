@@ -218,9 +218,6 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " L2 Cloud Detection Flags")
     private boolean ccOutputL2CloudDetection = true;
 
-    @Parameter(defaultValue = "true", label = " Anas cloud optimisation")
-    private boolean enableAnasOptimisation;
-
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
@@ -601,7 +598,6 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("userDefinedMDSIThreshold", ccUserDefinedMDSIThreshold);
         cloudClassificationParameters.put("userDefinedNDVIThreshold", ccUserDefinedNDVIThreshold);
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
-        cloudClassificationParameters.put("enableAnasOptimisation", enableAnasOptimisation);
         cloudClassificationParameters.put("ccCloudBufferWidth", ccCloudBufferWidth);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),

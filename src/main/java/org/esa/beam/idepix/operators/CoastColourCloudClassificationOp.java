@@ -20,9 +20,13 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -85,6 +89,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final int F_SNOW_ICE = 9;
     public static final int F_GLINTRISK = 10;
     public static final int F_CLOUD_BUFFER = 11;
+    public static final int F_CLOUD_SHADOW = 12;
 
     private L2AuxData auxData;
 
@@ -118,9 +123,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedPScattPressureThreshold;
     @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.185")
     private double userDefinedRhoToa442Threshold;
-
-    @Parameter(description = "Ana optimisation for CoastColour.", defaultValue = "true")
-    private boolean enableAnasOptimisation;
 
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold;   // default changed from 0.185, 2011/03/25
@@ -168,6 +170,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band rhoAgOutputBand;
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
+    private RasterDataNode altitudeRDN;
 
 
     @Override
@@ -215,12 +218,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
         flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
         flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), null);
         return flagCoding;
     }
 
     private static Mask[] createBitmaskDefs(Product sourceProduct) {
 
-        Mask[] bitmaskDefs = new Mask[7];
+        Mask[] bitmaskDefs = new Mask[8];
 
         int w = sourceProduct.getSceneRasterWidth();
         int h = sourceProduct.getSceneRasterHeight();
@@ -231,6 +235,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
                                                              CLOUD_FLAGS + ".F_CLOUD_BUFFER",
                                                              Color.RED, 0.5f);
+        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud shadow flag", w, h,
+                                                             CLOUD_FLAGS + ".F_CLOUD_SHADOW",
+                                                             Color.BLUE, 0.5f);
         bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
                                                              CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f);
         bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
@@ -307,9 +314,14 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             sd.cosv[i] = (float) Math.cos(sd.vza[i] * MathUtils.DTOR);
             sd.deltaAzimuth[i] = (float) HelperFunctions.computeAzimuthDifference(sd.vaa[i], sd.saa[i]);
         }
+        if (l1bProduct.getProductType().equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
+            altitudeRDN = l1bProduct.getBand("altitude");
+        } else {
+            altitudeRDN = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
+        }
 
-        sd.altitude = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME),
-                                              rectangle).getRawSamples().getElems();
+        sd.altitude = getSourceTile(altitudeRDN, rectangle).getSamplesFloat();
+
         sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
                                                    rectangle).getRawSamples().getElems();
 
@@ -335,6 +347,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle);
             Tile lisePScattTile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT),
                                                 rectangle);
+            Tile altTile = getSourceTile(altitudeRDN, rectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
@@ -360,7 +373,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
 
                         if (band == cloudFlagBand) {
-                            classifyCloud(sd, pixelInfo, targetTile);
+                            classifyCloud(sd, pixelInfo, altTile, targetTile);
                         }
                         if (band == psurfOutputBand && l2Pressures) {
                             setCloudPressureSurface(sd, pixelInfo, targetTile);
@@ -410,7 +423,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, pixelInfo.ctp);
     }
 
-    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
+    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile altTile, Tile targetTile) {
         final ReturnValue press = new ReturnValue();
         float inputPressure;
         if (pressureOutputL2CloudDetectionLisePScatt) {
@@ -457,12 +470,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
         final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
 
-        double pscattPressure;
-        if (enableAnasOptimisation) {
-            pscattPressure = 1.25 - pixelInfo.pscattPressure / 800.0;
-        } else {
-            pscattPressure = pixelInfo.pscattPressure;
-        }
+        double pscattPressure = pixelInfo.pscattPressure;
         boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
         if (!land_f) {
@@ -470,15 +478,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             boolean is_glint_risk = is_glint && is_glint_2;
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
             if (is_glint_risk) {
-                is_snow_ice = bright_rc && high_mdsi;
-                is_cloud = (bright_rc || low_p_pscatt);
+                // disabled because the algorithm tends to detect glint as snow_ice and
+                // it's unlikely to have snow_ice in glint conditions
+//                is_snow_ice = bright_rc && high_mdsi;
+                is_cloud = (bright_rc || low_p_pscatt) && !is_snow_ice;
             } else {
                 is_snow_ice = bright_rc && high_mdsi;
-                if (enableAnasOptimisation) {
-                    is_cloud = (sd.rhoToa[bb442][pixelInfo.index] == 0.17f || low_p_pscatt) && !(is_snow_ice);
-                } else {
-                    is_cloud = (bright || low_p_pscatt) && !(is_snow_ice);
-                }
+                is_cloud = (bright || low_p_pscatt) && !(is_snow_ice);
             }
         } else {
             // over land
@@ -489,20 +495,56 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
 
-        Rectangle rectangle = targetTile.getRectangle();
         if (is_cloud) {
-            int LEFT_BORDER = Math.max(pixelInfo.x - ccCloudBufferWidth, rectangle.x);
-            int RIGHT_BORDER = Math.min(pixelInfo.x + ccCloudBufferWidth, rectangle.x + rectangle.width - 1);
-            int TOP_BORDER = Math.max(pixelInfo.y - ccCloudBufferWidth, rectangle.y);
-            int BOTTOM_BORDER = Math.min(pixelInfo.y + ccCloudBufferWidth, rectangle.y + rectangle.height - 1);
-            for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-                for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                    targetTile.setSample(i, j, F_CLOUD_BUFFER, true);
+            computeCloudBuffer(pixelInfo, targetTile);
+            computeCloudShadow(sd, pixelInfo, altTile, targetTile);
+        }
+    }
+
+    private void computeCloudShadow(SourceData sd, PixelInfo pixelInfo, Tile altTile, Tile targetTile) {
+        // TODO - copied the algorithm from IdepixCloudShadowOp
+        // should be extracted into an algorithm class
+        PixelPos pixelPos = new PixelPos(pixelInfo.x, pixelInfo.y);
+        GeoCoding geoCoding = targetProduct.getGeoCoding();
+        final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
+        if (pixelInfo.ctp > 0) {
+            final float sza = sd.sza[pixelInfo.index] * MathUtils.DTOR_F;
+            final float saa = sd.saa[pixelInfo.index] * MathUtils.DTOR_F;
+            final float vza = sd.vza[pixelInfo.index] * MathUtils.DTOR_F;
+            final float vaa = sd.vaa[pixelInfo.index] * MathUtils.DTOR_F;
+
+            float cloudAlt = computeHeightFromPressure(pixelInfo.ctp);
+            GeoPos shadowPos = IdepixCloudShadowOp.getCloudShadow(altTile, geoCoding, sza, saa, vza, vaa,
+                                                                  cloudAlt, geoPos);
+            if (shadowPos != null) {
+                pixelPos = targetProduct.getGeoCoding().getPixelPos(shadowPos, pixelPos);
+                Rectangle rectangle = targetTile.getRectangle();
+                if (rectangle.contains(pixelPos)) {
+                    final int pixelX = MathUtils.floorInt(pixelPos.x);
+                    final int pixelY = MathUtils.floorInt(pixelPos.y);
+                    targetTile.setSample(pixelX, pixelY, F_CLOUD_SHADOW, true);
                 }
             }
         }
-
     }
+
+    private void computeCloudBuffer(PixelInfo pixelInfo, Tile targetTile) {
+        Rectangle rectangle = targetTile.getRectangle();
+        int LEFT_BORDER = Math.max(pixelInfo.x - ccCloudBufferWidth, rectangle.x);
+        int RIGHT_BORDER = Math.min(pixelInfo.x + ccCloudBufferWidth, rectangle.x + rectangle.width - 1);
+        int TOP_BORDER = Math.max(pixelInfo.y - ccCloudBufferWidth, rectangle.y);
+        int BOTTOM_BORDER = Math.min(pixelInfo.y + ccCloudBufferWidth, rectangle.y + rectangle.height - 1);
+        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                targetTile.setSample(i, j, F_CLOUD_BUFFER, true);
+            }
+        }
+    }
+
+    private float computeHeightFromPressure(float pressure) {
+        return (float) (-8000 * Math.log(pressure / 1013.0f));
+    }
+
 
     private double computeRhoGlint(SourceData sd, PixelInfo pixelInfo) {
         final double windm = Math.sqrt(sd.windu[pixelInfo.index] * sd.windu[pixelInfo.index] +
