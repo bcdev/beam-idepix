@@ -35,6 +35,8 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import org.esa.beam.idepix.seaice.SeaIceClassification;
+import org.esa.beam.idepix.seaice.SeaIceClassifier;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
@@ -49,6 +51,8 @@ import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.io.IOException;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import static org.esa.beam.meris.l2auxdata.Constants.*;
@@ -161,6 +165,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedMDSIThreshold;
     @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
     private double userDefinedNDVIThreshold;
+    @Parameter(description = "User Defined Sea Ice Threshold on Climatology.", defaultValue = "10.0")
+    private double seaIceThreshold;
+
     private Band cloudFlagBand;
     private Band ctpOutputBand;
     private Band psurfOutputBand;
@@ -171,6 +178,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
     private RasterDataNode altitudeRDN;
+    private SeaIceClassifier seaIceClassifier;
 
 
     @Override
@@ -186,6 +194,18 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         if (merisWavelengthIndexMap == null) {
             merisWavelengthIndexMap = IdepixUtils.setupMerisWavelengthIndexMap();
             wavelengthIndex = merisWavelengthIndexMap.get(rhoAgReferenceWavelength);
+        }
+        initSeaIceClassifier();
+    }
+
+
+    private void initSeaIceClassifier() {
+        final ProductData.UTC startTime = getSourceProduct().getStartTime();
+        final int monthIndex = startTime.getAsCalendar().get(Calendar.MONTH);
+        try {
+            seaIceClassifier = new SeaIceClassifier(monthIndex + 1);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -452,7 +472,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         // DPM #2.1.8-1
         boolean land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
         boolean is_cloud = false;
-        boolean is_snow_ice = false;
 
         boolean bright_toa_f = resultFlags[3];  // bright_2
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_TOA, bright_toa_f);
@@ -473,6 +492,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         double pscattPressure = pixelInfo.pscattPressure;
         boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
+
+        boolean is_snow_ice = false;
         if (!land_f) {
             // over water
             boolean is_glint_risk = is_glint && is_glint_2;
@@ -481,9 +502,15 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 // disabled because the algorithm tends to detect glint as snow_ice and
                 // it's unlikely to have snow_ice in glint conditions
 //                is_snow_ice = bright_rc && high_mdsi;
-                is_cloud = (bright_rc || low_p_pscatt) && !is_snow_ice;
+                is_cloud = (bright_rc || low_p_pscatt);
             } else {
-                is_snow_ice = bright_rc && high_mdsi;
+                final GeoPos geoPos = getGeoPos(pixelInfo);
+                geoPos.lon += 180;
+                geoPos.lat += 90;
+                final SeaIceClassification classification = seaIceClassifier.getClassification(geoPos.lat, geoPos.lon);
+                if (classification.max >= seaIceThreshold) {
+                    is_snow_ice = bright_rc && high_mdsi;
+                }
                 is_cloud = (bright || low_p_pscatt) && !(is_snow_ice);
             }
         } else {
@@ -499,6 +526,14 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             computeCloudBuffer(pixelInfo, targetTile);
             computeCloudShadow(sd, pixelInfo, altTile, targetTile);
         }
+    }
+
+    private GeoPos getGeoPos(PixelInfo pixelInfo) {
+        final GeoPos geoPos = new GeoPos();
+        final GeoCoding geoCoding = getSourceProduct().getGeoCoding();
+        final PixelPos pixelPos = new PixelPos(pixelInfo.x, pixelInfo.y);
+        geoCoding.getGeoPos(pixelPos, geoPos);
+        return geoPos;
     }
 
     private void computeCloudShadow(SourceData sd, PixelInfo pixelInfo, Tile altTile, Tile targetTile) {

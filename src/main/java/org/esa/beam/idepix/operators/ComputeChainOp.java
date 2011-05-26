@@ -239,6 +239,9 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
     private double ccUserDefinedRhoToa442Threshold = 0.03;
 
+    @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
+    private double seaIceThreshold;
+
     @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
                valueSet = {
                        "412",
@@ -599,6 +602,7 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("userDefinedNDVIThreshold", ccUserDefinedNDVIThreshold);
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
         cloudClassificationParameters.put("ccCloudBufferWidth", ccCloudBufferWidth);
+        cloudClassificationParameters.put("seaIceThreshold", seaIceThreshold);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
                 cloudClassificationParameters, cloudInput);
