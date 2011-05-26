@@ -33,13 +33,13 @@ import java.util.zip.ZipFile;
  */
 public class SeaIceClassifier {
 
-//    private List<String[]> classifications;
-    private final Map<Integer,Map<Integer,String[]>> latLonMap = new HashMap<Integer, Map<Integer, String[]>>();
+    private final Map<Integer, Map<Integer, String[]>> latLonMap = new HashMap<Integer, Map<Integer, String[]>>();
 
     /**
      * Creates a new instance of SeaIceClassifier and loads the classification file.
      *
      * @param monthIndex The month the data shall be loaded for.
+     *
      * @throws java.io.IOException If resource cannot be found or read from.
      */
     public SeaIceClassifier(int monthIndex) throws IOException {
@@ -51,8 +51,8 @@ public class SeaIceClassifier {
     /**
      * Returns a new instance of SeaIceClassification for given latitude, longitude, and month.
      *
-     * @param lat   The latitude value of the classification, in the range [0..89.9999].
-     * @param lon   The longitude value of the classification, in the range [0..359.9999].
+     * @param lat The latitude value of the classification, in the range [0..89.9999].
+     * @param lon The longitude value of the classification, in the range [0..359.9999].
      *
      * @return A new instance of SeaIceClassification.
      */
@@ -69,18 +69,6 @@ public class SeaIceClassifier {
     String[] getEntry(double lat, double lon) {
         final Map<Integer, String[]> lonMap = latLonMap.get((int) lat);
         return lonMap.get((int) lon);
-
-//        for (String[] entry : classifications) {
-//            final double latitude = Double.parseDouble(entry[0]);
-//            if ((int) latitude == (int) lat) {
-//                final double longitude = Double.parseDouble(entry[1]);
-//                if ((int) longitude == (int) lon) {
-//                    return entry;
-//                }
-//            }
-//        }
-//        throw new IllegalArgumentException(
-//                MessageFormat.format("No entry found for latitude ''{0}'', longitude ''{1}''..", lat, lon));
     }
 
     void validateParameters(double lat, double lon) {
@@ -103,7 +91,7 @@ public class SeaIceClassifier {
             for (String[] classification : classifications) {
                 final int latitude = Integer.parseInt(classification[0]);
                 Map<Integer, String[]> lonMap = latLonMap.get(latitude);
-                if(lonMap == null) {
+                if (lonMap == null) {
                     lonMap = new HashMap<Integer, String[]>();
                     latLonMap.put(latitude, lonMap);
                 }

@@ -6,6 +6,8 @@
     <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
     </description>
 
+    <packaging>dir</packaging>
+
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>
         Max Planck Str.2, 21502 Geesthacht (Germany)
