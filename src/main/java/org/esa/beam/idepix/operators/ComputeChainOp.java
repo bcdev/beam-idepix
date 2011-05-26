@@ -221,6 +221,9 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
+    @Parameter(label = "GAC Window Width (# of pixels)", defaultValue = "5")
+    private int ccGacWindowWidth;
+
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ccUserDefinedPScattPressureThreshold = 700.0;
 
@@ -403,13 +406,14 @@ public class ComputeChainOp extends BasisOp {
 
         // Cloud Classification
         computeCoastColourMerisCloudProduct();
+        Product postCloudProduct = computeCoastColourCloudPostProcessProduct();
+
 
         // Gaseous Correction
         Product gasProduct = computeGaseousCorrectionProduct();
 
         // Land Water Reclassification
         Product landProduct = computeLandClassificationProduct(gasProduct);
-//        Product landProduct = computeCoastColourLandClassificationProduct(gasProduct);
 
         // Rayleigh Correction
         if (ccOutputRayleigh) {
@@ -419,6 +423,11 @@ public class ComputeChainOp extends BasisOp {
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
         fillTargetProduct(null, gasProduct, landProduct, null, null, null, null);
+
+
+        Band cloudFlagBand = targetProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS);
+        cloudFlagBand.setSourceImage(
+                postCloudProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct);
         Band l1FlagsSourceBand = sourceProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
@@ -583,9 +592,23 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void computeCoastColourMerisCloudProduct() {
+        Map<String, Object> glintCorrParameters = new HashMap<String, Object>(11);
+        glintCorrParameters.put("glintCorrParameters", false);
+        glintCorrParameters.put("outputTosa", false);
+        glintCorrParameters.put("outputNormReflec", false);
+        glintCorrParameters.put("outputReflec", false);
+        glintCorrParameters.put("outputPath", false);
+        glintCorrParameters.put("outputTransmittance", false);
+        glintCorrParameters.put("deriveRwFromPath", false);
+        glintCorrParameters.put("useFlint", false);
+        HashMap<String, Product> glintProducts = new HashMap<String, Product>();
+        glintProducts.put("merisProduct", sourceProduct);
+        Product gacProduct = GPF.createProduct("Meris.GlintCorrection", glintCorrParameters, glintProducts);
+
         Map<String, Product> cloudInput = new HashMap<String, Product>(4);
         cloudInput.put("l1b", sourceProduct);
         cloudInput.put("rhotoa", rad2reflProduct);
+        cloudInput.put("gac", gacProduct);
         cloudInput.put("ctp", ctpProduct);
         cloudInput.put("pressureOutputLise", pressureLiseProduct);
 
@@ -601,11 +624,24 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("userDefinedMDSIThreshold", ccUserDefinedMDSIThreshold);
         cloudClassificationParameters.put("userDefinedNDVIThreshold", ccUserDefinedNDVIThreshold);
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
-        cloudClassificationParameters.put("ccCloudBufferWidth", ccCloudBufferWidth);
         cloudClassificationParameters.put("seaIceThreshold", seaIceThreshold);
+        cloudClassificationParameters.put("gacWindowWidth", ccGacWindowWidth);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
                 cloudClassificationParameters, cloudInput);
+    }
+
+    private Product computeCoastColourCloudPostProcessProduct() {
+        HashMap<String, Product> sourceProducts = new HashMap<String, Product>();
+        sourceProducts.put("l1b", sourceProduct);
+        sourceProducts.put("merisCloud", merisCloudProduct);
+        sourceProducts.put("ctp", ctpProduct);
+
+        Map<String, Object> postCloudParams = new HashMap<String, Object>();
+        postCloudParams.put("cloudBufferWidth", ccCloudBufferWidth);
+        return GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourPostProcessCloudOp.class),
+                                 postCloudParams, sourceProducts);
+
     }
 
     private void computePressureLiseProduct() {
@@ -806,7 +842,7 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void addCloudClassificationFlagBand() {
-        if ((isQWGAlgo() && ipfOutputL2CloudDetection) || (isCoastColourAlgo() && ccOutputL2CloudDetection)) {
+        if (isQWGAlgo() && ipfOutputL2CloudDetection) {
             FlagCoding flagCoding = CoastColourCloudClassificationOp.createFlagCoding(
                     CoastColourCloudClassificationOp.CLOUD_FLAGS);
             targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -814,6 +850,17 @@ public class ComputeChainOp extends BasisOp {
                 if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                     targetProduct.addBand(band);
+                }
+            }
+        }
+        if (isCoastColourAlgo() && ccOutputL2CloudDetection) {
+            FlagCoding flagCoding = CoastColourCloudClassificationOp.createFlagCoding(
+                    CoastColourCloudClassificationOp.CLOUD_FLAGS);
+            targetProduct.getFlagCodingGroup().add(flagCoding);
+            for (Band band : merisCloudProduct.getBands()) {
+                if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {
+                    Band targetBand = ProductUtils.copyBand(band.getName(), merisCloudProduct, targetProduct);
+                    targetBand.setSampleCoding(flagCoding);
                 }
             }
         }

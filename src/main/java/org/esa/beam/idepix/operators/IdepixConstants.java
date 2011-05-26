@@ -76,7 +76,8 @@ public class IdepixConstants {
             "ccUserDefinedNDVIThreshold",
             "ccUserDefinedRhoToa442Threshold",
             "ccRhoAgReferenceWavelength",
-            "ccCloudBufferWidth"
+            "ccCloudBufferWidth",
+            "ccGacWindowWidth"
     };
 
 
