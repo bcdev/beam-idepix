@@ -20,10 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -78,6 +75,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private static final int BAND_SLOPE_N_1 = 1;
     private static final int BAND_SLOPE_N_2 = 2;
 
+    private static final int GAC_ATC_OOR_BITINDEX = 2;
+    private static final int GAC_TOA_OOR_BITINDEX = 3;
+
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
     public static final int F_BRIGHT_RC = 2;
@@ -101,6 +101,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Product l1bProduct;
     @SourceProduct(alias = "rhotoa")
     private Product rhoToaProduct;
+    @SourceProduct(alias = "gac")
+    private Product gacProduct;
     @SourceProduct(alias = "ctp")
     private Product ctpProduct;
     @SourceProduct(alias = "pressureOutputLise")
@@ -128,9 +130,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedDeltaRhoToa442Threshold;   // default changed from 0.185, 2011/03/25
     @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
     public double userDefinedGlintThreshold;
-
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int ccCloudBufferWidth;
 
 
     @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "865",
@@ -161,6 +160,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double userDefinedMDSIThreshold;
     @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
     private double userDefinedNDVIThreshold;
+    @Parameter(description = "GAC Window Width.", defaultValue = "5")
+    private int gacWindowWidth;
     private Band cloudFlagBand;
     private Band ctpOutputBand;
     private Band psurfOutputBand;
@@ -235,7 +236,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
                                                              CLOUD_FLAGS + ".F_CLOUD_BUFFER",
                                                              Color.RED, 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud shadow flag", w, h,
+        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_shadow", "IDEPIX CC cloud shadow flag", w, h,
                                                              CLOUD_FLAGS + ".F_CLOUD_SHADOW",
                                                              Color.BLUE, 0.5f);
         bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
@@ -270,7 +271,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     }
 
 
-    private SourceData loadSourceTiles(Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
+    private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
 
         SourceData sd = new SourceData();
         sd.rhoToa = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS][0];
@@ -332,7 +333,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                            rectangle).getRawSamples().getElems();
 
         sd.l1Flags = getSourceTile(l1bProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME), rectangle);
-
+        sd.agc_flags = getSourceTile(gacProduct.getBand("agc_flags"), rectangle);
         return sd;
     }
 
@@ -341,13 +342,12 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
         Rectangle rectangle = targetTile.getRectangle();
         try {
-            SourceData sd = loadSourceTiles(rectangle, pm);
+            SourceData sd = loadSourceTiles(rectangle);
 
             Tile ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), rectangle);
             Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle);
             Tile lisePScattTile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT),
                                                 rectangle);
-            Tile altTile = getSourceTile(altitudeRDN, rectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
@@ -373,7 +373,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
 
                         if (band == cloudFlagBand) {
-                            classifyCloud(sd, pixelInfo, altTile, targetTile);
+                            classifyCloud(sd, pixelInfo, targetTile);
                         }
                         if (band == psurfOutputBand && l2Pressures) {
                             setCloudPressureSurface(sd, pixelInfo, targetTile);
@@ -423,7 +423,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, pixelInfo.ctp);
     }
 
-    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile altTile, Tile targetTile) {
+    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         final ReturnValue press = new ReturnValue();
         float inputPressure;
         if (pressureOutputL2CloudDetectionLisePScatt) {
@@ -491,58 +491,28 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             is_snow_ice = (high_mdsi && bright_f);
             is_cloud = (bright_f) && !(is_snow_ice);
         }
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
 
+        // consolidate cloud by using the ATC_OOR flag of GAC operator
         if (is_cloud) {
-            computeCloudBuffer(pixelInfo, targetTile);
-            computeCloudShadow(sd, pixelInfo, altTile, targetTile);
-        }
-    }
-
-    private void computeCloudShadow(SourceData sd, PixelInfo pixelInfo, Tile altTile, Tile targetTile) {
-        // TODO - copied the algorithm from IdepixCloudShadowOp
-        // should be extracted into an algorithm class
-        PixelPos pixelPos = new PixelPos(pixelInfo.x, pixelInfo.y);
-        GeoCoding geoCoding = targetProduct.getGeoCoding();
-        final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
-        if (pixelInfo.ctp > 0) {
-            final float sza = sd.sza[pixelInfo.index] * MathUtils.DTOR_F;
-            final float saa = sd.saa[pixelInfo.index] * MathUtils.DTOR_F;
-            final float vza = sd.vza[pixelInfo.index] * MathUtils.DTOR_F;
-            final float vaa = sd.vaa[pixelInfo.index] * MathUtils.DTOR_F;
-
-            float cloudAlt = computeHeightFromPressure(pixelInfo.ctp);
-            GeoPos shadowPos = IdepixCloudShadowOp.getCloudShadow(altTile, geoCoding, sza, saa, vza, vaa,
-                                                                  cloudAlt, geoPos);
-            if (shadowPos != null) {
-                pixelPos = targetProduct.getGeoCoding().getPixelPos(shadowPos, pixelPos);
-                Rectangle rectangle = targetTile.getRectangle();
-                if (rectangle.contains(pixelPos)) {
-                    final int pixelX = MathUtils.floorInt(pixelPos.x);
-                    final int pixelY = MathUtils.floorInt(pixelPos.y);
-                    targetTile.setSample(pixelX, pixelY, F_CLOUD_SHADOW, true);
+            Rectangle rectangle = targetTile.getRectangle();
+            int LEFT_BORDER = Math.max(pixelInfo.x - gacWindowWidth, rectangle.x);
+            int RIGHT_BORDER = Math.min(pixelInfo.x + gacWindowWidth, rectangle.x + rectangle.width - 1);
+            int TOP_BORDER = Math.max(pixelInfo.y - gacWindowWidth, rectangle.y);
+            int BOTTOM_BORDER = Math.min(pixelInfo.y + gacWindowWidth, rectangle.y + rectangle.height - 1);
+            for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                    boolean atc_oor_f = sd.agc_flags.getSampleBit(i, j, GAC_ATC_OOR_BITINDEX);
+                    boolean toa_oor_f = sd.agc_flags.getSampleBit(i, j, GAC_TOA_OOR_BITINDEX);
+                    boolean window_land_f = sd.l1Flags.getSampleBit(i, j, L1_F_LAND);
+                    if ((atc_oor_f || toa_oor_f) && !window_land_f) {
+                        targetTile.setSample(i, j, F_CLOUD, is_cloud);
+                    }
                 }
             }
         }
-    }
-
-    private void computeCloudBuffer(PixelInfo pixelInfo, Tile targetTile) {
-        Rectangle rectangle = targetTile.getRectangle();
-        int LEFT_BORDER = Math.max(pixelInfo.x - ccCloudBufferWidth, rectangle.x);
-        int RIGHT_BORDER = Math.min(pixelInfo.x + ccCloudBufferWidth, rectangle.x + rectangle.width - 1);
-        int TOP_BORDER = Math.max(pixelInfo.y - ccCloudBufferWidth, rectangle.y);
-        int BOTTOM_BORDER = Math.min(pixelInfo.y + ccCloudBufferWidth, rectangle.y + rectangle.height - 1);
-        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                targetTile.setSample(i, j, F_CLOUD_BUFFER, true);
-            }
-        }
-    }
-
-    private float computeHeightFromPressure(float pressure) {
-        return (float) (-8000 * Math.log(pressure / 1013.0f));
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
     }
 
 
@@ -985,8 +955,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         private float[] altitude;
         private float[] ecmwfPressure;
         private Tile l1Flags;
-
-
+        private Tile agc_flags;
     }
 
     private static class PixelInfo {
