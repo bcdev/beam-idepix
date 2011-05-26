@@ -19,8 +19,6 @@ package org.esa.beam.idepix.seaice;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
-
 import static org.junit.Assert.*;
 
 /**
@@ -32,7 +30,7 @@ public class SeaIceClassifierTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        seaIceClassifier = new MySeaIceClassifier();
+        seaIceClassifier = new SeaIceClassifier();
     }
 
     @Test
@@ -108,12 +106,5 @@ public class SeaIceClassifierTest {
     @Test(expected = IllegalArgumentException.class)
     public void testValidateParameters_FailHighMonth() throws Exception {
         seaIceClassifier.validateParameters(90, 10, 13);
-    }
-
-    private static class MySeaIceClassifier extends SeaIceClassifier {
-
-        public MySeaIceClassifier() throws IOException {
-            super();
-        }
     }
 }
