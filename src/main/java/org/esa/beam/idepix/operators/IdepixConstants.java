@@ -77,7 +77,8 @@ public class IdepixConstants {
             "ccUserDefinedRhoToa442Threshold",
             "ccRhoAgReferenceWavelength",
             "ccCloudBufferWidth",
-            "ccGacWindowWidth"
+            "ccGacWindowWidth",
+            "seaIceThreshold"
     };
 
 
