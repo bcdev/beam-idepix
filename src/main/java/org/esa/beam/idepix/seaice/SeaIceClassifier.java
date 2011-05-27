@@ -24,7 +24,8 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * API class which provides access to static data maps for sea ice classification.
@@ -33,26 +34,33 @@ import java.util.zip.ZipFile;
  */
 public class SeaIceClassifier {
 
-//    private List<String[]> classifications;
-    private final Map<Integer,Map<Integer,String[]>> latLonMap = new HashMap<Integer, Map<Integer, String[]>>();
+    private final Map<Integer, Map<Integer, String[]>> latLonMap = new HashMap<Integer, Map<Integer, String[]>>();
 
     /**
      * Creates a new instance of SeaIceClassifier and loads the classification file.
      *
-     * @param monthIndex The month the data shall be loaded for.
+     * @param month The month the data shall be loaded for.
+     *
      * @throws java.io.IOException If resource cannot be found or read from.
      */
-    public SeaIceClassifier(int monthIndex) throws IOException {
-        final String path = getClass().getResource("classification.zip").getFile();
-        ZipFile zip = new ZipFile(path);
-        loadClassifications(monthIndex, zip);
+    public SeaIceClassifier(int month) throws IOException {
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException("month must be in between 1 and 12.");
+        }
+        InputStream classificationZipStream = getClass().getResourceAsStream("classification.zip");
+        ZipInputStream zip = new ZipInputStream(classificationZipStream);
+        try {
+            loadClassifications(month, zip);
+        } finally {
+            zip.close();
+        }
     }
 
     /**
      * Returns a new instance of SeaIceClassification for given latitude, longitude, and month.
      *
-     * @param lat   The latitude value of the classification, in the range [0..89.9999].
-     * @param lon   The longitude value of the classification, in the range [0..359.9999].
+     * @param lat The latitude value of the classification, in the range [0..180].
+     * @param lon The longitude value of the classification, in the range [0..360].
      *
      * @return A new instance of SeaIceClassification.
      */
@@ -67,53 +75,54 @@ public class SeaIceClassifier {
     }
 
     String[] getEntry(double lat, double lon) {
-        final Map<Integer, String[]> lonMap = latLonMap.get((int) lat);
-        return lonMap.get((int) lon);
+        int latIndex = (int) lat;
+        if (latIndex == 180) {
+            // latitude of 180 is a valid value, but value range in map is 0..179
+            // therefore we map 180 to 179
+            latIndex--;
+        }
+        int lonIndex = (int) lon;
+        if (latIndex == 360) {
+            // latitude of 360 is a valid value, but value range in map is 0..359
+            // therefore we map 360 to 359
+            latIndex--;
+        }
 
-//        for (String[] entry : classifications) {
-//            final double latitude = Double.parseDouble(entry[0]);
-//            if ((int) latitude == (int) lat) {
-//                final double longitude = Double.parseDouble(entry[1]);
-//                if ((int) longitude == (int) lon) {
-//                    return entry;
-//                }
-//            }
-//        }
-//        throw new IllegalArgumentException(
-//                MessageFormat.format("No entry found for latitude ''{0}'', longitude ''{1}''..", lat, lon));
+        final Map<Integer, String[]> lonMap = latLonMap.get(latIndex);
+        return lonMap.get(lonIndex);
     }
 
-    void validateParameters(double lat, double lon) {
-        if (lat >= 180 || lat < 0) {
-            throw new IllegalArgumentException("lat must be >= 0 and < 180, was '" + lat + "'.");
+    static void validateParameters(double lat, double lon) {
+        if (lat > 180 || lat < 0) {
+            throw new IllegalArgumentException("lat must be >= 0 and <= 180, was '" + lat + "'.");
         }
-        if (lon >= 360 || lon < 0) {
-            throw new IllegalArgumentException("lon must be >= 0 and < 360, was '" + lon + "'.");
+        if (lon > 360 || lon < 0) {
+            throw new IllegalArgumentException("lon must be >= 0 and <= 360, was '" + lon + "'.");
         }
     }
 
-    private void loadClassifications(int month, ZipFile zip) throws IOException {
-        InputStream inputStream = null;
-        try {
-            final String fileName = String.format("classification_%d.csv", month);
-            inputStream = zip.getInputStream(zip.getEntry(fileName));
-            final InputStreamReader reader = new InputStreamReader(inputStream);
-            final CsvReader csvReader = new CsvReader(reader, new char[]{' '}, true, "#");
-            List<String[]> classifications = csvReader.readStringRecords();
-            for (String[] classification : classifications) {
-                final int latitude = Integer.parseInt(classification[0]);
-                Map<Integer, String[]> lonMap = latLonMap.get(latitude);
-                if(lonMap == null) {
-                    lonMap = new HashMap<Integer, String[]>();
-                    latLonMap.put(latitude, lonMap);
+    private void loadClassifications(int month, ZipInputStream zip) throws IOException {
+        final String fileName = String.format("classification_%d.csv", month);
+        ZipEntry ze = zip.getNextEntry();
+
+        while (ze != null) {
+            if (ze.getName().equals(fileName)) {
+                final InputStreamReader reader = new InputStreamReader(zip);
+                final CsvReader csvReader = new CsvReader(reader, new char[]{' '}, true, "#");
+                List<String[]> classifications = csvReader.readStringRecords();
+                for (String[] classification : classifications) {
+                    final int latitude = Integer.parseInt(classification[0]);
+                    Map<Integer, String[]> lonMap = latLonMap.get(latitude);
+                    if (lonMap == null) {
+                        lonMap = new HashMap<Integer, String[]>();
+                        latLonMap.put(latitude, lonMap);
+                    }
+                    final int longitude = Integer.parseInt(classification[1]);
+                    lonMap.put(longitude, classification);
                 }
-                final int longitude = Integer.parseInt(classification[1]);
-                lonMap.put(longitude, classification);
+                return;
             }
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
+            ze = zip.getNextEntry();
         }
     }
 
