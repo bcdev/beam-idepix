@@ -190,10 +190,14 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band scattAngleOutputBand;
     private Band rhoThreshOutputBand;
     private Band rhoGlintOutputBand;
+    private Band rhoAgOutputBand;
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
     private SeaIceClassifier seaIceClassifier;
     private WatermaskClassifier landWaterClassifier;
+    private Band ctpBand;
+    private Band liseP1Band;
+    private Band lisePScattBand;
 
 
     @Override
@@ -219,6 +223,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             }
         }
 
+        ctpBand = ctpProduct.getBand("cloud_top_press");
+        liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
+        lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
     }
 
 
@@ -244,6 +251,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         scattAngleOutputBand = targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
         rhoThreshOutputBand = targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
         rhoGlintOutputBand = targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
+        rhoAgOutputBand = targetProduct.addBand(RHO_AG + "_" + rhoAgReferenceWavelength, ProductData.TYPE_FLOAT32);
         mdsiOutputBand = targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
     }
 
@@ -388,10 +396,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         try {
             SourceData sd = loadSourceTiles(rectangle);
 
-            Tile ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), rectangle);
-            Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle);
-            Tile lisePScattTile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT),
-                                                rectangle);
+            Tile ctpTile = getSourceTile(ctpBand, rectangle);
+            Tile liseP1Tile = getSourceTile(liseP1Band, rectangle);
+            Tile lisePScattTile = getSourceTile(lisePScattBand, rectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
@@ -443,7 +450,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoGlint);
                         }
 
-                        if (band.getName().equals(RHO_AG + "_" + rhoAgReferenceWavelength)) {
+                        if (band == rhoAgOutputBand) {
                             final double rhoAg = computeRhoAg(wavelengthIndex, sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoAg);
                         }
@@ -459,7 +466,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         final ReturnValue press = new ReturnValue();
 
-        Comp_Pressure(sd, pixelInfo, press);
+        computePressure(sd, pixelInfo, press);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, Math.max(0.0, press.value));
     }
 
@@ -478,7 +485,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
         final boolean[] resultFlags = new boolean[6];
 
-        Comp_Pressure(sd, pixelInfo, press);
+        computePressure(sd, pixelInfo, press);
 
         /* apply thresholds on pressure- step 2.1.2 */
         press_thresh(sd, pixelInfo, press.value, inputPressure, resultFlags);
@@ -650,7 +657,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
      * @param pixelInfo the pixel structure
      * @param press     the resulting pressure
      */
-    private void Comp_Pressure(SourceData sd, PixelInfo pixelInfo, ReturnValue press) {
+    private void computePressure(SourceData sd, PixelInfo pixelInfo, ReturnValue press) {
         double eta; // Ratio TOAR(11)/TOAR(10)
         press.error = false;
         final FractIndex spectralShiftIndex = new FractIndex();

@@ -225,7 +225,7 @@ public class ComputeChainOp extends BasisOp {
     private double ccUserDefinedPScattPressureThreshold = 700.0;
 
     @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
-    public double ccUserDefinedGlintThreshold;
+    private double ccUserDefinedGlintThreshold;
 
     @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
     private double ccUserDefinedRhoToa753Threshold = 0.1;

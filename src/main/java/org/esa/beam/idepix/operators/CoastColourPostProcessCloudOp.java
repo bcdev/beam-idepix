@@ -37,8 +37,6 @@ import java.awt.Rectangle;
                   description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
 public class CoastColourPostProcessCloudOp extends MerisBasisOp {
 
-    private static final int GAC_ATC_OOR_BITINDEX = 2;
-
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
     @SourceProduct(alias = "merisCloud")
