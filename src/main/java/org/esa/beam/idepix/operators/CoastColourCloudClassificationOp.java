@@ -518,7 +518,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         // DPM #2.1.8-1
         boolean land_f;
         boolean coast_f;
-        GeoCoding geoCoding = getSourceProduct().getGeoCoding();
         if (useL1bLandFlag) {
             coast_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_COAST);
             land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
@@ -555,7 +554,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
 
         boolean is_snow_ice = false;
-        if (!(land_f && coast_f)) {
+        boolean land_coast = land_f || coast_f;
+        if (!(land_coast)) {
             // over water
             boolean is_glint_risk = is_glint && is_glint_2;
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
