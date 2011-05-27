@@ -353,7 +353,7 @@ public class ComputeChainOp extends BasisOp {
 
         // Rayleigh Correction
         if (ipfOutputRayleigh || isGlobAlbedoAlgo()) {
-            computeRayleighCorrectionProduct(gasProduct, landProduct);
+            computeRayleighCorrectionProduct(gasProduct, landProduct, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         }
 
         // Blue Band
@@ -417,7 +417,7 @@ public class ComputeChainOp extends BasisOp {
 
         // Rayleigh Correction
         if (ccOutputRayleigh) {
-            computeRayleighCorrectionProduct(gasProduct, landProduct);
+            computeRayleighCorrectionProduct(gasProduct, landProduct, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         }
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
@@ -496,7 +496,7 @@ public class ComputeChainOp extends BasisOp {
         return GPF.createProduct(OperatorSpi.getOperatorAlias(BrrOp.class), brrParameters, brrInput);
     }
 
-    private void computeRayleighCorrectionProduct(Product gasProduct, Product landProduct) {
+    private void computeRayleighCorrectionProduct(Product gasProduct, Product landProduct, String landExpression) {
         Map<String, Product> rayleighInput = new HashMap<String, Product>(3);
         rayleighInput.put("l1b", sourceProduct);
         rayleighInput.put("input", gasProduct);
@@ -505,6 +505,7 @@ public class ComputeChainOp extends BasisOp {
         rayleighInput.put("cloud", merisCloudProduct);
         Map<String, Object> rayleighParameters = new HashMap<String, Object>(2);
         rayleighParameters.put("correctWater", true);
+        rayleighParameters.put("landExpression", landExpression);
         rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class),
                                             rayleighParameters, rayleighInput);
     }

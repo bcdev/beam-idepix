@@ -15,7 +15,12 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.meris.brr.*;
+import org.esa.beam.meris.brr.CloudClassificationOp;
+import org.esa.beam.meris.brr.GaseousCorrectionOp;
+import org.esa.beam.meris.brr.HelperFunctions;
+import org.esa.beam.meris.brr.LandClassificationOp;
+import org.esa.beam.meris.brr.Rad2ReflOp;
+import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
@@ -23,16 +28,16 @@ import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.Map;
 
 
 @OperatorMetadata(alias = "Meris.IdepixRayleighCorrection",
-        version = "1.0",
-        internal = true,
-        authors = "Marco Zuehlke, Olaf Danne",
-        copyright = "(c) 2007 by Brockmann Consult",
-        description = "MERIS L2 rayleigh correction.")
+                  version = "1.0",
+                  internal = true,
+                  authors = "Marco Zuehlke, Olaf Danne",
+                  copyright = "(c) 2007 by Brockmann Consult",
+                  description = "MERIS L2 rayleigh correction.")
 public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constants {
 
     public static final String BRR_BAND_PREFIX = "brr";
@@ -72,6 +77,8 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
     private Product targetProduct;
     @Parameter
     boolean correctWater = false;
+    @Parameter(defaultValue = LandClassificationOp.LAND_FLAGS + ".F_LANDCONS")
+    String landExpression;
     @Parameter
     boolean exportRayCoeffs = false;
     @Parameter
@@ -109,7 +116,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
             sphAlbRBands = addBandGroup("sphAlbR");
         }
         BandMathsOp bandArithmeticOp =
-                BandMathsOp.createBooleanExpressionBand(LandClassificationOp.LAND_FLAGS + ".F_LANDCONS", landProduct);
+                BandMathsOp.createBooleanExpressionBand(landExpression, landProduct);
         isLandBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
         if (l1bProduct.getPreferredTileSize() != null) {
             targetProduct.setPreferredTileSize(l1bProduct.getPreferredTileSize());
@@ -140,15 +147,15 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws
-            OperatorException {
+                                                                                                       OperatorException {
         try {
             Tile sza = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME), rectangle);
             Tile vza = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME), rectangle);
             Tile saa = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME), rectangle);
             Tile vaa = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
-                    rectangle);
+                                     rectangle);
             Tile altitude = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME),
-                    rectangle);
+                                          rectangle);
             Tile ecmwfPressure = getSourceTile(l1bProduct.getTiePointGrid("atm_press"), rectangle);
 
             Tile[] rhoNg = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
@@ -201,10 +208,11 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
             Tile cloudFlagsTile = null;
             if (cloudProduct != null) {
                 surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE),
-                        rectangle);
+                                                    rectangle);
                 cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP),
-                        rectangle);
-                cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
+                                                     rectangle);
+                cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS),
+                                               rectangle);
             }
 
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y += Constants.SUBWIN_HEIGHT) {
@@ -215,9 +223,8 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
                     for (int iy = y; iy <= yWinEnd; iy++) {
                         for (int ix = x; ix <= xWinEnd; ix++) {
-                            if (rhoNg[0].getSampleFloat(ix,
-                                    iy) != BAD_VALUE && (correctWater || isLandCons.getSampleBoolean(
-                                    ix, iy))) {
+                            if (rhoNg[0].getSampleFloat(ix, iy) != BAD_VALUE &&
+                                (correctWater || isLandCons.getSampleBoolean(ix, iy))) {
                                 correctPixel = true;
                                 do_corr[iy - y][ix - x] = true;
                             } else {
@@ -243,23 +250,23 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                         final double mus = Math.cos(szaRad);
                         final double muv = Math.cos(vzaRad);
                         final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(vaa.getSampleFloat(x, y),
-                                saa.getSampleFloat(x, y));
+                                                                                             saa.getSampleFloat(x, y));
 
                         /*
                               * 2. Rayleigh corrections (DPM section 7.3.3.3.2, step 2.6.15)
                               */
                         double press = HelperFunctions.correctEcmwfPressure(ecmwfPressure.getSampleFloat(x, y),
-                                altitude.getSampleFloat(x, y),
-                                auxData.press_scale_height); /* DPM #2.6.15.1-3 */
+                                                                            altitude.getSampleFloat(x, y),
+                                                                            auxData.press_scale_height); /* DPM #2.6.15.1-3 */
                         final double airMass = HelperFunctions.calculateAirMassMusMuv(muv, mus);
 
                         /* correct pressure in presence of clouds */
                         if (cloudProduct != null) {
                             final boolean isCloud = cloudFlagsTile.getSampleBit(x, y, CloudClassificationOp.F_CLOUD);
                             if (isCloud) {
-                                final double pressureCorrectionCloud = cloudTopPressureTile.getSampleDouble(x,
-                                        y) / surfacePressureTile.getSampleDouble(
-                                        x, y);
+                                double ctp = cloudTopPressureTile.getSampleDouble(x, y);
+                                double sp = surfacePressureTile.getSampleDouble(x, y);
+                                final double pressureCorrectionCloud = ctp / sp;
                                 press *= pressureCorrectionCloud;
                             }
                         }
@@ -272,7 +279,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
                         /* Rayleigh reflectance*/
                         rayleighCorrection.ref_rayleigh(deltaAzimuth, szaSampleFloat, vzaSampleFloat, mus, muv,
-                                airMass, phaseR, tauR, rhoR);
+                                                        airMass, phaseR, tauR, rhoR);
 
                         /* Rayleigh transmittance */
                         rayleighCorrection.trans_rayleigh(mus, tauR, transRs);
@@ -287,7 +294,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                                 if (do_corr[iy - y][ix - x]) {
                                     /* Rayleigh correction for each pixel */
                                     rayleighCorrection.corr_rayleigh(rhoR, sphAlbR, transRs, transRv,
-                                            rhoNg, brr, ix, iy); /*  (2.6.15.4) */
+                                                                     rhoNg, brr, ix, iy); /*  (2.6.15.4) */
 
                                     /* flag negative Rayleigh-corrected reflectance */
                                     for (int bandId : BANDS_TO_CORRECT) {
