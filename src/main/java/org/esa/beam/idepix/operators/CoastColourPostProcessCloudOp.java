@@ -105,7 +105,6 @@ public class CoastColourPostProcessCloudOp extends MerisBasisOp {
             checkForCancellation();
             for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
                 boolean is_cloud = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
-
                 if (is_cloud) {
                     computeCloudBufferShadow(x, y,
                                              szaTile, vzaTile, saaTile, vaaTile, altitudeTile, ctpTile,
@@ -131,7 +130,8 @@ public class CoastColourPostProcessCloudOp extends MerisBasisOp {
         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                 boolean is_already_cloud = sourceFlagTile.getSampleBit(i, j, CoastColourCloudClassificationOp.F_CLOUD);
-                if (!is_already_cloud && targetTile.getRectangle().contains(i, j)) {
+                boolean is_land = sourceFlagTile.getSampleBit(i, j, CoastColourCloudClassificationOp.F_LAND);
+                if (!is_already_cloud && !is_land && targetTile.getRectangle().contains(i, j)) {
                     targetTile.setSample(i, j, CoastColourCloudClassificationOp.F_CLOUD_BUFFER, true);
                 }
             }

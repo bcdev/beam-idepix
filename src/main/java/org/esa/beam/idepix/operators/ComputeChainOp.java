@@ -49,9 +49,9 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
-                  version = "1.2",
+                  version = "1.3.1",
                   authors = "Olaf Danne, Carsten Brockmann",
-                  copyright = "(c) 2010 by Brockmann Consult",
+                  copyright = "(c) 2011 by Brockmann Consult",
                   description = "Pixel identification and classification. This operator just calls a chain of other operators.")
 public class ComputeChainOp extends BasisOp {
 
