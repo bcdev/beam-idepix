@@ -498,7 +498,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         boolean coast_f;
         if (useL1bLandFlag) {
             coast_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_COAST);
-            land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND) || coast_f;
+            land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
         } else {
             GeoCoding geoCoding = getSourceProduct().getGeoCoding();
             try {
@@ -506,7 +506,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                                                               new PixelPos(pixelInfo.x, pixelInfo.y),
                                                                               oversamplingFactorX, oversamplingFactorY);
                 coast_f = waterFraction < 100 && waterFraction > 0;
-                land_f = waterFraction == 0 || coast_f;
+                land_f = waterFraction == 0;
             } catch (IOException e) {
                 throw new OperatorException("Could not set land flag", e);
             }
