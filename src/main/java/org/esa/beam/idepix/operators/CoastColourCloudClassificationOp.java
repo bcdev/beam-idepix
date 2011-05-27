@@ -198,6 +198,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band ctpBand;
     private Band liseP1Band;
     private Band lisePScattBand;
+    private byte[] waterFractionArray;
 
 
     @Override
@@ -220,6 +221,20 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 landWaterClassifier = new WatermaskClassifier(landMaskResolution);
             } catch (IOException e) {
                 throw new OperatorException("Could not initialise WatermaskClassifier", e);
+            }
+        }
+        waterFractionArray = new byte[l1bProduct.getSceneRasterWidth() * l1bProduct.getSceneRasterHeight()];
+        for (int y = 0; y < l1bProduct.getSceneRasterHeight(); y++) {
+            for (int x = 0; x < l1bProduct.getSceneRasterWidth(); x++) {
+                int index = y * l1bProduct.getSceneRasterWidth() + x;
+                try {
+                    waterFractionArray[index] = landWaterClassifier.getWaterMaskFraction(l1bProduct.getGeoCoding(),
+                                                                                         new PixelPos(x, y),
+                                                                                         oversamplingFactorX,
+                                                                                         oversamplingFactorY);
+                } catch (IOException e) {
+                    throw new OperatorException("Could not compute water fraction", e);
+                }
             }
         }
 
@@ -503,20 +518,14 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         // DPM #2.1.8-1
         boolean land_f;
         boolean coast_f;
+        GeoCoding geoCoding = getSourceProduct().getGeoCoding();
         if (useL1bLandFlag) {
             coast_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_COAST);
             land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
         } else {
-            GeoCoding geoCoding = getSourceProduct().getGeoCoding();
-            try {
-                byte waterFraction = landWaterClassifier.getWaterMaskFraction(geoCoding,
-                                                                              new PixelPos(pixelInfo.x, pixelInfo.y),
-                                                                              oversamplingFactorX, oversamplingFactorY);
-                coast_f = waterFraction < 100 && waterFraction > 0;
-                land_f = waterFraction == 0;
-            } catch (IOException e) {
-                throw new OperatorException("Could not set land flag", e);
-            }
+            byte waterFraction = waterFractionArray[pixelInfo.y * l1bProduct.getSceneRasterWidth() + pixelInfo.x];
+            coast_f = waterFraction < 100 && waterFraction > 0;
+            land_f = waterFraction == 0;
         }
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, land_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_COASTLINE, coast_f);
@@ -546,7 +555,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
 
         boolean is_snow_ice = false;
-        if (!land_f) {
+        if (!(land_f && coast_f)) {
             // over water
             boolean is_glint_risk = is_glint && is_glint_2;
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
@@ -582,8 +591,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                     boolean atc_oor_f = sd.agc_flags.getSampleBit(i, j, GAC_ATC_OOR_BITINDEX);
                     boolean toa_oor_f = sd.agc_flags.getSampleBit(i, j, GAC_TOA_OOR_BITINDEX);
-                    boolean window_land_f = sd.l1Flags.getSampleBit(i, j, L1_F_LAND);
-                    if ((atc_oor_f || toa_oor_f) && !window_land_f) {
+                    byte waterFraction = waterFractionArray[j * l1bProduct.getSceneRasterWidth() + i];
+                    boolean window_coast_land_f = waterFraction < 100;
+                    if ((atc_oor_f || toa_oor_f) && !window_coast_land_f) {
                         targetTile.setSample(i, j, F_CLOUD, is_cloud);
                     }
                 }
