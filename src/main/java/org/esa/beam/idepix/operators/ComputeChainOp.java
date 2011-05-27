@@ -206,9 +206,6 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false", label = " Gas Absorption Corrected Reflectances")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(defaultValue = "true", label = " Land/Water Reclassification Flags")
-    private boolean ccOutputLandWater = true;
-
     @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances")
     private boolean ccOutputRayleigh = true;
 
@@ -242,28 +239,28 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
     private double ccUserDefinedRhoToa442Threshold = 0.03;
 
-    @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
-    private double seaIceThreshold;
-
     @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
                valueSet = {
-                       "412",
-                       "442",
-                       "490",
-                       "510",
-                       "560",
-                       "620",
-                       "665",
-                       "681",
-                       "705",
-                       "753",
-                       "760",
-                       "775",
-                       "865",
-                       "890",
-                       "900"
+                       "412", "442", "490", "510", "560", "620", "665",
+                       "681", "705", "753", "760", "775", "865", "890", "900"
                })
     private int ccRhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
+
+    @Parameter(label = "Use L1b land flag", defaultValue = "false",
+               description = "Use the L1b Land flag instead of the high resolution mask.")
+    private boolean ccUseL1bLandFlag;
+    @Parameter(label = "Resolution of land mask", defaultValue = "50",
+               description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
+    private int ccLandMaskResolution;
+    @Parameter(label = "Source pixel over-sampling (X)", defaultValue = "3",
+               description = "The factor used to over-sample the source pixels in X-direction.")
+    private int ccOversamplingFactorX;
+    @Parameter(label = "Source pixel over-sampling (Y)", defaultValue = "3",
+               description = "The factor used to over-sample the source pixels in Y-direction.")
+    private int ccOversamplingFactorY;
+
+    @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
+    private double ccSeaIceThreshold;
 
 
     private boolean straylightCorr;
@@ -413,16 +410,18 @@ public class ComputeChainOp extends BasisOp {
         Product gasProduct = computeGaseousCorrectionProduct();
 
         // Land Water Reclassification
-        Product landProduct = computeLandClassificationProduct(gasProduct);
+        // Land classification is done CoastColourMerisCloudProduct
+//        Product landProduct = computeLandClassificationProduct(gasProduct);
 
         // Rayleigh Correction
         if (ccOutputRayleigh) {
-            computeRayleighCorrectionProduct(gasProduct, landProduct, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
+            computeRayleighCorrectionProduct(gasProduct, merisCloudProduct,
+                                             CoastColourCloudClassificationOp.CLOUD_FLAGS + ".F_LAND");
         }
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
-        fillTargetProduct(null, gasProduct, landProduct, null, null, null, null);
+        fillTargetProduct(null, gasProduct, null, null, null, null, null);
 
 
         Band cloudFlagBand = targetProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS);
@@ -625,8 +624,12 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("userDefinedMDSIThreshold", ccUserDefinedMDSIThreshold);
         cloudClassificationParameters.put("userDefinedNDVIThreshold", ccUserDefinedNDVIThreshold);
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
-        cloudClassificationParameters.put("seaIceThreshold", seaIceThreshold);
         cloudClassificationParameters.put("gacWindowWidth", ccGacWindowWidth);
+        cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
+        cloudClassificationParameters.put("useL1bLandFlag", ccUseL1bLandFlag);
+        cloudClassificationParameters.put("landMaskResolution", ccLandMaskResolution);
+        cloudClassificationParameters.put("oversamplingFactorX", ccOversamplingFactorX);
+        cloudClassificationParameters.put("oversamplingFactorY", ccOversamplingFactorY);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
                 cloudClassificationParameters, cloudInput);
@@ -799,7 +802,7 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void addLandWaterClassificationFlagBand(Product landProduct) {
-        if ((isQWGAlgo() && ipfOutputLandWater) || (isCoastColourAlgo() && ccOutputLandWater)) {
+        if (isQWGAlgo() && ipfOutputLandWater) {
             FlagCoding flagCoding = LandClassificationOp.createFlagCoding();
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : landProduct.getBands()) {

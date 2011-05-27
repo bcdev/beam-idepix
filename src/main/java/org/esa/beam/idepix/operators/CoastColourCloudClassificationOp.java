@@ -26,6 +26,7 @@ import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -48,6 +49,7 @@ import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
+import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -97,6 +99,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final int F_GLINTRISK = 10;
     public static final int F_CLOUD_BUFFER = 11;
     public static final int F_CLOUD_SHADOW = 12;
+    public static final int F_LAND = 13;
+    public static final int F_COASTLINE = 14;
+    public static final int F_LANDRISK = 15;
 
     private L2AuxData auxData;
 
@@ -119,11 +124,21 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     @TargetProduct
     private Product targetProduct;
 
+    @Parameter(label = "Use L1b land flag", defaultValue = "false",
+               description = "Use the L1b Land flag instead of the high resolution mask.")
+    private boolean useL1bLandFlag;
+    @Parameter(label = "Resolution of land mask", defaultValue = "50",
+               description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
+    private int landMaskResolution;
+    @Parameter(label = "Source pixel over-sampling (X)", defaultValue = "3",
+               description = "The factor used to over-sample the source pixels in X-direction.")
+    private int oversamplingFactorX;
+    @Parameter(label = "Source pixel over-sampling (Y)", defaultValue = "3",
+               description = "The factor used to over-sample the source pixels in Y-direction.")
+    private int oversamplingFactorY;
+
     @Parameter(description = "If 'true' the algorithm will compute L2 Pressures.", defaultValue = "true")
     private boolean l2Pressures;
-    // todo (mp 2010/10/04)- parameter is never used
-    @Parameter(description = "If 'true' the algorithm will compute L2 Cloud detection flags.", defaultValue = "true")
-    private boolean l2CloudDetection;
     @Parameter(label = "L2 Cloud Detection Flags with LISE 'PScatt'", defaultValue = "false")
     private boolean pressureOutputL2CloudDetectionLisePScatt;
     @Parameter(description = "User Defined P1 Pressure Threshold.", defaultValue = "125.0")
@@ -161,8 +176,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
-    @Parameter(description = "User Defined RhoTOA Ratio 753/775 Threshold.", defaultValue = "0.15")
-    private double userDefinedRhoToaRatio753775Threshold;
     @Parameter(description = "User Defined MDSI Threshold.", defaultValue = "0.01")
     private double userDefinedMDSIThreshold;
     @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
@@ -177,11 +190,10 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band scattAngleOutputBand;
     private Band rhoThreshOutputBand;
     private Band rhoGlintOutputBand;
-    private Band rhoAgOutputBand;
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
-    private RasterDataNode altitudeRDN;
     private SeaIceClassifier seaIceClassifier;
+    private WatermaskClassifier landWaterClassifier;
 
 
     @Override
@@ -199,6 +211,14 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             wavelengthIndex = merisWavelengthIndexMap.get(rhoAgReferenceWavelength);
         }
         initSeaIceClassifier();
+        if (!useL1bLandFlag) {
+            try {
+                landWaterClassifier = new WatermaskClassifier(landMaskResolution);
+            } catch (IOException e) {
+                throw new OperatorException("Could not initialise WatermaskClassifier", e);
+            }
+        }
+
     }
 
 
@@ -224,7 +244,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         scattAngleOutputBand = targetProduct.addBand(SCATT_ANGLE, ProductData.TYPE_FLOAT32);
         rhoThreshOutputBand = targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
         rhoGlintOutputBand = targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
-        rhoAgOutputBand = targetProduct.addBand(RHO_AG + "_" + rhoAgReferenceWavelength, ProductData.TYPE_FLOAT32);
         mdsiOutputBand = targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
     }
 
@@ -242,41 +261,45 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
         flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
         flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), null);
+        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
+        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, F_COASTLINE), null);
+        flagCoding.addFlag("F_LANDRISK", BitSetter.setFlag(0, F_LANDRISK), null);
         return flagCoding;
     }
 
-    private static Mask[] createBitmaskDefs(Product sourceProduct) {
-
-        Mask[] bitmaskDefs = new Mask[8];
-
-        int w = sourceProduct.getSceneRasterWidth();
-        int h = sourceProduct.getSceneRasterHeight();
-        int maskIndex = 0;
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
-                                                             CLOUD_FLAGS + ".F_CLOUD",
-                                                             Color.YELLOW, 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
-                                                             CLOUD_FLAGS + ".F_CLOUD_BUFFER",
-                                                             Color.RED, 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_cloud_shadow", "IDEPIX CC cloud shadow flag", w, h,
-                                                             CLOUD_FLAGS + ".F_CLOUD_SHADOW",
-                                                             Color.BLUE, 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
-                                                             CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
-                                                             CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f);
-
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_interm_bright", "IDEPIX CC result of bright test", w,
-                                                             h,
-                                                             CLOUD_FLAGS + ".F_BRIGHT", Color.YELLOW.darker(), 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_interm_low_pscatt",
-                                                             "IDEPIX CC result of test on apparent scattering (over ocean)",
-                                                             w, h, CLOUD_FLAGS + ".F_LOW_PSCATT",
-                                                             Color.YELLOW.brighter(), 0.5f);
-        bitmaskDefs[maskIndex++] = Mask.BandMathsType.create("cc_interm_prel_bright",
-                                                             "IDEPIX CC result of preliminary bright test", w, h,
-                                                             CLOUD_FLAGS + ".F_BRIGHT_RC",
-                                                             Color.YELLOW.darker().darker(), 0.5f);
+    private static void createBitmaskDefs(ProductNodeGroup<Mask> maskGroup) {
+        int w = maskGroup.getProduct().getSceneRasterWidth();
+        int h = maskGroup.getProduct().getSceneRasterHeight();
+        maskGroup.add(Mask.BandMathsType.create("cc_land", "IDEPIX CC land flag", w, h,
+                                                CLOUD_FLAGS + ".F_LAND",
+                                                Color.GREEN.darker(), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_coastline", "IDEPIX CC coastline flag", w, h,
+                                                CLOUD_FLAGS + ".F_COASTLINE",
+                                                Color.GREEN, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_landrisk", "IDEPIX CC risk for land flag", w, h,
+                                                CLOUD_FLAGS + ".F_LANDRISK",
+                                                Color.GREEN.darker().darker(), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
+                                                CLOUD_FLAGS + ".F_CLOUD",
+                                                Color.YELLOW, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
+                                                CLOUD_FLAGS + ".F_CLOUD_BUFFER",
+                                                Color.RED, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_shadow", "IDEPIX CC cloud shadow flag", w, h,
+                                                CLOUD_FLAGS + ".F_CLOUD_SHADOW",
+                                                Color.BLUE, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
+                                                CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
+                                                CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_interm_bright", "IDEPIX CC result of bright test", w, h,
+                                                CLOUD_FLAGS + ".F_BRIGHT", Color.YELLOW.darker(), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_interm_low_pscatt",
+                                                "IDEPIX CC result of test on apparent scattering (over ocean)",
+                                                w, h, CLOUD_FLAGS + ".F_LOW_PSCATT", Color.YELLOW.brighter(), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_interm_prel_bright", "IDEPIX CC result of preliminary bright test",
+                                                w, h, CLOUD_FLAGS + ".F_BRIGHT_RC", Color.YELLOW.darker().darker(),
+                                                0.5f));
 
         // not used as masks but still available as flag
 //        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
@@ -288,8 +311,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 //        bitmaskDefs[9] = Mask.BandMathsType.create("f_high_mdsi",
 //                                                   "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
 //                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
-
-        return bitmaskDefs;
     }
 
 
@@ -337,6 +358,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             sd.cosv[i] = (float) Math.cos(sd.vza[i] * MathUtils.DTOR);
             sd.deltaAzimuth[i] = (float) HelperFunctions.computeAzimuthDifference(sd.vaa[i], sd.saa[i]);
         }
+        RasterDataNode altitudeRDN;
         if (l1bProduct.getProductType().equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
             altitudeRDN = l1bProduct.getBand("altitude");
         } else {
@@ -472,8 +494,29 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
-        boolean land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
-        boolean is_cloud = false;
+        boolean land_f;
+        boolean coast_f;
+        if (useL1bLandFlag) {
+            coast_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_COAST);
+            land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND) || coast_f;
+        } else {
+            GeoCoding geoCoding = getSourceProduct().getGeoCoding();
+            try {
+                byte waterFraction = landWaterClassifier.getWaterMaskFraction(geoCoding,
+                                                                              new PixelPos(pixelInfo.x, pixelInfo.y),
+                                                                              oversamplingFactorX, oversamplingFactorY);
+                coast_f = waterFraction < 100 && waterFraction > 0;
+                land_f = waterFraction == 0 || coast_f;
+            } catch (IOException e) {
+                throw new OperatorException("Could not set land flag", e);
+            }
+        }
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, land_f);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_COASTLINE, coast_f);
+        // not yet used; shall be spectral analysis
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LANDRISK, 0);
+
+        boolean is_cloud;
 
         boolean bright_toa_f = resultFlags[3];  // bright_2
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_TOA, bright_toa_f);
@@ -963,12 +1006,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 //    }
 
     public static void addBitmasks(Product targetProduct) {
-        Mask[] bitmaskDefs = createBitmaskDefs(targetProduct);
-
-        int index = 0;
-        for (Mask bitmaskDef : bitmaskDefs) {
-            targetProduct.getMaskGroup().add(index++, bitmaskDef);
-        }
+        createBitmaskDefs(targetProduct.getMaskGroup());
     }
 
 
