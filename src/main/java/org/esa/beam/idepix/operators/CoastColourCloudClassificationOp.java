@@ -46,10 +46,10 @@ import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.BitSetter;
+import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -119,23 +119,12 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Product ctpProduct;
     @SourceProduct(alias = "pressureOutputLise")
     private Product lisePressureProduct;
+    @SourceProduct(alias = "waterMask")
+    private Product waterMaskProduct;
 
     @SuppressWarnings({"FieldCanBeLocal"})
     @TargetProduct
     private Product targetProduct;
-
-    @Parameter(label = "Use L1b land flag", defaultValue = "false",
-               description = "Use the L1b Land flag instead of the high resolution mask.")
-    private boolean useL1bLandFlag;
-    @Parameter(label = "Resolution of land mask", defaultValue = "50",
-               description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
-    private int landMaskResolution;
-    @Parameter(label = "Source pixel over-sampling (X)", defaultValue = "3",
-               description = "The factor used to over-sample the source pixels in X-direction.")
-    private int oversamplingFactorX;
-    @Parameter(label = "Source pixel over-sampling (Y)", defaultValue = "3",
-               description = "The factor used to over-sample the source pixels in Y-direction.")
-    private int oversamplingFactorY;
 
     @Parameter(description = "If 'true' the algorithm will compute L2 Pressures.", defaultValue = "true")
     private boolean l2Pressures;
@@ -194,11 +183,11 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
     private SeaIceClassifier seaIceClassifier;
-    private WatermaskClassifier landWaterClassifier;
     private Band ctpBand;
     private Band liseP1Band;
     private Band lisePScattBand;
-    private byte[] waterFractionArray;
+    private Band landWaterBand;
+    private RectangleExtender rectCalculator;
 
 
     @Override
@@ -216,31 +205,16 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             wavelengthIndex = merisWavelengthIndexMap.get(rhoAgReferenceWavelength);
         }
         initSeaIceClassifier();
-        if (!useL1bLandFlag) {
-            try {
-                landWaterClassifier = new WatermaskClassifier(landMaskResolution);
-            } catch (IOException e) {
-                throw new OperatorException("Could not initialise WatermaskClassifier", e);
-            }
-        }
-        waterFractionArray = new byte[l1bProduct.getSceneRasterWidth() * l1bProduct.getSceneRasterHeight()];
-        for (int y = 0; y < l1bProduct.getSceneRasterHeight(); y++) {
-            for (int x = 0; x < l1bProduct.getSceneRasterWidth(); x++) {
-                int index = y * l1bProduct.getSceneRasterWidth() + x;
-                try {
-                    waterFractionArray[index] = landWaterClassifier.getWaterMaskFraction(l1bProduct.getGeoCoding(),
-                                                                                         new PixelPos(x, y),
-                                                                                         oversamplingFactorX,
-                                                                                         oversamplingFactorY);
-                } catch (IOException e) {
-                    throw new OperatorException("Could not compute water fraction", e);
-                }
-            }
-        }
 
         ctpBand = ctpProduct.getBand("cloud_top_press");
         liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
         lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
+        landWaterBand = waterMaskProduct.getBand("land_water_fraction");
+
+        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
+                                                             l1bProduct.getSceneRasterHeight()),
+                                               gacWindowWidth, gacWindowWidth);
+
     }
 
 
@@ -414,6 +388,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             Tile ctpTile = getSourceTile(ctpBand, rectangle);
             Tile liseP1Tile = getSourceTile(liseP1Band, rectangle);
             Tile lisePScattTile = getSourceTile(lisePScattBand, rectangle);
+            Tile waterTile = getSourceTile(landWaterBand, rectCalculator.extend(rectangle));
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
@@ -439,7 +414,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
 
                         if (band == cloudFlagBand) {
-                            classifyCloud(sd, pixelInfo, targetTile);
+                            classifyCloud(sd, pixelInfo, waterTile, targetTile);
                         }
                         if (band == psurfOutputBand && l2Pressures) {
                             setCloudPressureSurface(sd, pixelInfo, targetTile);
@@ -489,7 +464,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, pixelInfo.ctp);
     }
 
-    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
+    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile waterFractionTile, Tile targetTile) {
         final ReturnValue press = new ReturnValue();
         float inputPressure;
         if (pressureOutputL2CloudDetectionLisePScatt) {
@@ -516,16 +491,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
-        boolean land_f;
-        boolean coast_f;
-        if (useL1bLandFlag) {
-            coast_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_COAST);
-            land_f = sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
-        } else {
-            byte waterFraction = waterFractionArray[pixelInfo.y * l1bProduct.getSceneRasterWidth() + pixelInfo.x];
-            coast_f = waterFraction < 100 && waterFraction > 0;
-            land_f = waterFraction == 0;
-        }
+        int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
+        boolean coast_f = waterFraction < 100 && waterFraction > 0;
+        boolean land_f = waterFraction == 0;
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, land_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_COASTLINE, coast_f);
         // not yet used; shall be spectral analysis
@@ -591,8 +559,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                     boolean atc_oor_f = sd.agc_flags.getSampleBit(i, j, GAC_ATC_OOR_BITINDEX);
                     boolean toa_oor_f = sd.agc_flags.getSampleBit(i, j, GAC_TOA_OOR_BITINDEX);
-                    byte waterFraction = waterFractionArray[j * l1bProduct.getSceneRasterWidth() + i];
-                    boolean window_coast_land_f = waterFraction < 100;
+                    int waterFractionATC = waterFractionTile.getSampleInt(i, j);
+                    boolean window_coast_land_f = waterFractionATC < 100;
                     if ((atc_oor_f || toa_oor_f) && !window_coast_land_f) {
                         targetTile.setSample(i, j, F_CLOUD, is_cloud);
                     }

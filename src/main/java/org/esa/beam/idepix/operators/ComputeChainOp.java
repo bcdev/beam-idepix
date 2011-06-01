@@ -49,7 +49,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
-                  version = "1.3.1",
+                  version = "1.3.2",
                   authors = "Olaf Danne, Carsten Brockmann",
                   copyright = "(c) 2011 by Brockmann Consult",
                   description = "Pixel identification and classification. This operator just calls a chain of other operators.")
@@ -246,9 +246,6 @@ public class ComputeChainOp extends BasisOp {
                })
     private int ccRhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
 
-    @Parameter(label = "Use L1b land flag", defaultValue = "false",
-               description = "Use the L1b Land flag instead of the high resolution mask.")
-    private boolean ccUseL1bLandFlag;
     @Parameter(label = "Resolution of land mask", defaultValue = "50",
                description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
     private int ccLandMaskResolution;
@@ -605,12 +602,20 @@ public class ComputeChainOp extends BasisOp {
         glintProducts.put("merisProduct", sourceProduct);
         Product gacProduct = GPF.createProduct("Meris.GlintCorrection", glintCorrParameters, glintProducts);
 
-        Map<String, Product> cloudInput = new HashMap<String, Product>(4);
-        cloudInput.put("l1b", sourceProduct);
-        cloudInput.put("rhotoa", rad2reflProduct);
-        cloudInput.put("gac", gacProduct);
-        cloudInput.put("ctp", ctpProduct);
-        cloudInput.put("pressureOutputLise", pressureLiseProduct);
+        HashMap<String, Object> waterParameters = new HashMap<String, Object>();
+        waterParameters.put("resolution", ccLandMaskResolution);
+        waterParameters.put("subSamplingFactorX", ccOversamplingFactorX);
+        waterParameters.put("subSamplingFactorY", ccOversamplingFactorY);
+        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
+
+        Map<String, Product> cloudInputProducts = new HashMap<String, Product>(4);
+        cloudInputProducts.put("l1b", sourceProduct);
+        cloudInputProducts.put("rhotoa", rad2reflProduct);
+        cloudInputProducts.put("gac", gacProduct);
+        cloudInputProducts.put("ctp", ctpProduct);
+        cloudInputProducts.put("pressureOutputLise", pressureLiseProduct);
+        cloudInputProducts.put("waterMask", waterMaskProduct);
+
 
         Map<String, Object> cloudClassificationParameters = new HashMap<String, Object>(11);
         cloudClassificationParameters.put("l2Pressures", ccOutputL2Pressures);
@@ -626,13 +631,9 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
         cloudClassificationParameters.put("gacWindowWidth", ccGacWindowWidth);
         cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
-        cloudClassificationParameters.put("useL1bLandFlag", ccUseL1bLandFlag);
-        cloudClassificationParameters.put("landMaskResolution", ccLandMaskResolution);
-        cloudClassificationParameters.put("oversamplingFactorX", ccOversamplingFactorX);
-        cloudClassificationParameters.put("oversamplingFactorY", ccOversamplingFactorY);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
-                cloudClassificationParameters, cloudInput);
+                cloudClassificationParameters, cloudInputProducts);
     }
 
     private Product computeCoastColourCloudPostProcessProduct() {
