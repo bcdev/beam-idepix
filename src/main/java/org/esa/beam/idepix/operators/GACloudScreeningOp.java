@@ -229,12 +229,15 @@ public class GACloudScreeningOp extends Operator {
                 pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
                 IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
                 pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
+                                                 IdepixConstants.NO_DATA_VALUE,
                                                  true);
                 p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
+                IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                                                 true);
                 pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
+                                                 IdepixConstants.NO_DATA_VALUE,
                                                  true);
             }
         }
@@ -666,11 +669,7 @@ public class GACloudScreeningOp extends Operator {
         public byte getWatermaskSample(float lat, float lon) {
             int waterMaskSample = WatermaskClassifier.INVALID_VALUE;
             if (classifier != null) {
-                try {
-                    waterMaskSample = classifier.getWaterMaskSample(lat, lon);
-                } catch (IOException e) {
-                    // fallback
-                }
+                waterMaskSample = classifier.getWaterMaskSample(lat, lon);
             }
             return (byte) waterMaskSample;
         }
