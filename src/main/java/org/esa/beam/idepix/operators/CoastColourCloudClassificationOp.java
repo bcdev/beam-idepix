@@ -46,7 +46,6 @@ import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.BitSetter;
-import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
@@ -187,7 +186,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private Band liseP1Band;
     private Band lisePScattBand;
     private Band landWaterBand;
-    private RectangleExtender rectCalculator;
 
 
     @Override
@@ -210,10 +208,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
         lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
-
-        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                             l1bProduct.getSceneRasterHeight()),
-                                               gacWindowWidth, gacWindowWidth);
 
     }
 
@@ -388,7 +382,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             Tile ctpTile = getSourceTile(ctpBand, rectangle);
             Tile liseP1Tile = getSourceTile(liseP1Band, rectangle);
             Tile lisePScattTile = getSourceTile(lisePScattBand, rectangle);
-            Tile waterTile = getSourceTile(landWaterBand, rectCalculator.extend(rectangle));
+
+            Tile waterTile = getSourceTile(landWaterBand, rectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
