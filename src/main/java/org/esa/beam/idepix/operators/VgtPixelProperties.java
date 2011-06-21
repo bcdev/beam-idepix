@@ -33,9 +33,13 @@ class VgtPixelProperties extends AbstractPixelProperties {
     private float[] refl;
     private boolean smLand;
 
+    private float brightwhiteThresh = BRIGHTWHITE_THRESH;
+    private float cloudThresh = CLOUD_THRESH;
+    private float ndsiThresh = NDSI_THRESH;
+
     @Override
     public boolean isBrightWhite() {
-        return (!isInvalid() && whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
+        return (!isInvalid() && whiteValue() + brightValue() > brightwhiteThresh);
     }
 
     @Override
@@ -44,7 +48,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
             return false;
         }
         return (!isInvalid() &&
-                (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) &&
+                (whiteValue() + brightValue() + pressureValue() + temperatureValue() > cloudThresh) &&
                 !isClearSnow());
     }
 
@@ -84,7 +88,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && isBrightWhite() && ndsiValue() > ndsiThresh);
     }
 
     @Override
@@ -259,5 +263,22 @@ class VgtPixelProperties extends AbstractPixelProperties {
                                         "] - must be " + IdepixConstants.VGT_WAVELENGTHS.length);
         }
         this.refl = refl;
+    }
+
+    /**
+     * TEST: these methods allow to change thresholds externally, e.g. for specific regions
+     *
+     * @param brightwhiteThresh
+     */
+    public void setBrightwhiteThresh(float brightwhiteThresh) {
+        this.brightwhiteThresh = brightwhiteThresh;
+    }
+
+    public void setNdsiThresh(float ndsiThresh) {
+        this.ndsiThresh = ndsiThresh;
+    }
+
+    public void setCloudThresh(float cloudThresh) {
+        this.cloudThresh = cloudThresh;
     }
 }

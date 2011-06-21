@@ -48,15 +48,18 @@ class MerisPixelProperties extends AbstractPixelProperties {
     private float[] refl;
     private float[] brr;
 
+    private float brightwhiteThresh = BRIGHTWHITE_THRESH;
+    private float cloudThresh = CLOUD_THRESH;
+    private float ndsiThresh = NDSI_THRESH;
 
     @Override
     public boolean isBrightWhite() {
-        return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
+        return (whiteValue() + brightValue() > brightwhiteThresh);
     }
 
     @Override
     public boolean isCloud() {
-        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
+        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > cloudThresh && !isClearSnow());
     }
     // AR, 18/05/11:
 //    public boolean isCloud() {
@@ -98,7 +101,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        return (!isInvalid() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && isBrightWhite() && ndsiValue() > ndsiThresh);
     }
 
     @Override
@@ -380,6 +383,23 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
     public void setQwgCloudClassifFlagBrightRc(boolean qwgCloudClassifFlagBrightRc) {
         this.qwgCloudClassifFlagBrightRc = qwgCloudClassifFlagBrightRc;
+    }
+
+    /**
+     * TEST: these methods allow to change thresholds externally, e.g. for specific regions
+     *
+     * @param brightwhiteThresh
+     */
+    public void setBrightwhiteThresh(float brightwhiteThresh) {
+        this.brightwhiteThresh = brightwhiteThresh;
+    }
+
+    public void setNdsiThresh(float ndsiThresh) {
+        this.ndsiThresh = ndsiThresh;
+    }
+
+    public void setCloudThresh(float cloudThresh) {
+        this.cloudThresh = cloudThresh;
     }
 
 }

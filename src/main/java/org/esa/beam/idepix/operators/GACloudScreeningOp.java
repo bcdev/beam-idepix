@@ -2,13 +2,7 @@ package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -87,6 +81,10 @@ public class GACloudScreeningOp extends Operator {
     private Band pbaroBand;
     private Band pscattBand;
 
+    private TiePointGrid latitudeTpg;
+    private TiePointGrid longitudeTpg;
+    private TiePointGrid altitudeTpg;
+
     // AATSR bands:
     private Band[] aatsrReflectanceBands;
     private Band[] aatsrBtempBands;
@@ -138,6 +136,10 @@ public class GACloudScreeningOp extends Operator {
                 pbaroBand = pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC);
                 pscattBand = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
                 brr442ThreshBand = cloudProduct.getBand("rho442_thresh_term");
+
+                latitudeTpg = sourceProduct.getTiePointGrid("latitude");
+                longitudeTpg = sourceProduct.getTiePointGrid("longitude");
+                altitudeTpg = sourceProduct.getTiePointGrid("dem_alt");
 
                 break;
             case IdepixConstants.PRODUCT_TYPE_AATSR:
@@ -617,6 +619,14 @@ public class GACloudScreeningOp extends Operator {
         pixelProperties.setQwgCloudClassifFlagBrightRc
                 (merisQwgCloudClassifFlagTile.getSampleBit(x, y, MerisPixelProperties.F_BRIGHT_RC));
         setIsWater(watermask, pixelProperties);
+
+        // test for Globalbedo, Himalaya:
+//        float latitude = latitudeTpg.getPixelFloat(x, y);
+//        float altitude = altitudeTpg.getPixelFloat(x, y);
+//        if (altitude > 4000) {
+//            pixelProperties.setNdsiThresh(0.3f);
+//        }
+
         return pixelProperties;
     }
 

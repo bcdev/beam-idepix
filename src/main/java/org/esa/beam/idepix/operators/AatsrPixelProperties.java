@@ -34,15 +34,19 @@ class AatsrPixelProperties extends AbstractPixelProperties {
     private boolean l1FlagGlintRisk;
     private boolean useFwardViewForCloudMask;
 
+    private float brightwhiteThresh = BRIGHTWHITE_THRESH;
+    private float cloudThresh = CLOUD_THRESH;
+    private float ndsiThresh = NDSI_THRESH;
+
 
     @Override
     public boolean isBrightWhite() {
-        return (whiteValue() + brightValue() > BRIGHTWHITE_THRESH);
+        return (whiteValue() + brightValue() > brightwhiteThresh);
     }
 
     @Override
     public boolean isCloud() {
-        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
+        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > cloudThresh && !isClearSnow());
     }
 
     @Override
@@ -90,7 +94,7 @@ class AatsrPixelProperties extends AbstractPixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        return (!isInvalid() && !isCold() && isBrightWhite() && ndsiValue() > NDSI_THRESH);
+        return (!isInvalid() && !isCold() && isBrightWhite() && ndsiValue() > ndsiThresh);
     }
 
     @Override
@@ -134,19 +138,19 @@ class AatsrPixelProperties extends AbstractPixelProperties {
         double value = (refl[0] + refl[1] + refl[2]) / 300.0f;
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
-        return (float)value;
+        return (float) value;
     }
 
     @Override
     public float spectralFlatnessValue() {
         final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[1],
-                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[0],
-                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[1]);
+                IdepixConstants.AATSR_REFL_WAVELENGTHS[0],
+                IdepixConstants.AATSR_REFL_WAVELENGTHS[1]);
         final double slope1 = IdepixUtils.spectralSlope(refl[1], refl[2],
-                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[1],
-                                                          IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
+                IdepixConstants.AATSR_REFL_WAVELENGTHS[1],
+                IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
 
-        final double flatness = (1.0f - Math.abs(20.0*(slope0 + slope1)/2.0));
+        final double flatness = (1.0f - Math.abs(20.0 * (slope0 + slope1) / 2.0));
         float result = (float) Math.max(0.0f, flatness);
         return result;
     }
@@ -171,7 +175,7 @@ class AatsrPixelProperties extends AbstractPixelProperties {
         } else if (290f <= btemp1200 && 300f > btemp1200) {
             temperature = 0.5f - 0.49f * ((btemp1200 - 290f) / (300f - 290f));
         } else {
-            temperature =  0.01f;
+            temperature = 0.01f;
         }
 
         return temperature;
@@ -258,4 +262,22 @@ class AatsrPixelProperties extends AbstractPixelProperties {
     public void setUseFwardViewForCloudMask(boolean useFwardViewForCloudMask) {
         this.useFwardViewForCloudMask = useFwardViewForCloudMask;
     }
+
+    /**
+     * TEST: these methods allow to change thresholds externally, e.g. for specific regions
+     *
+     * @param brightwhiteThresh
+     */
+    public void setBrightwhiteThresh(float brightwhiteThresh) {
+        this.brightwhiteThresh = brightwhiteThresh;
+    }
+
+    public void setNdsiThresh(float ndsiThresh) {
+        this.ndsiThresh = ndsiThresh;
+    }
+
+    public void setCloudThresh(float cloudThresh) {
+        this.cloudThresh = cloudThresh;
+    }
+
 }
