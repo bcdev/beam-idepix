@@ -17,6 +17,9 @@
                 <include>*:beam-meris-brr*</include>
                 <include>*:beam-idepix*</include>
                 <include>*:beam-watermask*</include>
+                <include>*:beam-meris-glint*</include>
+                <include>*:beam-meris-radiometry*</include>
+                <include>*:flint-processor*</include>
             </includes>
         </dependencySet>
     </dependencySets>
