@@ -2,7 +2,14 @@ package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -679,7 +686,11 @@ public class GACloudScreeningOp extends Operator {
         public byte getWatermaskSample(float lat, float lon) {
             int waterMaskSample = WatermaskClassifier.INVALID_VALUE;
             if (classifier != null) {
-                waterMaskSample = classifier.getWaterMaskSample(lat, lon);
+                try {
+                    waterMaskSample = classifier.getWaterMaskSample(lat, lon);
+                } catch (IOException ignored) {
+                    // fallback
+                }
             }
             return (byte) waterMaskSample;
         }
