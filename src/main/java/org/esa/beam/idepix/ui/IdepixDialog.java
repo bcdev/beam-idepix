@@ -6,9 +6,7 @@ import org.esa.beam.framework.datamodel.ProductFilter;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.ui.SingleTargetProductDialog;
-import org.esa.beam.framework.gpf.ui.SourceProductSelector;
-import org.esa.beam.framework.gpf.ui.TargetProductSelectorModel;
+import org.esa.beam.framework.gpf.ui.*;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.idepix.util.IdepixUtils;
 
@@ -42,12 +40,14 @@ class IdepixDialog extends SingleTargetProductDialog {
     public static final int DIALOG_WIDTH = 650;
     public static final int DIALOG_HEIGHT = 420;
     private OperatorSpi operatorSpi;
+    private String helpID;
 
     /*
      * IdepixDialog constructor
      */
     IdepixDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
         super(appContext, title, helpID);
+        this.helpID = helpID;
         this.operatorName = operatorName;
         this.appContext = appContext;
         this.targetProductNameSuffix = targetProductNameSuffix;
@@ -131,6 +131,14 @@ class IdepixDialog extends SingleTargetProductDialog {
 
 		form.setPreferredSize(new Dimension(IdepixDialog.DIALOG_WIDTH, IdepixDialog.DIALOG_HEIGHT));
         form.add("I/O Parameters", ioParametersPanel);
+
+        final OperatorParameterSupport parameterSupport = new OperatorParameterSupport(operatorSpi.getOperatorClass(),
+                                                                                       null,
+                                                                                       parameterMap,
+                                                                                       null);
+        OperatorMenu menuSupport = new OperatorMenu(this.getJDialog(), operatorSpi.getOperatorClass(),
+                                                    parameterSupport, helpID);
+        getJDialog().setJMenuBar(menuSupport.createDefaultMenu());
     }
 
     private HashMap<String, Product> createSourceProductsMap() {
