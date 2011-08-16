@@ -200,7 +200,7 @@
                 <version>2.2</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/dependencies.xml</descriptor>
+                        <descriptor>src/main/assembly/modules.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>
