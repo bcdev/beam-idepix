@@ -268,6 +268,10 @@ public class ComputeChainOp extends BasisOp {
     private Product rad2reflProduct;
     private Product pbaroProduct;
     private Product ctpProduct;
+    private Product waterMaskProduct;
+    private Product gacProduct;
+    private Product postCloudProduct;
+    private Product gasProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -288,6 +292,48 @@ public class ComputeChainOp extends BasisOp {
         }
 
         renameL1bMaskNames();
+    }
+
+    @Override
+    public void dispose() {
+        if (rayleighProduct != null) {
+            rayleighProduct.dispose();
+            rayleighProduct = null;
+        }
+        if (pressureLiseProduct != null) {
+            pressureLiseProduct.dispose();
+            pressureLiseProduct = null;
+        }
+        if (rad2reflProduct != null) {
+            rad2reflProduct.dispose();
+            rad2reflProduct = null;
+        }
+        if (pbaroProduct != null) {
+            pbaroProduct.dispose();
+            pbaroProduct = null;
+        }
+        if (ctpProduct != null) {
+            ctpProduct.dispose();
+            ctpProduct = null;
+        }
+        if (gacProduct != null) {
+            gacProduct.dispose();
+            gacProduct = null;
+        }
+        if (waterMaskProduct != null) {
+            waterMaskProduct.dispose();
+            waterMaskProduct = null;
+        }
+        if (postCloudProduct != null) {
+            postCloudProduct.dispose();
+            postCloudProduct = null;
+        }
+        if (gasProduct != null) {
+            gasProduct.dispose();
+            gasProduct = null;
+        }
+
+        super.dispose();
     }
 
     private void renameL1bMaskNames() {
@@ -400,11 +446,11 @@ public class ComputeChainOp extends BasisOp {
 
         // Cloud Classification
         computeCoastColourMerisCloudProduct();
-        Product postCloudProduct = computeCoastColourCloudPostProcessProduct();
+        postCloudProduct = computeCoastColourCloudPostProcessProduct();
 
 
         // Gaseous Correction
-        Product gasProduct = computeGaseousCorrectionProduct();
+        gasProduct = computeGaseousCorrectionProduct();
 
         // Land Water Reclassification
         // Land classification is done CoastColourMerisCloudProduct
@@ -600,13 +646,13 @@ public class ComputeChainOp extends BasisOp {
         glintCorrParameters.put("useFlint", false);
         HashMap<String, Product> glintProducts = new HashMap<String, Product>();
         glintProducts.put("merisProduct", sourceProduct);
-        Product gacProduct = GPF.createProduct("Meris.GlintCorrection", glintCorrParameters, glintProducts);
+        gacProduct = GPF.createProduct("Meris.GlintCorrection", glintCorrParameters, glintProducts);
 
         HashMap<String, Object> waterParameters = new HashMap<String, Object>();
         waterParameters.put("resolution", ccLandMaskResolution);
         waterParameters.put("subSamplingFactorX", ccOversamplingFactorX);
         waterParameters.put("subSamplingFactorY", ccOversamplingFactorY);
-        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
+        waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
 
         Map<String, Product> cloudInputProducts = new HashMap<String, Product>(4);
         cloudInputProducts.put("l1b", sourceProduct);
