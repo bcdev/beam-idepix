@@ -259,9 +259,10 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
     private double ccSeaIceThreshold;
 
-    @Parameter(description = "Perform the Spatial Cloud Test.", defaultValue = "false")
+    @Parameter(label = "Spatial Cloud Test", description = "Perform the Spatial Cloud Test.", defaultValue = "false")
     private boolean ccSpatialCloudTest;
-    @Parameter(description = "User Defined Threshold for Spatial Cloud Test.", defaultValue = "0.04",
+    @Parameter(label = "Threshold for Spatial Cloud Test",
+               description = "Threshold for Spatial Cloud Test.", defaultValue = "0.04",
                interval = "[0.0, 1.0]")
     private double ccSpatialCloudTestThreshold;
 
