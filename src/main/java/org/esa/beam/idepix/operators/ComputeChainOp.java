@@ -259,6 +259,11 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
     private double ccSeaIceThreshold;
 
+    @Parameter(description = "Perform the Spatial Cloud Test.", defaultValue = "false")
+    private boolean ccSpatialCloudTest;
+    @Parameter(description = "User Defined Threshold for Spatial Cloud Test.", defaultValue = "0.04",
+               interval = "[0.0, 1.0]")
+    private double ccSpatialCloudTestThreshold;
 
     private boolean straylightCorr;
     private Product merisCloudProduct;
@@ -677,6 +682,8 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
         cloudClassificationParameters.put("gacWindowWidth", ccGacWindowWidth);
         cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
+        cloudClassificationParameters.put("spatialCloudTest", ccSpatialCloudTest);
+        cloudClassificationParameters.put("spatialCloudTestThreshold", ccSpatialCloudTestThreshold);
         merisCloudProduct = GPF.createProduct(
                 OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
                 cloudClassificationParameters, cloudInputProducts);
@@ -895,7 +902,7 @@ public class ComputeChainOp extends BasisOp {
     private void addCloudClassificationFlagBand() {
         if (isQWGAlgo() && ipfOutputL2CloudDetection) {
             FlagCoding flagCoding = CoastColourCloudClassificationOp.createFlagCoding(
-                    CoastColourCloudClassificationOp.CLOUD_FLAGS);
+                    CoastColourCloudClassificationOp.CLOUD_FLAGS, false);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : merisCloudProduct.getBands()) {
                 if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {
@@ -906,7 +913,7 @@ public class ComputeChainOp extends BasisOp {
         }
         if (isCoastColourAlgo() && ccOutputL2CloudDetection) {
             FlagCoding flagCoding = CoastColourCloudClassificationOp.createFlagCoding(
-                    CoastColourCloudClassificationOp.CLOUD_FLAGS);
+                    CoastColourCloudClassificationOp.CLOUD_FLAGS, ccSpatialCloudTest);
             targetProduct.getFlagCodingGroup().add(flagCoding);
             for (Band band : merisCloudProduct.getBands()) {
                 if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {

@@ -101,6 +101,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final int F_LAND = 13;
     public static final int F_COASTLINE = 14;
     public static final int F_LANDRISK = 15;
+    public static final int F_CLOUD_SPATIAL = 16;
 
     private L2AuxData auxData;
 
@@ -172,6 +173,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private double seaIceThreshold;
     @Parameter(description = "GAC Window Width.", defaultValue = "5")
     private int gacWindowWidth;
+
+    @Parameter(description = "Perform the Spatial Cloud Test.", defaultValue = "false")
+    private boolean spatialCloudTest;
+    @Parameter(description = "User Defined Threshold for Spatial Cloud Test.", defaultValue = "0.04",
+               interval = "[0.0, 1.0]")
+    private double spatialCloudTestThreshold;
+
     private Band cloudFlagBand;
     private Band ctpOutputBand;
     private Band psurfOutputBand;
@@ -208,7 +216,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
         lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
-
     }
 
 
@@ -225,8 +232,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     private void createTargetProduct() {
         targetProduct = createCompatibleProduct(l1bProduct, "MER", "MER_L2");
 
-        cloudFlagBand = targetProduct.addBand(CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = createFlagCoding(CLOUD_FLAGS);
+        cloudFlagBand = targetProduct.addBand(CLOUD_FLAGS, ProductData.TYPE_INT32);
+        FlagCoding flagCoding = createFlagCoding(CLOUD_FLAGS, spatialCloudTest);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
         ctpOutputBand = targetProduct.addBand(PRESSURE_CTP, ProductData.TYPE_FLOAT32);
@@ -238,7 +245,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         mdsiOutputBand = targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
     }
 
-    public static FlagCoding createFlagCoding(String flagIdentifier) {
+    public static FlagCoding createFlagCoding(String flagIdentifier, boolean spatialCloudTest) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
@@ -255,6 +262,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, F_COASTLINE), null);
         flagCoding.addFlag("F_LANDRISK", BitSetter.setFlag(0, F_LANDRISK), null);
+        if (spatialCloudTest) {
+            flagCoding.addFlag("F_CLOUD_SPATIAL", BitSetter.setFlag(0, F_CLOUD_SPATIAL), null);
+        }
         return flagCoding;
     }
 
@@ -374,23 +384,23 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-
-        Rectangle rectangle = targetTile.getRectangle();
+        Rectangle targetRectangle = targetTile.getRectangle();
         try {
-            SourceData sd = loadSourceTiles(rectangle);
+            final Rectangle sourceRectangle = createSourceRectangle(band, targetRectangle);
+            SourceData sd = loadSourceTiles(targetRectangle);
 
-            Tile ctpTile = getSourceTile(ctpBand, rectangle);
-            Tile liseP1Tile = getSourceTile(liseP1Band, rectangle);
-            Tile lisePScattTile = getSourceTile(lisePScattBand, rectangle);
+            Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
+            Tile liseP1Tile = getSourceTile(liseP1Band, sourceRectangle);
+            Tile lisePScattTile = getSourceTile(lisePScattBand, sourceRectangle);
 
-            Tile waterTile = getSourceTile(landWaterBand, rectangle);
+            Tile waterTile = getSourceTile(landWaterBand, sourceRectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
-            int i = 0;
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
                 checkForCancellation();
                 pixelInfo.y = y;
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                    final int i = (y - sourceRectangle.y) * sourceRectangle.width + (x - sourceRectangle.x);
                     if (!sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
                         pixelInfo.x = x;
                         pixelInfo.index = i;
@@ -425,27 +435,126 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoThreshOffsetTerm);
                         }
-
                         if (band == mdsiOutputBand) {
                             setMdsi(sd, pixelInfo, targetTile);
                         }
-
                         if (band == rhoGlintOutputBand) {
                             final double rhoGlint = computeRhoGlint(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoGlint);
                         }
-
                         if (band == rhoAgOutputBand) {
                             final double rhoAg = computeRhoAg(wavelengthIndex, sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoAg);
                         }
                     }
-                    i++;
                 }
+            }
+            if (band == cloudFlagBand && spatialCloudTest) {
+                performSpatialCloudTest(targetTile, sourceRectangle, sd);
             }
         } catch (Exception e) {
             throw new OperatorException(e);
         }
+    }
+
+    private void performSpatialCloudTest(Tile targetTile, Rectangle sourceRectangle, SourceData sd) {
+        final Rectangle targetRectangle = targetTile.getRectangle();
+        final int wavelengthIndex = merisWavelengthIndexMap.get(865);
+
+        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                if (sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
+                    continue;
+                }
+                /*
+                variance computation in a single pass (from http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance)
+                def online_variance(data):
+                n = 0
+                mean = 0
+                M2 = 0
+
+                for x in data:
+                n = n + 1
+                delta = x - mean
+                mean = mean + delta/n
+                M2 = M2 + delta*(x - mean)  # This expression uses the new value of mean
+
+                variance = M2/(n - 1)
+                return variance
+                */
+
+                int n = 0;
+                double mean = 0.0;
+                double m2 = 0.0;
+
+                final PixelInfo pixelInfo = new PixelInfo();
+                for (int iy = y - 1; iy <= y + 1; iy++) {
+                    if (iy < 0 || iy >= sourceRectangle.y + sourceRectangle.height) {
+                        continue;
+                    }
+                    pixelInfo.y = iy;
+                    for (int ix = x; ix <= x + 1; ix++) {
+                        if (ix < 0 || ix >= sourceRectangle.x + sourceRectangle.width) {
+                            continue;
+                        }
+                        if (sd.l1Flags.getSampleBit(ix, iy, L1_F_INVALID)) {
+                            continue;
+                        }
+                        pixelInfo.x = ix;
+                        pixelInfo.index = (iy - sourceRectangle.y) * sourceRectangle.width + (ix - sourceRectangle.x);
+                        setPixelInfoAirMassAndPressure(sd, iy, ix, pixelInfo);
+                        final double rho = computeRhoAg(wavelengthIndex, sd, pixelInfo);
+                        n++;
+                        final double delta = rho - mean;
+                        mean += delta / n;
+                        m2 += delta * (rho - mean);
+                    }
+                }
+                if (n > 1) {
+                    final boolean cloud = m2 / (n - 1) > spatialCloudTestThreshold * spatialCloudTestThreshold;
+                    targetTile.setSample(x, y, F_CLOUD_SPATIAL, cloud);
+                }
+            }
+        }
+    }
+
+    private void setPixelInfoAirMassAndPressure(SourceData sd, int y, int x, PixelInfo pixelInfo) {
+        pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[pixelInfo.index], sd.sza[pixelInfo.index]);
+        if (sd.l1Flags.getSampleBit(x, y, L1_F_LAND)) {
+            // ECMWF pressure is only corrected for positive
+            // altitudes and only for land pixels
+            pixelInfo.ecmwfPressure = HelperFunctions.correctEcmwfPressure(sd.ecmwfPressure[pixelInfo.index],
+                                                                           sd.altitude[pixelInfo.index],
+                                                                           auxData.press_scale_height);
+        } else {
+            pixelInfo.ecmwfPressure = sd.ecmwfPressure[pixelInfo.index];
+        }
+    }
+
+    private Rectangle createSourceRectangle(Band band, Rectangle rectangle) {
+        int x = rectangle.x;
+        int y = rectangle.y;
+        int w = rectangle.width;
+        int h = rectangle.height;
+        if (x > 0) {
+            x -= 1;
+            w += 2;
+        } else {
+            w += 1;
+        }
+        if (x + w > band.getRasterWidth()) {
+            w = band.getRasterWidth() - x;
+        }
+        if (y > 0) {
+            y -= 1;
+            h += 2;
+        } else {
+            h += 1;
+        }
+        if (y + h > band.getRasterHeight()) {
+            h = band.getRasterHeight() - y;
+        }
+        return new Rectangle(x, x, w, h);
     }
 
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {

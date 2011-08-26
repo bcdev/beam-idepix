@@ -83,6 +83,8 @@ public class IdepixConstants {
             "ccOversamplingFactorX",
             "ccOversamplingFactorY",
             "ccSeaIceThreshold",
+            "ccSpatialCloudTest",
+            "ccSpatialCloudTestThreshold"
     };
 
 
