@@ -283,6 +283,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         maskGroup.add(Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD",
                                                 Color.YELLOW, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_spatial", "IDEPIX CC cloud spatial flag", w, h,
+                                                CLOUD_FLAGS + ".F_CLOUD_SPATIAL",
+                                                Color.YELLOW, 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD_BUFFER",
                                                 Color.RED, 0.5f));
@@ -387,7 +390,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         Rectangle targetRectangle = targetTile.getRectangle();
         try {
             final Rectangle sourceRectangle = createSourceRectangle(band, targetRectangle);
-            SourceData sd = loadSourceTiles(targetRectangle);
+            SourceData sd = loadSourceTiles(sourceRectangle);
 
             Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
             Tile liseP1Tile = getSourceTile(liseP1Band, sourceRectangle);
@@ -401,9 +404,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 pixelInfo.y = y;
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                     final int i = (y - sourceRectangle.y) * sourceRectangle.width + (x - sourceRectangle.x);
+                    pixelInfo.x = x;
+                    pixelInfo.index = i;
                     if (!sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
-                        pixelInfo.x = x;
-                        pixelInfo.index = i;
                         pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[i], sd.sza[i]);
                         if (sd.l1Flags.getSampleBit(x, y, L1_F_LAND)) {
                             // ECMWF pressure is only corrected for positive
@@ -554,7 +557,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         if (y + h > band.getRasterHeight()) {
             h = band.getRasterHeight() - y;
         }
-        return new Rectangle(x, x, w, h);
+        return new Rectangle(x, y, w, h);
     }
 
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
