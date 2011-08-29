@@ -686,11 +686,7 @@ public class GACloudScreeningOp extends Operator {
         public byte getWatermaskSample(float lat, float lon) {
             int waterMaskSample = WatermaskClassifier.INVALID_VALUE;
             if (classifier != null) {
-                try {
-                    waterMaskSample = classifier.getWaterMaskSample(lat, lon);
-                } catch (IOException ignored) {
-                    // fallback
-                }
+                waterMaskSample = classifier.getWaterMaskSample(lat, lon);
             }
             return (byte) waterMaskSample;
         }
