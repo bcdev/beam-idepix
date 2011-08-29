@@ -464,6 +464,23 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         final Rectangle targetRectangle = targetTile.getRectangle();
         final int wavelengthIndex = merisWavelengthIndexMap.get(865);
 
+        final double[][] rhoAg = new double[sourceRectangle.width][sourceRectangle.height];
+        final PixelInfo pixelInfo = new PixelInfo();
+        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
+            pixelInfo.y = y;
+            for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
+                if (sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
+                    continue;
+                }
+                if (sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
+                    continue;
+                }
+                pixelInfo.x = x;
+                pixelInfo.index = (y - sourceRectangle.y) * sourceRectangle.width + (x - sourceRectangle.x);
+                setPixelInfoAirMassAndPressure(sd, y, x, pixelInfo);
+                rhoAg[x][y] = computeRhoAg(wavelengthIndex, sd, pixelInfo);
+            }
+        }
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 if (sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
@@ -490,12 +507,10 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 double mean = 0.0;
                 double m2 = 0.0;
 
-                final PixelInfo pixelInfo = new PixelInfo();
                 for (int iy = y - 1; iy <= y + 1; iy++) {
                     if (iy < 0 || iy >= sourceRectangle.y + sourceRectangle.height) {
                         continue;
                     }
-                    pixelInfo.y = iy;
                     for (int ix = x; ix <= x + 1; ix++) {
                         if (ix < 0 || ix >= sourceRectangle.x + sourceRectangle.width) {
                             continue;
@@ -503,10 +518,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         if (sd.l1Flags.getSampleBit(ix, iy, L1_F_INVALID)) {
                             continue;
                         }
-                        pixelInfo.x = ix;
-                        pixelInfo.index = (iy - sourceRectangle.y) * sourceRectangle.width + (ix - sourceRectangle.x);
-                        setPixelInfoAirMassAndPressure(sd, iy, ix, pixelInfo);
-                        final double rho = computeRhoAg(wavelengthIndex, sd, pixelInfo);
+                        final double rho = rhoAg[ix][iy];
                         n++;
                         final double delta = rho - mean;
                         mean += delta / n;
