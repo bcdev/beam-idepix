@@ -18,6 +18,7 @@ package org.esa.beam.idepix.seaice;
 
 import org.esa.beam.util.io.CsvReader;
 
+import javax.xml.stream.events.NotationDeclaration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,7 +35,7 @@ import java.util.zip.ZipInputStream;
  */
 public class SeaIceClassifier {
 
-    private final Map<Integer, Map<Integer, String[]>> latLonMap = new HashMap<Integer, Map<Integer, String[]>>();
+    private final double[][][] map = new double[180][360][4];
 
     /**
      * Creates a new instance of SeaIceClassifier and loads the classification file.
@@ -66,15 +67,15 @@ public class SeaIceClassifier {
      */
     public SeaIceClassification getClassification(double lat, double lon) {
         validateParameters(lat, lon);
-        final String[] entry = getEntry(lat, lon);
-        final double mean = Double.parseDouble(entry[2]);
-        final double min = Double.parseDouble(entry[3]);
-        final double max = Double.parseDouble(entry[4]);
-        final double stdDev = Double.parseDouble(entry[5]);
+        final double[] entry = getEntry(lat, lon);
+        final double mean = entry[0];
+        final double min = entry[1];
+        final double max = entry[2];
+        final double stdDev = entry[3];
         return SeaIceClassification.create(mean, min, max, stdDev);
     }
 
-    String[] getEntry(double lat, double lon) {
+    double[] getEntry(double lat, double lon) {
         int latIndex = (int) lat;
         if (latIndex == 180) {
             // latitude of 180 is a valid value, but value range in map is 0..179
@@ -88,8 +89,7 @@ public class SeaIceClassifier {
             latIndex--;
         }
 
-        final Map<Integer, String[]> lonMap = latLonMap.get(latIndex);
-        return lonMap.get(lonIndex);
+        return map[latIndex][lonIndex];
     }
 
     static void validateParameters(double lat, double lon) {
@@ -102,28 +102,24 @@ public class SeaIceClassifier {
     }
 
     private void loadClassifications(int month, ZipInputStream zip) throws IOException {
-        final String fileName = String.format("classification_%d.csv", month);
         ZipEntry ze = zip.getNextEntry();
 
         while (ze != null) {
+            final String fileName = String.format("classification_%d.csv", month);
             if (ze.getName().equals(fileName)) {
                 final InputStreamReader reader = new InputStreamReader(zip);
                 final CsvReader csvReader = new CsvReader(reader, new char[]{' '}, true, "#");
-                List<String[]> classifications = csvReader.readStringRecords();
-                for (String[] classification : classifications) {
-                    final int latitude = Integer.parseInt(classification[0]);
-                    Map<Integer, String[]> lonMap = latLonMap.get(latitude);
-                    if (lonMap == null) {
-                        lonMap = new HashMap<Integer, String[]>();
-                        latLonMap.put(latitude, lonMap);
+                final List<String[]> classifications = csvReader.readStringRecords();
+                for (final String[] classification : classifications) {
+                    final int latIndex = Integer.parseInt(classification[0]);
+                    final int lonIndex = Integer.parseInt(classification[1]);
+                    for (int i = 0; i < 4; i++) {
+                        map[latIndex][lonIndex][i] = Double.parseDouble(classification[2 + i]);
                     }
-                    final int longitude = Integer.parseInt(classification[1]);
-                    lonMap.put(longitude, classification);
                 }
                 return;
             }
             ze = zip.getNextEntry();
         }
     }
-
 }
