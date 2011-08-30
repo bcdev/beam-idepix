@@ -83,10 +83,10 @@ public class SeaIceClassifier {
             latIndex--;
         }
         int lonIndex = (int) lon;
-        if (latIndex == 360) {
+        if (lonIndex == 360) {
             // latitude of 360 is a valid value, but value range in map is 0..359
             // therefore we map 360 to 359
-            latIndex--;
+            lonIndex--;
         }
 
         return map[latIndex][lonIndex];
