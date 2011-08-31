@@ -471,9 +471,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 if (sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
                     continue;
                 }
-                if (sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
-                    continue;
-                }
                 pixelInfo.x = x;
                 pixelInfo.index = (y - sourceRectangle.y) * sourceRectangle.width + (x - sourceRectangle.x);
                 setPixelInfoAirMassAndPressure(sd, x, y, pixelInfo);
