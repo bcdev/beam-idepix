@@ -300,47 +300,6 @@ public class ComputeChainOp extends BasisOp {
         renameL1bMaskNames();
     }
 
-    @Override
-    public void dispose() {
-        if (rayleighProduct != null) {
-            rayleighProduct.dispose();
-            rayleighProduct = null;
-        }
-        if (pressureLiseProduct != null) {
-            pressureLiseProduct.dispose();
-            pressureLiseProduct = null;
-        }
-        if (rad2reflProduct != null) {
-            rad2reflProduct.dispose();
-            rad2reflProduct = null;
-        }
-        if (pbaroProduct != null) {
-            pbaroProduct.dispose();
-            pbaroProduct = null;
-        }
-        if (ctpProduct != null) {
-            ctpProduct.dispose();
-            ctpProduct = null;
-        }
-        if (gacProduct != null) {
-            gacProduct.dispose();
-            gacProduct = null;
-        }
-        if (waterMaskProduct != null) {
-            waterMaskProduct.dispose();
-            waterMaskProduct = null;
-        }
-        if (postCloudProduct != null) {
-            postCloudProduct.dispose();
-            postCloudProduct = null;
-        }
-        if (gasProduct != null) {
-            gasProduct.dispose();
-            gasProduct = null;
-        }
-
-        super.dispose();
-    }
 
     private void renameL1bMaskNames() {
         prefixMask("coastline");

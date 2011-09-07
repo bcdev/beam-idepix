@@ -38,7 +38,7 @@ class IdepixDialog extends SingleTargetProductDialog {
     private AppContext appContext;
 
     public static final int DIALOG_WIDTH = 650;
-    public static final int DIALOG_HEIGHT = 420;
+    public static final int DIALOG_HEIGHT = 560;
     private OperatorSpi operatorSpi;
     private String helpID;
 
