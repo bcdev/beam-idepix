@@ -141,14 +141,14 @@ public class LisePressureOp extends BasisOp {
     private static final double standardSeaSurfacePressure = 1013.25;
 
     // central wavelength for each detector at 761 nm
-    private static final double[] o2FilterWavelengths = {
+    static final double[] o2FilterWavelengths = {
             760.7d, 760.8d, 760.9d, 761.0d, 761.1d, 761.2d, 761.3d,
             761.4d, 761.5d, 761.6d, 761.7d, 761.8d, 761.9d, 762.0d,
             762.1d, 762.2d, 762.3d, 762.4d, 762.5d, 762.6d, 762.7d
     };
 
     // gaussian angle grid point for the Rayleigh TO2
-    private static final double[] gaussianAngles = {
+    static final double[] gaussianAngles = {
             2.84d, 6.52d, 10.22d, 13.93d, 17.64d, 21.35d, 25.06d, 28.77d,
             32.48d, 36.19d, 39.90d, 43.61d, 47.32d, 51.03d, 54.74d, 58.46d,
             62.17d, 65.88d, 69.59d, 73.30d, 77.01d, 80.72d, 84.43d, 88.14d
@@ -655,16 +655,15 @@ public class LisePressureOp extends BasisOp {
         }
     }
 
-
     /*
     * This method returns the index of the nearest Gauss angle
     */
-    private int getNearestGaussIndex(double thetaS) {
+    int getNearestGaussIndex(double thetaS) {
         int index = -1;
 
         if (thetaS <= gaussianAngles[0]) {
             index = 0;  // bug fixed: was 1 before (LB, 01.10.09) !!
-        } else if (thetaS >= gaussianAngles[23]) {
+        } else if (thetaS >= gaussianAngles[22]) {
             index = 22;
         } else {
             double a = 1000.0d;
@@ -683,7 +682,7 @@ public class LisePressureOp extends BasisOp {
     /*
      * This method returns the index of the nearest O2 filter wavelength
      */
-    private int getNearestFilterIndex(double w0) {
+    int getNearestFilterIndex(double w0) {
         int index = -1;
 
         if (w0 <= o2FilterWavelengths[0]) {
@@ -691,7 +690,6 @@ public class LisePressureOp extends BasisOp {
         } else if (w0 >= o2FilterWavelengths[NFILTER - 1]) {
             index = NFILTER - 2;
         } else {
-//    		for (int i=0; i<NFILTER-1; i++) {
             for (int i = 1; i < NFILTER; i++) { // bug fixed  (LB, 01.10.09)
                 if (o2FilterWavelengths[i] >= w0) {
                     index = i - 1;
