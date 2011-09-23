@@ -15,19 +15,20 @@ public class IdepixConstants {
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
     public static final int F_CLOUD_BUFFER = 2;
-    public static final int F_CLOUD_SHADOW = 3;
-    public static final int F_CLEAR_LAND = 4;
-    public static final int F_CLEAR_WATER = 5;
-    public static final int F_CLEAR_SNOW = 6;
-    public static final int F_LAND = 7;
-    public static final int F_WATER = 8;
-    public static final int F_BRIGHT = 9;
-    public static final int F_WHITE = 10;
-    public static final int F_BRIGHTWHITE = 11;
-    public static final int F_COLD = 12;
-    public static final int F_HIGH = 13;
-    public static final int F_VEG_RISK = 14;
-    public static final int F_GLINT_RISK = 15;
+    public static final int F_CLOUD_BUFFER_LC = 3;
+    public static final int F_CLOUD_SHADOW = 4;
+    public static final int F_CLEAR_LAND = 5;
+    public static final int F_CLEAR_WATER = 6;
+    public static final int F_CLEAR_SNOW = 7;
+    public static final int F_LAND = 8;
+    public static final int F_WATER = 9;
+    public static final int F_BRIGHT = 10;
+    public static final int F_WHITE = 11;
+    public static final int F_BRIGHTWHITE = 12;
+    public static final int F_COLD = 13;
+    public static final int F_HIGH = 14;
+    public static final int F_VEG_RISK = 16;
+    public static final int F_GLINT_RISK = 16;
 
     public static final String[] ipfParameterNames = new String[]{
             "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",

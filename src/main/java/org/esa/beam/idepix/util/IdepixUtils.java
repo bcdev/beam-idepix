@@ -156,6 +156,7 @@ public class IdepixUtils {
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, IdepixConstants.F_INVALID), null);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, IdepixConstants.F_CLOUD), null);
         flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, IdepixConstants.F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER_LC", BitSetter.setFlag(0, IdepixConstants.F_CLOUD_BUFFER_LC), null);
         flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, IdepixConstants.F_CLOUD_SHADOW), null);
         flagCoding.addFlag("F_CLEAR_LAND", BitSetter.setFlag(0, IdepixConstants.F_CLEAR_LAND), null);
         flagCoding.addFlag("F_CLEAR_WATER", BitSetter.setFlag(0, IdepixConstants.F_CLEAR_WATER), null);
@@ -190,6 +191,9 @@ public class IdepixUtils {
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
                                          "cloud_classif_flags.F_CLOUD_BUFFER", Color.red, 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD_BUFFER_LC", "Cloud + LC cloud buffer pixels", w, h,
+                                         "cloud_classif_flags.F_CLOUD_BUFFER_LC", Color.blue, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_SHADOW", "Cloud shadow pixels", w, h,
                                          "cloud_classif_flags.F_CLOUD_SHADOW", Color.cyan, 0.5f);

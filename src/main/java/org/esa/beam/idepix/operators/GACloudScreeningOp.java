@@ -25,6 +25,9 @@ import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Operator for GlobAlbedo cloud screening
@@ -534,27 +537,115 @@ public class GACloudScreeningOp extends Operator {
                     }
                 }
             }
-            // set cloud buffer flag...
-            if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
-                for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                    for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-                            int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x);
-                            int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - 1);
-                            int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y);
-                            int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - 1);
-                            for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-                                for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                    targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
-                                }
+            // set cloud buffer flags...
+            setCloudBuffer(band, targetTile, rectangle);
+            setCloudBufferLC(band, targetTile, rectangle);
+
+        } catch (Exception e) {
+            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+        }
+    }
+
+    private void setCloudBuffer(Band band, Tile targetTile, Rectangle rectangle) {
+        if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                    if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                        int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x);
+                        int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - 1);
+                        int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y);
+                        int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - 1);
+                        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                                targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                             }
                         }
                     }
                 }
             }
+        }
+    }
 
-        } catch (Exception e) {
-            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+    private void setCloudBufferLC(Band band, Tile targetTile, Rectangle rectangle) {
+        //  set alternative cloud buffer flag as used in LC-CCI project:
+        // 1. use 2x2 square with reference pixel in upper left
+        // 2. move this square row-by-row over the tile
+        // 3. if reference pixel is not clouds, don't do anything
+        // 4. if reference pixel is cloudy:
+        //    - if 2x2 square only has cloud pixels, then set cloud buffer of two pixels
+        //      in both x and y direction of reference pixel.
+        //    - if 2x2 square also has non-cloudy pixels, do the same but with cloud buffer of only 1
+
+        if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
+                for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
+                    if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                        // reference pixel is upper left (x, y)
+                        // first set buffer of 1 in each direction
+                        int bufferWidth = 1;
+                        int LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
+                        int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
+                        int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
+                        int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
+                        // now check if whole 2x2 square (x+1,y), (x, y+1), (x+1, y+1) is cloudy
+                        if (targetTile.getSampleBit(x + 1, y, IdepixConstants.F_CLOUD) &&
+                                targetTile.getSampleBit(x, y + 1, IdepixConstants.F_CLOUD) &&
+                                targetTile.getSampleBit(x + 1, y + 1, IdepixConstants.F_CLOUD)) {
+                            // set buffer of 2 in each direction
+                            bufferWidth = 2;
+                            LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
+                            RIGHT_BORDER = Math.min(x + 1 + bufferWidth, rectangle.x + rectangle.width - 1);
+                            TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
+                            BOTTOM_BORDER = Math.min(y + 1 + bufferWidth, rectangle.y + rectangle.height - 1);
+                        }
+                        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                                targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                            }
+                        }
+
+                    }
+                }
+            }
+            int bufferWidth = 1;
+
+            // south tile boundary...
+            final int ySouth = rectangle.y + rectangle.height - 1;
+            for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
+                int LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
+                int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
+                int TOP_BORDER = ySouth - bufferWidth;
+                if (targetTile.getSampleBit(x, ySouth, IdepixConstants.F_CLOUD)) {
+                    for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                        for (int j = TOP_BORDER; j <= ySouth; j++) {
+                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                        }
+                    }
+                }
+            }
+
+            // east tile boundary...
+            final int xEast = rectangle.x + rectangle.width - 1;
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
+                int LEFT_BORDER = xEast - bufferWidth;
+                int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
+                int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
+                if (targetTile.getSampleBit(xEast, y, IdepixConstants.F_CLOUD)) {
+                    for (int i = LEFT_BORDER; i <= xEast; i++) {
+                        for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                        }
+                    }
+                }
+            }
+            // pixel in lower right corner...
+            if (targetTile.getSampleBit(xEast, ySouth, IdepixConstants.F_CLOUD)) {
+                for (int i = xEast-1; i <= xEast; i++) {
+                    for (int j = ySouth-1; j <= ySouth; j++) {
+                        targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                    }
+                }
+            }
         }
     }
 
