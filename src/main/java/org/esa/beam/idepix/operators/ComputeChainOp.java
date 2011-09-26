@@ -198,6 +198,8 @@ public class ComputeChainOp extends BasisOp {
     private int wmResolution;
     @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
+    @Parameter(defaultValue = "false", label = " Rayleigh Corrected Reflectances")
+    private boolean gaOutputRayleigh = false;
 
     // Coastcolour parameters
     @Parameter(defaultValue = "true", label = " TOA Reflectances")
@@ -685,12 +687,16 @@ public class ComputeChainOp extends BasisOp {
         addMerisCloudProductBands();
         addCloudClassificationFlagBand();
         addGaseousCorrectionBands(gasProduct);
-        addRayleighCorrectionBands();
+        if ((isQWGAlgo() && ipfOutputRayleigh) || (isCoastColourAlgo() && ccOutputRayleigh)) {
+            addRayleighCorrectionBands();
+        }
         addLandWaterClassificationFlagBand(landProduct);
         addCtpProductBands(ctpProductStraylight);
         addPbaroProductBands();
         addPsurfNNProductBands(psurfNNProduct);
-        addPressureLiseProductBands();
+        if (isQWGAlgo()) {
+            addPressureLiseProductBands();
+        }
         addBlueBandProductBands(blueBandProduct);
         addCloudProbabilityProductBands(cloudProbabilityProduct);
         addCombinedCloudProductBands(combinedCloudProduct);
@@ -742,7 +748,7 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void addPressureLiseProductBands() {
-        if (isQWGAlgo() && pressureOutputP1Lise) {
+        if (pressureOutputP1Lise) {
             for (Band band : pressureLiseProduct.getBands()) {
                 if (!targetProduct.containsBand(band.getName())) {
                     if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P1)) {
@@ -752,7 +758,7 @@ public class ComputeChainOp extends BasisOp {
             }
         }
 
-        if (isQWGAlgo() && pressureOutputPSurfLise) {
+        if (pressureOutputPSurfLise) {
             for (Band band : pressureLiseProduct.getBands()) {
                 if (!targetProduct.containsBand(band.getName())) {
                     if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSURF)) {
@@ -762,7 +768,7 @@ public class ComputeChainOp extends BasisOp {
             }
         }
 
-        if (isQWGAlgo() && pressureOutputP2Lise) {
+        if (pressureOutputP2Lise) {
             for (Band band : pressureLiseProduct.getBands()) {
                 if (!targetProduct.containsBand(band.getName())) {
                     if (band.getName().equals(LisePressureOp.PRESSURE_LISE_P2)) {
@@ -772,7 +778,7 @@ public class ComputeChainOp extends BasisOp {
             }
         }
 
-        if (isQWGAlgo() && pressureOutputPScattLise) {
+        if (pressureOutputPScattLise) {
             for (Band band : pressureLiseProduct.getBands()) {
                 if (!targetProduct.containsBand(band.getName())) {
                     if (band.getName().equals(LisePressureOp.PRESSURE_LISE_PSCATT)) {
@@ -831,17 +837,15 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void addRayleighCorrectionBands() {
-        if ((isQWGAlgo() && ipfOutputRayleigh) || (isCoastColourAlgo() && ccOutputRayleigh)) {
-            int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
-            FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);
-            targetProduct.getFlagCodingGroup().add(flagCoding);
-            for (Band band : rayleighProduct.getBands()) {
-                if (!targetProduct.containsBand(band.getName())) {
-                    if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
-                        band.setSampleCoding(flagCoding);
-                    }
-                    targetProduct.addBand(band);
+        int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
+        FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);
+        targetProduct.getFlagCodingGroup().add(flagCoding);
+        for (Band band : rayleighProduct.getBands()) {
+            if (!targetProduct.containsBand(band.getName())) {
+                if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
+                    band.setSampleCoding(flagCoding);
                 }
+                targetProduct.addBand(band);
             }
         }
     }
@@ -958,6 +962,10 @@ public class ComputeChainOp extends BasisOp {
         }
 
         targetProduct = gaCloudProduct;
+        if (gaOutputRayleigh) {
+            addRayleighCorrectionBands();
+        }
+        addPressureLiseProductBands();
     }
 
     /**
