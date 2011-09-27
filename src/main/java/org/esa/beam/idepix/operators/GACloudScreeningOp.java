@@ -200,7 +200,7 @@ public class GACloudScreeningOp extends Operator {
 
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
 
-        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT32);
         FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -486,6 +486,9 @@ public class GACloudScreeningOp extends Operator {
                             break;
                     }
 
+                    if (x == 360 && y == 500) {
+                        System.out.println("x = " + x);
+                    }
                     if (band == cloudFlagBand) {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
                         targetTile.setSample(x, y, IdepixConstants.F_INVALID, pixelProperties.isInvalid());
@@ -614,7 +617,8 @@ public class GACloudScreeningOp extends Operator {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
                 int LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
                 int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
-                int TOP_BORDER = ySouth - bufferWidth;
+//                int TOP_BORDER = ySouth - bufferWidth;
+                int TOP_BORDER = Math.max(rectangle.y, ySouth - bufferWidth);
                 if (targetTile.getSampleBit(x, ySouth, IdepixConstants.F_CLOUD)) {
                     for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                         for (int j = TOP_BORDER; j <= ySouth; j++) {
@@ -627,7 +631,8 @@ public class GACloudScreeningOp extends Operator {
             // east tile boundary...
             final int xEast = rectangle.x + rectangle.width - 1;
             for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
-                int LEFT_BORDER = xEast - bufferWidth;
+//                int LEFT_BORDER = xEast - bufferWidth;
+                int LEFT_BORDER = Math.max(rectangle.x, xEast - bufferWidth);
                 int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
                 int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
                 if (targetTile.getSampleBit(xEast, y, IdepixConstants.F_CLOUD)) {
@@ -640,8 +645,8 @@ public class GACloudScreeningOp extends Operator {
             }
             // pixel in lower right corner...
             if (targetTile.getSampleBit(xEast, ySouth, IdepixConstants.F_CLOUD)) {
-                for (int i = xEast-1; i <= xEast; i++) {
-                    for (int j = ySouth-1; j <= ySouth; j++) {
+                for (int i = Math.max(rectangle.x, xEast - 1); i <= xEast; i++) {
+                    for (int j = Math.max(rectangle.y, ySouth - 1); j <= ySouth; j++) {
                         targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
                     }
                 }
@@ -658,7 +663,9 @@ public class GACloudScreeningOp extends Operator {
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         pixelProperties.setRefl(vgtReflectanceSaturationCorrected);
 
-        pixelProperties.setSmLand(smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_LAND));
+        final boolean isLand = smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_LAND) &&
+                !(watermaskSample == WatermaskClassifier.WATER_VALUE);
+        pixelProperties.setSmLand(isLand);
         setIsWater(watermaskSample, pixelProperties);
 
         // specific threshold for polar regions:
@@ -698,7 +705,9 @@ public class GACloudScreeningOp extends Operator {
         pixelProperties.setUseFwardViewForCloudMask(gaUseAatsrFwardForClouds);
         pixelProperties.setRefl(aatsrReflectance);
         pixelProperties.setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
-        pixelProperties.setL1FlagLand(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_LAND));
+        final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_LAND) &&
+                !(watermaskSample == WatermaskClassifier.WATER_VALUE);
+        pixelProperties.setL1FlagLand(isLand);
         pixelProperties.setL1FlagGlintRisk(aatsrL1bFlagTile.getSampleBit(x, y, AatsrPixelProperties.L1B_F_GLINT_RISK));
         setIsWater(watermaskSample, pixelProperties);
         return pixelProperties;
@@ -722,13 +731,18 @@ public class GACloudScreeningOp extends Operator {
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
             merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
         }
+        if (x == 360 && y == 500) {
+            System.out.println("x = " + x);
+        }
         pixelProperties.setBrr(merisBrr);
         pixelProperties.setBrr442(brr442Tile.getSampleFloat(x, y));
         pixelProperties.setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
         pixelProperties.setP1(p1Tile.getSampleFloat(x, y));
         pixelProperties.setPBaro(pbaroTile.getSampleFloat(x, y));
         pixelProperties.setPscatt(pscattTile.getSampleFloat(x, y));
-        pixelProperties.setL1FlagLand(merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND));
+        final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND) &&
+                !(watermask == WatermaskClassifier.WATER_VALUE);
+        pixelProperties.setL1FlagLand(isLand);
         pixelProperties.setQwgCloudClassifFlagBrightRc
                 (merisQwgCloudClassifFlagTile.getSampleBit(x, y, MerisPixelProperties.F_BRIGHT_RC));
         setIsWater(watermask, pixelProperties);

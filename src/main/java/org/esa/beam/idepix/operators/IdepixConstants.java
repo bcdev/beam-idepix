@@ -27,7 +27,7 @@ public class IdepixConstants {
     public static final int F_BRIGHTWHITE = 12;
     public static final int F_COLD = 13;
     public static final int F_HIGH = 14;
-    public static final int F_VEG_RISK = 16;
+    public static final int F_VEG_RISK = 15;
     public static final int F_GLINT_RISK = 16;
 
     public static final String[] ipfParameterNames = new String[]{

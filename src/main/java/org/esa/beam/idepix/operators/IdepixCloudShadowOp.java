@@ -97,7 +97,7 @@ public class IdepixCloudShadowOp extends Operator {
 
         targetProduct = new Product(cloudProduct.getName(), cloudProduct.getProductType(), sceneWidth, sceneHeight);
 
-        cloudFlagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        cloudFlagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT32);
         FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);

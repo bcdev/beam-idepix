@@ -80,7 +80,7 @@ class MerisPixelProperties extends AbstractPixelProperties {
         } else {
             return false; // this means: if we have no information about land, we return isClearLand = false
         }
-        return (!isCloud() && landValue > LAND_THRESH);
+        return (!isWater && !isCloud() && landValue > LAND_THRESH);
     }
 
     @Override
@@ -340,7 +340,8 @@ class MerisPixelProperties extends AbstractPixelProperties {
 
     @Override
     public boolean isLand() {
-        return (!isInvalid() && aPrioriLandValue() > LAND_THRESH);
+        final boolean isLand1 = !usel1bLandWaterFlag && !isWater;
+        return (isLand1 || (!isInvalid() && aPrioriLandValue() > LAND_THRESH));
     }
 
     @Override
