@@ -486,9 +486,6 @@ public class GACloudScreeningOp extends Operator {
                             break;
                     }
 
-                    if (x == 360 && y == 500) {
-                        System.out.println("x = " + x);
-                    }
                     if (band == cloudFlagBand) {
                         // for given instrument, compute boolean pixel properties and write to cloud flag band
                         targetTile.setSample(x, y, IdepixConstants.F_INVALID, pixelProperties.isInvalid());
