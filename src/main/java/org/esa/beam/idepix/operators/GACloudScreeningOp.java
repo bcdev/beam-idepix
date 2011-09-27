@@ -74,6 +74,8 @@ public class GACloudScreeningOp extends Operator {
     private int wmResolution;
     @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
     private boolean gaUseL1bLandWaterFlag;
+    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+    private boolean gaLcCloudBuffer = false;
 
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
@@ -200,7 +202,7 @@ public class GACloudScreeningOp extends Operator {
 
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
 
-        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT32);
+        cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -538,8 +540,11 @@ public class GACloudScreeningOp extends Operator {
                 }
             }
             // set cloud buffer flags...
-            setCloudBuffer(band, targetTile, rectangle);
-            setCloudBufferLC(band, targetTile, rectangle);
+            if (gaLcCloudBuffer) {
+                setCloudBufferLC(band, targetTile, rectangle);
+            } else {
+                setCloudBuffer(band, targetTile, rectangle);
+            }
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
@@ -600,7 +605,7 @@ public class GACloudScreeningOp extends Operator {
                         }
                         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                                targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                             }
                         }
 
@@ -619,7 +624,7 @@ public class GACloudScreeningOp extends Operator {
                 if (targetTile.getSampleBit(x, ySouth, IdepixConstants.F_CLOUD)) {
                     for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                         for (int j = TOP_BORDER; j <= ySouth; j++) {
-                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                         }
                     }
                 }
@@ -635,7 +640,7 @@ public class GACloudScreeningOp extends Operator {
                 if (targetTile.getSampleBit(xEast, y, IdepixConstants.F_CLOUD)) {
                     for (int i = LEFT_BORDER; i <= xEast; i++) {
                         for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                         }
                     }
                 }
@@ -644,7 +649,7 @@ public class GACloudScreeningOp extends Operator {
             if (targetTile.getSampleBit(xEast, ySouth, IdepixConstants.F_CLOUD)) {
                 for (int i = Math.max(rectangle.x, xEast - 1); i <= xEast; i++) {
                     for (int j = Math.max(rectangle.y, ySouth - 1); j <= ySouth; j++) {
-                        targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER_LC, true);
+                        targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                     }
                 }
             }
