@@ -31,15 +31,29 @@ public class IdepixUtils {
 
     public static boolean isInputValid(Product inputProduct) {
         if (!isValidMerisProduct(inputProduct) &&
-            !isValidAatsrProduct(inputProduct) &&
-            !isValidVgtProduct(inputProduct)) {
+                !isValidAatsrProduct(inputProduct) &&
+                !isValidVgtProduct(inputProduct)) {
             logErrorMessage("Input product must be either MERIS, AATSR or VGT L1b!");
         }
         return true;
     }
 
     public static boolean isValidMerisProduct(Product product) {
-        return EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(product.getProductType()).matches();
+        final boolean merisL1TypePatternMatches = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(product.getProductType()).matches();
+        // accept also ICOL L1N products...
+        final boolean merisIcolTypePatternMatches = isValidMerisIcolL1NProduct(product);
+        return merisL1TypePatternMatches || merisIcolTypePatternMatches;
+    }
+
+    private static boolean isValidMerisIcolL1NProduct(Product product) {
+        final String icolProductType = product.getProductType();
+        if (icolProductType.endsWith("_1N")) {
+            int index = icolProductType.indexOf("_1");
+            final String merisProductType = icolProductType.substring(0, index) + "_1P";
+            return (EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(merisProductType).matches());
+        } else {
+            return false;
+        }
     }
 
     public static boolean isValidAatsrProduct(Product product) {
@@ -66,7 +80,7 @@ public class IdepixUtils {
     public static void logErrorMessage(String msg) {
         if (System.getProperty("gpfMode") != null && "GUI".equals(System.getProperty("gpfMode"))) {
             JOptionPane.showOptionDialog(null, msg, "IDEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
-                                         JOptionPane.ERROR_MESSAGE, null, null, null);
+                    JOptionPane.ERROR_MESSAGE, null, null, null);
         } else {
             info(msg);
         }
@@ -183,52 +197,52 @@ public class IdepixUtils {
         Random r = new Random();
 
         mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h, "cloud_classif_flags.F_INVALID",
-                                         getRandomColour(r), 0.5f);
+                getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD",
-                                         Color.yellow, 0.5f);
+                Color.yellow, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud + cloud buffer pixels", w, h,
-                                         "cloud_classif_flags.F_CLOUD_BUFFER", Color.red, 0.5f);
+                "cloud_classif_flags.F_CLOUD_BUFFER", Color.red, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_SHADOW", "Cloud shadow pixels", w, h,
-                                         "cloud_classif_flags.F_CLOUD_SHADOW", Color.cyan, 0.5f);
+                "cloud_classif_flags.F_CLOUD_SHADOW", Color.cyan, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLEAR_LAND", "Clear sky pixels over land", w, h,
-                                         "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
+                "cloud_classif_flags.F_CLEAR_LAND", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLEAR_WATER", "Clear sky pixels over water", w, h,
-                                         "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
+                "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLEAR_SNOW", "Clear sky pixels, snow covered ", w, h,
-                                         "cloud_classif_flags.F_CLEAR_SNOW", Color.magenta, 0.5f);
+                "cloud_classif_flags.F_CLEAR_SNOW", Color.magenta, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_LAND", "Pixels over land", w, h, "cloud_classif_flags.F_LAND",
-                                         getRandomColour(r), 0.5f);
+                getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
-                                         getRandomColour(r), 0.5f);
+                getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
-                                         "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
+                "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_WHITE", "Pixels classified as white", w, h, "cloud_classif_flags.F_WHITE",
-                                         getRandomColour(r), 0.5f);
+                getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
-                                         "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
+                "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
-                                         getRandomColour(r), 0.5f);
+                getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
-                                         getRandomColour(r), 0.5f);
+                getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_VEG_RISK", "Pixels may contain vegetation", w, h,
-                                         "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
+                "cloud_classif_flags.F_VEG_RISK", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_GLINT_RISK", "Pixels may contain glint", w, h,
-                                         "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
+                "cloud_classif_flags.F_GLINT_RISK", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
 
         return index;
