@@ -407,8 +407,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                     pixelInfo.x = x;
                     pixelInfo.index = i;
                     if (!sd.l1Flags.getSampleBit(x, y, L1_F_INVALID)) {
+                        final boolean isLand = waterTile.getSampleInt(pixelInfo.x, pixelInfo.y) == 0;
                         pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[i], sd.sza[i]);
-                        if (sd.l1Flags.getSampleBit(x, y, L1_F_LAND)) {
+                        if (isLand) {
                             // ECMWF pressure is only corrected for positive
                             // altitudes and only for land pixels
                             pixelInfo.ecmwfPressure = HelperFunctions.correctEcmwfPressure(sd.ecmwfPressure[i],
@@ -422,7 +423,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
 
                         if (band == cloudFlagBand) {
-                            classifyCloud(sd, pixelInfo, waterTile, targetTile);
+                            classifyCloud(sd, pixelInfo, waterTile, targetTile, isLand);
                         }
                         if (band == psurfOutputBand && l2Pressures) {
                             setCloudPressureSurface(sd, pixelInfo, targetTile);
@@ -453,14 +454,14 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 }
             }
             if (band == cloudFlagBand && spatialCloudTest) {
-                performSpatialCloudTest(targetTile, sourceRectangle, sd);
+                performSpatialCloudTest(targetTile, sourceRectangle, sd, waterTile);
             }
         } catch (Exception e) {
             throw new OperatorException(e);
         }
     }
 
-    private void performSpatialCloudTest(Tile targetTile, Rectangle sourceRectangle, SourceData sd) {
+    private void performSpatialCloudTest(Tile targetTile, Rectangle sourceRectangle, SourceData sd, Tile waterTile) {
         final int wavelengthIndex = merisWavelengthIndexMap.get(865);
         final double[][] rhoAg = new double[sourceRectangle.width][sourceRectangle.height];
         final PixelInfo pixelInfo = new PixelInfo();
@@ -473,7 +474,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 }
                 pixelInfo.x = x;
                 pixelInfo.index = (y - sourceRectangle.y) * sourceRectangle.width + (x - sourceRectangle.x);
-                setPixelInfoAirMassAndPressure(sd, x, y, pixelInfo);
+                final boolean isLand = waterTile.getSampleInt(pixelInfo.x, pixelInfo.y) == 0;
+                setPixelInfoAirMassAndPressure(sd, pixelInfo, isLand);
                 rhoAg[x - sourceRectangle.x][y - sourceRectangle.y] = computeRhoAg(wavelengthIndex, sd, pixelInfo);
             }
         }
@@ -530,9 +532,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         }
     }
 
-    private void setPixelInfoAirMassAndPressure(SourceData sd, int x, int y, PixelInfo pixelInfo) {
+    private void setPixelInfoAirMassAndPressure(SourceData sd, PixelInfo pixelInfo, boolean isLand) {
         pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[pixelInfo.index], sd.sza[pixelInfo.index]);
-        if (sd.l1Flags.getSampleBit(x, y, L1_F_LAND)) {
+        if (isLand) {
             // ECMWF pressure is only corrected for positive
             // altitudes and only for land pixels
             pixelInfo.ecmwfPressure = HelperFunctions.correctEcmwfPressure(sd.ecmwfPressure[pixelInfo.index],
@@ -580,7 +582,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, pixelInfo.ctp);
     }
 
-    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile waterFractionTile, Tile targetTile) {
+    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile waterFractionTile, Tile targetTile,
+                              boolean isLand) {
         final ReturnValue press = new ReturnValue();
         float inputPressure;
         if (pressureOutputL2CloudDetectionLisePScatt) {
@@ -594,10 +597,10 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         computePressure(sd, pixelInfo, press);
 
         /* apply thresholds on pressure- step 2.1.2 */
-        press_thresh(sd, pixelInfo, press.value, inputPressure, resultFlags);
+        press_thresh(pixelInfo, press.value, inputPressure, resultFlags, isLand);
 
         // Compute slopes- step 2.1.7
-        spec_slopes(sd, pixelInfo, resultFlags);
+        spec_slopes(sd, pixelInfo, resultFlags, isLand);
         boolean bright_f = resultFlags[0];
         boolean slope_1_f = resultFlags[1];
         boolean slope_2_f = resultFlags[2];
@@ -636,7 +639,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         double pscattPressure = pixelInfo.pscattPressure;
         boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
-
+        if (pixelInfo.x == 188 && pixelInfo.y == 175) {
+            System.out.println("Pixel of interest");
+        }
         boolean is_snow_ice = false;
         boolean land_coast = land_f || coast_f;
         if (!(land_coast)) {
@@ -869,14 +874,15 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
      * @param result_flags  the return values, <code>resultFlags[0]</code> contains low NN pressure flag (low_P_nn),
      *                      <code>resultFlags[1]</code> contains low polynomial pressure flag (low_P_poly),
      *                      <code>resultFlags[2]</code> contains pressure range flag (delta_p).
+     * @param isLand
      */
-    private void press_thresh(SourceData sd, PixelInfo pixelInfo, double pressure, float inputPressure,
-                              boolean[] result_flags) {
+    private void press_thresh(PixelInfo pixelInfo, double pressure, float inputPressure,
+                              boolean[] result_flags, boolean isLand) {
         double delta_press_thresh; /* absolute threshold on pressure difference */
         FractIndex[] DP_Index = FractIndex.createArray(2);
 
         /* get proper threshold - DPM #2.1.2-2 */
-        if (sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {
+        if (isLand) {
             delta_press_thresh = userDefinedP1PressureThreshold;
         } else {
             delta_press_thresh = userDefinedPScattPressureThreshold;
@@ -925,8 +931,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
      * @param result_flags the return values, <code>resultFlags[0]</code> contains low NN pressure flag (low_P_nn),
      *                     <code>resultFlags[1]</code> contains low polynomial pressure flag (low_P_poly),
      *                     <code>resultFlags[2]</code> contains pressure range flag (delta_p).
+     * @param isLand
      */
-    private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags) {
+    private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags, boolean isLand) {
         double rhorc_442_thr;   /* threshold on rayleigh corrected reflectance */
         final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
 
@@ -938,7 +945,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
         final FractIndex[] rhoRC442index = FractIndex.createArray(3);
         /* Interpolate threshold on rayleigh corrected reflectance - DPM #2.1.7-9 */
-        if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
+        if (isLand) {   /* land pixel */
             Interp.interpCoord(dc.sza[pixelInfo.index], auxData.Rhorc_442_land_LUT.getTab(0), rhoRC442index[0]);
             Interp.interpCoord(dc.vza[pixelInfo.index], auxData.Rhorc_442_land_LUT.getTab(1), rhoRC442index[1]);
             Interp.interpCoord(deltaAzimuth, auxData.Rhorc_442_land_LUT.getTab(2), rhoRC442index[2]);
@@ -985,7 +992,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
                             || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
-        if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
+        if (isLand) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {
             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
