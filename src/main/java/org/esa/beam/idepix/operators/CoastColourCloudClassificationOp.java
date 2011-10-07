@@ -639,9 +639,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         double pscattPressure = pixelInfo.pscattPressure;
         boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                                (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
-        if (pixelInfo.x == 188 && pixelInfo.y == 175) {
-            System.out.println("Pixel of interest");
-        }
         boolean is_snow_ice = false;
         boolean land_coast = land_f || coast_f;
         if (!(land_coast)) {
