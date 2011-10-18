@@ -891,7 +891,7 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void addMerisCloudProductBands() {
-        if (isQWGAlgo() && ipfOutputL2Pressures) {
+        if ((isQWGAlgo() && ipfOutputL2Pressures) || (isCoastColourAlgo() && ccOutputL2Pressures)) {
             for (Band band : merisCloudProduct.getBands()) {
                 if (!targetProduct.containsBand(band.getName())) {
                     if (!band.getName().equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
