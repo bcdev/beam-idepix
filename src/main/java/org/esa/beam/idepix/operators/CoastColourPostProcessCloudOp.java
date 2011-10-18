@@ -140,7 +140,7 @@ public class CoastColourPostProcessCloudOp extends MerisBasisOp {
         float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
         float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
         float vaa = vaaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-        float ctp = ctpTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
+        float ctp = ctpTile.getSampleFloat(x, y);
         computeCloudShadow(x, y, sza, saa, vza, vaa, ctp, altitudeTile, sourceFlagTile, targetTile);
     }
 
