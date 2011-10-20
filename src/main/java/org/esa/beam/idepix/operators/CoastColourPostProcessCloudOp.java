@@ -161,7 +161,7 @@ public class CoastColourPostProcessCloudOp extends MerisBasisOp {
                     final int shadowPixelX = MathUtils.floorInt(shadowPixelPos.x);
                     final int shadowPixelY = MathUtils.floorInt(shadowPixelPos.y);
                     Rectangle rectangle = targetTile.getRectangle();
-                    boolean isAlreadyCloud = IsPixelAlreadyMarkedAsCloud(shadowPixelX, shadowPixelY, sourceFlagTile);
+                    boolean isAlreadyCloud = isPixelAlreadyMarkedAsCloud(shadowPixelX, shadowPixelY, sourceFlagTile);
                     if (!isAlreadyCloud && rectangle.contains(shadowPixelX, shadowPixelY)) {
                         targetTile.setSample(shadowPixelX, shadowPixelY,
                                              CoastColourCloudClassificationOp.F_CLOUD_SHADOW, true);
@@ -171,7 +171,7 @@ public class CoastColourPostProcessCloudOp extends MerisBasisOp {
         }
     }
 
-    private boolean IsPixelAlreadyMarkedAsCloud(int pixelX, int pixelY, Tile sourceFlagTile) {
+    private boolean isPixelAlreadyMarkedAsCloud(int pixelX, int pixelY, Tile sourceFlagTile) {
         boolean is_already_cloud = false;
         if (sourceFlagTile.getRectangle().contains(pixelX, pixelY)) {
             is_already_cloud = sourceFlagTile.getSampleBit(pixelX, pixelY, CoastColourCloudClassificationOp.F_CLOUD);
