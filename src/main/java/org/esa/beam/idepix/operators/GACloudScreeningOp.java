@@ -23,6 +23,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
+import javax.media.jai.JAI;
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -125,6 +126,7 @@ public class GACloudScreeningOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         setSourceProductTypeId();
         try {
             classifier = new WatermaskClassifier(wmResolution);
@@ -526,11 +528,11 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.glintRiskValue());
                     } else if (band == pressureBand) {
                         targetTile.setSample(x, y, pixelProperties.pressureValue());
-                    } else if (band == pbaroBand) {
+                    } else if (band == pbaroOutputBand) {
                         targetTile.setSample(x, y, pbaroTile.getSampleFloat(x, y));
-                    } else if (band == p1Band) {
+                    } else if (band == p1OutputBand) {
                         targetTile.setSample(x, y, p1Tile.getSampleFloat(x, y));
-                    } else if (band == pscattBand) {
+                    } else if (band == pscattOutputBand) {
                         targetTile.setSample(x, y, pscattTile.getSampleFloat(x, y));
                     } else if (band == radioLandBand) {
                         targetTile.setSample(x, y, pixelProperties.radiometricLandValue());
