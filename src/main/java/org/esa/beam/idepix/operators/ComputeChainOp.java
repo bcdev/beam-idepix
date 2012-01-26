@@ -49,10 +49,10 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
-                  version = "1.3.2",
-                  authors = "Olaf Danne, Carsten Brockmann",
-                  copyright = "(c) 2011 by Brockmann Consult",
-                  description = "Pixel identification and classification. This operator just calls a chain of other operators.")
+        version = "1.3.2",
+        authors = "Olaf Danne, Carsten Brockmann",
+        copyright = "(c) 2011 by Brockmann Consult",
+        description = "Pixel identification and classification. This operator just calls a chain of other operators.")
 public class ComputeChainOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
@@ -109,23 +109,23 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
     private double ipfQWGUserDefinedRhoToa442Threshold = 0.03;   // default changed from 0.185, 2011/03/25
     @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
-               valueSet = {
-                       "412",
-                       "442",
-                       "490",
-                       "510",
-                       "560",
-                       "620",
-                       "665",
-                       "681",
-                       "705",
-                       "753",
-                       "760",
-                       "775",
-                       "865",
-                       "890",
-                       "900"
-               })
+            valueSet = {
+                    "412",
+                    "442",
+                    "490",
+                    "510",
+                    "560",
+                    "620",
+                    "665",
+                    "681",
+                    "705",
+                    "753",
+                    "760",
+                    "775",
+                    "865",
+                    "890",
+                    "900"
+            })
     private int rhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
 
     // Pressure product parameters
@@ -142,7 +142,7 @@ public class ComputeChainOp extends BasisOp {
     private boolean pressureFubTropicalAtmosphere = false;
 
     @Parameter(defaultValue = "false",
-               label = " L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
+            label = " L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
     private boolean pressureQWGOutputCtpStraylightCorrFub = false;
 
     @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
@@ -178,14 +178,14 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Compute cloud shadow (MERIS)")
     private boolean gaComputeMerisCloudShadow;
     @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
-               valueSet = {
-                       IdepixConstants.ctpModeDefault,
-                       "850 hPa",
-                       "700 hPa",
-                       "500 hPa",
-                       "400 hPa",
-                       "300 hPa"
-               })
+            valueSet = {
+                    IdepixConstants.ctpModeDefault,
+                    "850 hPa",
+                    "700 hPa",
+                    "500 hPa",
+                    "400 hPa",
+                    "300 hPa"
+            })
     private String ctpMode;
     @Parameter(defaultValue = "false", label = " Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
@@ -194,7 +194,7 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+            description = "Resolution in m/pixel")
     private int wmResolution;
     @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
@@ -244,20 +244,20 @@ public class ComputeChainOp extends BasisOp {
     private double ccUserDefinedRhoToa442Threshold = 0.03;
 
     @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
-               valueSet = {
-                       "412", "442", "490", "510", "560", "620", "665",
-                       "681", "705", "753", "760", "775", "865", "890", "900"
-               })
+            valueSet = {
+                    "412", "442", "490", "510", "560", "620", "665",
+                    "681", "705", "753", "760", "775", "865", "890", "900"
+            })
     private int ccRhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
 
     @Parameter(label = "Resolution of land mask", defaultValue = "50",
-               description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
+            description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
     private int ccLandMaskResolution;
     @Parameter(label = "Source pixel over-sampling (X)", defaultValue = "3",
-               description = "The factor used to over-sample the source pixels in X-direction.")
+            description = "The factor used to over-sample the source pixels in X-direction.")
     private int ccOversamplingFactorX;
     @Parameter(label = "Source pixel over-sampling (Y)", defaultValue = "3",
-               description = "The factor used to over-sample the source pixels in Y-direction.")
+            description = "The factor used to over-sample the source pixels in Y-direction.")
     private int ccOversamplingFactorY;
 
     @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
@@ -266,8 +266,8 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(label = "Spatial Cloud Test", description = "Perform the Spatial Cloud Test.", defaultValue = "false")
     private boolean ccSpatialCloudTest;
     @Parameter(label = "Threshold for Spatial Cloud Test",
-               description = "Threshold for Spatial Cloud Test.", defaultValue = "0.04",
-               interval = "[0.0, 1.0]")
+            description = "Threshold for Spatial Cloud Test.", defaultValue = "0.04",
+            interval = "[0.0, 1.0]")
     private double ccSpatialCloudTestThreshold;
 
     private boolean straylightCorr;
@@ -343,8 +343,8 @@ public class ComputeChainOp extends BasisOp {
         // Cloud Classification
         merisCloudProduct = null;
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection
-            || isGlobAlbedoAlgo()) {
+                pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection
+                || isGlobAlbedoAlgo()) {
             computeMerisCloudProduct();
         }
 
@@ -393,7 +393,7 @@ public class ComputeChainOp extends BasisOp {
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
         fillTargetProduct(ctpProductStraylight, gasProduct, landProduct, blueBandProduct, cloudProbabilityProduct,
-                          psurfNNProduct, combinedCloudProduct);
+                psurfNNProduct, combinedCloudProduct);
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct);
         Band l1FlagsSourceBand = sourceProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
@@ -428,17 +428,18 @@ public class ComputeChainOp extends BasisOp {
         // Rayleigh Correction
         if (ccOutputRayleigh) {
             computeRayleighCorrectionProduct(gasProduct, merisCloudProduct,
-                                             CoastColourCloudClassificationOp.CLOUD_FLAGS + ".F_LAND");
+                    CoastColourCloudClassificationOp.CLOUD_FLAGS + ".F_LAND");
         }
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
         fillTargetProduct(null, gasProduct, null, null, null, null, null);
 
-
-        Band cloudFlagBand = targetProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS);
-        cloudFlagBand.setSourceImage(
-                postCloudProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
+        if (ccOutputL2CloudDetection) {
+            Band cloudFlagBand = targetProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS);
+            cloudFlagBand.setSourceImage(
+                    postCloudProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
+        }
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct);
         Band l1FlagsSourceBand = sourceProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
@@ -482,7 +483,7 @@ public class ComputeChainOp extends BasisOp {
         cloudProbabilityParameters.put("validLandExpression", "not l1_flags.INVALID and dem_alt > -50");
         cloudProbabilityParameters.put("validOceanExpression", "not l1_flags.INVALID and dem_alt <= -50");
         cloudProbabilityProduct = GPF.createProduct("Meris.CloudProbability", cloudProbabilityParameters,
-                                                    cloudProbabilityInput);
+                cloudProbabilityInput);
         return cloudProbabilityProduct;
     }
 
@@ -518,7 +519,7 @@ public class ComputeChainOp extends BasisOp {
         rayleighParameters.put("correctWater", true);
         rayleighParameters.put("landExpression", landExpression);
         rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class),
-                                            rayleighParameters, rayleighInput);
+                rayleighParameters, rayleighInput);
     }
 
     private Product computeLandClassificationProduct(Product gasProduct) {
@@ -528,7 +529,7 @@ public class ComputeChainOp extends BasisOp {
         landInput.put("l1b", sourceProduct);
         landInput.put("gascor", gasProduct);
         landProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), emptyParams,
-                                        landInput);
+                landInput);
         return landProduct;
     }
 
@@ -541,7 +542,7 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> gasParameters = new HashMap<String, Object>(2);
         gasParameters.put("correctWater", true);
         gasProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), gasParameters,
-                                       gasInput);
+                gasInput);
         return gasProduct;
     }
 
@@ -571,7 +572,7 @@ public class ComputeChainOp extends BasisOp {
     private void computeRad2reflProduct() {
         Map<String, Object> emptyParams = new HashMap<String, Object>();
         rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), emptyParams,
-                                            sourceProduct);
+                sourceProduct);
     }
 
     private void computeMerisCloudProduct() {
@@ -586,20 +587,20 @@ public class ComputeChainOp extends BasisOp {
             cloudClassificationParameters.put("l2Pressures", ipfOutputL2Pressures || isGlobAlbedoAlgo());
             cloudClassificationParameters.put("userDefinedP1PressureThreshold", ipfQWGUserDefinedP1PressureThreshold);
             cloudClassificationParameters.put("userDefinedPScattPressureThreshold",
-                                              ipfQWGUserDefinedPScattPressureThreshold);
+                    ipfQWGUserDefinedPScattPressureThreshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
             cloudClassificationParameters.put("userDefinedDeltaRhoToa442Threshold",
-                                              ipfQWGUserDefinedDeltaRhoToa442Threshold);
+                    ipfQWGUserDefinedDeltaRhoToa442Threshold);
             cloudClassificationParameters.put("userDefinedRhoToa753Threshold", ipfQWGUserDefinedRhoToa753Threshold);
             cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
             cloudClassificationParameters.put("userDefinedRhoToaRatio753775Threshold",
-                                              ipfQWGUserDefinedRhoToaRatio753775Threshold);
+                    ipfQWGUserDefinedRhoToaRatio753775Threshold);
             cloudClassificationParameters.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
             cloudClassificationParameters.put("userDefinedNDVIThreshold", userDefinedNDVIThreshold);
 
             cloudInput.put("pressureBaro", pbaroProduct);
             merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),
-                                                  cloudClassificationParameters, cloudInput);
+                    cloudClassificationParameters, cloudInput);
         }
     }
 
@@ -636,7 +637,7 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("l2Pressures", ccOutputL2Pressures);
         cloudClassificationParameters.put("l2CloudDetection", ccOutputL2CloudDetection);
         cloudClassificationParameters.put("userDefinedPScattPressureThreshold",
-                                          ccUserDefinedPScattPressureThreshold);
+                ccUserDefinedPScattPressureThreshold);
         cloudClassificationParameters.put("userDefinedGlintThreshold", ccUserDefinedGlintThreshold);
         cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ccUserDefinedRhoToa442Threshold);
         cloudClassificationParameters.put("userDefinedRhoToa753Threshold", ccUserDefinedRhoToa753Threshold);
@@ -662,7 +663,7 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> postCloudParams = new HashMap<String, Object>();
         postCloudParams.put("cloudBufferWidth", ccCloudBufferWidth);
         return GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourPostProcessCloudOp.class),
-                                 postCloudParams, sourceProducts);
+                postCloudParams, sourceProducts);
 
     }
 
@@ -673,7 +674,7 @@ public class ComputeChainOp extends BasisOp {
         pressureLiseInput.put("rhotoa", rad2reflProduct);
         Map<String, Object> pressureLiseParameters = new HashMap<String, Object>(6);
         pressureLiseParameters.put("straylightCorr",
-                                   false);   // mail from RL/RS, 2009/03/19: do not apply correction on LISE pressure
+                false);   // mail from RL/RS, 2009/03/19: do not apply correction on LISE pressure
         pressureLiseParameters.put("outputP1", true);
         pressureLiseParameters.put("outputPressureSurface", pressureOutputPSurfLise);
         pressureLiseParameters.put("outputP2", pressureOutputP2Lise);
@@ -950,7 +951,7 @@ public class ComputeChainOp extends BasisOp {
         gaCloudClassificationParameters.put("gaLcCloudBuffer", gaLcCloudBuffer);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
-                                           gaCloudClassificationParameters, gaCloudInput);
+                gaCloudClassificationParameters, gaCloudInput);
 
         // add cloud shadow flag to the cloud product computed above...
         if (gaComputeMerisCloudShadow && IdepixUtils.isValidMerisProduct(sourceProduct)) {
@@ -961,7 +962,7 @@ public class ComputeChainOp extends BasisOp {
             Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
             gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
             gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-                                               gaFinalCloudClassificationParameters, gaFinalCloudInput);
+                    gaFinalCloudClassificationParameters, gaFinalCloudInput);
         }
 
         targetProduct = gaCloudProduct;
