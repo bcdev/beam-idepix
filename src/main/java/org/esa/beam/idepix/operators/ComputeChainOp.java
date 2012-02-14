@@ -413,9 +413,6 @@ public class ComputeChainOp extends BasisOp {
         // Pressure (LISE)
         computePressureLiseProduct();
 
-        // Cloud Classification
-        computeCoastColourMerisCloudProduct();
-        postCloudProduct = computeCoastColourCloudPostProcessProduct();
 
 
         // Gaseous Correction
@@ -429,7 +426,16 @@ public class ComputeChainOp extends BasisOp {
         if (ccOutputRayleigh) {
             computeRayleighCorrectionProduct(gasProduct, merisCloudProduct,
                     CoastColourCloudClassificationOp.CLOUD_FLAGS + ".F_LAND");
+            // todo: do spectral unmixing here to retrieve mixpix flag:
+            // 1. generate virtual bands brr_<i>_n, i=5,7,9,10,12,13 as described by AR
+
+            // 2. generate spectral unmixing product
         }
+
+        // Cloud Classification
+        // todo: put optional spectral unmixing product into cloud class. op and set mixpix flag there
+        computeCoastColourMerisCloudProduct();
+        postCloudProduct = computeCoastColourCloudPostProcessProduct();
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
