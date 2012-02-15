@@ -101,7 +101,8 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final int F_LAND = 13;
     public static final int F_COASTLINE = 14;
     public static final int F_LANDRISK = 15;
-    public static final int F_CLOUD_SPATIAL = 16;
+    public static final int F_MIXED_PIXEL = 16;
+    public static final int F_CLOUD_SPATIAL = 17;
 
     private L2AuxData auxData;
 
@@ -262,6 +263,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, F_COASTLINE), null);
         flagCoding.addFlag("F_LANDRISK", BitSetter.setFlag(0, F_LANDRISK), null);
+        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, F_MIXED_PIXEL), null);
         if (spatialCloudTest) {
             flagCoding.addFlag("F_CLOUD_SPATIAL", BitSetter.setFlag(0, F_CLOUD_SPATIAL), null);
         }
@@ -303,6 +305,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                                 w, h, CLOUD_FLAGS + ".F_LOW_PSCATT", Color.YELLOW.brighter(), 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_interm_prel_bright", "IDEPIX CC result of preliminary bright test",
                                                 w, h, CLOUD_FLAGS + ".F_BRIGHT_RC", Color.YELLOW.darker().darker(),
+                                                0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC result of spectral unmixing",
+                                                w, h, CLOUD_FLAGS + ".F_MIXED_PIXEL", Color.GREEN.darker(),
                                                 0.5f));
 
         // not used as masks but still available as flag

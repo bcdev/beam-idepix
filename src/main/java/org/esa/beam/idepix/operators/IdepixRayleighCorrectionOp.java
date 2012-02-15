@@ -49,6 +49,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
     private Band isLandBand;
     private Band[] brrBands;
+    private Band[] brrNormalizedBands;
     private Band[] rayleighReflBands;
     private Band flagBand;
 
@@ -83,6 +84,9 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
     boolean exportRayCoeffs = false;
     @Parameter
     boolean exportRhoR = false;
+    // these bands are needed as input for the spectral unmixing to retrieve mixed pixel flag:
+    @Parameter
+    boolean exportBrrNormalized = false;
 
 
     @Override
@@ -99,9 +103,12 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
     private void createTargetProduct() throws OperatorException {
         targetProduct = createCompatibleProduct(l1bProduct, "MER", "MER_L2");
 
-        brrBands = addBandGroup(BRR_BAND_PREFIX);
+        brrBands = addBandGroup(BRR_BAND_PREFIX, "");
+        if (exportBrrNormalized) {
+            brrNormalizedBands = addBandGroup(BRR_BAND_PREFIX, "_n");
+        }
         if (exportRhoR) {
-            rayleighReflBands = addBandGroup(RAYLEIGH_REFL_BAND_PREFIX);
+            rayleighReflBands = addBandGroup(RAYLEIGH_REFL_BAND_PREFIX, "");
         }
 
         flagBand = targetProduct.addBand(RAY_CORR_FLAGS, ProductData.TYPE_INT16);
@@ -110,10 +117,10 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
         if (exportRayCoeffs) {
-            transRvBands = addBandGroup("transRv");
-            transRsBands = addBandGroup("transRs");
-            tauRBands = addBandGroup("tauR");
-            sphAlbRBands = addBandGroup("sphAlbR");
+            transRvBands = addBandGroup("transRv", "");
+            transRsBands = addBandGroup("transRs", "");
+            tauRBands = addBandGroup("tauR", "");
+            sphAlbRBands = addBandGroup("sphAlbR", "");
         }
         BandMathsOp bandArithmeticOp =
                 BandMathsOp.createBooleanExpressionBand(landExpression, landProduct);
@@ -123,10 +130,10 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
         }
     }
 
-    private Band[] addBandGroup(String prefix) {
+    private Band[] addBandGroup(String prefix, String suffix) {
         Band[] bands = new Band[L1_BAND_NUM];
         for (int bandId : BANDS_TO_CORRECT) {
-            Band targetBand = targetProduct.addBand(prefix + "_" + (bandId + 1), ProductData.TYPE_FLOAT32);
+            Band targetBand = targetProduct.addBand(prefix + "_" + (bandId + 1) + suffix, ProductData.TYPE_FLOAT32);
             ProductUtils.copySpectralBandProperties(l1bProduct.getBandAt(bandId), targetBand);
             targetBand.setNoDataValueUsed(true);
             targetBand.setNoDataValue(BAD_VALUE);
@@ -147,7 +154,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws
-                                                                                                       OperatorException {
+            OperatorException {
         try {
             Tile sza = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME), rectangle);
             Tile vza = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME), rectangle);
@@ -187,6 +194,10 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                 rayleigh_refl = getTargetTileGroup(rayleighReflBands, targetTiles);
             }
             Tile[] brr = getTargetTileGroup(brrBands, targetTiles);
+            Tile[] brrNormalized = null;
+            if (exportBrrNormalized) {
+                brrNormalized = getTargetTileGroup(brrNormalizedBands, targetTiles);
+            }
             Tile brrFlags = targetTiles.get(flagBand);
 
             boolean[][] do_corr = new boolean[SUBWIN_HEIGHT][SUBWIN_WIDTH];
@@ -224,7 +235,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                     for (int iy = y; iy <= yWinEnd; iy++) {
                         for (int ix = x; ix <= xWinEnd; ix++) {
                             if (rhoNg[0].getSampleFloat(ix, iy) != BAD_VALUE &&
-                                (correctWater || isLandCons.getSampleBoolean(ix, iy))) {
+                                    (correctWater || isLandCons.getSampleBoolean(ix, iy))) {
                                 correctPixel = true;
                                 do_corr[iy - y][ix - x] = true;
                             } else {
@@ -232,6 +243,9 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                                 for (int bandId = 0; bandId < L1_BAND_NUM; bandId++) {
                                     if (bandId != bb11 && bandId != bb15) {
                                         brr[bandId].setSample(ix, iy, BAD_VALUE);
+                                        if (exportBrrNormalized) {
+                                            brrNormalized[bandId].setSample(ix, iy, BAD_VALUE);
+                                        }
                                     }
                                 }
                             }
@@ -346,6 +360,21 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                     }
                 }
             }
+
+            if (exportBrrNormalized) {
+                for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                    for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                        for (int bandId : BANDS_TO_CORRECT) {
+                            final float brrValue = brr[bandId].getSampleFloat(x, y);
+                            if (brrValue != BAD_VALUE) {
+                                final double cosSza = Math.cos(sza.getSampleFloat(x, y) * MathUtils.DTOR);
+                                brrNormalized[bandId].setSample(x, y, brrValue / cosSza);
+                            }
+                        }
+                    }
+                }
+            }
+
         } catch (Exception e) {
             throw new OperatorException(e);
         }

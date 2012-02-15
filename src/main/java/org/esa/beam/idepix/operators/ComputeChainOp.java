@@ -15,10 +15,7 @@
 package org.esa.beam.idepix.operators;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -35,9 +32,14 @@ import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
+import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BeamConstants;
 import org.esa.beam.util.ProductUtils;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,7 +51,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
-        version = "1.3.2",
+        version = "1.3.4-SNAPSHOT",
         authors = "Olaf Danne, Carsten Brockmann",
         copyright = "(c) 2011 by Brockmann Consult",
         description = "Pixel identification and classification. This operator just calls a chain of other operators.")
@@ -63,7 +65,7 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Cloud screening parameters
-    @Parameter(defaultValue = "GlobAlbedo", valueSet = {"GlobAlbedo", "QWG", "CoastColour"})
+    @Parameter(defaultValue = "CoastColour", valueSet = {"GlobAlbedo", "QWG", "CoastColour"})
     private CloudScreeningSelector algorithm;
 
 
@@ -210,7 +212,7 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false", label = " Gas Absorption Corrected Reflectances")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances")
+    @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances and Mixed Pixel Flag")
     private boolean ccOutputRayleigh = true;
 
     @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
@@ -280,13 +282,20 @@ public class ComputeChainOp extends BasisOp {
     private Product ctpProduct;
     private Product waterMaskProduct;
     private Product gacProduct;
-    private Product postCloudProduct;
+    private Product ccPostProcessingProduct;
     private Product gasProduct;
+    
+    private int width;
+    private int height;
+    private Product smaProduct;
 
     @Override
     public void initialize() throws OperatorException {
 
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+
+        width = sourceProduct.getSceneRasterWidth();
+        height = sourceProduct.getSceneRasterHeight();
 
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, algorithm);
         if (!inputProductIsValid) {
@@ -296,7 +305,12 @@ public class ComputeChainOp extends BasisOp {
         if (isQWGAlgo()) {
             processQwg();
         } else if (isCoastColourAlgo()) {
-            processCoastColour();
+            try {
+                processCoastColour();
+            } catch (IOException e) {
+                // todo
+                e.printStackTrace();
+            }
         } else if (isGlobAlbedoAlgo()) {
             processGlobAlbedo();
         }
@@ -403,7 +417,7 @@ public class ComputeChainOp extends BasisOp {
         IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
     }
 
-    private void processCoastColour() {
+    private void processCoastColour() throws IOException {
         // Radiance to Reflectance
         computeRad2reflProduct();
 
@@ -413,7 +427,9 @@ public class ComputeChainOp extends BasisOp {
         // Pressure (LISE)
         computePressureLiseProduct();
 
-
+        // Cloud Classification
+        computeCoastColourMerisCloudProduct();
+//        postCloudProduct = computeCoastColourPostProcessProduct();
 
         // Gaseous Correction
         gasProduct = computeGaseousCorrectionProduct();
@@ -423,19 +439,17 @@ public class ComputeChainOp extends BasisOp {
 //        Product landProduct = computeLandClassificationProduct(gasProduct);
 
         // Rayleigh Correction
+        smaProduct = null;
         if (ccOutputRayleigh) {
             computeRayleighCorrectionProduct(gasProduct, merisCloudProduct,
                     CoastColourCloudClassificationOp.CLOUD_FLAGS + ".F_LAND");
-            // todo: do spectral unmixing here to retrieve mixpix flag:
-            // 1. generate virtual bands brr_<i>_n, i=5,7,9,10,12,13 as described by AR
 
-            // 2. generate spectral unmixing product
+            // generate spectral unmixing product
+            smaProduct = computeUnmixingProduct();
         }
 
-        // Cloud Classification
-        // todo: put optional spectral unmixing product into cloud class. op and set mixpix flag there
-        computeCoastColourMerisCloudProduct();
-        postCloudProduct = computeCoastColourCloudPostProcessProduct();
+        // Post Cloud Classification and computation of Mixed Pixel Flag
+        ccPostProcessingProduct = computeCoastColourPostProcessProduct();
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
@@ -444,7 +458,7 @@ public class ComputeChainOp extends BasisOp {
         if (ccOutputL2CloudDetection) {
             Band cloudFlagBand = targetProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS);
             cloudFlagBand.setSourceImage(
-                    postCloudProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
+                    ccPostProcessingProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
         }
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct);
@@ -454,7 +468,6 @@ public class ComputeChainOp extends BasisOp {
 
         CoastColourCloudClassificationOp.addBitmasks(targetProduct);
     }
-
 
     private Product computeCombinedCloudProduct(Product blueBandProduct, Product cloudProbabilityProduct) {
         Map<String, Object> emptyParams = new HashMap<String, Object>();
@@ -524,9 +537,28 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> rayleighParameters = new HashMap<String, Object>(2);
         rayleighParameters.put("correctWater", true);
         rayleighParameters.put("landExpression", landExpression);
+        rayleighParameters.put("exportBrrNormalized", ccOutputRayleigh);
         rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class),
                 rayleighParameters, rayleighInput);
     }
+
+    public Product computeUnmixingProduct() throws UnsupportedEncodingException {
+        Product spectralUnmixingProduct;
+        Map<String, Product> spectralUnmixingInput = new HashMap<String, Product>(1);
+        spectralUnmixingInput.put("sourceProduct", rayleighProduct);
+        Map<String, Object> spectralUnmixingParameters = new HashMap<String, Object>(3);
+        // todo: do we need more than one endmember file? do more parameters need to be flexible?
+        spectralUnmixingParameters.put("sourceBandNames", IdepixConstants.SMA_SOURCE_BAND_NAMES);
+        final Endmember[] endmembers = IdepixUtils.setupCCSpectralUnmixingEndmembers();
+        spectralUnmixingParameters.put("endmembers", endmembers);
+        spectralUnmixingParameters.put("computeErrorBands", true);
+        spectralUnmixingParameters.put("minBandwidth", 5.0);
+        spectralUnmixingParameters.put("unmixingModelName", "Fully Constrained LSU");
+        spectralUnmixingProduct = GPF.createProduct("Unmix", spectralUnmixingParameters,
+                                                    spectralUnmixingInput);
+        return spectralUnmixingProduct;
+    }
+
 
     private Product computeLandClassificationProduct(Product gasProduct) {
         Map<String, Object> emptyParams = new HashMap<String, Object>();
@@ -660,15 +692,17 @@ public class ComputeChainOp extends BasisOp {
                 cloudClassificationParameters, cloudInputProducts);
     }
 
-    private Product computeCoastColourCloudPostProcessProduct() {
+    private Product computeCoastColourPostProcessProduct() {
         HashMap<String, Product> sourceProducts = new HashMap<String, Product>();
         sourceProducts.put("l1b", sourceProduct);
         sourceProducts.put("merisCloud", merisCloudProduct);
         sourceProducts.put("ctp", ctpProduct);
+        sourceProducts.put("rayleigh", rayleighProduct);
+        sourceProducts.put("sma", smaProduct);   // may be null
 
         Map<String, Object> postCloudParams = new HashMap<String, Object>();
         postCloudParams.put("cloudBufferWidth", ccCloudBufferWidth);
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourPostProcessCloudOp.class),
+        return GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourPostProcessOp.class),
                 postCloudParams, sourceProducts);
 
     }
@@ -850,11 +884,13 @@ public class ComputeChainOp extends BasisOp {
         FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);
         targetProduct.getFlagCodingGroup().add(flagCoding);
         for (Band band : rayleighProduct.getBands()) {
-            if (!targetProduct.containsBand(band.getName())) {
+            // do not add the normalized bands
+            if (!targetProduct.containsBand(band.getName())&& !band.getName().endsWith("_n")) {
                 if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                 }
                 targetProduct.addBand(band);
+                targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
             }
         }
     }

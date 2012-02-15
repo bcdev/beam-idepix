@@ -5,14 +5,23 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
+import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.idepix.operators.IdepixConstants;
+import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BitSetter;
+import org.esa.beam.util.math.LUT;
 
 import javax.swing.JOptionPane;
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.StringTokenizer;
 
 /**
  * @author Olaf Danne
@@ -248,6 +257,18 @@ public class IdepixUtils {
         return index;
     }
 
+    public static Endmember[] setupCCSpectralUnmixingEndmembers() {
+        Endmember[] endmembers = new Endmember[IdepixConstants.SMA_ENDMEMBER_NAMES.length];
+        for (int i = 0; i < endmembers.length; i++) {
+            endmembers[i] = new Endmember(IdepixConstants.SMA_ENDMEMBER_NAMES[i],
+                                          IdepixConstants.SMA_ENDMEMBER_WAVELENGTHS,
+                                          IdepixConstants.SMA_ENDMEMBER_RADIATIONS[i]);
+
+        }
+
+        return endmembers;
+    }
+    
     private static Color getRandomColour(Random random) {
         int rColor = random.nextInt(256);
         int gColor = random.nextInt(256);

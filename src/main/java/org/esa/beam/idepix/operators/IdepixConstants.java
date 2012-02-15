@@ -10,7 +10,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
  */
 public class IdepixConstants {
 
-    public static final String IDEPIX_VERSION = "v1.3.2";
+    public static final String IDEPIX_VERSION = "v1.3.4-SNAPSHOT";
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
@@ -189,10 +189,10 @@ public class IdepixConstants {
 
     public static final String inputconsistencyErrorMessage =
             "Selected cloud screening algorithm cannot be used with given input product. \n\n" +
-            "Valid combinations are: \n" +
-            " - QWG for MERIS products \n" +
-            " - GlobColour for MERIS, AATSR, VGT products \n" +
-            " - CoastColour for MERIS products ";
+                    "Valid combinations are: \n" +
+                    " - QWG for MERIS products \n" +
+                    " - GlobColour for MERIS, AATSR, VGT products \n" +
+                    " - CoastColour for MERIS products ";
 
 
     public static final int IO_TAB_INDEX = 0;
@@ -204,4 +204,19 @@ public class IdepixConstants {
     public static final int COASTCOLOUR_TAB_INDEX = 6;
 
     public static final String ctpModeDefault = "Derive from Neural Net";
+
+    // constants for spectral unmixing
+    public static final String[] SMA_SOURCE_BAND_NAMES = {"brr_5_n", "brr_7_n", "brr_9_n", "brr_10_n", "brr_12_n", "brr_13_n"};
+    public static final String[] SMA_ENDMEMBER_NAMES = {"Land", "Water", "Coast", "Cloud"};
+    public static final double[] SMA_ENDMEMBER_WAVELENGTHS =
+            {559.694, 664.57306, 708.32904, 753.37103, 778.40906, 864.87604};
+    public static final double[] SMA_ENDMEMBER_BANDWIDTHS =
+            {9.97, 9.985, 9.992, 7.495, 15.01, 20.047};
+    public static final double[][] SMA_ENDMEMBER_RADIATIONS =
+            {{0.06874453, 0.05234256, 0.10713479, 0.2107095, 0.22287288, 0.24322398},
+            {0.026597029, 0.014183232, 0.012450832, 0.011182333, 0.01058279, 0.008555549},
+            {0.061452672, 0.03917208, 0.046320472, 0.06117781, 0.06220935, 0.061626144},
+            {0.4057965, 0.41043115, 0.43384373, 0.47499827, 0.48148763, 0.49312785}};
+    public static final String[] SMA_ABUNDANCE_BAND_NAMES = {"Land_abundance", "Water_abundance", "Cloud_abundance"};
+    public static final String SMA_SUMMARY_BAND_NAME = "summary_error";
 }

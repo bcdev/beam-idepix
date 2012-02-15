@@ -85,6 +85,7 @@ public class IdepixWithFSGProductTest {
     public void testCreatingTargetProduct_CoastColour_Algo() {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "CoastColour");
+        parameters.put("ccOutputRayleigh", false);
         final Product product = GPF.createProduct("idepix.ComputeChain", parameters, sourceProduct);
         assertNotNull(product);
         assertNotNull(product.getGeoCoding());
@@ -99,6 +100,8 @@ public class IdepixWithFSGProductTest {
         final short[] shortElemes = new short[width * height];
         for (String l1bBandName : EnvisatConstants.MERIS_L1B_BAND_NAMES) {
             final Band band = pcgProduct.addBand(l1bBandName, ProductData.TYPE_UINT16);
+            band.setSpectralWavelength((float) IdepixConstants.SMA_ENDMEMBER_WAVELENGTHS[0]);
+            band.setSpectralBandwidth((float) IdepixConstants.SMA_ENDMEMBER_BANDWIDTHS[0]);
             band.setDataElems(shortElemes);
         }
         FlagCoding l1_flags = new FlagCoding("l1_flags");
