@@ -23,12 +23,8 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import javax.media.jai.JAI;
 import java.awt.Rectangle;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Operator for GlobAlbedo cloud screening
@@ -265,39 +261,29 @@ public class GACloudScreeningOp extends Operator {
             switch (sourceProductTypeId) {
                 case IdepixConstants.PRODUCT_TYPE_MERIS:
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                        Band b = ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                                targetProduct);
-                        b.setSourceImage(sourceProduct.getBand(
-                                EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]).getSourceImage());
+                        ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
+                                              targetProduct);
                     }
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                        Band b = ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
+                        ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
                                 targetProduct);
-                        b.setSourceImage(rad2reflProduct.getBand(
-                                Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)).getSourceImage());
                     }
                     break;
                 case IdepixConstants.PRODUCT_TYPE_AATSR:
                     for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
-                        Band b = ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
+                        ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
                                 targetProduct);
-//                        b.setSourceImage(sourceProduct.getBand(
-//                                IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i]).getSourceImage());
                     }
                     for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
-                        Band b = ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
+                        ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
                                 targetProduct);
-//                        b.setSourceImage(sourceProduct.getBand(
-//                                IdepixConstants.AATSR_BTEMP_BAND_NAMES[i]).getSourceImage());
                     }
                     break;
                 case IdepixConstants.PRODUCT_TYPE_VGT:
                     for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
                         // write the original reflectance bands:
-                        Band b = ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct,
+                        ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct,
                                 targetProduct);
-                        b.setSourceImage(
-                                sourceProduct.getBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i]).getSourceImage());
                     }
                     break;
                 default:
@@ -319,10 +305,7 @@ public class GACloudScreeningOp extends Operator {
             switch (sourceProductTypeId) {
                 case IdepixConstants.PRODUCT_TYPE_VGT:
                     for (String bandName : IdepixConstants.VGT_ANNOTATION_BAND_NAMES) {
-                        Band b = ProductUtils.copyBand(bandName, sourceProduct, targetProduct);
-                        if (b != null) {
-                            b.setSourceImage(sourceProduct.getBand(bandName).getSourceImage());
-                        }
+                        ProductUtils.copyBand(bandName, sourceProduct, targetProduct);
                     }
                     break;
                 default:

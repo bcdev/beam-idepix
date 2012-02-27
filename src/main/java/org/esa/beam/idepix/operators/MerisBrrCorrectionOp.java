@@ -47,10 +47,7 @@ public class MerisBrrCorrectionOp extends Operator {
         for (String bandName : brrProduct.getBandNames()) {
             if (!targetProduct.containsBand(bandName)) {
                 if (!brrProduct.getBand(bandName).isFlagBand()) {
-                    Band targetBand = ProductUtils.copyBand(bandName, brrProduct, targetProduct);
-                    if (!bandName.startsWith("brr")) {
-                        targetBand.setSourceImage(brrProduct.getBand(bandName).getSourceImage());
-                    }
+                    ProductUtils.copyBand(bandName, brrProduct, targetProduct);
                 }
             }
         }

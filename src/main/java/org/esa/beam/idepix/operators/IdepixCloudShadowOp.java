@@ -116,8 +116,7 @@ public class IdepixCloudShadowOp extends Operator {
             case IdepixConstants.PRODUCT_TYPE_MERIS:
                 for (Band b : cloudProduct.getBands()) {
                     if (!b.isFlagBand() && !targetProduct.containsBand(b.getName())) {
-                        Band bCopy = ProductUtils.copyBand(b.getName(), cloudProduct, targetProduct);
-                        bCopy.setSourceImage(b.getSourceImage());
+                        ProductUtils.copyBand(b.getName(), cloudProduct, targetProduct);
                     }
                 }
                 break;
