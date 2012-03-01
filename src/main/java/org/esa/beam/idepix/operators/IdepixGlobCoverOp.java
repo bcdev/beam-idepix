@@ -23,7 +23,6 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
@@ -33,11 +32,9 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.util.BitSetter;
-import org.esa.beam.util.ProductUtils;
-import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 /**
- * Operator for adapting the output of hte globcover chain to
+ * Operator for adapting the output of hte GlobCover chain to
  * the Idepix GlobAlbedo output
  *
  * @author MarcoZ
@@ -54,9 +51,6 @@ public class IdepixGlobCoverOp extends SampleOperator {
     @SourceProduct
     private Product brrProduct;
 
-    private Band cloudFlagBand;
-    private WatermaskClassifier classifier;
-
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
@@ -70,16 +64,6 @@ public class IdepixGlobCoverOp extends SampleOperator {
         flagBand.setSampleCoding(flagCoding);
         target.getFlagCodingGroup().add(flagCoding);
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(target);
-
-        ProductUtils.copyBand("l2_flags_p1", brrProduct, target);
-        ProductUtils.copyBand(CombinedCloudOp.FLAG_BAND_NAME, cloudProduct, target);
-
-        String[] bandNames = brrProduct.getBandNames();
-        for (String bandName : bandNames) {
-            if (bandName.startsWith("toar")) {
-                ProductUtils.copyBand(bandName, brrProduct, target);
-            }
-        }
     }
 
     @Override
