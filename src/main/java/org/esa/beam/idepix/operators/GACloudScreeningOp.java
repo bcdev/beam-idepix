@@ -556,7 +556,7 @@ public class GACloudScreeningOp extends Operator {
         }
     }
 
-    private void setCloudBufferLC(Band band, Tile targetTile, Rectangle rectangle) {
+    static void setCloudBufferLC(Band band, Tile targetTile, Rectangle rectangle) {
         //  set alternative cloud buffer flag as used in LC-CCI project:
         // 1. use 2x2 square with reference pixel in upper left
         // 2. move this square row-by-row over the tile

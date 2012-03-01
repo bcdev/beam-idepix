@@ -17,6 +17,7 @@ package org.esa.beam.idepix.operators;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
@@ -63,7 +64,7 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Cloud screening parameters
-    @Parameter(defaultValue = "CoastColour", valueSet = {"GlobAlbedo", "QWG", "CoastColour", "GlobCover"})
+    @Parameter(defaultValue = "CoastColour", valueSet = {"GlobAlbedo", "QWG", "CoastColour", "GlobCover", "MagicStick"})
     private CloudScreeningSelector algorithm;
 
 
@@ -302,6 +303,10 @@ public class ComputeChainOp extends BasisOp {
             case GlobCover:
                 processGlobCover();
                 break;
+            case MagicStick:
+                processMagicStick();
+                break;
+
             default:
                 throw new OperatorException("Unsupported algorithm selected: " + algorithm);
         }
@@ -492,20 +497,35 @@ public class ComputeChainOp extends BasisOp {
         Product combinedCloudProduct = computeCombinedCloudProduct(blueBandProduct, cloudProbabilityProduct);
         computeCloudTopPressureProduct();
 
-        CloudEdgeOp cloudEdgeOp = new CloudEdgeOp();
+        Operator cloudEdgeOp = new CloudEdgeOp();
         cloudEdgeOp.setSourceProduct(combinedCloudProduct);
         Product cloudEdgeProduct = cloudEdgeOp.getTargetProduct();
 
-        CloudShadowOp cloudShadowOp = new CloudShadowOp();
+        Operator cloudShadowOp = new CloudShadowOp();
         cloudShadowOp.setSourceProduct("l1b", sourceProduct);
         cloudShadowOp.setSourceProduct("cloud", cloudEdgeProduct);
         cloudShadowOp.setSourceProduct("ctp", ctpProduct);
         Product cloudShadowProduct = cloudShadowOp.getTargetProduct();
 
-        IdepixGlobCoverOp idepixGlobCoverOp = new IdepixGlobCoverOp();
+        Operator idepixGlobCoverOp = new IdepixGlobCoverOp();
         idepixGlobCoverOp.setSourceProduct("cloudProduct", cloudShadowProduct);
         idepixGlobCoverOp.setSourceProduct("brrProduct", brrProduct);
         targetProduct = idepixGlobCoverOp.getTargetProduct();
+    }
+
+    private void processMagicStick() {
+        computeCloudTopPressureProduct();
+
+        Operator operator = new IdepixMagicStickOp();
+        operator.setSourceProduct(sourceProduct);
+        Product magicProduct = operator.getTargetProduct();
+        Map<String, Product> shadowInput = new HashMap<String, Product>(4);
+        shadowInput.put("gal1b", sourceProduct);
+        shadowInput.put("cloud", magicProduct);
+        shadowInput.put("ctp", ctpProduct);   // may be null
+        Map<String, Object> params = new HashMap<String, Object>(1);
+        params.put("ctpMode", ctpMode);
+        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
     }
 
     private void processCoastColour() {

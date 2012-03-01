@@ -67,12 +67,13 @@ public class IdepixUtils {
 
 
     private static boolean isInputConsistent(Product sourceProduct, CloudScreeningSelector algorithm) {
-        if (CloudScreeningSelector.QWG.equals(algorithm) ||
-                CloudScreeningSelector.CoastColour.equals(algorithm) ||
-                CloudScreeningSelector.GlobCover.equals(algorithm)) {
+        if (CloudScreeningSelector.QWG == algorithm ||
+                CloudScreeningSelector.CoastColour == algorithm ||
+                CloudScreeningSelector.GlobCover == algorithm ||
+                CloudScreeningSelector.MagicStick == algorithm) {
             return (isValidMerisProduct(sourceProduct));
         }
-        if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {
+        if (CloudScreeningSelector.GlobAlbedo == algorithm) {
             return (isValidMerisProduct(sourceProduct) ||
                     isValidAatsrProduct(sourceProduct) ||
                     isValidVgtProduct(sourceProduct));

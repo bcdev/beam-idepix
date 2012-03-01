@@ -10,5 +10,6 @@ public enum CloudScreeningSelector {
     QWG,
     GlobAlbedo,
     GlobCover,
-    CoastColour
+    CoastColour,
+    MagicStick
 }
