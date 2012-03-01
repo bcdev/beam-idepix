@@ -30,7 +30,9 @@ import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
+import org.esa.beam.meris.cloud.CloudEdgeOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
+import org.esa.beam.meris.cloud.CloudShadowOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BeamConstants;
@@ -61,7 +63,7 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Cloud screening parameters
-    @Parameter(defaultValue = "CoastColour", valueSet = {"GlobAlbedo", "QWG", "CoastColour"})
+    @Parameter(defaultValue = "CoastColour", valueSet = {"GlobAlbedo", "QWG", "CoastColour", "GlobCover"})
     private CloudScreeningSelector algorithm;
 
 
@@ -297,6 +299,11 @@ public class ComputeChainOp extends BasisOp {
             case GlobAlbedo:
                 processGlobAlbedo();
                 break;
+            case GlobCover:
+                processGlobCover();
+                break;
+            default:
+                throw new OperatorException("Unsupported algorithm selected: " + algorithm);
         }
         renameL1bMaskNames();
     }
@@ -356,7 +363,7 @@ public class ComputeChainOp extends BasisOp {
 
         Product blueBandProduct = null;
         if (cloudOutputBlueBand || cloudOutputCombinedCloud) {
-            blueBandProduct = computeBlueBandProduct();
+            blueBandProduct = computeBlueBandProduct(computeBrrProduct());
         }
 
         // Cloud Probability
@@ -478,6 +485,29 @@ public class ComputeChainOp extends BasisOp {
         addPressureLiseProductBands();
     }
 
+    private void processGlobCover() {
+        Product brrProduct = computeBrrProduct();
+        Product blueBandProduct = computeBlueBandProduct(brrProduct);
+        Product cloudProbabilityProduct = computeCloudProbabilityProduct();
+        Product combinedCloudProduct = computeCombinedCloudProduct(blueBandProduct, cloudProbabilityProduct);
+        computeCloudTopPressureProduct();
+
+        CloudEdgeOp cloudEdgeOp = new CloudEdgeOp();
+        cloudEdgeOp.setSourceProduct(combinedCloudProduct);
+        Product cloudEdgeProduct = cloudEdgeOp.getTargetProduct();
+
+        CloudShadowOp cloudShadowOp = new CloudShadowOp();
+        cloudShadowOp.setSourceProduct("l1b", sourceProduct);
+        cloudShadowOp.setSourceProduct("cloud", cloudEdgeProduct);
+        cloudShadowOp.setSourceProduct("ctp", ctpProduct);
+        Product cloudShadowProduct = cloudShadowOp.getTargetProduct();
+
+        IdepixGlobCoverOp idepixGlobCoverOp = new IdepixGlobCoverOp();
+        idepixGlobCoverOp.setSourceProduct("cloudProduct", cloudShadowProduct);
+        idepixGlobCoverOp.setSourceProduct("brrProduct", brrProduct);
+        targetProduct = idepixGlobCoverOp.getTargetProduct();
+    }
+
     private void processCoastColour() {
         computeRadiance2ReflectanceProduct();
         computeCloudTopPressureProduct();
@@ -564,10 +594,10 @@ public class ComputeChainOp extends BasisOp {
         return GPF.createProduct("Meris.CloudProbability", params, input);
     }
 
-    private Product computeBlueBandProduct() {
+    private Product computeBlueBandProduct(Product brrProduct) {
         Map<String, Product> input = new HashMap<String, Product>(2);
         input.put("l1b", sourceProduct);
-        input.put("toar", computeBrrProduct());
+        input.put("toar", brrProduct);
         return GPF.createProduct("Meris.BlueBand", GPF.NO_PARAMS, input);
     }
 

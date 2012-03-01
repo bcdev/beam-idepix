@@ -5,23 +5,15 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
-import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.idepix.operators.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BitSetter;
-import org.esa.beam.util.math.LUT;
 
 import javax.swing.JOptionPane;
 import java.awt.Color;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.StringTokenizer;
 
 /**
  * @author Olaf Danne
@@ -75,7 +67,9 @@ public class IdepixUtils {
 
 
     private static boolean isInputConsistent(Product sourceProduct, CloudScreeningSelector algorithm) {
-        if (CloudScreeningSelector.QWG.equals(algorithm) || CloudScreeningSelector.CoastColour.equals(algorithm)) {
+        if (CloudScreeningSelector.QWG.equals(algorithm) ||
+                CloudScreeningSelector.CoastColour.equals(algorithm) ||
+                CloudScreeningSelector.GlobCover.equals(algorithm)) {
             return (isValidMerisProduct(sourceProduct));
         }
         if (CloudScreeningSelector.GlobAlbedo.equals(algorithm)) {

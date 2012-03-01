@@ -9,5 +9,6 @@ package org.esa.beam.idepix.operators;
 public enum CloudScreeningSelector {
     QWG,
     GlobAlbedo,
+    GlobCover,
     CoastColour
 }
