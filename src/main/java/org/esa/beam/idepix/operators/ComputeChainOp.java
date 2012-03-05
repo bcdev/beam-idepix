@@ -36,7 +36,6 @@ import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CloudShadowOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.unmixing.Endmember;
-import org.esa.beam.util.BeamConstants;
 import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
@@ -428,11 +427,7 @@ public class ComputeChainOp extends BasisOp {
             addCombinedCloudProductBands(combinedCloudProduct);
         }
 
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-        Band l1FlagsSourceBand = sourceProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
-        Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
-        l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
-
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
     }
 
@@ -577,11 +572,7 @@ public class ComputeChainOp extends BasisOp {
                     ccPostProcessingProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
         }
 
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-        Band l1FlagsSourceBand = sourceProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
-        Band l1FlagsTargetBand = targetProduct.getBand(BeamConstants.MERIS_L1B_FLAGS_DS_NAME);
-        l1FlagsTargetBand.setSourceImage(l1FlagsSourceBand.getSourceImage());
-
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         CoastColourCloudClassificationOp.addBitmasks(targetProduct);
     }
 
@@ -922,7 +913,7 @@ public class ComputeChainOp extends BasisOp {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         for (Band band : merisCloudProduct.getBands()) {
             if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {
-                Band targetBand = ProductUtils.copyBand(band.getName(), merisCloudProduct, targetProduct);
+                Band targetBand = ProductUtils.copyBand(band.getName(), merisCloudProduct, targetProduct, true);
                 targetBand.setSampleCoding(flagCoding);
             }
         }

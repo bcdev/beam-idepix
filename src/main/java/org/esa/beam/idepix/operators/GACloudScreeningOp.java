@@ -262,50 +262,41 @@ public class GACloudScreeningOp extends Operator {
                 case IdepixConstants.PRODUCT_TYPE_MERIS:
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                         ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                                              targetProduct);
+                                              targetProduct, true);
                     }
                     for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                         ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
-                                targetProduct);
+                                targetProduct, true);
                     }
                     break;
                 case IdepixConstants.PRODUCT_TYPE_AATSR:
                     for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
                         ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
-                                targetProduct);
+                                targetProduct, true);
                     }
                     for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
                         ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
-                                targetProduct);
+                                targetProduct, true);
                     }
                     break;
                 case IdepixConstants.PRODUCT_TYPE_VGT:
                     for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
                         // write the original reflectance bands:
                         ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct,
-                                targetProduct);
+                                targetProduct, true);
                     }
                     break;
                 default:
                     break;
             }
-
-            // copy flag bands
-            ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-            for (Band sb : sourceProduct.getBands()) {
-                if (sb.isFlagBand()) {
-                    Band tb = targetProduct.getBand(sb.getName());
-                    tb.setSourceImage(sb.getSourceImage());
-                }
-            }
-
+            ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         }
 
         if (gaCopyAnnotations) {
             switch (sourceProductTypeId) {
                 case IdepixConstants.PRODUCT_TYPE_VGT:
                     for (String bandName : IdepixConstants.VGT_ANNOTATION_BAND_NAMES) {
-                        ProductUtils.copyBand(bandName, sourceProduct, targetProduct);
+                        ProductUtils.copyBand(bandName, sourceProduct, targetProduct, true);
                     }
                     break;
                 default:

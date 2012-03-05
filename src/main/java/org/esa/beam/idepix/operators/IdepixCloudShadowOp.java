@@ -116,7 +116,7 @@ public class IdepixCloudShadowOp extends Operator {
             case IdepixConstants.PRODUCT_TYPE_MERIS:
                 for (Band b : cloudProduct.getBands()) {
                     if (!b.isFlagBand() && !targetProduct.containsBand(b.getName())) {
-                        ProductUtils.copyBand(b.getName(), cloudProduct, targetProduct);
+                        ProductUtils.copyBand(b.getName(), cloudProduct, targetProduct, true);
                     }
                 }
                 break;
@@ -126,15 +126,7 @@ public class IdepixCloudShadowOp extends Operator {
             case IdepixConstants.PRODUCT_TYPE_VGT:
                 throw new OperatorException("No cloud shadow algorithm available for VGT");
         }
-
-        // copy L1b flags
-        ProductUtils.copyFlagBands(l1bProduct, targetProduct);
-        for (Band sb : l1bProduct.getBands()) {
-            if (sb.isFlagBand() && sb.getName().equals(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME)) {
-                Band tb = targetProduct.getBand(sb.getName());
-                tb.setSourceImage(sb.getSourceImage());
-            }
-        }
+        ProductUtils.copyFlagBands(l1bProduct, targetProduct, true);
     }
 
     private void setSourceProductTypeId() {

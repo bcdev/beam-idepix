@@ -47,11 +47,11 @@ public class MerisBrrCorrectionOp extends Operator {
         for (String bandName : brrProduct.getBandNames()) {
             if (!targetProduct.containsBand(bandName)) {
                 if (!brrProduct.getBand(bandName).isFlagBand()) {
-                    ProductUtils.copyBand(bandName, brrProduct, targetProduct);
+                    ProductUtils.copyBand(bandName, brrProduct, targetProduct, true);
                 }
             }
         }
-        OperatorUtils.copyFlagBandsWithImages(brrProduct, targetProduct);
+        ProductUtils.copyFlagBands(brrProduct, targetProduct, true);
 
         BandMathsOp bandArithmeticOp = BandMathsOp.createBooleanExpressionBand("l1_flags.INVALID", l1bProduct);
         invalidBand = bandArithmeticOp.getTargetProduct().getBandAt(0);

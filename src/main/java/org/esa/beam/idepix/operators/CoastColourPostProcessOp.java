@@ -108,7 +108,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                                                shadowWidth, shadowWidth);
 
 
-        ProductUtils.copyBand(CloudClassificationOp.CLOUD_FLAGS, merisCloudProduct, postProcessedCloudProduct);
+        ProductUtils.copyBand(CloudClassificationOp.CLOUD_FLAGS, merisCloudProduct, postProcessedCloudProduct, false);
         setTargetProduct(postProcessedCloudProduct);
     }
 

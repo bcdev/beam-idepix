@@ -51,17 +51,6 @@ public class OperatorUtils {
         targetProduct.setEndTime(sourceProduct.getEndTime());
     }
 
-    public static void copyFlagBandsWithImages(Product sourceProduct, Product targetProduct) {
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-        Band[] bands = sourceProduct.getBands();
-        for (Band srcBand : bands) {
-            if (srcBand.isFlagBand()) {
-                Band targetBand = targetProduct.getBand(srcBand.getName());
-                targetBand.setSourceImage(srcBand.getSourceImage());
-            }
-        }
-    }
-
     public static Band[] addBandGroup(Product srcProduct, int numSrcBands, int[] bandsToSkip, Product targetProduct, String targetPrefix, double noDataValue, boolean compactTargetArray) {
         int numTargetBands = numSrcBands;
         if (compactTargetArray && bandsToSkip.length > 0) {
