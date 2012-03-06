@@ -474,6 +474,7 @@ public class ComputeChainOp extends BasisOp {
             gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
             Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
             gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
+            gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", true);
             gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
                                                gaFinalCloudClassificationParameters, gaFinalCloudInput);
         }

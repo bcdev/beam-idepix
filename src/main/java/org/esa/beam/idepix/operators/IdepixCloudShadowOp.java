@@ -19,6 +19,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
@@ -64,6 +65,10 @@ public class IdepixCloudShadowOp extends Operator {
     @Parameter(description = " CTP value to use in MERIS cloud shadow algorithm",
                defaultValue = "Derive from Neural Net")
     private String ctpMode;
+
+    @Parameter(description = "If 'true', cloud shadow is computed for cloud buffer as well",
+                   defaultValue = "false")
+    private boolean shadowForCloudBuffer;
 
     private int sourceProductTypeId;
 
@@ -175,7 +180,9 @@ public class IdepixCloudShadowOp extends Operator {
 
             for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
-                    if (inputCloudTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                    int cloudFlag = inputCloudTile.getSampleInt(x, y);
+                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) ||
+                            (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
