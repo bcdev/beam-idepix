@@ -783,7 +783,8 @@ public class GACloudScreeningOp extends Operator {
         @Override
         public byte getWatermaskSample(float lat, float lon) {
             int waterMaskSample = WatermaskClassifier.INVALID_VALUE;
-            if (classifier != null) {
+            if (classifier != null && lat > -60f) {
+                //TODO the watermask does not work below -60 degree (mz, 2012-03-06)
                 waterMaskSample = classifier.getWaterMaskSample(lat, lon);
             }
             return (byte) waterMaskSample;
