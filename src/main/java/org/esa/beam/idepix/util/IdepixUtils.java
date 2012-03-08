@@ -70,7 +70,8 @@ public class IdepixUtils {
         if (CloudScreeningSelector.QWG == algorithm ||
                 CloudScreeningSelector.CoastColour == algorithm ||
                 CloudScreeningSelector.GlobCover == algorithm ||
-                CloudScreeningSelector.MagicStick == algorithm) {
+                CloudScreeningSelector.MagicStick == algorithm ||
+                CloudScreeningSelector.Schiller == algorithm) {
             return (isValidMerisProduct(sourceProduct));
         }
         if (CloudScreeningSelector.GlobAlbedo == algorithm) {

@@ -11,5 +11,6 @@ public enum CloudScreeningSelector {
     GlobAlbedo,
     GlobCover,
     CoastColour,
-    MagicStick
+    MagicStick,
+    Schiller
 }

@@ -1,0 +1,562 @@
+; Definition of the neural net
+; 
+[ Net ]
+MajVersion = 1
+MinVersion = 2
+NumLayers = 4
+InpLayer = 1
+OutLayer = 4
+Precision = Double ; ID = 8
+  
+; Definition of layer 1
+; 
+[ Layer(1) ]
+NumUnits = 15
+InpFunc = Sum_1 ; ID = 40
+ActFunc = Identity ; ID = 1
+OutFunc = Linear ; ID = 11
+ActSlope = 1
+ActThres = 0
+  
+; Definition of layer 2
+; 
+[ Layer(2) ]
+NumUnits = 8
+InpFunc = Sum_1 ; ID = 40
+ActFunc = Sigmoid_1 ; ID = 20
+OutFunc = Identity ; ID = 1
+ActSlope = 1
+ActThres = 0
+  
+; Definition of layer 3
+; 
+[ Layer(3) ]
+NumUnits = 3
+InpFunc = Sum_1 ; ID = 40
+ActFunc = Sigmoid_1 ; ID = 20
+OutFunc = Identity ; ID = 1
+ActSlope = 1
+ActThres = 0
+  
+; Definition of layer 4
+; 
+[ Layer(4) ]
+NumUnits = 1
+InpFunc = Sum_1 ; ID = 40
+ActFunc = Sigmoid_1 ; ID = 20
+OutFunc = Linear ; ID = 11
+ActSlope = 1
+ActThres = 0
+  
+; Definition of unit 1 of layer 1
+; 
+[ Unit(1,1) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8176844203
+OutScale = 0.3319808434
+; No incoming connections defined!
+  
+; Definition of unit 2 of layer 1
+; 
+[ Unit(1,2) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8038253753
+OutScale = 0.30671215
+; No incoming connections defined!
+  
+; Definition of unit 3 of layer 1
+; 
+[ Unit(1,3) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.7925245058
+OutScale = 0.2739460337
+; No incoming connections defined!
+  
+; Definition of unit 4 of layer 1
+; 
+[ Unit(1,4) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.794103671
+OutScale = 0.2586744538
+; No incoming connections defined!
+  
+; Definition of unit 5 of layer 1
+; 
+[ Unit(1,5) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8041495881
+OutScale = 0.2324542919
+; No incoming connections defined!
+  
+; Definition of unit 6 of layer 1
+; 
+[ Unit(1,6) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8122172295
+OutScale = 0.2088215407
+; No incoming connections defined!
+  
+; Definition of unit 7 of layer 1
+; 
+[ Unit(1,7) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8062708869
+OutScale = 0.196710257
+; No incoming connections defined!
+  
+; Definition of unit 8 of layer 1
+; 
+[ Unit(1,8) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8041917155
+OutScale = 0.1936019961
+; No incoming connections defined!
+  
+; Definition of unit 9 of layer 1
+; 
+[ Unit(1,9) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8067839529
+OutScale = 0.1866030226
+; No incoming connections defined!
+  
+; Definition of unit 10 of layer 1
+; 
+[ Unit(1,10) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8098133471
+OutScale = 0.1750226873
+; No incoming connections defined!
+  
+; Definition of unit 11 of layer 1
+; 
+[ Unit(1,11) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.9127470615
+OutScale = 0.1775967711
+; No incoming connections defined!
+  
+; Definition of unit 12 of layer 1
+; 
+[ Unit(1,12) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8149057622
+OutScale = 0.1715269691
+; No incoming connections defined!
+  
+; Definition of unit 13 of layer 1
+; 
+[ Unit(1,13) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8204502148
+OutScale = 0.1598444777
+; No incoming connections defined!
+  
+; Definition of unit 14 of layer 1
+; 
+[ Unit(1,14) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.8225128004
+OutScale = 0.1598105542
+; No incoming connections defined!
+  
+; Definition of unit 15 of layer 1
+; 
+[ Unit(1,15) ]
+NumConns = 0
+InpBias = 0
+InpScale = 1
+OutBias = 0.842944025
+OutScale = 0.1602654509
+; No incoming connections defined!
+  
+; Definition of unit 1 of layer 2
+; 
+[ Unit(2,1) ]
+NumConns = 15
+InpBias = 2.047228
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, 6.261569
+C(2) = 1,2, 7.290474
+C(3) = 1,3, 8.631183
+C(4) = 1,4, 7.970839
+C(5) = 1,5, 7.724805
+C(6) = 1,6, 6.431612
+C(7) = 1,7, 9.006804
+C(8) = 1,8, 8.344402
+C(9) = 1,9, 7.368262
+C(10) = 1,10, 6.752601
+C(11) = 1,11, -1.666928
+C(12) = 1,12, 6.549159
+C(13) = 1,13, 4.619954
+C(14) = 1,14, 4.770931
+C(15) = 1,15, 6.110509
+  
+; Definition of unit 2 of layer 2
+; 
+[ Unit(2,2) ]
+NumConns = 15
+InpBias = -3.019068
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, -38.235904
+C(2) = 1,2, 0.284959
+C(3) = 1,3, 20.734142
+C(4) = 1,4, -20.066753
+C(5) = 1,5, -2.820463
+C(6) = 1,6, 8.101938
+C(7) = 1,7, 12.528792
+C(8) = 1,8, 21.755605
+C(9) = 1,9, 23.015137
+C(10) = 1,10, 30.35018
+C(11) = 1,11, 7.58117
+C(12) = 1,12, 1.443201
+C(13) = 1,13, -31.762852
+C(14) = 1,14, -20.411769
+C(15) = 1,15, -8.038461
+  
+; Definition of unit 3 of layer 2
+; 
+[ Unit(2,3) ]
+NumConns = 15
+InpBias = 3.126798
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, -20.968277
+C(2) = 1,2, 12.196274
+C(3) = 1,3, 32.835765
+C(4) = 1,4, 33.556744
+C(5) = 1,5, 35.198965
+C(6) = 1,6, -22.827963
+C(7) = 1,7, -29.949507
+C(8) = 1,8, -32.990627
+C(9) = 1,9, 8.48352
+C(10) = 1,10, 8.898925
+C(11) = 1,11, -12.059387
+C(12) = 1,12, 22.151641
+C(13) = 1,13, -15.700977
+C(14) = 1,14, -44.880153
+C(15) = 1,15, 16.424652
+  
+; Definition of unit 4 of layer 2
+; 
+[ Unit(2,4) ]
+NumConns = 15
+InpBias = 23.9678
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, -46.937063
+C(2) = 1,2, -7.4082
+C(3) = 1,3, 23.341938
+C(4) = 1,4, 29.325778
+C(5) = 1,5, 43.230015
+C(6) = 1,6, -2.672465
+C(7) = 1,7, -1.021172
+C(8) = 1,8, 1.753184
+C(9) = 1,9, 98.001348
+C(10) = 1,10, 51.583069
+C(11) = 1,11, -15.385781
+C(12) = 1,12, 32.840407
+C(13) = 1,13, -71.736991
+C(14) = 1,14, -177.81791
+C(15) = 1,15, 13.77755
+  
+; Definition of unit 5 of layer 2
+; 
+[ Unit(2,5) ]
+NumConns = 15
+InpBias = -3.129352
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, -14.640501
+C(2) = 1,2, -1.476909
+C(3) = 1,3, 23.348601
+C(4) = 1,4, 33.951393
+C(5) = 1,5, -18.624624
+C(6) = 1,6, 2.780549
+C(7) = 1,7, -6.862176
+C(8) = 1,8, -7.202683
+C(9) = 1,9, 0.665234
+C(10) = 1,10, -5.84063
+C(11) = 1,11, 25.437646
+C(12) = 1,12, -6.306139
+C(13) = 1,13, 2.08447
+C(14) = 1,14, -15.723214
+C(15) = 1,15, 8.611919
+  
+; Definition of unit 6 of layer 2
+; 
+[ Unit(2,6) ]
+NumConns = 15
+InpBias = -4.646927
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, 12.682164
+C(2) = 1,2, 2.896656
+C(3) = 1,3, -3.860181
+C(4) = 1,4, -4.138735
+C(5) = 1,5, 3.201639
+C(6) = 1,6, 5.648963
+C(7) = 1,7, -4.178821
+C(8) = 1,8, -4.498801
+C(9) = 1,9, 5.292866
+C(10) = 1,10, -2.464745
+C(11) = 1,11, -6.269114
+C(12) = 1,12, -2.688466
+C(13) = 1,13, -1.569274
+C(14) = 1,14, -5.586474
+C(15) = 1,15, 24.999215
+  
+; Definition of unit 7 of layer 2
+; 
+[ Unit(2,7) ]
+NumConns = 15
+InpBias = 4.934111
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, -6.13767
+C(2) = 1,2, -11.016311
+C(3) = 1,3, 17.244349
+C(4) = 1,4, -4.588061
+C(5) = 1,5, 14.634517
+C(6) = 1,6, 7.395414
+C(7) = 1,7, -7.989419
+C(8) = 1,8, -9.15666
+C(9) = 1,9, 6.977126
+C(10) = 1,10, -29.357891
+C(11) = 1,11, 2.12515
+C(12) = 1,12, 4.677415
+C(13) = 1,13, 14.919055
+C(14) = 1,14, 6.053841
+C(15) = 1,15, -13.539037
+  
+; Definition of unit 8 of layer 2
+; 
+[ Unit(2,8) ]
+NumConns = 15
+InpBias = 1.745835
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...15)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 1,1, 4.275079
+C(2) = 1,2, 3.068332
+C(3) = 1,3, -5.452126
+C(4) = 1,4, -6.395572
+C(5) = 1,5, -11.54247
+C(6) = 1,6, -20.053606
+C(7) = 1,7, -19.722104
+C(8) = 1,8, -12.095999
+C(9) = 1,9, 19.560764
+C(10) = 1,10, 68.158875
+C(11) = 1,11, 2.793158
+C(12) = 1,12, -8.401247
+C(13) = 1,13, -4.170049
+C(14) = 1,14, -6.323067
+C(15) = 1,15, -7.380972
+  
+; Definition of unit 1 of layer 3
+; 
+[ Unit(3,1) ]
+NumConns = 8
+InpBias = -15.195344
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...8)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 2,1, -7.412334
+C(2) = 2,2, -1.480633
+C(3) = 2,3, -12.291119
+C(4) = 2,4, -2.68765
+C(5) = 2,5, 10.221033
+C(6) = 2,6, 13.063139
+C(7) = 2,7, 18.537657
+C(8) = 2,8, -1.112938
+  
+; Definition of unit 2 of layer 3
+; 
+[ Unit(3,2) ]
+NumConns = 8
+InpBias = -5.143623
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...8)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 2,1, -6.202637
+C(2) = 2,2, 2.875108
+C(3) = 2,3, 73.283459
+C(4) = 2,4, 159.108327
+C(5) = 2,5, -9.271653
+C(6) = 2,6, -1.357188
+C(7) = 2,7, 3.170105
+C(8) = 2,8, 25.87507
+  
+; Definition of unit 3 of layer 3
+; 
+[ Unit(3,3) ]
+NumConns = 8
+InpBias = 8.819513
+InpScale = 1
+OutBias = 0
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...8)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 2,1, 8.524428
+C(2) = 2,2, 17.750875
+C(3) = 2,3, 6.142579
+C(4) = 2,4, -6.454346
+C(5) = 2,5, -16.795668
+C(6) = 2,6, -1.947988
+C(7) = 2,7, 8.777443
+C(8) = 2,8, -23.534651
+  
+; Definition of unit 1 of layer 4
+; 
+[ Unit(4,1) ]
+NumConns = 3
+InpBias = 2.29048
+InpScale = 1
+OutBias = 1
+OutScale = 1
+; Definition of the incoming connections:
+; Form:
+; 	C(iC) = iL, iU, fW
+; with
+; 	iC: Connection index (1...3)
+; 	iL: Source layer index
+; 	iU: Source unit index
+; 	fW: Weight or RBF centre point co-ordinate value
+; 
+C(1) = 3,1, 3.759874
+C(2) = 3,2, -6.052172
+C(3) = 3,3, -1.91126

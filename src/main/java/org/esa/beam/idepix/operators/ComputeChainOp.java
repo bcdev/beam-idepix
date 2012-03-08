@@ -35,6 +35,7 @@ import org.esa.beam.meris.cloud.CloudEdgeOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CloudShadowOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
+import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.ProductUtils;
 
@@ -63,7 +64,8 @@ public class ComputeChainOp extends BasisOp {
 
 
     // Cloud screening parameters
-    @Parameter(defaultValue = "CoastColour", valueSet = {"GlobAlbedo", "QWG", "CoastColour", "GlobCover", "MagicStick"})
+    @Parameter(defaultValue = "CoastColour",
+               valueSet = {"GlobAlbedo", "QWG", "CoastColour", "GlobCover", "MagicStick", "Schiller"})
     private CloudScreeningSelector algorithm;
 
 
@@ -305,6 +307,9 @@ public class ComputeChainOp extends BasisOp {
             case MagicStick:
                 processMagicStick();
                 break;
+            case Schiller:
+                processSchiller();
+                break;
 
             default:
                 throw new OperatorException("Unsupported algorithm selected: " + algorithm);
@@ -515,6 +520,7 @@ public class ComputeChainOp extends BasisOp {
         Operator operator = new IdepixMagicStickOp();
         operator.setSourceProduct(sourceProduct);
         Product magicProduct = operator.getTargetProduct();
+
         Map<String, Product> shadowInput = new HashMap<String, Product>(4);
         shadowInput.put("gal1b", sourceProduct);
         shadowInput.put("cloud", magicProduct);
@@ -522,6 +528,17 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> params = new HashMap<String, Object>(1);
         params.put("ctpMode", ctpMode);
         targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
+    }
+
+    private void processSchiller() {
+        // convert radiance bands to reflectance
+        Map<String, Object> relfParam = new HashMap<String, Object>(3);
+        relfParam.put("doRadToRefl", true);
+        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, sourceProduct);
+
+        Operator operator = new IdepixSchillerOp();
+        operator.setSourceProduct(reflProduct);
+        targetProduct = operator.getTargetProduct();
     }
 
     private void processCoastColour() {
