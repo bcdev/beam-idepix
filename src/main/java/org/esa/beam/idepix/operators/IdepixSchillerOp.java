@@ -26,7 +26,6 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNodeFilter;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
@@ -91,21 +90,9 @@ public class IdepixSchillerOp extends PixelOperator {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
 
-        productConfigurer.addBand("one_net", ProductData.TYPE_FLOAT32);
-        productConfigurer.addBand("two_nets", ProductData.TYPE_FLOAT32);
-        productConfigurer.addBand("mdsi", ProductData.TYPE_FLOAT32);
-
-        productConfigurer.copyBands(new ProductNodeFilter<Band>() {
-            @Override
-            public boolean accept(Band productNode) {
-                return productNode.getName().startsWith("reflec");
-            }
-        });
-        productConfigurer.copyBands("l1_flags");
-
         landNN = createWrapper(loadNeuralNet(NN_LAND), 15, 1);
         waterNN = createWrapper(loadNeuralNet(NN_WATER), 15, 1);
-        landWaterNN = createWrapper(loadNeuralNet(NN_LAND_WATER), 15, 1);
+        //landWaterNN = createWrapper(loadNeuralNet(NN_LAND_WATER), 15, 1);
 
 
         try {
@@ -126,9 +113,6 @@ public class IdepixSchillerOp extends PixelOperator {
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         sampleConfigurer.defineSample(0, GACloudScreeningOp.GA_CLOUD_FLAGS);
-        sampleConfigurer.defineSample(1, "one_net");
-        sampleConfigurer.defineSample(2, "two_nets");
-        sampleConfigurer.defineSample(3, "mdsi");
     }
 
     @Override
@@ -140,7 +124,6 @@ public class IdepixSchillerOp extends PixelOperator {
         } catch (IOException ignore) {
         }
 
-        targetSamples[1].set(process(landWaterNN.get(), sourceSamples));
         boolean isCloud;
         double nnResult;
         if (isWater) {
@@ -150,13 +133,11 @@ public class IdepixSchillerOp extends PixelOperator {
             nnResult = process(landNN.get(), sourceSamples);
             isCloud = nnResult > 1.25;
         }
-        targetSamples[2].set(nnResult);
 
         // snow
         double rhoToa13 = sourceSamples[12].getDouble();
         double rhoToa14 = sourceSamples[13].getDouble();
         double mdsi = (rhoToa13 - rhoToa14) / (rhoToa13 + rhoToa14);
-        targetSamples[3].set(mdsi);
         boolean isL1bBright = BitSetter.isFlagSet(sourceSamples[15].getInt(), 5);
         boolean isSnow = mdsi > 0.01 && isL1bBright;
 
