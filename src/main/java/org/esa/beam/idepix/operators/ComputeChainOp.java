@@ -519,11 +519,11 @@ public class ComputeChainOp extends BasisOp {
 
         Operator operator = new IdepixMagicStickOp();
         operator.setSourceProduct(sourceProduct);
-        Product magicProduct = operator.getTargetProduct();
+        Product cloudProduct = operator.getTargetProduct();
 
         Map<String, Product> shadowInput = new HashMap<String, Product>(4);
         shadowInput.put("gal1b", sourceProduct);
-        shadowInput.put("cloud", magicProduct);
+        shadowInput.put("cloud", cloudProduct);
         shadowInput.put("ctp", ctpProduct);   // may be null
         Map<String, Object> params = new HashMap<String, Object>(1);
         params.put("ctpMode", ctpMode);
@@ -531,6 +531,8 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void processSchiller() {
+        computeCloudTopPressureProduct();
+
         // convert radiance bands to reflectance
         Map<String, Object> relfParam = new HashMap<String, Object>(3);
         relfParam.put("doRadToRefl", true);
@@ -538,7 +540,15 @@ public class ComputeChainOp extends BasisOp {
 
         Operator operator = new IdepixSchillerOp();
         operator.setSourceProduct(reflProduct);
-        targetProduct = operator.getTargetProduct();
+        Product cloudProduct = operator.getTargetProduct();
+
+        Map<String, Product> shadowInput = new HashMap<String, Product>(4);
+        shadowInput.put("gal1b", sourceProduct);
+        shadowInput.put("cloud", cloudProduct);
+        shadowInput.put("ctp", ctpProduct);   // may be null
+        Map<String, Object> params = new HashMap<String, Object>(1);
+        params.put("ctpMode", ctpMode);
+        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
     }
 
     private void processCoastColour() {
