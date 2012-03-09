@@ -16,6 +16,7 @@
 
 package org.esa.beam.idepix.operators;
 
+import com.bc.ceres.core.ProgressMonitor;
 import com.bc.jnn.Jnn;
 import com.bc.jnn.JnnException;
 import com.bc.jnn.JnnNet;
@@ -26,18 +27,16 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,7 +51,7 @@ import java.io.InputStreamReader;
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Computed a cloud mask using neural nets from Schiller.")
-public class IdepixSchillerOp extends PixelOperator {
+public class IdepixSchillerOp extends Operator {
 
     private static final String NN_LAND = "schiller_7x3_1047.0_land.nna";
     private static final String NN_WATER = "schiller_7x3_526.2_water.nna";
@@ -69,7 +68,7 @@ public class IdepixSchillerOp extends PixelOperator {
     private GeoCoding geoCoding;
 
     @Override
-    protected void prepareInputs() throws OperatorException {
+    public void initialize() throws OperatorException {
         geoCoding = sourceProduct.getGeoCoding();
         if (geoCoding == null) {
             throw new OperatorException("Source product has no geocoding");
@@ -77,88 +76,79 @@ public class IdepixSchillerOp extends PixelOperator {
         if (!geoCoding.canGetGeoPos()) {
             throw new OperatorException("Source product has no usable geocoding");
         }
-    }
+        Product targetProduct = new Product(sourceProduct.getName(),
+                                            sourceProduct.getProductType(),
+                                            sourceProduct.getSceneRasterWidth(),
+                                            sourceProduct.getSceneRasterHeight());
 
-    @Override
-    protected void configureTargetProduct(ProductConfigurer productConfigurer) {
-        super.configureTargetProduct(productConfigurer);
-
-        Product targetProduct = productConfigurer.getTargetProduct();
-        Band flagBand = productConfigurer.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        Band flagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
-
-        landNN = createWrapper(loadNeuralNet(NN_LAND), 15, 1);
-        waterNN = createWrapper(loadNeuralNet(NN_WATER), 15, 1);
-        //landWaterNN = createWrapper(loadNeuralNet(NN_LAND_WATER), 15, 1);
-
 
         try {
             watermaskClassifier = new WatermaskClassifier(50);
         } catch (IOException e) {
             throw new OperatorException("Failed to init water mask", e);
         }
+        landNN = createWrapper(loadNeuralNet(NN_LAND), 15, 1);
+        waterNN = createWrapper(loadNeuralNet(NN_WATER), 15, 1);
+
+        setTargetProduct(targetProduct);
     }
 
     @Override
-    protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        for (int bandId = 0; bandId < 15; bandId++) {
-            sampleConfigurer.defineSample(bandId, "reflec_" + (bandId + 1));
+    public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
+        Rectangle rectangle = targetTile.getRectangle();
+        Tile[] srcTiles = new Tile[16];
+        for (int i = 0; i < 15; i++) {
+            srcTiles[i] = getSourceTile(sourceProduct.getBand("reflec_" + (i+1)), rectangle);
         }
-        sampleConfigurer.defineSample(15, "l1_flags");
+        srcTiles[15] = getSourceTile(sourceProduct.getBand("l1_flags"), rectangle);
+        for (Tile.Pos pos : targetTile) {
+            boolean isWater = true;
+            try {
+                GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(pos.x + 0.5f, pos.y + 0.5f), null);
+                isWater = watermaskClassifier.isWater(geoPos.lat, geoPos.lon);
+            } catch (IOException ignore) {
+            }
+    
+            boolean isCloud;
+            double nnResult;
+            if (isWater) {
+                nnResult = process(waterNN.get(), srcTiles, pos.x, pos.y);
+                isCloud = nnResult > 1.35;
+            } else {
+                nnResult = process(landNN.get(), srcTiles, pos.x, pos.y);
+                isCloud = nnResult > 1.25;
+            }
+    
+            // snow
+            double rhoToa13 = srcTiles[12].getSampleDouble(pos.x, pos.y);
+            double rhoToa14 = srcTiles[13].getSampleDouble(pos.x, pos.y);
+            double mdsi = (rhoToa13 - rhoToa14) / (rhoToa13 + rhoToa14);
+            boolean isL1bBright = BitSetter.isFlagSet(srcTiles[15].getSampleInt(pos.x, pos.y), 5);
+            boolean isSnow = mdsi > 0.01 && isL1bBright;
+
+            // cloud flag
+            int resultFlag = 0;
+            resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLOUD, isCloud);
+            resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_LAND, !isWater && !isCloud && !isSnow);
+            resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_WATER, isWater && !isCloud && !isSnow);
+            resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_SNOW, !isWater && !isCloud && isSnow);
+            resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_LAND, !isWater);
+            resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_WATER, isWater);
+    
+            targetTile.setSample(pos.x, pos.y, resultFlag);
+        }
+        GACloudScreeningOp.setCloudBufferLC(targetBand, targetTile, rectangle);
     }
 
-    @Override
-    protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.defineSample(0, GACloudScreeningOp.GA_CLOUD_FLAGS);
-    }
-
-    @Override
-    protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        boolean isWater = true;
-        try {
-            GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-            isWater = watermaskClassifier.isWater(geoPos.lat, geoPos.lon);
-        } catch (IOException ignore) {
-        }
-
-        boolean isCloud;
-        double nnResult;
-        if (isWater) {
-            nnResult = process(waterNN.get(), sourceSamples);
-            isCloud = nnResult > 1.35;
-        } else {
-            nnResult = process(landNN.get(), sourceSamples);
-            isCloud = nnResult > 1.25;
-        }
-
-        // snow
-        double rhoToa13 = sourceSamples[12].getDouble();
-        double rhoToa14 = sourceSamples[13].getDouble();
-        double mdsi = (rhoToa13 - rhoToa14) / (rhoToa13 + rhoToa14);
-        boolean isL1bBright = BitSetter.isFlagSet(sourceSamples[15].getInt(), 5);
-        boolean isSnow = mdsi > 0.01 && isL1bBright;
-
-
-        // cloud flag
-        int resultFlag = 0;
-        resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLOUD, isCloud);
-        resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_LAND, !isWater && !isCloud && !isSnow);
-        resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_WATER, isWater && !isCloud && !isSnow);
-        resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_SNOW, !isWater && !isCloud && isSnow);
-        resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_LAND, !isWater);
-        resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_WATER, isWater);
-
-        targetSamples[0].set(resultFlag);
-    }
-
-    private double process(JnnNetWrapper wrapper, Sample[] sourceSamples) {
+    private double process(JnnNetWrapper wrapper, Tile[] srcTiles, int x, int y) {
         double[] nnIn = wrapper.nnIn;
-        for (int i = 0; i < sourceSamples.length - 1; i++) {
-            Sample sourceSample = sourceSamples[i];
-            nnIn[i] = Math.log(sourceSample.getDouble());
+        for (int i = 0; i < srcTiles.length - 1; i++) {
+            nnIn[i] = Math.log(srcTiles[i].getSampleDouble(x,y));
         }
         double[] nnOut = wrapper.nnOut;
         wrapper.neuralNet.process(nnIn, nnOut);
