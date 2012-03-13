@@ -17,9 +17,6 @@
 package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.jnn.Jnn;
-import com.bc.jnn.JnnException;
-import com.bc.jnn.JnnNet;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
@@ -33,13 +30,12 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.idepix.util.NeuralNetWrapper;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.Rectangle;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 /**
  * Operator for calculating cloud using neural nets from Schiller
@@ -60,9 +56,9 @@ public class IdepixSchillerOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
-    private ThreadLocal<JnnNetWrapper> landNN;
-    private ThreadLocal<JnnNetWrapper> waterNN;
-    private ThreadLocal<JnnNetWrapper> landWaterNN;
+    private ThreadLocal<NeuralNetWrapper> landNN;
+    private ThreadLocal<NeuralNetWrapper> waterNN;
+    private ThreadLocal<NeuralNetWrapper> landWaterNN;
 
     private WatermaskClassifier watermaskClassifier;
     private GeoCoding geoCoding;
@@ -92,8 +88,8 @@ public class IdepixSchillerOp extends Operator {
         } catch (IOException e) {
             throw new OperatorException("Failed to init water mask", e);
         }
-        landNN = createWrapper(loadNeuralNet(NN_LAND), 15, 1);
-        waterNN = createWrapper(loadNeuralNet(NN_WATER), 15, 1);
+        landNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_LAND), 15, 1);
+        waterNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_WATER), 15, 1);
 
         setTargetProduct(targetProduct);
     }
@@ -145,52 +141,14 @@ public class IdepixSchillerOp extends Operator {
         GACloudScreeningOp.setCloudBufferLC(targetBand, targetTile, rectangle);
     }
 
-    private double process(JnnNetWrapper wrapper, Tile[] srcTiles, int x, int y) {
-        double[] nnIn = wrapper.nnIn;
+    private double process(NeuralNetWrapper wrapper, Tile[] srcTiles, int x, int y) {
+        double[] nnIn = wrapper.getInputVector();
         for (int i = 0; i < srcTiles.length - 1; i++) {
             nnIn[i] = Math.log(srcTiles[i].getSampleDouble(x,y));
         }
-        double[] nnOut = wrapper.nnOut;
-        wrapper.neuralNet.process(nnIn, nnOut);
+        double[] nnOut = wrapper.getOutputVector();
+        wrapper.getNeuralNet().process(nnIn, nnOut);
         return nnOut[0];
     }
 
-    private ThreadLocal<JnnNetWrapper> createWrapper(final JnnNet neuralNet, final int in, final int out) {
-        return new ThreadLocal<JnnNetWrapper>() {
-            @Override
-            protected JnnNetWrapper initialValue() {
-                return new JnnNetWrapper(neuralNet.clone(), in, out);
-            }
-        };
-    }
-
-    private JnnNet loadNeuralNet(String nnName) {
-        try {
-            InputStream inputStream = IdepixSchillerOp.class.getResourceAsStream(nnName);
-            final InputStreamReader reader = new InputStreamReader(inputStream);
-
-            try {
-                Jnn.setOptimizing(true);
-                return Jnn.readNna(reader);
-            } finally {
-                reader.close();
-            }
-        } catch (JnnException jnne) {
-            throw new OperatorException(jnne);
-        } catch (IOException ioe) {
-            throw new OperatorException(ioe);
-        }
-    }
-
-    private static class JnnNetWrapper {
-        final JnnNet neuralNet;
-        final double[] nnIn;
-        final double[] nnOut;
-
-        private JnnNetWrapper(JnnNet neuralNet, int in, int out) {
-            this.neuralNet = neuralNet;
-            this.nnIn = new double[in];
-            this.nnOut = new double[out];
-        }
-    }
 }

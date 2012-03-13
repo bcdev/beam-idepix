@@ -61,6 +61,18 @@
             <helpID>idepixChain</helpID>
             <placeAfter/>
         </action>
+        <action>
+            <id>schillercloud</id>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <operatorName>SchillerCloud</operatorName>
+            <dialogTitle>Schillers Cloud-mask</dialogTitle>
+            <targetProductNameSuffix>_schillercloud</targetProductNameSuffix>
+            <text>Schillers Cloud-mask...</text>
+            <shortDescr>A cloud mask based on Schillers neural nets.</shortDescr>
+            <parent>tool</parent>
+            <helpID>schillercloud</helpID>
+            <placeAfter>idepix</placeAfter>
+        </action>
     </extension>
 
     <extension point="beam-ui:helpSets">
