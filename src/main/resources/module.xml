@@ -44,6 +44,9 @@
     <dependency>
         <module>beam-watermask</module>
     </dependency>
+    <dependency>
+        <module>beam-meris-radiometry</module>
+    </dependency>
 
     <categories>Application,Processor,MERIS,AATSR</categories>
 
