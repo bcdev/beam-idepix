@@ -618,7 +618,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
         boolean coast_f = waterFraction < 100 && waterFraction > 0;
         boolean land_f = waterFraction == 0;
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, land_f);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, land_f || coast_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_COASTLINE, coast_f);
         // not yet used; shall be spectral analysis
 //        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LANDRISK, 0);
