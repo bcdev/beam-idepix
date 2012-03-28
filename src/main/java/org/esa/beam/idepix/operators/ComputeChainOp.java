@@ -512,6 +512,12 @@ public class ComputeChainOp extends BasisOp {
         idepixGlobCoverOp.setSourceProduct("cloudProduct", cloudShadowProduct);
         idepixGlobCoverOp.setSourceProduct("brrProduct", brrProduct);
         targetProduct = idepixGlobCoverOp.getTargetProduct();
+        if (gaCopyRadiances) {
+            for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct, true);
+            }
+            ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME, sourceProduct, targetProduct, true);
+        }
     }
 
     private void processMagicStick() {
@@ -549,6 +555,11 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> params = new HashMap<String, Object>(1);
         params.put("ctpMode", ctpMode);
         targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
+        if (gaCopyRadiances) {
+            for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct, true);
+            }
+        }
     }
 
     private void processCoastColour() {
