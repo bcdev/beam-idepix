@@ -6,6 +6,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Tests for class {@link org.esa.beam.idepix.util.IdepixUtils}.
@@ -115,7 +116,7 @@ public class IdepixUtilsTest extends TestCase {
     }
 
     public void testGetMerisWavelengthIndex() {
-        HashMap<Integer, Integer> merisWavelengthIndexMap = IdepixUtils.setupMerisWavelengthIndexMap();
+        Map<Integer, Integer> merisWavelengthIndexMap = IdepixUtils.setupMerisWavelengthIndexMap();
 
         int wl_1 = 412;
         assertEquals(0, merisWavelengthIndexMap.get(wl_1).intValue());

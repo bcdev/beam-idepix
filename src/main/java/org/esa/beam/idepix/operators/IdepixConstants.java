@@ -77,14 +77,13 @@ public class IdepixConstants {
             "ccUserDefinedRhoToa442Threshold",
             "ccRhoAgReferenceWavelength",
             "ccCloudBufferWidth",
-            "ccGacWindowWidth",
             "ccUseL1bLandFlag",
             "ccLandMaskResolution",
             "ccOversamplingFactorX",
             "ccOversamplingFactorY",
             "ccSeaIceThreshold",
-            "ccSpatialCloudTest",
-            "ccSpatialCloudTestThreshold"
+            "ccSchillerAmbiguous",
+            "ccSchillerSure"
     };
 
 

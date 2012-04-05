@@ -34,13 +34,11 @@ import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
-import org.esa.beam.meris.brr.dpm.DpmPixel;
+import org.esa.beam.meris.dpm.PixelId;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.BitSetter;
-import org.esa.beam.util.math.FractIndex;
-import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Color;
@@ -319,9 +317,11 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     }
 
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
-        final ReturnValue press = new ReturnValue();
-
-        Comp_Pressure(sd, pixelInfo, press);
+        PixelId pixelId = new PixelId(auxData);
+        PixelId.Pressure press = pixelId.computePressure(sd.rhoToa[bb753][pixelInfo.index],
+                                                         sd.rhoToa[bb760][pixelInfo.index],
+                                                         pixelInfo.airMass,
+                                                         sd.detectorIndex[pixelInfo.index]);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, Math.max(0.0, press.value));
     }
 
@@ -330,20 +330,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     }
 
     public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
-        final ReturnValue press = new ReturnValue();
-        float inputPressure;
-        if (pressureOutputL2CloudDetectionLisePScatt) {
-            inputPressure = pixelInfo.pscattPressure;
-        } else {
-            inputPressure = pixelInfo.ctp;
-        }
-
         final boolean[] resultFlags = new boolean[6];
-
-        Comp_Pressure(sd, pixelInfo, press);
-
-        /* apply thresholds on pressure- step 2.1.2 */
-        press_thresh(sd, pixelInfo, press.value, inputPressure, resultFlags);
 
         // Compute slopes- step 2.1.7
         spec_slopes(sd, pixelInfo, resultFlags);
@@ -369,13 +356,13 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         // new #2.1.8:
         if (!land_f) {
             boolean low_p_p1 = (pixelInfo.p1Pressure < pixelInfo.pbaroPressure - userDefinedP1PressureThreshold) &&
-                               (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
+                    (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
             is_cloud = (bright_f || low_p_p1) && (!high_mdsi);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_P_P1, low_p_p1);
         } else {
             float rhoToaRatio = sd.rhoToa[bb753][pixelInfo.index] / sd.rhoToa[bb775][pixelInfo.index];
             boolean low_p_pscatt = (pixelInfo.pscattPressure < userDefinedPScattPressureThreshold) &&
-                                   (rhoToaRatio > userDefinedRhoToaRatio753775Threshold);
+                    (rhoToaRatio > userDefinedRhoToaRatio753775Threshold);
             is_cloud = (bright_f || low_p_pscatt) && (!(high_mdsi && bright_f));
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_P_PSCATT, low_p_pscatt);
         }
@@ -387,161 +374,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     private void setMdsi(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         final float mdsi = computeMdsi(sd.rhoToa[bb865][pixelInfo.index], sd.rhoToa[bb890][pixelInfo.index]);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, mdsi);
-    }
-
-    /**
-     * Computes the pressure.
-     * <p/>
-     * <b>Input:</b> {@link org.esa.beam.meris.brr.dpm.DpmPixel#rho_toa},
-     * {@link org.esa.beam.meris.brr.dpm.DpmPixel#mus},
-     * {@link org.esa.beam.meris.brr.dpm.DpmPixel#muv}<br> <b>Output:</b>
-     * {@link org.esa.beam.meris.brr.dpm.DpmPixel#TOAR} (exceptional)<br> <b>DPM ref.:</b> section 3.5 step
-     * 2.1.4<br> <b>MEGS ref.:</b> <code>pixelid.c</code>, function <code>Comp_Pressure</code><br>
-     *
-     * @param pixelInfo the pixel structure
-     * @param press     the resulting pressure
-     */
-    private void Comp_Pressure(SourceData sd, PixelInfo pixelInfo, ReturnValue press) {
-        double eta; // Ratio TOAR(11)/TOAR(10)
-        press.error = false;
-        final FractIndex spectralShiftIndex = new FractIndex();
-        final FractIndex[] cIndex = FractIndex.createArray(2);
-        final ReturnValue press_1 = new ReturnValue();
-        final ReturnValue press_2 = new ReturnValue();
-
-        /* DPM #2.1.3-1 */
-        /* get spectral_shift from detector id in order to use pressure polynomials */
-        Interp.interpCoord(auxData.central_wavelength[bb760][sd.detectorIndex[pixelInfo.index]],
-                           auxData.spectral_shift_wavelength,
-                           spectralShiftIndex);
-
-        // DPM #2.1.3-2, DPM #2.1.3-3, DPM #2.1.3-4
-        // when out of bands, spectral_shift is set to 0 or PPOL_NUM_SHIFT with a null weight,
-        // so it works fine with the following.
-
-        /* reflectance ratio computation, DPM #2.1.12-2 */
-        if (sd.rhoToa[bb753][pixelInfo.index] > 0.0) {
-            eta = sd.rhoToa[bb760][pixelInfo.index] / sd.rhoToa[bb753][pixelInfo.index];
-        } else {
-            // DPM section 3.5.3
-            eta = 0.0;        /* DPM #2.1.12-3 */
-            press.error = true;                /* raise PCD */
-        }
-        // DPM #2.1.12-4
-        Interp.interpCoord(pixelInfo.airMass, auxData.C.getTab(1), cIndex[0]);
-        Interp.interpCoord(sd.rhoToa[bb753][pixelInfo.index], auxData.C.getTab(2), cIndex[1]);
-
-        float[][][] c_lut = (float[][][]) auxData.C.getJavaArray();
-        // coefficient used in the pressure estimation
-        double C_res = Interp.interpolate(c_lut[VOLC_NONE], cIndex);
-
-        // DPM #2.1.12-5, etha * C
-        double ethaC = eta * C_res;
-        // DPM #2.1.12-5a
-        pressure_func(ethaC, pixelInfo.airMass, spectralShiftIndex.index, press_1);
-        // DPM #2.1.12-5b
-        pressure_func(ethaC, pixelInfo.airMass, spectralShiftIndex.index + 1, press_2);
-        if (press_1.error) {
-            press.value = press_2.value; /* corrected by LB as DPM is flawed: press_1 --> press_2 */
-        } else if (press_2.error) {
-            press.value = press_1.value; /* corrected by LB as DPM is flawed: press_2 --> press_1 */
-        } else {
-            /* DPM #2.1.12-5c */
-            press.value = (1 - spectralShiftIndex.fraction) * press_1.value + spectralShiftIndex.fraction * press_2.value;
-        }
-
-        /* DPM #2.1.12-12 */
-        press.error = press.error || press_1.error || press_2.error;
-    }
-
-    /**
-     * Computes surface pressure from corrected ratio b11/b10.
-     * <p/>
-     * <b>DPM ref.:</b> section 3.5 (step 2.1.12)<br> <b>MEGS ref.:</b> <code>pixelid.c</code>, function
-     * <code>pressure_func</code><br>
-     *
-     * @param eta_C         ratio TOAR(B11)/TOAR(B10) corrected
-     * @param airMass       air mass
-     * @param spectralShift
-     * @param press         the resulting pressure
-     */
-    private void pressure_func(double eta_C,
-                               double airMass,
-                               int spectralShift,
-                               ReturnValue press) {
-        double P; /* polynomial accumulator */
-        double koeff; /* powers of eta_c */
-        press.error = false;
-        final FractIndex polcoeffShiftIndex = new FractIndex();
-
-        /* Interpoate polcoeff from spectral shift dependent table - DPM #2.1.16-1 */
-        Interp.interpCoord(spectralShift, auxData.polcoeff.getTab(0), polcoeffShiftIndex);
-        /* nearest neighbour interpolation */
-        if (polcoeffShiftIndex.fraction > 0.5) {
-            polcoeffShiftIndex.index++;
-        }
-        float[][] polcoeff = (float[][]) auxData.polcoeff.getArray().getJavaArray();
-
-        /* DPM #2.1.16-2 */
-        P = polcoeff[polcoeffShiftIndex.index][0];
-        koeff = 1.0;
-        for (int i = 1; i < PPOL_NUM_ORDER; i++) {
-            koeff *= eta_C;
-            P += polcoeff[polcoeffShiftIndex.index][i] * koeff;
-        }
-        /* CHANGED v7.0: polynomial now gives log10(m*P^2) (LB 15/12/2003) */
-        if ((P <= 308.0) && (P >= -308.0)) {  /* MP2 would be out of double precision range  */
-            double MP2 = Math.pow(10.0, P); /* retrieved product of air mass times square of pressure */
-            press.value = Math.sqrt(MP2 / airMass); /* DPM 2.1.16-3 */
-            if (press.value > auxData.maxPress) {
-                press.value = auxData.maxPress; /* DPM #2.1.16-5 */
-                press.error = true;     /* DPM #2.1.16-4  */
-            }
-        } else {
-            press.value = 0.0;    /* DPM #2.1.16-6 */
-            press.error = true;  /* DPM #2.1.16-7 */
-        }
-    }
-
-    /**
-     * Compares pressure estimates with ECMWF data.
-     * <p/>
-     * <b>Uses:</b> {@link DpmPixel#l2flags}, {@link DpmPixel#sun_zenith}, {@link DpmPixel#view_zenith},
-     * {@link DpmPixel#press_ecmwf}, {@link L2AuxData#DPthresh_land},
-     * {@link L2AuxData#DPthresh_ocean},
-     * {@link L2AuxData#press_confidence}<br> <b>Sets:</b> nothing <br> <b>DPM
-     * Ref.:</b> MERIS Level 2 DPM, step 2.1 <br> <b>MEGS Ref.:</b> file pixelid.c, function press_thresh  <br>
-     *
-     * @param pixelInfo     the pixel structure
-     * @param pressure      the pressure of the pixel
-     * @param inputPressure can be either cloud top pressure from CloudTopPressureOp,
-     *                      or PScatt from {@link LisePressureOp} (new!), or -1 if not given
-     * @param result_flags  the return values, <code>resultFlags[0]</code> contains low NN pressure flag (low_P_nn),
-     *                      <code>resultFlags[1]</code> contains low polynomial pressure flag (low_P_poly),
-     *                      <code>resultFlags[2]</code> contains pressure range flag (delta_p).
-     */
-    private void press_thresh(SourceData sd, PixelInfo pixelInfo, double pressure, float inputPressure,
-                              boolean[] result_flags) {
-        double delta_press_thresh; /* absolute threshold on pressure difference */
-        FractIndex[] DP_Index = FractIndex.createArray(2);
-
-        /* get proper threshold - DPM #2.1.2-2 */
-        if (sd.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {
-            delta_press_thresh = userDefinedP1PressureThreshold;
-        } else {
-            delta_press_thresh = userDefinedPScattPressureThreshold;
-        }
-
-        /* test NN pressure- DPM #2.1.2-4 */ // low_P_nn
-        if (inputPressure != -1) {
-            result_flags[0] = (inputPressure < pixelInfo.ecmwfPressure - delta_press_thresh); //changed in V7
-        } else {
-            result_flags[0] = (pixelInfo.ecmwfPressure < pixelInfo.ecmwfPressure - delta_press_thresh); //changed in V7
-        }
-        /* test polynomial pressure- DPM #2.1.2-3 */ // low_P_poly
-        result_flags[1] = (pressure < pixelInfo.ecmwfPressure - delta_press_thresh);  //changed in V7
-        /* test pressure range - DPM #2.1.2-5 */   // delta_p
-        result_flags[2] = (Math.abs(pixelInfo.ecmwfPressure - pressure) > auxData.press_confidence); //changed in V7
     }
 
     private double calcScatteringAngle(SourceData dc, PixelInfo pixelInfo) {
@@ -567,7 +399,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         final double thetaScatt = calcScatteringAngle(dc, pixelInfo) * MathUtils.DTOR;
         return userDefinedRhoToa442Threshold + userDefinedDeltaRhoToa442Threshold *
 //                                             userDefinedDeltaRhoToa442ThresholdFactor *
-                                               Math.cos(thetaScatt) * Math.cos(thetaScatt);
+                Math.cos(thetaScatt) * Math.cos(thetaScatt);
     }
 
     /**
@@ -579,7 +411,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
      *                     <code>resultFlags[2]</code> contains pressure range flag (delta_p).
      */
     private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags) {
-        double rhorc_442_thr;   /* threshold on rayleigh corrected reflectance */
 
         //Rayleigh phase function coefficients, PR in DPM
         final double[] phaseR = new double[RAYSCATT_NUM_SER];
@@ -600,10 +431,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
                                                                              dc.saa[pixelInfo.index]);
 
-        // scattering angle
-        // TODO (mp 20.12.2010) - result is never used
-//        final double thetaScatt = calcScatteringAngle(dc, pixelInfo);
-
         /* Rayleigh phase function Fourier decomposition */
         rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
 
@@ -621,55 +448,26 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
             rhoAg[band] = dc.rhoToa[band][pixelInfo.index] - rhoRay[band];
         }
 
-        final FractIndex[] rhoRC442index = FractIndex.createArray(3);
+        PixelId pixelId = new PixelId(auxData);
+        boolean isLand = dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
         /* Interpolate threshold on rayleigh corrected reflectance - DPM #2.1.7-9 */
-        if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
-            Interp.interpCoord(dc.sza[pixelInfo.index], auxData.Rhorc_442_land_LUT.getTab(0), rhoRC442index[0]);
-            Interp.interpCoord(dc.vza[pixelInfo.index], auxData.Rhorc_442_land_LUT.getTab(1), rhoRC442index[1]);
-            Interp.interpCoord(deltaAzimuth, auxData.Rhorc_442_land_LUT.getTab(2), rhoRC442index[2]);
-            rhorc_442_thr = Interp.interpolate(auxData.Rhorc_442_land_LUT.getJavaArray(), rhoRC442index);
-        } else {    /* water  pixel */
-            Interp.interpCoord(dc.sza[pixelInfo.index], auxData.Rhorc_442_ocean_LUT.getTab(0), rhoRC442index[0]);
-            Interp.interpCoord(dc.vza[pixelInfo.index], auxData.Rhorc_442_ocean_LUT.getTab(1), rhoRC442index[1]);
-            Interp.interpCoord(deltaAzimuth, auxData.Rhorc_442_ocean_LUT.getTab(2), rhoRC442index[2]);
-            rhorc_442_thr = Interp.interpolate(auxData.Rhorc_442_ocean_LUT.getJavaArray(), rhoRC442index);
-        }
-        /* END CHANGE 01 */
+        double rhorc_442_thr = pixelId.getRhoRC442thr(dc.sza[pixelInfo.index], dc.vza[pixelInfo.index], deltaAzimuth, isLand);
 
         /* Derive bright flag by reflectance comparison to threshold - DPM #2.1.7-10 */
-        boolean slope1_f;
-        boolean slope2_f;
         boolean bright_f;
         // TODO (20.12.2010) - assignment is never used
 //        boolean bright_f = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
 //                           || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
 
         /* Spectral slope processor.brr 1 */
-        if (rhoAg[auxData.band_slope_d_1] <= 0.0) {
-            /* negative reflectance exception */
-            slope1_f = false; /* DPM #2.1.7-6 */
-        } else {
-            /* DPM #2.1.7-5 */
-            double slope1 = rhoAg[auxData.band_slope_n_1] / rhoAg[auxData.band_slope_d_1];
-            slope1_f = ((slope1 >= auxData.slope_1_low_thr) && (slope1 <= auxData.slope_1_high_thr))
-                       || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_SLOPE_N_1, auxData.band_slope_n_1);
-        }
-
+        boolean slope1_f = pixelId.isSpectraSlope1Flag(rhoAg, dc.radiance[BAND_SLOPE_N_1].getSampleFloat(pixelInfo.x, pixelInfo.y));
         /* Spectral slope processor.brr 2 */
-        if (rhoAg[auxData.band_slope_d_2] <= 0.0) {
-            /* negative reflectance exception */
-            slope2_f = false; /* DPM #2.1.7-8 */
-        } else {
-            /* DPM #2.1.7-7 */
-            double slope2 = rhoAg[auxData.band_slope_n_2] / rhoAg[auxData.band_slope_d_2];
-            slope2_f = ((slope2 >= auxData.slope_2_low_thr) && (slope2 <= auxData.slope_2_high_thr))
-                       || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_SLOPE_N_2, auxData.band_slope_n_2);
-        }
+        boolean slope2_f = pixelId.isSpectraSlope2Flag(rhoAg, dc.radiance[BAND_SLOPE_N_2].getSampleFloat(pixelInfo.x, pixelInfo.y));
 
         boolean bright_toa_f = false;
         // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                            || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
+                || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {
@@ -695,63 +493,9 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         return (rhoToa865 - rhoToa885) / (rhoToa865 + rhoToa885);
     }
 
-    /**
-     * Table driven cloud classification decision.
-     * <p/>
-     * <b>DPM Ref.:</b> Level 2, Step 2.1.8 <br> <b>MEGS Ref.:</b> file classcloud.c, function class_cloud  <br>
-     *
-     * @param land_f
-     * @param bright_f
-     * @param low_P_nn
-     * @param low_P_poly
-     * @param delta_p
-     * @param slope_1_f
-     * @param slope_2_f
-     * @param pcd_nn
-     * @param pcd_poly
-     *
-     * @return <code>true</code> if cloud flag shall be set
-     */
-    private boolean is_cloudy(boolean land_f, boolean bright_f,
-                              boolean low_P_nn, boolean low_P_poly,
-                              boolean delta_p, boolean slope_1_f,
-                              boolean slope_2_f, boolean pcd_nn,
-                              boolean pcd_poly) {
-        boolean is_cloud;
-        int index = 0;
-
-        /* set bits of index according to inputs */
-        index = BitSetter.setFlag(index, CC_BRIGHT, bright_f);
-        index = BitSetter.setFlag(index, CC_LOW_P_NN, low_P_nn);
-        index = BitSetter.setFlag(index, CC_LOW_P_PO, low_P_poly);
-        index = BitSetter.setFlag(index, CC_DELTA_P, delta_p);
-        index = BitSetter.setFlag(index, CC_PCD_NN, pcd_nn);
-        index = BitSetter.setFlag(index, CC_PCD_PO, pcd_poly);
-        index = BitSetter.setFlag(index, CC_SLOPE_1, slope_1_f);
-        index = BitSetter.setFlag(index, CC_SLOPE_2, slope_2_f);
-        index &= 0xff;
-
-        /* readRecord decision table */
-        if (land_f) {
-            is_cloud = auxData.land_decision_table[index]; /* DPM #2.1.8-1 */
-        } else {
-            is_cloud = auxData.water_decision_table[index]; /* DPM #2.1.8-2 */
-        }
-
-        return is_cloud;
-    }
-
     private boolean isSaturated(SourceData sd, int x, int y, int radianceBandId, int bandId) {
         return sd.radiance[radianceBandId].getSampleFloat(x, y) > auxData.Saturation_L[bandId];
     }
-
-//    public static void addBitmasks(Product product) {
-//        for (BitmaskDef bitmaskDef : BITMASK_DEFINITIONS) {
-//            // need a copy, cause the BitmaskDefs are otherwise disposed
-//            // if the outputProduct gets disposed after processing
-//            product.addBitmaskDef(bitmaskDef.createCopy());
-//        }
-//    }
 
     public static void addBitmasks(Product sourceProduct, Product targetProduct) {
         Mask[] bitmaskDefs = createBitmaskDefs(sourceProduct);
@@ -789,13 +533,6 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
         float pscattPressure;
         float ctp;
     }
-
-    private static class ReturnValue {
-
-        public double value;
-        public boolean error;
-    }
-
 
     public static class Spi extends OperatorSpi {
 

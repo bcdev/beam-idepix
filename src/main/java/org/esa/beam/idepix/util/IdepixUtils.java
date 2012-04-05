@@ -13,6 +13,7 @@ import org.esa.beam.util.BitSetter;
 import javax.swing.JOptionPane;
 import java.awt.Color;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -149,8 +150,8 @@ public class IdepixUtils {
         band.setNoDataValueUsed(useNoDataValue);
     }
 
-    public static HashMap setupMerisWavelengthIndexMap() {
-        HashMap<Integer, Integer> merisWavelengthIndexMap = new HashMap<Integer, Integer>();
+    public static Map<Integer, Integer> setupMerisWavelengthIndexMap() {
+        Map<Integer, Integer> merisWavelengthIndexMap = new HashMap<Integer, Integer>();
         merisWavelengthIndexMap.put(412, 0);
         merisWavelengthIndexMap.put(442, 1);
         merisWavelengthIndexMap.put(490, 2);
