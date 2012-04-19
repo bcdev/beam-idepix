@@ -33,7 +33,6 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.SampleOperator;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.idepix.util.NeuralNetWrapper;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
@@ -54,16 +53,12 @@ import java.util.Map;
                   description = "Computed a cloud mask using neural nets from Schiller.")
 public class SchillerOp extends SampleOperator {
 
-    private static final String NN_LAND = "schiller_7x3_1047.0_land.nna";
-    private static final String NN_WATER = "schiller_7x3_526.2_water.nna";
-    private static final String NN_LAND_WATER = "schiller_8x3_1706.7_lawat.nna";
-
     @SourceProduct
     private Product sourceProduct;
 
-    private ThreadLocal<NeuralNetWrapper> landNN;
-    private ThreadLocal<NeuralNetWrapper> waterNN;
-    private ThreadLocal<NeuralNetWrapper> landWaterNN;
+    private SchillerAlgorithm landNN;
+    private SchillerAlgorithm waterNN;
+    private SchillerAlgorithm landWaterNN;
 
     private WatermaskClassifier watermaskClassifier;
     private GeoCoding geoCoding;
@@ -106,9 +101,9 @@ public class SchillerOp extends SampleOperator {
         } catch (IOException e) {
             throw new OperatorException("Failed to init water mask", e);
         }
-        landNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_LAND), 15, 1);
-        waterNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_WATER), 15, 1);
-        landWaterNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_LAND_WATER), 15, 1);
+        landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
+        waterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.WATER);
+        landWaterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.ALL);
     }
     
     private static void addMask(Product product, String name, String expression, Color color) {
@@ -141,29 +136,19 @@ public class SchillerOp extends SampleOperator {
         float result = Float.NaN;
         switch (targetSample.getIndex()) {
             case 0:
-                result = process(landWaterNN.get(), sourceSamples);
+                result = landWaterNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples));
                 break;
             case 1:
-                result = process(landNN.get(), sourceSamples);
+                result = landNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples));
                 break;
             case 2:
-                result = process(waterNN.get(), sourceSamples);
+                result = waterNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples));
                 break;
             case 3:
                 result = watermaskClassifier.getWaterMaskFraction(geoCoding, new PixelPos(x, y), 3, 3);
                 break;
         }
         targetSample.set(result);
-    }
-
-    private float process(NeuralNetWrapper wrapper, Sample[] sourceSamples) {
-        double[] nnIn = wrapper.getInputVector();
-        for (int i = 0; i < sourceSamples.length; i++) {
-            nnIn[i] = Math.log(sourceSamples[i].getDouble());
-        }
-        double[] nnOut = wrapper.getOutputVector();
-        wrapper.getNeuralNet().process(nnIn, nnOut);
-        return (float)nnOut[0];
     }
 
     public static class Spi extends OperatorSpi {

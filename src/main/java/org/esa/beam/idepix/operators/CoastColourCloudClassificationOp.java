@@ -39,7 +39,6 @@ import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.seaice.SeaIceClassification;
 import org.esa.beam.idepix.seaice.SeaIceClassifier;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.idepix.util.NeuralNetWrapper;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
@@ -101,8 +100,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static final int F_MIXED_PIXEL = 15;
     public static final int F_CLOUD_AMBIGUOUS = 4;
 
-    private static final String NN_LAND_WATER = "schiller_8x3_1706.7_lawat.nna";
-    private ThreadLocal<NeuralNetWrapper> landWaterNN;
+    private SchillerAlgorithm landWaterNN;
     private L2AuxData auxData;
     private PixelId pixelId;
     private RayleighCorrection rayleighCorrection;
@@ -198,7 +196,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         } catch (L2AuxDataException e) {
             throw new OperatorException("Could not load L2Auxdata", e);
         }
-        landWaterNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_LAND_WATER), 15, 1);
+        landWaterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.ALL);
         pixelId = new PixelId(auxData);
         rayleighCorrection = new RayleighCorrection(auxData);
         createTargetProduct();
@@ -500,7 +498,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_1, slope_1_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_2, slope_2_f);
 
-        float schillerValue = processNeuralnet(landWaterNN.get(), sd, pixelInfo);
+        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
         boolean isCloud = schillerValue > schillerAmbiguous;
         boolean isCloudAmbiguous = schillerValue > schillerAmbiguous && schillerValue < schillerSure;
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
@@ -559,15 +557,13 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
     }
 
-    private float processNeuralnet(NeuralNetWrapper wrapper, SourceData sd, PixelInfo pixelInfo) {
-        double[] nnIn = wrapper.getInputVector();
-        float[][] rhoToa = sd.rhoToa;
-        for (int i = 0; i < rhoToa.length; i++) {
-            nnIn[i] = Math.log(rhoToa[i][pixelInfo.index]);
-        }
-        double[] nnOut = wrapper.getOutputVector();
-        wrapper.getNeuralNet().process(nnIn, nnOut);
-        return (float) nnOut[0];
+    private float computeSchillerCloud(SchillerAlgorithm schillerAlgorithm, final SourceData sd, final PixelInfo pixelInfo) {
+        return schillerAlgorithm.compute(new SchillerAlgorithm.Accessor() {
+            @Override
+            public double get(int index) {
+                return sd.rhoToa[index][pixelInfo.index];
+            }
+        });
     }
 
 

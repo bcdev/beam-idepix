@@ -120,8 +120,7 @@ public class GACloudScreeningOp extends Operator {
     private Band p1OutputBand;
     private Band pscattOutputBand;
     private GeoCoding geoCoding;
-
-    private ThreadLocal<NeuralNetWrapper> landNN;
+    private WatermaskStrategy strategy = null;
 
 
     @Override
@@ -183,8 +182,21 @@ public class GACloudScreeningOp extends Operator {
                 break;
         }
 
+        switch (sourceProductTypeId) {
+             // todo - put different sensor computations into different strategy modules
+             case IdepixConstants.PRODUCT_TYPE_MERIS:
+                 strategy = new MerisWatermaskStrategy();
+                 break;
+             case IdepixConstants.PRODUCT_TYPE_AATSR:
+                 strategy = new MerisWatermaskStrategy();
+                 break;
+             case IdepixConstants.PRODUCT_TYPE_VGT:
+                 strategy = new MerisWatermaskStrategy();
+                 break;
+         }
+
+
         createTargetProduct();
-        landNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream("schiller_7x3_1047.0_land.nna"), 15, 1);
     }
 
     private void setSourceProductTypeId() {
@@ -206,7 +218,6 @@ public class GACloudScreeningOp extends Operator {
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
 
         cloudFlagBand = targetProduct.addBand(GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        schillerBand = targetProduct.addBand("schiller", ProductData.TYPE_FLOAT32);
         FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -418,21 +429,6 @@ public class GACloudScreeningOp extends Operator {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
-                    WatermaskStrategy strategy = null;
-
-                    switch (sourceProductTypeId) {
-                        // todo - put different sensor computations into different strategy modules
-                        case IdepixConstants.PRODUCT_TYPE_MERIS:
-                            strategy = new MerisWatermaskStrategy();
-                            break;
-                        case IdepixConstants.PRODUCT_TYPE_AATSR:
-                            strategy = new MerisWatermaskStrategy();
-                            break;
-                        case IdepixConstants.PRODUCT_TYPE_VGT:
-                            strategy = new MerisWatermaskStrategy();
-                            break;
-                    }
-
                     byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
                     if (!gaUseL1bLandWaterFlag) {
                         final GeoCoding geoCoding = sourceProduct.getGeoCoding();
@@ -518,15 +514,6 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, pixelProperties.radiometricLandValue());
                     } else if (band == radioWaterBand) {
                         targetTile.setSample(x, y, pixelProperties.radiometricWaterValue());
-                    } else if (band == schillerBand) {
-                        NeuralNetWrapper wrapper = landNN.get();
-                        double[] nnIn = wrapper.getInputVector();
-                        for (int i = 0; i < merisReflectanceTiles.length; i++) {
-                            nnIn[i] = Math.log(merisReflectanceTiles[i].getSampleDouble(x, y));
-                        }
-                        double[] nnOut = wrapper.getOutputVector();
-                        wrapper.getNeuralNet().process(nnIn, nnOut);
-                        targetTile.setSample(x, y, nnOut[0]);
                     }
                 }
             }

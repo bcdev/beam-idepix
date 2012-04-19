@@ -30,7 +30,6 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.idepix.util.NeuralNetWrapper;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
@@ -49,16 +48,11 @@ import java.io.IOException;
                   description = "Computed a cloud mask using neural nets from Schiller.")
 public class IdepixSchillerOp extends Operator {
 
-    private static final String NN_LAND = "schiller_7x3_1047.0_land.nna";
-    private static final String NN_WATER = "schiller_7x3_526.2_water.nna";
-    private static final String NN_LAND_WATER = "schiller_8x3_1706.7_lawat.nna";
-
     @SourceProduct
     private Product sourceProduct;
 
-    private ThreadLocal<NeuralNetWrapper> landNN;
-    private ThreadLocal<NeuralNetWrapper> waterNN;
-    private ThreadLocal<NeuralNetWrapper> landWaterNN;
+    private SchillerAlgorithm landNN;
+    private SchillerAlgorithm waterNN;
 
     private WatermaskClassifier watermaskClassifier;
     private GeoCoding geoCoding;
@@ -88,8 +82,8 @@ public class IdepixSchillerOp extends Operator {
         } catch (IOException e) {
             throw new OperatorException("Failed to init water mask", e);
         }
-        landNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_LAND), 15, 1);
-        waterNN = NeuralNetWrapper.create(this.getClass().getResourceAsStream(NN_WATER), 15, 1);
+        landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
+        waterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.WATER);
 
         setTargetProduct(targetProduct);
     }
@@ -97,12 +91,12 @@ public class IdepixSchillerOp extends Operator {
     @Override
     public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         Rectangle rectangle = targetTile.getRectangle();
-        Tile[] srcTiles = new Tile[16];
+        final Tile[] srcTiles = new Tile[16];
         for (int i = 0; i < 15; i++) {
             srcTiles[i] = getSourceTile(sourceProduct.getBand("reflec_" + (i+1)), rectangle);
         }
         srcTiles[15] = getSourceTile(sourceProduct.getBand("l1_flags"), rectangle);
-        for (Tile.Pos pos : targetTile) {
+        for (final Tile.Pos pos : targetTile) {
             boolean isWater = true;
             try {
                 GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(pos.x + 0.5f, pos.y + 0.5f), null);
@@ -111,13 +105,16 @@ public class IdepixSchillerOp extends Operator {
             }
     
             boolean isCloud;
-            double nnResult;
+            SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
+                @Override
+                public double get(int index) {
+                    return srcTiles[index].getSampleDouble(pos.x, pos.y);
+                }
+            };
             if (isWater) {
-                nnResult = process(waterNN.get(), srcTiles, pos.x, pos.y);
-                isCloud = nnResult > 1.35;
+                isCloud = (double) waterNN.compute(accessor) > 1.35;
             } else {
-                nnResult = process(landNN.get(), srcTiles, pos.x, pos.y);
-                isCloud = nnResult > 1.25;
+                isCloud = (double) landNN.compute(accessor) > 1.25;
             }
     
             // snow
@@ -139,16 +136,6 @@ public class IdepixSchillerOp extends Operator {
             targetTile.setSample(pos.x, pos.y, resultFlag);
         }
         GACloudScreeningOp.setCloudBufferLC(targetBand, targetTile, rectangle);
-    }
-
-    private double process(NeuralNetWrapper wrapper, Tile[] srcTiles, int x, int y) {
-        double[] nnIn = wrapper.getInputVector();
-        for (int i = 0; i < srcTiles.length - 1; i++) {
-            nnIn[i] = Math.log(srcTiles[i].getSampleDouble(x,y));
-        }
-        double[] nnOut = wrapper.getOutputVector();
-        wrapper.getNeuralNet().process(nnIn, nnOut);
-        return nnOut[0];
     }
 
 }
