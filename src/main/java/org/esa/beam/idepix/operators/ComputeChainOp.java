@@ -204,6 +204,8 @@ public class ComputeChainOp extends BasisOp {
     private boolean gaOutputRayleigh = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
+    private boolean gaComputeSchillerClouds= false;
 
     // Coastcolour parameters
     @Parameter(defaultValue = "true", label = " TOA Reflectances")
@@ -463,6 +465,7 @@ public class ComputeChainOp extends BasisOp {
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
         gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
         gaCloudClassificationParameters.put("gaLcCloudBuffer", gaLcCloudBuffer);
+        gaCloudClassificationParameters.put("gaComputeSchillerClouds", gaComputeSchillerClouds);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);

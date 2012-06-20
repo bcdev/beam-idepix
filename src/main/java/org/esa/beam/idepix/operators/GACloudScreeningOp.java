@@ -19,7 +19,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.idepix.util.NeuralNetWrapper;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
@@ -74,6 +73,8 @@ public class GACloudScreeningOp extends Operator {
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
+    private boolean gaComputeSchillerClouds= false;
 
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
@@ -105,7 +106,6 @@ public class GACloudScreeningOp extends Operator {
 
 
     private Band cloudFlagBand;
-    private Band schillerBand;
     private Band brightBand;
     private Band whiteBand;
     private Band brightWhiteBand;
@@ -121,6 +121,7 @@ public class GACloudScreeningOp extends Operator {
     private Band pscattOutputBand;
     private GeoCoding geoCoding;
     private WatermaskStrategy strategy = null;
+    private SchillerAlgorithm landNN = null;
 
 
     @Override
@@ -155,6 +156,9 @@ public class GACloudScreeningOp extends Operator {
                 longitudeTpg = sourceProduct.getTiePointGrid("longitude");
                 altitudeTpg = sourceProduct.getTiePointGrid("dem_alt");
 
+                if (gaComputeSchillerClouds) {
+                    landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
+                }
                 break;
             case IdepixConstants.PRODUCT_TYPE_AATSR:
                 aatsrReflectanceBands = new Band[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
@@ -483,6 +487,22 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, IdepixConstants.F_HIGH, pixelProperties.isHigh());
                         targetTile.setSample(x, y, IdepixConstants.F_VEG_RISK, pixelProperties.isVegRisk());
                         targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, pixelProperties.isGlintRisk());
+
+                         if (landNN != null && !targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                             final int finalX = x;
+                             final int finalY = y;
+                             final Tile[] finalMerisRefl = merisReflectanceTiles;
+                             SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
+                                 @Override
+                                 public double get(int index) {
+                                     return finalMerisRefl[index].getSampleDouble(finalX, finalY);
+                                 }
+                             };
+                             float schillerCloud = landNN.compute(accessor);
+                             if (schillerCloud > 1.4) {
+                                 targetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                             }
+                         }
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
