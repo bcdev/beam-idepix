@@ -15,7 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.10</beam.version>
+        <beam.version>4.10.3</beam.version>
     </properties>
 
     <repositories>
