@@ -142,9 +142,6 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                             refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                         }
                     }
-                    // todo: setting to 'false' seems to be ignored if previously set to true - check this!
-//                    targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_CLOUD, false);  // todo test - remove!
-//                    targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_CLOUD, true);  // todo test - remove!
                 }
             }
         }
@@ -235,11 +232,13 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         }
 
         if (removeCloudFlag) {
-            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
-            targetTile.setSample(x, y, sourceSample - 1);
-            targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL, true);
-            // todo (s.a.)
+            //// this does not work correctly, but will be fixed in BEAM 4.10.4
 //            targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_CLOUD, false);
+            // in the meantime, use this instead:
+            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
+            targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourCloudClassificationOp.F_CLOUD));
+            ////
+            targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL, true);
         }
     }
 
@@ -330,6 +329,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         final float diffb10b7 = brr10n - brr7n;
         final boolean isLand = cloudClassifFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_LAND);
         final boolean isCloud = cloudClassifFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
+        final boolean isAlreadyMixedPixel = targetTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL);
 
         final boolean b1 = (landAbundance > 0.002);
         final boolean b2 = (summaryError < 0.0075);
@@ -343,7 +343,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         final boolean b10 = !isLand;
         final boolean b11 = !isCloud;
 
-        final boolean isMixedPixel = (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
+        final boolean isMixedPixel = isAlreadyMixedPixel ||
+                (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
         targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL, isMixedPixel);
 
         // former expression used by AR - currently not used any more
