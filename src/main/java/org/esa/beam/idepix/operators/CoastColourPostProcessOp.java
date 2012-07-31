@@ -17,6 +17,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.meris.brr.CloudClassificationOp;
+import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
@@ -52,6 +53,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
+    private static final int MEAN_EARTH_RADIUS = 6372000;
+
     private Band origCloudFlagBand;
     private TiePointGrid szaTPG;
     private TiePointGrid vzaTPG;
@@ -70,6 +73,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     private Band brr12nBand;
 
     private RectangleExtender rectCalculator;
+
+    private GeoCoding geoCoding;
 
 
     @Override
@@ -102,6 +107,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             brr10nBand = rayleighProduct.getBand(IdepixConstants.SMA_SOURCE_BAND_NAMES[3]);
             brr12nBand = rayleighProduct.getBand(IdepixConstants.SMA_SOURCE_BAND_NAMES[4]);
         }
+        geoCoding = l1bProduct.getGeoCoding();
 
         rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
                                                              l1bProduct.getSceneRasterHeight()),
@@ -128,8 +134,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
             checkForCancellation();
             for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
-                computeCloudShadow(x, y, szaTile, vzaTile, saaTile, vaaTile, altitudeTile, ctpTile,
-                                   sourceFlagTile, targetTile);
+//                computeCloudShadow(x, y, szaTile, vzaTile, saaTile, vaaTile, altitudeTile, ctpTile,
+//                                   sourceFlagTile, targetTile);
 
                 if (targetRectangle.contains(x, y)) {
                     final boolean is_cloud = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
@@ -166,6 +172,34 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             }
         }
 
+
+        // TEST: cloud shadow Michael
+        computeCloudShadowMichael(targetTile, extendedRectangle, sourceFlagTile, szaTile, saaTile, ctpTile);
+
+    }
+
+    private void computeCloudShadowMichael(Tile targetTile, Rectangle extendedRectangle, Tile sourceFlagTile, Tile szaTile, Tile saaTile, Tile ctpTile) {
+        Rectangle targetRectangle = targetTile.getRectangle();
+        float[][] cloudBase = getCloudBase(ctpTile, sourceFlagTile, extendedRectangle);
+        float ctp = 0.0f;
+        for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
+            checkForCancellation();
+            for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
+                final boolean is_cloud = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
+                final boolean is_cloud_buffer = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD_BUFFER);
+                if (!is_cloud && !is_cloud_buffer) {
+                    final boolean isCloudShadow = isCloudShadow(x, y, cloudBase, sourceFlagTile, ctpTile, szaTile, saaTile, extendedRectangle);
+
+                    PixelPos pixelPos = new PixelPos(x, y);
+                    if (isCloudShadow && targetRectangle.contains(pixelPos)) {
+                        final int pixelX = MathUtils.floorInt(pixelPos.x);
+                        final int pixelY = MathUtils.floorInt(pixelPos.y);
+                        targetTile.setSample(pixelX, pixelY, CoastColourCloudClassificationOp.F_CLOUD_SHADOW, true);
+//                        targetTile.setSample(pixelX, pixelY, CoastColourCloudClassificationOp.F_CLOUD_BUFFER, true); // todo remove this
+                    }
+                }
+            }
+        }
     }
 
     private void combineFlags(int x, int y, Tile sourceFlagTile, Tile targetTile) {
@@ -351,6 +385,134 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 //        final boolean isMixedPixelOld = (((b1 && b2) && (b3 && waterAbundance < 0.9 && b2)) ||
 //                b5 && b6 && b7) && b10;
 //        targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL, isMixedPixelOld);
+    }
+
+    private float[][] getCloudBase(Tile ctpTile, Tile cloudTile, Rectangle sourceRectangle) {
+        float[][] cb = new float[sourceRectangle.width][sourceRectangle.height];
+
+        // computes the cloud base in metres on source rectangle
+        final int x0 = sourceRectangle.x;
+        final int y0 = sourceRectangle.y;
+        for (int y = y0; y < y0 + sourceRectangle.height; y++) {
+            for (int x = x0; x < x0 + sourceRectangle.width; x++) {
+                int cloudFlag = cloudTile.getSampleInt(x, y);
+                if (!BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) || ctpTile == null) {
+                    cb[x - x0][y - y0] = 0.0f;
+                } else {
+                    cb[x - x0][y - y0] = computeHeightFromPressure(ctpTile.getSampleFloat(x, y));
+                    final int windowWidth = 1;
+                    final int LEFT_BORDER = Math.max(x - windowWidth, x0);
+                    final int RIGHT_BORDER = Math.min(x + windowWidth, x0 + sourceRectangle.width - 1);
+                    final int TOP_BORDER = Math.max(y - windowWidth, y0);
+                    final int BOTTOM_BORDER = Math.min(y + windowWidth, y0 + sourceRectangle.height - 1);
+                    for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                        for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                            final float neighbourCloudBase = computeHeightFromPressure(ctpTile.getSampleFloat(i, j));
+                            cb[x - x0][y - y0] = Math.min(cb[x - x0][y - y0], neighbourCloudBase);
+                        }
+                    }
+                    cb[x - x0][y - y0] -= 300.0f;
+                }
+            }
+        }
+
+        return cb;
+    }
+
+    private boolean isCloudShadow(int x, int y, float[][] cloudBase, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle sourceRectangle) {
+        final int x0 = sourceRectangle.x;
+        final int y0 = sourceRectangle.y;
+        int xCurrent = x;
+        int yCurrent = y;
+        int xTmp = x;
+        int yTmp = y;
+        final double sza = szaTile.getSampleDouble(x, y);
+        final double saa = saaTile.getSampleDouble(x, y);
+        double angle1;
+        double angle2;
+
+        final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
+        if (x == 53 && y == 162) {
+            System.out.println("x,y = " + x + "," + y);
+        }
+
+        for (int k = 0; k < 40; k++) {
+            double minDist = 500;
+
+            final int LEFT_BORDER = Math.max(xCurrent - x, x0);
+            final int RIGHT_BORDER = Math.min(xCurrent + 1 - x, x0 + sourceRectangle.width - 1);
+            final int TOP_BORDER = Math.max(yCurrent - y, y0);
+            final int BOTTOM_BORDER = Math.min(yCurrent + 1 - y, y0 + sourceRectangle.height - 1);
+
+            if (k == 0) {
+                angle2 = saa;
+                angle1 = saa;
+            } else {
+                angle2 = MathUtils.RTOD * Math.atan2(BOTTOM_BORDER, LEFT_BORDER);
+                angle1 = Math.abs(angle2 - (saa - 90.0));
+            }
+            if (angle1 < minDist) {
+                xTmp = xCurrent;
+                yTmp = yCurrent + 1;
+                minDist = angle1;
+            }
+
+            angle2 = MathUtils.RTOD * Math.atan2(BOTTOM_BORDER, RIGHT_BORDER);
+            angle1 = Math.abs(angle2 - (saa - 90.0));
+            if (angle1 < minDist) {
+                xTmp = xCurrent + 1;
+                yTmp = yCurrent + 1;
+                minDist = angle1;
+            }
+
+            angle2 = MathUtils.RTOD * Math.atan2(TOP_BORDER, RIGHT_BORDER);
+            angle1 = Math.abs(angle2 - (saa - 90.0));
+            if (angle1 < minDist) {
+                xTmp = xCurrent + 1;
+                yTmp = yCurrent;
+            }
+
+            xCurrent = xTmp;
+            yCurrent = yTmp;
+//            if (sourceRectangle.contains(xCurrent, yCurrent) && cloudBase[xCurrent - x0][yCurrent - y0] > 0.0) {
+            if (sourceRectangle.contains(xCurrent, yCurrent)) {
+                final GeoPos geoPosCurrent = geoCoding.getGeoPos(new PixelPos(xCurrent, yCurrent), null);
+                double dist = computeDistance(geoPos, geoPosCurrent);
+                double sunHeight = dist * Math.tan(MathUtils.DTOR * (90.0 - sza));
+                final boolean is_cloud_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourCloudClassificationOp.F_CLOUD);
+                final boolean is_cloud_buffer = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourCloudClassificationOp.F_CLOUD_BUFFER);
+                if (is_cloud_current || is_cloud_buffer) {
+                    final float cloudHeight = computeHeightFromPressure(ctpTile.getSampleFloat(xCurrent, yCurrent));
+                    if (sunHeight >= cloudBase[xCurrent - x0][yCurrent - y0] && sunHeight <= cloudHeight) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private double computeDistance(GeoPos geoPos1, GeoPos geoPos2) {
+        final float lon1 = geoPos1.getLon();
+        final float lon2 = geoPos2.getLon();
+        final float lat1 = geoPos1.getLat();
+        final float lat2 = geoPos2.getLat();
+
+        final double cosLat1 = Math.cos(MathUtils.DTOR * lat1);
+        final double cosLat2 = Math.cos(MathUtils.DTOR * lat2);
+        final double sinLat1 = Math.sin(MathUtils.DTOR * lat1);
+        final double sinLat2 = Math.sin(MathUtils.DTOR * lat2);
+
+        final double delta = MathUtils.DTOR * (lon2 - lon1);
+        final double cosDelta = Math.cos(delta);
+        final double sinDelta = Math.sin(delta);
+
+        final double y = Math.sqrt(Math.pow(cosLat2 * sinDelta, 2) + Math.pow(cosLat1 * sinLat2 - sinLat1 * cosLat2 * cosDelta, 2));
+        final double x = sinLat1 * sinLat2 + cosLat1 * cosLat2 * cosDelta;
+
+        final double ad = Math.atan2(y, x);
+
+        return ad * MEAN_EARTH_RADIUS;
     }
 
     public static class Spi extends OperatorSpi {
