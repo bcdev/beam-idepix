@@ -127,4 +127,17 @@ public class IdepixUtilsTest extends TestCase {
         int wl_4 = 1234;
         assertNull(merisWavelengthIndexMap.get(wl_4));
     }
+
+    public void testConvertGeophysicalToMathematicalAngle() {
+        double geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(31.0);
+        assertEquals(59.0, geoAngle, 1.0);
+        geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(134.0);
+        assertEquals(316.0, geoAngle, 1.0);
+        geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(213.0);
+        assertEquals(237.0, geoAngle, 1.0);
+        geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(301.0);
+        assertEquals(149.0, geoAngle, 1.0);
+        geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(3100.0);
+        assertTrue(Double.isNaN(geoAngle));
+    }
 }

@@ -16,6 +16,8 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import org.esa.beam.idepix.util.Bresenham;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
@@ -23,6 +25,7 @@ import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Rectangle;
+import java.util.List;
 
 /**
  * Operator used to consolidate cloud flag for CoastColour
@@ -192,7 +195,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             for (int x = x0; x < x0 + w; x++) {
                 final boolean isCloud = targetTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
                 if (!isCloud) {
-                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile, extendedRectangle);
+                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile, targetRectangle, extendedRectangle);
                     targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
                 }
             }
@@ -464,7 +467,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
     // used by Michael's aproach
     // todo: clarify this algorithm with GK, MP and add comments !!!
-    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle sourceRectangle) {
+    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle targetRectangle, Rectangle sourceRectangle) {
         int xCurrent = x;
         int yCurrent = y;
         int xTmp = x;
@@ -476,38 +479,14 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
 
-        for (int k = 0; k < 20; k++) {
-            double minDist = 500;
+        final double angle = IdepixUtils.convertGeophysicalToMathematicalAngle(saa);
+        PixelPos borderPixel = Bresenham.findBorderPixel(x, y, targetRectangle, angle);
+        List<PixelPos> pathPixels = Bresenham.getPathPixels(x, y, (int) borderPixel.getX(), (int) borderPixel.getY(), targetRectangle);
 
-            if (k == 0) {
-                angle2 = saa;
-                angle1 = saa;
-            } else {
-                angle2 = MathUtils.RTOD * Math.atan2(yCurrent + 1 - y, xCurrent - x);
-                angle1 = Math.abs(angle2 - (saa - 90.0));
-            }
-            if (angle1 < minDist) {
-                xTmp = xCurrent;
-                yTmp = yCurrent + 1;
-                minDist = angle1;
-            }
+        for (int k = 0; k < pathPixels.size(); k++) {
 
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (!(i == 0 && j == 0) && !(i == 0 && j == 1)) {
-                        angle2 = MathUtils.RTOD * Math.atan2(yCurrent + j - y, xCurrent + i - x);
-                        angle1 = Math.abs(angle2 - (saa - 90.0));
-                        if (angle1 < minDist) {
-                            xTmp = xCurrent + i;
-                            yTmp = yCurrent + j;
-                            minDist = angle1;
-                        }
-                    }
-                }
-            }
-
-            xCurrent = xTmp;
-            yCurrent = yTmp;
+            xCurrent = (int) pathPixels.get(k).getX();
+            yCurrent = (int) pathPixels.get(k).getY();
 
             if (sourceRectangle.contains(xCurrent, yCurrent)) {
                 final boolean is_cloud_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourCloudClassificationOp.F_CLOUD);

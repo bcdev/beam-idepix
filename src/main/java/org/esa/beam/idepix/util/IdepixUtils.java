@@ -265,6 +265,17 @@ public class IdepixUtils {
 
         return endmembers;
     }
+
+    public static double convertGeophysicalToMathematicalAngle(double inAngle) {
+        if (0.0 <= inAngle && inAngle < 90.0) {
+            return (90.0 - inAngle);
+        } else if (90.0 <= inAngle && inAngle < 360.0) {
+            return (90.0 - inAngle + 360.0);
+        } else  {
+            // invalid
+            return Double.NaN;
+        }
+    }
     
     private static Color getRandomColour(Random random) {
         int rColor = random.nextInt(256);
