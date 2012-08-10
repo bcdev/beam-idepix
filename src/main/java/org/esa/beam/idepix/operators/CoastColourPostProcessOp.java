@@ -93,10 +93,10 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         int shadowWidth;
         if (l1bProduct.getProductType().equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
             altitudeRDN = l1bProduct.getBand("altitude");
-            shadowWidth = 16;
+            shadowWidth = 64;
         } else {
             altitudeRDN = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
-            shadowWidth = 64;
+            shadowWidth = 16;
 
         }
 
@@ -468,25 +468,19 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     // used by Michael's aproach
     // todo: clarify this algorithm with GK, MP and add comments !!!
     private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle targetRectangle, Rectangle sourceRectangle) {
-        int xCurrent = x;
-        int yCurrent = y;
-        int xTmp = x;
-        int yTmp = y;
         final double sza = szaTile.getSampleDouble(x, y);
         final double saa = saaTile.getSampleDouble(x, y);
-        double angle1;
-        double angle2;
 
         final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
 
         final double angle = IdepixUtils.convertGeophysicalToMathematicalAngle(saa);
-        PixelPos borderPixel = Bresenham.findBorderPixel(x, y, targetRectangle, angle);
-        List<PixelPos> pathPixels = Bresenham.getPathPixels(x, y, (int) borderPixel.getX(), (int) borderPixel.getY(), targetRectangle);
+        PixelPos borderPixel = Bresenham.findBorderPixel(x, y, sourceRectangle, angle);
+        List<PixelPos> pathPixels = Bresenham.getPathPixels(x, y, (int) borderPixel.getX(), (int) borderPixel.getY(), sourceRectangle);
 
-        for (int k = 0; k < pathPixels.size(); k++) {
+        for (PixelPos pathPixel : pathPixels) {
 
-            xCurrent = (int) pathPixels.get(k).getX();
-            yCurrent = (int) pathPixels.get(k).getY();
+            final int xCurrent = (int) pathPixel.getX();
+            final int yCurrent = (int) pathPixel.getY();
 
             if (sourceRectangle.contains(xCurrent, yCurrent)) {
                 final boolean is_cloud_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourCloudClassificationOp.F_CLOUD);

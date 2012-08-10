@@ -136,27 +136,15 @@ public class Bresenham {
     }
 
     /**
-     * Plot a line between (x1,y1) and (x2,y2). The results are placed in x[] and y[], which must be large enough.
+     * Provides the path pixels between (x1,y1) and (x2,y2).
      *
-     * @return the length of the line or the length of x[]/y[], whichever is smaller
-     */
-//    public static final int plot(final int x1, final int y1, final int x2, final int y2, final int x[], final int y[]) {
-//
-//        int length = Math.min(x.length, Math.min(y.length, bresenham.plot(x1, y1, x2, y2)));
-//        for (int i = 0; i < length; i++) {
-//            bresenham.next();
-//            x[i] = bresenham.getX();
-//            y[i] = bresenham.getY();
-//        }
-//
-//        return length;
-//
-//    }
-
-    /**
-     * Plot a line between (x1,y1) and (x2,y2). The results are placed in x[] and y[], which must be large enough.
+     * @param x1 - first x coordinate
+     * @param y1 - first y coordinate
+     * @param x2 - second x coordinate
+     * @param y2 - second y coordinate
+     * @param rect - rectangle where the pixels need to be inside
      *
-     * @return the length of the line or the length of x[]/y[], whichever is smaller
+     * @return the list of pixel positions
      */
     public static List<PixelPos> getPathPixels(final int x1, final int y1, final int x2, final int y2, Rectangle rect) {
 
