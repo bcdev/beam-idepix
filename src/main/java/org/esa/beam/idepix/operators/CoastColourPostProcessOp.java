@@ -142,15 +142,20 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 //                                   sourceFlagTile, targetTile);
 
                 if (targetRectangle.contains(x, y)) {
-                    final boolean is_cloud = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
-                    if (is_cloud) {
+                    final boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_CLOUD);
+                    if (isCloud) {
                         computeCloudBuffer(x, y, sourceFlagTile, targetTile);
                     }
                     combineFlags(x, y, sourceFlagTile, targetTile);
-                    if (is_cloud) {
+                    if (isCloud) {
                         if (isNearCoastline(x, y, sourceFlagTile)) {
                             refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                         }
+//                        refineGlintFlaggingForClouds(x, y, sourceFlagTile, targetTile);
+                    }
+                    final boolean isCoastline = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_COASTLINE);
+                    if (isCoastline) {
+//                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                     }
                 }
             }
@@ -295,6 +300,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         }
 
         if (removeCloudFlag) {
+            // todo
             //// this does not work correctly, but will be fixed in BEAM 4.10.4
 //            targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_CLOUD, false);
             // in the meantime, use this instead:
@@ -302,6 +308,24 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourCloudClassificationOp.F_CLOUD));
             ////
             targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL, true);
+        }
+    }
+
+    private void refineGlintFlaggingForClouds(int x, int y, Tile sourceFlagTile, Tile targetTile) {
+        final boolean isGlintrisk = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_GLINTRISK);
+        if (isGlintrisk) {
+            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
+            // todo: adjust this when Beam 4.10.4 is available (s.a.)
+            targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourCloudClassificationOp.F_GLINTRISK));
+        }
+    }
+
+    private void refineSnowIceFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile targetTile) {
+        final boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_SNOW_ICE);
+        if (isSnowIce) {
+            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
+            // todo: adjust this when Beam 4.10.4 is available (s.a.)
+            targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourCloudClassificationOp.F_SNOW_ICE));
         }
     }
 
