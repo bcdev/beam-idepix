@@ -280,7 +280,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                                                 Color.YELLOW, 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD_BUFFER",
-                                                Color.RED, 0.5f));
+                                                new Color(204, 255, 204), 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud_shadow", "IDEPIX CC cloud shadow flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD_SHADOW",
                                                 Color.BLUE, 0.5f));
@@ -498,12 +498,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_1, slope_1_f);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_2, slope_2_f);
 
-        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
-        boolean isCloud = schillerValue > schillerAmbiguous;
-        boolean isCloudAmbiguous = schillerValue > schillerAmbiguous && schillerValue < schillerSure;
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
-
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
         int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
@@ -534,9 +528,9 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
                 (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
         boolean is_snow_ice = false;
         boolean land_coast = land_f || coast_f;
+        boolean is_glint_risk = is_glint && is_glint_2;
         if (!(land_coast)) {
             // over water
-            boolean is_glint_risk = is_glint && is_glint_2;
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
             if (!is_glint_risk) {
                 final GeoPos geoPos = getGeoPos(pixelInfo);
@@ -551,6 +545,22 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
             // over land
             is_snow_ice = (high_mdsi && bright_f);
         }
+
+        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
+
+        double ambiguousThresh = schillerAmbiguous;
+        double sureThresh = schillerSure;
+        if (is_glint_risk) {
+            ambiguousThresh += 0.1;
+            sureThresh += 0.1;
+        }
+//        boolean isCloud = schillerValue > schillerAmbiguous;
+        boolean isCloud = schillerValue > ambiguousThresh;
+//        boolean isCloudAmbiguous = schillerValue > schillerAmbiguous && schillerValue < schillerSure;
+        boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
+
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
