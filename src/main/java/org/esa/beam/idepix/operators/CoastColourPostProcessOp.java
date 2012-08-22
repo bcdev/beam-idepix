@@ -151,11 +151,10 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                         if (isNearCoastline(x, y, sourceFlagTile)) {
                             refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                         }
-//                        refineGlintFlaggingForClouds(x, y, sourceFlagTile, targetTile);
                     }
                     final boolean isCoastline = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_COASTLINE);
                     if (isCoastline) {
-//                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                     }
                 }
             }
@@ -308,15 +307,6 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourCloudClassificationOp.F_CLOUD));
             ////
             targetTile.setSample(x, y, CoastColourCloudClassificationOp.F_MIXED_PIXEL, true);
-        }
-    }
-
-    private void refineGlintFlaggingForClouds(int x, int y, Tile sourceFlagTile, Tile targetTile) {
-        final boolean isGlintrisk = sourceFlagTile.getSampleBit(x, y, CoastColourCloudClassificationOp.F_GLINTRISK);
-        if (isGlintrisk) {
-            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
-            // todo: adjust this when Beam 4.10.4 is available (s.a.)
-            targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourCloudClassificationOp.F_GLINTRISK));
         }
     }
 

@@ -550,13 +550,12 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
 
         double ambiguousThresh = schillerAmbiguous;
         double sureThresh = schillerSure;
+        // this seems to avoid false cloud flagging in glint regions:
         if (is_glint_risk) {
             ambiguousThresh += 0.1;
             sureThresh += 0.1;
         }
-//        boolean isCloud = schillerValue > schillerAmbiguous;
         boolean isCloud = schillerValue > ambiguousThresh;
-//        boolean isCloudAmbiguous = schillerValue > schillerAmbiguous && schillerValue < schillerSure;
         boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
