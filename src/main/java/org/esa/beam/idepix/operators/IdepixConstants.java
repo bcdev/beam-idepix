@@ -63,7 +63,8 @@ public class IdepixConstants {
             "gaCloudBufferWidth",
             "wmResolution",
             "wmFill",
-            "gaUseL1bLandWaterFlag"
+            "gaUseL1bLandWaterFlag",
+            "gaUseWaterMaskFraction"
     };
 
     public static final String[] coastcolourParameterNames = new String[]{

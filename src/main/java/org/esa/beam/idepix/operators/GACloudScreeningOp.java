@@ -74,13 +74,17 @@ public class GACloudScreeningOp extends Operator {
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
     @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
-    private boolean gaComputeSchillerClouds= false;
+    private boolean gaComputeSchillerClouds = false;
+    @Parameter(defaultValue = "true", label = " Consider water mask fraction")
+    private boolean gaUseWaterMaskFraction = true;
 
 
     public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
 
     private int sourceProductTypeId;
+
     private WatermaskClassifier classifier;
+    private static final byte WATERMASK_FRACTION_THRESH = 23;   // for 3x3 subsampling, this means 2 subpixels water
 
     // MERIS bands:
     private Band[] merisRadianceBands;
@@ -119,7 +123,7 @@ public class GACloudScreeningOp extends Operator {
     private Band pbaroOutputBand;
     private Band p1OutputBand;
     private Band pscattOutputBand;
-    private GeoCoding geoCoding;
+    //    private GeoCoding geoCoding;
     private WatermaskStrategy strategy = null;
     private SchillerAlgorithm landNN = null;
 
@@ -187,17 +191,17 @@ public class GACloudScreeningOp extends Operator {
         }
 
         switch (sourceProductTypeId) {
-             // todo - put different sensor computations into different strategy modules
-             case IdepixConstants.PRODUCT_TYPE_MERIS:
-                 strategy = new MerisWatermaskStrategy();
-                 break;
-             case IdepixConstants.PRODUCT_TYPE_AATSR:
-                 strategy = new MerisWatermaskStrategy();
-                 break;
-             case IdepixConstants.PRODUCT_TYPE_VGT:
-                 strategy = new MerisWatermaskStrategy();
-                 break;
-         }
+            // todo - put different sensor computations into different strategy modules
+            case IdepixConstants.PRODUCT_TYPE_MERIS:
+                strategy = new MerisWatermaskStrategy();
+                break;
+            case IdepixConstants.PRODUCT_TYPE_AATSR:
+                strategy = new MerisWatermaskStrategy();
+                break;
+            case IdepixConstants.PRODUCT_TYPE_VGT:
+                strategy = new MerisWatermaskStrategy();
+                break;
+        }
 
 
         createTargetProduct();
@@ -434,11 +438,13 @@ public class GACloudScreeningOp extends Operator {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
                     byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
                     if (!gaUseL1bLandWaterFlag) {
                         final GeoCoding geoCoding = sourceProduct.getGeoCoding();
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
                         }
                     }
 
@@ -451,7 +457,9 @@ public class GACloudScreeningOp extends Operator {
                                                                          pbaroTile, pscattTile, brr442ThreshTile,
                                                                          merisReflectanceTiles,
                                                                          merisReflectance,
-                                                                         merisBrrTiles, merisBrr, waterMaskSample, y,
+                                                                         merisBrrTiles, merisBrr, waterMaskSample,
+                                                                         waterMaskFraction,
+                                                                         y,
                                                                          x);
 
                             break;
@@ -488,21 +496,21 @@ public class GACloudScreeningOp extends Operator {
                         targetTile.setSample(x, y, IdepixConstants.F_VEG_RISK, pixelProperties.isVegRisk());
                         targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, pixelProperties.isGlintRisk());
 
-                         if (landNN != null && !targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-                             final int finalX = x;
-                             final int finalY = y;
-                             final Tile[] finalMerisRefl = merisReflectanceTiles;
-                             SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
-                                 @Override
-                                 public double get(int index) {
-                                     return finalMerisRefl[index].getSampleDouble(finalX, finalY);
-                                 }
-                             };
-                             float schillerCloud = landNN.compute(accessor);
-                             if (schillerCloud > 1.4) {
-                                 targetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
-                             }
-                         }
+                        if (landNN != null && !targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                            final int finalX = x;
+                            final int finalY = y;
+                            final Tile[] finalMerisRefl = merisReflectanceTiles;
+                            SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
+                                @Override
+                                public double get(int index) {
+                                    return finalMerisRefl[index].getSampleDouble(finalX, finalY);
+                                }
+                            };
+                            float schillerCloud = landNN.compute(accessor);
+                            if (schillerCloud > 1.4) {
+                                targetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                            }
+                        }
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
@@ -669,7 +677,7 @@ public class GACloudScreeningOp extends Operator {
         setIsWater(watermaskSample, pixelProperties);
 
         // specific threshold for polar regions:
-        geoCoding = sourceProduct.getGeoCoding();
+        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
         if (geoCoding != null) {
             final PixelPos pixelPos = new PixelPos();
             pixelPos.setLocation(x + 0.5f, y + 0.5f);
@@ -718,7 +726,10 @@ public class GACloudScreeningOp extends Operator {
                                                        Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
                                                        Tile[] merisReflectanceTiles,
                                                        float[] merisReflectance,
-                                                       Tile[] merisBrrTiles, float[] merisBrr, byte watermask, int y,
+                                                       Tile[] merisBrrTiles, float[] merisBrr,
+                                                       byte watermask,
+                                                       byte watermaskFraction,
+                                                       int y,
                                                        int x) {
         MerisPixelProperties pixelProperties = new MerisPixelProperties();
 
@@ -731,28 +742,27 @@ public class GACloudScreeningOp extends Operator {
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
             merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
         }
-        if (x == 360 && y == 500) {
-            System.out.println("x = " + x);
-        }
         pixelProperties.setBrr(merisBrr);
         pixelProperties.setBrr442(brr442Tile.getSampleFloat(x, y));
         pixelProperties.setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
         pixelProperties.setP1(p1Tile.getSampleFloat(x, y));
         pixelProperties.setPBaro(pbaroTile.getSampleFloat(x, y));
         pixelProperties.setPscatt(pscattTile.getSampleFloat(x, y));
-        final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND) &&
-                !(watermask == WatermaskClassifier.WATER_VALUE);
-        pixelProperties.setL1FlagLand(isLand);
-        pixelProperties.setQwgCloudClassifFlagBrightRc
-                (merisQwgCloudClassifFlagTile.getSampleBit(x, y, MerisPixelProperties.F_BRIGHT_RC));
-        setIsWater(watermask, pixelProperties);
-
-        // test for Globalbedo, Himalaya:
-//        float latitude = latitudeTpg.getPixelFloat(x, y);
-//        float altitude = altitudeTpg.getPixelFloat(x, y);
-//        if (altitude > 4000) {
-//            pixelProperties.setNdsiThresh(0.3f);
-//        }
+        if (gaUseWaterMaskFraction) {
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND) &&
+                    watermaskFraction < WATERMASK_FRACTION_THRESH;
+            pixelProperties.setL1FlagLand(isLand);
+            pixelProperties.setQwgCloudClassifFlagBrightRc
+                    (merisQwgCloudClassifFlagTile.getSampleBit(x, y, MerisPixelProperties.F_BRIGHT_RC));
+            setIsWaterByFraction(watermaskFraction, pixelProperties);
+        } else {
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MerisPixelProperties.L1B_F_LAND) &&
+                    !(watermask == WatermaskClassifier.WATER_VALUE);
+            pixelProperties.setL1FlagLand(isLand);
+            pixelProperties.setQwgCloudClassifFlagBrightRc
+                    (merisQwgCloudClassifFlagTile.getSampleBit(x, y, MerisPixelProperties.F_BRIGHT_RC));
+            setIsWater(watermask, pixelProperties);
+        }
 
         return pixelProperties;
     }
@@ -764,6 +774,17 @@ public class GACloudScreeningOp extends Operator {
             isWater = pixelProperties.isL1Water();
         } else {
             isWater = watermask == WatermaskClassifier.WATER_VALUE;
+        }
+        pixelProperties.setIsWater(isWater);
+    }
+
+    private void setIsWaterByFraction(byte watermaskFraction, AbstractPixelProperties pixelProperties) {
+        boolean isWater;
+        if (watermaskFraction == WatermaskClassifier.INVALID_VALUE) {
+            // fallback
+            isWater = pixelProperties.isL1Water();
+        } else {
+            isWater = watermaskFraction >= WATERMASK_FRACTION_THRESH;
         }
         pixelProperties.setIsWater(isWater);
     }
@@ -798,6 +819,8 @@ public class GACloudScreeningOp extends Operator {
     private interface WatermaskStrategy {
 
         byte getWatermaskSample(float lat, float lon);
+
+        byte getWatermaskFraction(GeoCoding geoCoding, int x, int y);
     }
 
     private class MerisWatermaskStrategy implements WatermaskStrategy {
@@ -810,6 +833,16 @@ public class GACloudScreeningOp extends Operator {
                 waterMaskSample = classifier.getWaterMaskSample(lat, lon);
             }
             return (byte) waterMaskSample;
+        }
+
+        @Override
+        public byte getWatermaskFraction(GeoCoding geoCoding, int x, int y) {
+            int waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
+            final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
+            if (classifier != null && geoPos.getLat() > -60f) {
+                waterMaskFraction = classifier.getWaterMaskFraction(geoCoding, new PixelPos(x, y), 3, 3);
+            }
+            return (byte) waterMaskFraction;
         }
     }
 }
