@@ -133,7 +133,7 @@ public class GACloudScreeningOp extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         setSourceProductTypeId();
         try {
-            classifier = new WatermaskClassifier(wmResolution);
+            classifier = new WatermaskClassifier(wmResolution, 3, 3);
         } catch (IOException e) {
             getLogger().warning("Watermask classifier could not be initialized - fallback mode is used.");
         }
@@ -840,7 +840,7 @@ public class GACloudScreeningOp extends Operator {
             int waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
             final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
             if (classifier != null && geoPos.getLat() > -60f) {
-                waterMaskFraction = classifier.getWaterMaskFraction(geoCoding, new PixelPos(x, y), 3, 3);
+                waterMaskFraction = classifier.getWaterMaskFraction(geoCoding, x, y);
             }
             return (byte) waterMaskFraction;
         }

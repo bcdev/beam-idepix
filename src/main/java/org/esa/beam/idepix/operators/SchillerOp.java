@@ -19,7 +19,6 @@ package org.esa.beam.idepix.operators;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeFilter;
@@ -97,7 +96,7 @@ public class SchillerOp extends SampleOperator {
         addMask(targetProduct, "LC_CLOUD", "water_fraction > 0 ? water_net > 1.35 : land_net > 1.25", Color.YELLOW);
 
         try {
-            watermaskClassifier = new WatermaskClassifier(50);
+            watermaskClassifier = new WatermaskClassifier(50, 3, 3);
         } catch (IOException e) {
             throw new OperatorException("Failed to init water mask", e);
         }
@@ -145,7 +144,7 @@ public class SchillerOp extends SampleOperator {
                 result = waterNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples));
                 break;
             case 3:
-                result = watermaskClassifier.getWaterMaskFraction(geoCoding, new PixelPos(x, y), 3, 3);
+                result = watermaskClassifier.getWaterMaskFraction(geoCoding, x, y);
                 break;
         }
         targetSample.set(result);
