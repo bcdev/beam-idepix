@@ -15,7 +15,10 @@
 package org.esa.beam.idepix.operators;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -205,7 +208,7 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
     @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
-    private boolean gaComputeSchillerClouds= false;
+    private boolean gaComputeSchillerClouds = false;
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean gaUseWaterMaskFraction = true;
 
@@ -352,7 +355,7 @@ public class ComputeChainOp extends BasisOp {
         computePressureLiseProduct();
 
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-                pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection) {
+            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection) {
             computeMerisCloudProduct(ipfOutputL2Pressures);
         }
 
@@ -516,7 +519,8 @@ public class ComputeChainOp extends BasisOp {
         targetProduct = idepixGlobCoverOp.getTargetProduct();
         if (gaCopyRadiances) {
             for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct, true);
+                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct,
+                                      true);
             }
             ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME, sourceProduct, targetProduct, true);
         }
@@ -544,7 +548,8 @@ public class ComputeChainOp extends BasisOp {
         // convert radiance bands to reflectance
         Map<String, Object> relfParam = new HashMap<String, Object>(3);
         relfParam.put("doRadToRefl", true);
-        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, sourceProduct);
+        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class),
+                                                relfParam, sourceProduct);
 
         Operator operator = new IdepixSchillerOp();
         operator.setSourceProduct(reflProduct);
@@ -559,7 +564,8 @@ public class ComputeChainOp extends BasisOp {
         targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
         if (gaCopyRadiances) {
             for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct, true);
+                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct,
+                                      true);
             }
         }
     }
@@ -669,7 +675,8 @@ public class ComputeChainOp extends BasisOp {
         params.put("correctWater", true);
         params.put("landExpression", landExpression);
         params.put("exportBrrNormalized", ccOutputRayleigh);
-        rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class), params, input);
+        rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class), params,
+                                            input);
     }
 
     private Product computeSpectralUnmixingProduct() {
@@ -721,7 +728,8 @@ public class ComputeChainOp extends BasisOp {
     }
 
     private void computeRadiance2ReflectanceProduct() {
-        rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS, sourceProduct);
+        rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS,
+                                            sourceProduct);
     }
 
     private void computeMerisCloudProduct(boolean computeL2Pressure) {
@@ -735,15 +743,12 @@ public class ComputeChainOp extends BasisOp {
         Map<String, Object> params = new HashMap<String, Object>(11);
         params.put("l2Pressures", computeL2Pressure);
         params.put("userDefinedP1PressureThreshold", ipfQWGUserDefinedP1PressureThreshold);
-        params.put("userDefinedPScattPressureThreshold",
-                   ipfQWGUserDefinedPScattPressureThreshold);
+        params.put("userDefinedPScattPressureThreshold", ipfQWGUserDefinedPScattPressureThreshold);
         params.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
-        params.put("userDefinedDeltaRhoToa442Threshold",
-                   ipfQWGUserDefinedDeltaRhoToa442Threshold);
+        params.put("userDefinedDeltaRhoToa442Threshold", ipfQWGUserDefinedDeltaRhoToa442Threshold);
         params.put("userDefinedRhoToa753Threshold", ipfQWGUserDefinedRhoToa753Threshold);
         params.put("userDefinedRhoToa442Threshold", ipfQWGUserDefinedRhoToa442Threshold);
-        params.put("userDefinedRhoToaRatio753775Threshold",
-                   ipfQWGUserDefinedRhoToaRatio753775Threshold);
+        params.put("userDefinedRhoToaRatio753775Threshold", ipfQWGUserDefinedRhoToaRatio753775Threshold);
         params.put("userDefinedMDSIThreshold", ipfQWGUserDefinedMDSIThreshold);
         params.put("userDefinedNDVIThreshold", userDefinedNDVIThreshold);
 
@@ -779,9 +784,8 @@ public class ComputeChainOp extends BasisOp {
         cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
         cloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
         cloudClassificationParameters.put("schillerSure", ccSchillerSure);
-        merisCloudProduct = GPF.createProduct(
-                OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
-                cloudClassificationParameters, cloudInputProducts);
+        merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
+                                              cloudClassificationParameters, cloudInputProducts);
     }
 
     private Product computeCoastColourPostProcessProduct(Product smaProduct1) {
