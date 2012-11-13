@@ -53,7 +53,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ComputeChain",
-                  version = "1.3.4-SNAPSHOT",
+                  version = "1.3.5-SNAPSHOT",
                   authors = "Olaf Danne, Carsten Brockmann",
                   copyright = "(c) 2011 by Brockmann Consult",
                   description = "Pixel identification and classification. This operator just calls a chain of other operators.")

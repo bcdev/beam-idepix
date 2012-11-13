@@ -6,7 +6,7 @@
 
     <groupId>org.esa.beam</groupId>
     <artifactId>beam-idepix</artifactId>
-    <version>1.3.4-SNAPSHOT</version>
+    <version>1.3.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BEAM pixel identification</name>
@@ -15,7 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.10.3</beam.version>
+        <beam.version>4.10.4-SNAPSHOT</beam.version>
     </properties>
 
     <repositories>
