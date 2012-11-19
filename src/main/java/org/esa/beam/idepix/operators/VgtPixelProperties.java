@@ -137,7 +137,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
         return !IdepixUtils.areReflectancesValid(refl);
     }
 
-    @Override
+//    @Override
     public float brightValue() {
         double value;
         if (isLand()) {
@@ -152,7 +152,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
         return (float) value;
     }
 
-    @Override
+//    @Override
     public float spectralFlatnessValue() {
         final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[1],
                                                         IdepixConstants.VGT_WAVELENGTHS[0],
@@ -173,12 +173,12 @@ class VgtPixelProperties extends AbstractPixelProperties {
         }
     }
 
-    @Override
+//    @Override
     public float temperatureValue() {
         return UNCERTAINTY_VALUE;
     }
 
-    @Override
+//    @Override
     public float ndsiValue() {
         double value = (refl[2] - refl[3]) / (refl[2] + refl[3]);
         value = Math.min(value, 1.0);
@@ -186,7 +186,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
         return (float) value;
     }
 
-    @Override
+//    @Override
     public float ndviValue() {
         double value = (refl[2] - refl[1]) / (refl[2] + refl[1]);
         value = Math.min(value, 1.0);
@@ -194,19 +194,19 @@ class VgtPixelProperties extends AbstractPixelProperties {
         return (float) value;
     }
 
-    @Override
+//    @Override
     public float pressureValue() {
         return UNCERTAINTY_VALUE;
     }
 
-    @Override
+//    @Override
     public float glintRiskValue() {
         // todo: define conversion onto interval [0,1]
         return IdepixUtils.spectralSlope(refl[0], refl[1], IdepixConstants.VGT_WAVELENGTHS[0],
                                          IdepixConstants.VGT_WAVELENGTHS[1]);
     }
 
-    @Override
+//    @Override
     public float aPrioriLandValue() {
         if (isInvalid()) {
             return UNCERTAINTY_VALUE;
@@ -217,7 +217,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
         }
     }
 
-    @Override
+//    @Override
     public float aPrioriWaterValue() {
         if (isInvalid()) {
             return UNCERTAINTY_VALUE;
@@ -228,7 +228,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
         }
     }
 
-    @Override
+//    @Override
     public float radiometricLandValue() {
         if (isInvalid() || isCloud()) {
             return UNCERTAINTY_VALUE;
@@ -241,7 +241,7 @@ class VgtPixelProperties extends AbstractPixelProperties {
         }
     }
 
-    @Override
+//    @Override
     public float radiometricWaterValue() {
         if (isInvalid() || isCloud()) {
             return UNCERTAINTY_VALUE;

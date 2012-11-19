@@ -1,4 +1,5 @@
-org.esa.beam.idepix.operators.ComputeChainOp$Spi
+org.esa.beam.idepix.operators.CoastcolourOp$Spi
+org.esa.beam.idepix.operators.GlobalbedoOp$Spi
 org.esa.beam.idepix.operators.SurfacePressureFubOp$Spi
 org.esa.beam.idepix.operators.LisePressureOp$Spi
 org.esa.beam.idepix.operators.IdepixCloudClassificationOp$Spi

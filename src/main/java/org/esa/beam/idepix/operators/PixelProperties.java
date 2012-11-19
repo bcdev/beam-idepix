@@ -41,27 +41,28 @@ interface PixelProperties {
 
     boolean isInvalid();
 
-    float brightValue();
-
-    float temperatureValue();
-
-    float spectralFlatnessValue();
-    
-    float whiteValue();
-
-    float ndsiValue();
-
-    float ndviValue();
-
-    float pressureValue();
-
-    float glintRiskValue();
-
-    float aPrioriLandValue();
-
-    float aPrioriWaterValue();
-
-    float radiometricLandValue();
-
-    float radiometricWaterValue();
+    // don't use the '*Value()'-methods here any more. They were specific only for original GA approach
+//    float brightValue();
+//
+//    float temperatureValue();
+//
+//    float spectralFlatnessValue();
+//
+//    float whiteValue();
+//
+//    float ndsiValue();
+//
+//    float ndviValue();
+//
+//    float pressureValue();
+//
+//    float glintRiskValue();
+//
+//    float aPrioriLandValue();
+//
+//    float aPrioriWaterValue();
+//
+//    float radiometricLandValue();
+//
+//    float radiometricWaterValue();
 }

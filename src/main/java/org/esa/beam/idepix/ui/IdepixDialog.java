@@ -1,6 +1,7 @@
 package org.esa.beam.idepix.ui;
 
 import com.bc.ceres.swing.TableLayout;
+import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductFilter;
 import org.esa.beam.framework.gpf.GPF;
@@ -8,6 +9,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.ui.*;
 import org.esa.beam.framework.ui.AppContext;
+import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 import javax.swing.JPanel;
@@ -57,6 +59,8 @@ class IdepixDialog extends SingleTargetProductDialog {
 
     @Override
     protected Product createTargetProduct() throws Exception {
+        CloudScreeningSelector selector = (CloudScreeningSelector) parameterMap.get("algorithm");
+        System.out.println("selector = " + selector.name());
         final HashMap<String, Product> sourceProducts = createSourceProductsMap();
         return GPF.createProduct(operatorName, parameterMap, sourceProducts);
     }

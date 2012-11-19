@@ -1,11 +1,22 @@
 package org.esa.beam.idepix.operators;
 
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 
-abstract class BasisOp extends Operator {
-	/**
+public abstract class BasisOp extends Operator {
+
+    public Product computeRadiance2ReflectanceProduct(Product sourceProduct) {
+        return GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS,
+                                            sourceProduct);
+    }
+
+
+    /**
      * creates a new product with the same size
      *
      * @param sourceProduct
@@ -33,6 +44,26 @@ abstract class BasisOp extends Operator {
         copyTiePoints(sourceProduct, targetProduct);
         copyBaseGeoInfo(sourceProduct, targetProduct);
     }
+
+    public void renameL1bMaskNames(Product product) {
+        prefixMask("coastline", product);
+        prefixMask("land", product);
+        prefixMask("water", product);
+        prefixMask("cosmetic", product);
+        prefixMask("duplicated", product);
+        prefixMask("glint_risk", product);
+        prefixMask("suspect", product);
+        prefixMask("bright", product);
+        prefixMask("invalid", product);
+    }
+
+    public void prefixMask(String maskName, Product product) {
+        Mask mask = product.getMaskGroup().get(maskName);
+        if (mask != null) {
+            mask.setName("l1b_" + mask.getName());
+        }
+    }
+
 
     /**
      * Copies the tie point data.

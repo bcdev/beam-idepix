@@ -53,7 +53,7 @@
     <extension point="beam-ui:actions">
         <action>
             <id>idepix</id>
-            <class>org.esa.beam.idepix.ui.ComputeChainAction</class>
+            <class>org.esa.beam.visat.actions.ActionGroup</class>
             <text>IDEPIX Generic classification of pixels...</text>
             <shortDescr>
                 IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
@@ -64,6 +64,25 @@
             <helpID>idepixChain</helpID>
             <placeAfter/>
         </action>
+        <action>
+            <id>coastcolourAlgo</id>
+            <class>org.esa.beam.idepix.ui.IdepixCoastColourAction</class>
+            <text>CoastColour...</text>
+            <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
+            <mnemonic>C</mnemonic>
+            <parent>idepix</parent>
+            <helpId>coastcolourAlgo</helpId>
+        </action>
+        <action>
+            <id>globalbedoAlgo</id>
+            <class>org.esa.beam.idepix.ui.IdepixGlobAlbedoAction</class>
+            <text>CoastColour...</text>
+            <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
+            <mnemonic>G</mnemonic>
+            <parent>idepix</parent>
+            <helpId>globalbedoAlgo</helpId>
+        </action>
+
         <action>
             <id>schillercloud</id>
             <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>

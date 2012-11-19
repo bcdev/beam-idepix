@@ -32,7 +32,7 @@ class SourceProductSelectionListener implements SelectionChangeListener {
 
         if (selectedProduct != null) {
             // convert to IDEPIX specific product name
-            String idepixName = selectedProduct.getName();
+            String idepixName;
 
             // check for MERIS:
             if (IdepixUtils.isValidMerisProduct(selectedProduct)) {

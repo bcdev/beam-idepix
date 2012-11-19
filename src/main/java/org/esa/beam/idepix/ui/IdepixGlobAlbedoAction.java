@@ -16,6 +16,7 @@ package org.esa.beam.idepix.ui;
 
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.ui.command.CommandEvent;
+import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.idepix.operators.IdepixConstants;
 import org.esa.beam.visat.actions.AbstractVisatAction;
@@ -27,15 +28,14 @@ import org.esa.beam.visat.actions.AbstractVisatAction;
  * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
  * @since BEAM 4.2
  */
-public class ComputeChainAction extends AbstractVisatAction {
+public class IdepixGlobAlbedoAction extends AbstractVisatAction {
     @Override
     public void actionPerformed(CommandEvent commandEvent) {
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // test!!
         final IdepixDialog dialog =
-            new IdepixDialog(OperatorSpi.getOperatorAlias(ComputeChainOp.class),
+            new IdepixDialog(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class),
                     getAppContext(),
-                    "IDEPIX Pixel Identification Tool - " + IdepixConstants.IDEPIX_VERSION,
-                    "idepixChain","");
+                    "IDEPIX Pixel Identification Tool - GlobAlbedo Algorithm -  " + IdepixConstants.IDEPIX_VERSION,
+                    "globalbedoAlgo","");
         dialog.show();
     }
 

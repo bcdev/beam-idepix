@@ -24,8 +24,8 @@ package org.esa.beam.idepix.operators;
  */
 public abstract class AbstractPixelProperties implements PixelProperties {
 
-    boolean isWater;
-    boolean usel1bLandWaterFlag;
+    public boolean isWater;
+    public boolean usel1bLandWaterFlag;
 
     @Override
     public boolean isWater() {
