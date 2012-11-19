@@ -6,7 +6,7 @@
 
     <groupId>org.esa.beam</groupId>
     <artifactId>beam-idepix</artifactId>
-    <version>1.3.5-SNAPSHOT</version>
+    <version>1.4-renovation-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BEAM pixel identification</name>
