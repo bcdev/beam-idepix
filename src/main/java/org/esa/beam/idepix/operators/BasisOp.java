@@ -10,12 +10,6 @@ import org.esa.beam.util.ProductUtils;
 
 public abstract class BasisOp extends Operator {
 
-    public Product computeRadiance2ReflectanceProduct(Product sourceProduct) {
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS,
-                                            sourceProduct);
-    }
-
-
     /**
      * creates a new product with the same size
      *

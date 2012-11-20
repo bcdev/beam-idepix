@@ -18,6 +18,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
@@ -102,8 +103,8 @@ public class IdepixCloudShadowOp extends Operator {
 
         targetProduct = new Product(cloudProduct.getName(), cloudProduct.getProductType(), sceneWidth, sceneHeight);
 
-        cloudFlagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
+        cloudFlagBand = targetProduct.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
@@ -155,7 +156,7 @@ public class IdepixCloudShadowOp extends Operator {
             Rectangle targetRectangle = targetTile.getRectangle();
             Rectangle sourceRectangle = rectCalculator.extend(targetRectangle);
 
-            Tile inputCloudTile = getSourceTile(cloudProduct.getBand(GACloudScreeningOp.GA_CLOUD_FLAGS),
+            Tile inputCloudTile = getSourceTile(cloudProduct.getBand(IdepixUtils.GA_CLOUD_FLAGS),
                                                 sourceRectangle);
             copyInputCloudFlags(targetTile, targetRectangle, inputCloudTile);
 

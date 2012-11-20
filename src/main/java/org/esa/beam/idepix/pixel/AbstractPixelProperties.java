@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.pixel;
 
 /**
  * Abstract base class for pixel properties. Provides default implementations for isLand() and isWater(), using the

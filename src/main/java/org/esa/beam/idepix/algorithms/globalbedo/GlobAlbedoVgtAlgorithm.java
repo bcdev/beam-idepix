@@ -1,5 +1,8 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.idepix.IdepixConstants;
+
 /**
  * todo: add comment
  * To change this template use File | Settings | File Templates.
@@ -9,108 +12,133 @@ package org.esa.beam.idepix.algorithms.globalbedo;
  * @author olafd
  */
 public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
+
+    public static final int SM_F_LAND = 3;
+
+    private boolean smLand;
+    private float ndsiThresh;
+
     @Override
     public boolean isCloud() {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float brightValue() {
+    public float brightValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float temperatureValue() {
+    public float temperatureValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float spectralFlatnessValue() {
+    public float spectralFlatnessValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float whiteValue() {
+    public float whiteValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float ndsiValue() {
+    public float ndsiValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float ndviValue() {
+    public float ndviValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float pressureValue() {
+    public float pressureValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float glintRiskValue() {
+    public float glintRiskValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float aPrioriLandValue() {
+    public float aPrioriLandValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float aPrioriWaterValue() {
+    public float aPrioriWaterValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float radiometricLandValue() {
+    public float radiometricLandValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float radiometricWaterValue() {
+    public float radiometricWaterValue() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getBrightWhiteThreshold() {
+    public float getBrightWhiteThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getNdsiThreshold() {
+    public float getNdsiThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getNdviThreshold() {
+    public float getNdviThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getBrightThreshold() {
+    public float getBrightThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getWhiteThreshold() {
+    public float getWhiteThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getTemperatureThreshold() {
+    public float getTemperatureThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getGlintThreshold() {
+    public float getGlintThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    float getPressureThreshold() {
+    public float getPressureThreshold() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    // setters for VGT specific quantities
+
+    public void setSmLand(boolean smLand) {
+        this.smLand = smLand;
+    }
+
+    public void setNdsiThresh(float ndsiThresh) {
+        this.ndsiThresh = ndsiThresh;
+    }
+
+    public void setRefl(float[] refl) {
+        if (refl.length != IdepixConstants.VGT_WAVELENGTHS.length) {
+            throw new OperatorException("VGT pixel processing: Invalid number of wavelengths [" + refl.length +
+                                                "] - must be " + IdepixConstants.VGT_WAVELENGTHS.length);
+        }
+        this.refl = refl;
+    }
+
 }

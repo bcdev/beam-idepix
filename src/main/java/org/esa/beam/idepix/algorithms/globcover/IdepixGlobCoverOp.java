@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.algorithms.globcover;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
@@ -28,6 +28,7 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.SampleOperator;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.meris.l2auxdata.Constants;
@@ -59,8 +60,8 @@ public class IdepixGlobCoverOp extends SampleOperator {
         target.setName(brrProduct.getName());
         target.setProductType(brrProduct.getProductType());
 
-        Band flagBand = productConfigurer.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
+        Band flagBand = productConfigurer.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         target.getFlagCodingGroup().add(flagCoding);
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(target);
@@ -74,7 +75,7 @@ public class IdepixGlobCoverOp extends SampleOperator {
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.defineSample(0, GACloudScreeningOp.GA_CLOUD_FLAGS);
+        sampleConfigurer.defineSample(0, IdepixUtils.GA_CLOUD_FLAGS);
     }
 
     @Override

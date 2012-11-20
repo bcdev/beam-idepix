@@ -4,18 +4,18 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.algorithms.AlgorithmSelector;
 import org.esa.beam.idepix.operators.*;
+import org.esa.beam.idepix.util.IdepixProducts;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.GaseousCorrectionOp;
 import org.esa.beam.meris.brr.LandClassificationOp;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 
 import java.util.HashMap;
@@ -77,7 +77,7 @@ public class GlobAlbedoOp extends BasisOp {
     private int wmResolution;
     @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
-    @Parameter(defaultValue = "false", label = " Rayleigh Corrected Reflectances")
+    @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances")
     private boolean gaOutputRayleigh = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
@@ -89,8 +89,7 @@ public class GlobAlbedoOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
-        System.out.println();
-        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, CloudScreeningSelector.GlobAlbedo);
+        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.GlobAlbedo);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
@@ -100,14 +99,16 @@ public class GlobAlbedoOp extends BasisOp {
 
     private void processGlobAlbedo() {
         if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
-            rad2reflProduct = computeRadiance2ReflectanceProduct(sourceProduct);
-            computeBarometricPressureProduct();
-            computeCloudTopPressureProduct();
-            computePressureLiseProduct();
-            computeMerisCloudProduct(true);
-            Product gasProduct = computeGaseousCorrectionProduct();
-            Product landProduct = computeLandClassificationProduct(gasProduct);
-            computeRayleighCorrectionProduct(gasProduct, landProduct, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
+            rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
+            pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct);
+            ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
+            pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct, true);
+            merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
+                                                                        pressureLiseProduct, pbaroProduct, true);
+            final Product gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct);
+            final Product landProduct = IdepixProducts.computeLandClassificationProduct(sourceProduct, gasProduct);
+            rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct, landProduct,
+                                                            merisCloudProduct, false, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         }
 
         // Cloud Classification
@@ -132,7 +133,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaComputeSchillerClouds", gaComputeSchillerClouds);
         gaCloudClassificationParameters.put("gaUseWaterMaskFraction", gaUseWaterMaskFraction);
 
-        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GACloudScreeningOp.class),
+        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoCloudScreeningOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
 
         // add cloud shadow flag to the cloud product computed above...
@@ -152,74 +153,6 @@ public class GlobAlbedoOp extends BasisOp {
         if (gaOutputRayleigh) {
             addRayleighCorrectionBands();
         }
-    }
-
-    private void computeCloudTopPressureProduct() {
-        ctpProduct = GPF.createProduct("Meris.CloudTopPressureOp", GPF.NO_PARAMS, sourceProduct);
-    }
-
-    private void computeBarometricPressureProduct() {
-        Map<String, Object> params = new HashMap<String, Object>(1);
-        params.put("useGetasseDem", false);
-        pbaroProduct = GPF.createProduct("Meris.BarometricPressure", params, sourceProduct);
-    }
-
-
-    private void computeMerisCloudProduct(boolean computeL2Pressure) {
-        Map<String, Product> input = new HashMap<String, Product>(4);
-        input.put("l1b", sourceProduct);
-        input.put("rhotoa", rad2reflProduct);
-        input.put("ctp", ctpProduct);
-        input.put("pressureOutputLise", pressureLiseProduct);
-        input.put("pressureBaro", pbaroProduct);
-
-        Map<String, Object> params = new HashMap<String, Object>(11);
-        params.put("l2Pressures", computeL2Pressure);
-        merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudClassificationOp.class),
-                                              params, input);
-    }
-
-    private void computePressureLiseProduct() {
-        Map<String, Product> input = new HashMap<String, Product>(2);
-        input.put("l1b", sourceProduct);
-        input.put("rhotoa", rad2reflProduct);
-        Map<String, Object> params = new HashMap<String, Object>(6);
-        params.put("straylightCorr", false); // mail from RL/RS, 2009/03/19: do not apply correction on LISE pressure
-        params.put("outputP1", true);
-        params.put("outputPScatt", true);
-        pressureLiseProduct = GPF.createProduct("Meris.LisePressure", params, input);
-    }
-
-    private Product computeGaseousCorrectionProduct() {
-        Map<String, Product> input = new HashMap<String, Product>(3);
-        input.put("l1b", sourceProduct);
-        input.put("rhotoa", rad2reflProduct);
-        input.put("cloud", merisCloudProduct);
-        Map<String, Object> params = new HashMap<String, Object>(2);
-        params.put("correctWater", true);
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(GaseousCorrectionOp.class), params, input);
-    }
-
-    private Product computeLandClassificationProduct(Product gasProduct) {
-        Map<String, Product> input = new HashMap<String, Product>(2);
-        input.put("l1b", sourceProduct);
-        input.put("gascor", gasProduct);
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), GPF.NO_PARAMS, input);
-    }
-
-    private void computeRayleighCorrectionProduct(Product gasProduct, Product landProduct, String landExpression) {
-        Map<String, Product> input = new HashMap<String, Product>(3);
-        input.put("l1b", sourceProduct);
-        input.put("input", gasProduct);
-        input.put("rhotoa", rad2reflProduct);
-        input.put("land", landProduct);
-        input.put("cloud", merisCloudProduct);
-        Map<String, Object> params = new HashMap<String, Object>(2);
-        params.put("correctWater", true);
-        params.put("landExpression", landExpression);
-        params.put("exportBrrNormalized", false);
-        rayleighProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class), params,
-                                            input);
     }
 
     private void addRayleighCorrectionBands() {

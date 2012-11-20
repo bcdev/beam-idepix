@@ -27,6 +27,7 @@ import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.OperatorSpiRegistry;
+import org.esa.beam.idepix.IdepixConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -61,21 +62,21 @@ public class IdepixWithFSGProductTest {
         }
     }
 
-    @Test
-    public void testCreatingTargetProduct_QWG_Algo() {
-        final HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("algorithm", "QWG");
-        final Product product = GPF.createProduct("idepix.ComputeChain", parameters, sourceProduct);
-        assertNotNull(product);
-        assertNotNull(product.getGeoCoding());
-        assertTrue(product.getGeoCoding() instanceof PixelGeoCoding);
-    }
+//    @Test
+//    public void testCreatingTargetProduct_QWG_Algo() {
+//        final HashMap<String, Object> parameters = new HashMap<String, Object>();
+//        parameters.put("algorithm", "QWG");
+//        final Product product = GPF.createProduct("idepix.ComputeChain", parameters, sourceProduct);
+//        assertNotNull(product);
+//        assertNotNull(product.getGeoCoding());
+//        assertTrue(product.getGeoCoding() instanceof PixelGeoCoding);
+//    }
 
     @Test
     public void testCreatingTargetProduct_GlobAlbedo_Algo() {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "GlobAlbedo");
-        final Product product = GPF.createProduct("idepix.ComputeChain", parameters, sourceProduct);
+        final Product product = GPF.createProduct("idepix.globalbedo", parameters, sourceProduct);
         assertNotNull(product);
         assertNotNull(product.getGeoCoding());
         assertTrue(product.getGeoCoding() instanceof PixelGeoCoding);
@@ -86,7 +87,7 @@ public class IdepixWithFSGProductTest {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "CoastColour");
         parameters.put("ccOutputRayleigh", false);
-        final Product product = GPF.createProduct("idepix.ComputeChain", parameters, sourceProduct);
+        final Product product = GPF.createProduct("idepix.coastcolour", parameters, sourceProduct);
         assertNotNull(product);
         assertNotNull(product.getGeoCoding());
         assertTrue(product.getGeoCoding() instanceof PixelGeoCoding);

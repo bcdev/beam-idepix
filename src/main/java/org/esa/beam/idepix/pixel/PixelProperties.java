@@ -1,4 +1,4 @@
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.pixel;
 
 /**
  * Interface for pixel properties.

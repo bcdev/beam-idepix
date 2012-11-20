@@ -17,16 +17,13 @@ package org.esa.beam.idepix.ui;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.idepix.algorithms.coastcolour.CoastColourOp;
-import org.esa.beam.idepix.operators.ComputeChainOp;
-import org.esa.beam.idepix.operators.IdepixConstants;
+import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
 /**
- * Action for computing an operator chain.
+ * Idepix action for CoastColour algorithm.
  *
  * @author Olaf Danne
- * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
- * @since BEAM 4.2
  */
 public class IdepixCoastColourAction extends AbstractVisatAction {
     @Override
@@ -35,7 +32,7 @@ public class IdepixCoastColourAction extends AbstractVisatAction {
             new IdepixDialog(OperatorSpi.getOperatorAlias(CoastColourOp.class),
                     getAppContext(),
                     "IDEPIX Pixel Identification Tool - CoastColour Algorithm - " + IdepixConstants.IDEPIX_VERSION,
-                    "coastcolourAlgo","");
+                    "idepixChain","");
         dialog.show();
     }
 

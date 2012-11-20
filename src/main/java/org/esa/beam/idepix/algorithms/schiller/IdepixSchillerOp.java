@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.algorithms.schiller;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
@@ -29,6 +29,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
@@ -71,8 +72,8 @@ public class IdepixSchillerOp extends Operator {
                                             sourceProduct.getSceneRasterWidth(),
                                             sourceProduct.getSceneRasterHeight());
 
-        Band flagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
+        Band flagBand = targetProduct.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
@@ -135,7 +136,7 @@ public class IdepixSchillerOp extends Operator {
     
             targetTile.setSample(pos.x, pos.y, resultFlag);
         }
-        GACloudScreeningOp.setCloudBufferLC(targetBand, targetTile, rectangle);
+        IdepixUtils.setCloudBufferLC(targetBand, targetTile, rectangle);
     }
 
 }

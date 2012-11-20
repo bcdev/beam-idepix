@@ -1,4 +1,4 @@
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.algorithms;
 
 /**
  * Enumeration for selection of cloud screening algorithm
@@ -6,7 +6,7 @@ package org.esa.beam.idepix.operators;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public enum CloudScreeningSelector {
+public enum AlgorithmSelector {
     QWG,
     GlobAlbedo,
     GlobCover,

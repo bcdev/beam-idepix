@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.algorithms.magicstick;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
@@ -30,19 +30,14 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.SampleOperator;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.Rectangle;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Operator for calculating cloud using a "Magic" expression
@@ -79,8 +74,8 @@ public class IdepixMagicStickOp extends Operator {
                                             sourceProduct.getSceneRasterWidth(),
                                             sourceProduct.getSceneRasterHeight());
 
-        Band flagBand = targetProduct.addBand(GACloudScreeningOp.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(GACloudScreeningOp.GA_CLOUD_FLAGS);
+        Band flagBand = targetProduct.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
         IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
@@ -117,7 +112,7 @@ public class IdepixMagicStickOp extends Operator {
             cloudFlag = BitSetter.setFlag(cloudFlag, IdepixConstants.F_WATER, isWater);
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
-        GACloudScreeningOp.setCloudBufferLC(targetBand, targetTile, rectangle);
+        IdepixUtils.setCloudBufferLC(targetBand, targetTile, rectangle);
     }
 
 }

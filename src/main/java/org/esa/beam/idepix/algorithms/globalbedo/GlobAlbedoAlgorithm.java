@@ -1,6 +1,6 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
-import org.esa.beam.idepix.operators.AbstractPixelProperties;
+import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
@@ -13,6 +13,8 @@ import org.esa.beam.util.math.MathUtils;
  * @author olafd
  */
 public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
+
+    public static final int L1B_F_LAND = 4;
 
     static final float UNCERTAINTY_VALUE = 0.5f;
     static final float LAND_THRESH = 0.9f;
@@ -113,39 +115,38 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
         return !IdepixUtils.areReflectancesValid(refl);
     }
 
-    abstract float brightValue();
+    public abstract float brightValue();
 
-    abstract float temperatureValue();
+    public abstract float temperatureValue();
 
-    abstract float spectralFlatnessValue();
+    public abstract float spectralFlatnessValue();
 
-    abstract float whiteValue();
+    public abstract float whiteValue();
 
-    abstract float ndsiValue();
+    public abstract float ndsiValue();
 
-    abstract float ndviValue();
+    public abstract float ndviValue();
 
-    abstract float pressureValue();
+    public abstract float pressureValue();
 
-    abstract float glintRiskValue();
+    public abstract float glintRiskValue();
 
-    abstract float aPrioriLandValue();
+    public abstract float aPrioriLandValue();
 
-    abstract float aPrioriWaterValue();
+    public abstract float aPrioriWaterValue();
 
-    abstract float radiometricLandValue();
+    public abstract float radiometricLandValue();
 
-    abstract float radiometricWaterValue();
+    public abstract float radiometricWaterValue();
 
-
-    abstract float getBrightWhiteThreshold();
-    abstract float getNdsiThreshold();
-    abstract float getNdviThreshold();
-    abstract float getBrightThreshold();
-    abstract float getWhiteThreshold();
-    abstract float getTemperatureThreshold();
-    abstract float getGlintThreshold();
-    abstract float getPressureThreshold();
+    public abstract float getBrightWhiteThreshold();
+    public abstract float getNdsiThreshold();
+    public abstract float getNdviThreshold();
+    public abstract float getBrightThreshold();
+    public abstract float getWhiteThreshold();
+    public abstract float getTemperatureThreshold();
+    public abstract float getGlintThreshold();
+    public abstract float getPressureThreshold();
 
     public void setRefl(float[] refl) {
         this.refl = refl;

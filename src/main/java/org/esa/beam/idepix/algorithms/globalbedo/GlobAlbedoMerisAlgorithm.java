@@ -1,6 +1,6 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
-import org.esa.beam.idepix.operators.IdepixConstants;
+import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 /**
@@ -41,7 +41,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
 
 
     @Override
-    float spectralFlatnessValue() {
+    public float spectralFlatnessValue() {
         final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[2],
                                                         IdepixConstants.MERIS_WAVELENGTHS[0],
                                                         IdepixConstants.MERIS_WAVELENGTHS[2]);
@@ -59,7 +59,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
-    float whiteValue() {
+    public float whiteValue() {
         if (brightValue() > BRIGHT_FOR_WHITE_THRESH) {
             return spectralFlatnessValue();
         } else {
@@ -68,7 +68,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
-    float brightValue() {
+    public float brightValue() {
         if (brr442 <= 0.0 || brr442Thresh <= 0.0) {
             return IdepixConstants.NO_DATA_VALUE;
         }
@@ -150,7 +150,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
-    float getBrightWhiteThreshold() {
+    public float getBrightWhiteThreshold() {
         return BRIGHTWHITE_THRESH;
     }
 
@@ -193,37 +193,37 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     // THRESHOLD GETTERS
 
     @Override
-    float getNdsiThreshold() {
+    public float getNdsiThreshold() {
         return NDSI_THRESH;
     }
 
     @Override
-    float getNdviThreshold() {
+    public float getNdviThreshold() {
         return NDVI_THRESH;
     }
 
     @Override
-    float getBrightThreshold() {
+    public float getBrightThreshold() {
         return BRIGHT_THRESH;
     }
 
     @Override
-    float getWhiteThreshold() {
+    public float getWhiteThreshold() {
         return WHITE_THRESH;
     }
 
     @Override
-    float getTemperatureThreshold() {
+    public float getTemperatureThreshold() {
         return TEMPERATURE_THRESH;
     }
 
     @Override
-    float getGlintThreshold() {
+    public float getGlintThreshold() {
         return GLINT_THRESH;
     }
 
     @Override
-    float getPressureThreshold() {
+    public float getPressureThreshold() {
         return PRESSURE_THRESH;
     }
 

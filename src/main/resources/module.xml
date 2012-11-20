@@ -71,16 +71,16 @@
             <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
-            <helpId>coastcolourAlgo</helpId>
+            <helpId>idepixChain</helpId>
         </action>
         <action>
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.IdepixGlobAlbedoAction</class>
-            <text>CoastColour...</text>
+            <text>GlobAlbedo...</text>
             <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
-            <helpId>globalbedoAlgo</helpId>
+            <helpId>idepixChain</helpId>
         </action>
 
         <action>

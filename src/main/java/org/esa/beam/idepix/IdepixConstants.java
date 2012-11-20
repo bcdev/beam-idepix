@@ -1,4 +1,4 @@
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 
@@ -10,7 +10,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
  */
 public class IdepixConstants {
 
-    public static final String IDEPIX_VERSION = "v1.3.5-SNAPSHOT";
+    public static final String IDEPIX_VERSION = "v1.4-renovation-SNAPSHOT";
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
