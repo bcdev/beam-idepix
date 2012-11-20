@@ -1,0 +1,13 @@
+org.esa.beam.idepix.algorithms.coastcolour.CoastColourOp$Spi
+org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp$Spi
+org.esa.beam.idepix.algorithms.coastcolour.CoastColourCloudClassificationOp$Spi
+org.esa.beam.idepix.algorithms.coastcolour.CoastColourPostProcessOp$Spi
+org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoCloudScreeningOp$Spi
+org.esa.beam.idepix.algorithms.schiller.SchillerOp$Spi
+org.esa.beam.idepix.operators.SurfacePressureFubOp$Spi
+org.esa.beam.idepix.operators.LisePressureOp$Spi
+org.esa.beam.idepix.operators.IdepixCloudClassificationOp$Spi
+org.esa.beam.idepix.operators.IdepixRayleighCorrectionOp$Spi
+org.esa.beam.idepix.operators.BarometricPressureOp$Spi
+org.esa.beam.idepix.operators.MerisBrrCorrectionOp$Spi
+org.esa.beam.idepix.operators.IdepixCloudShadowOp$Spi

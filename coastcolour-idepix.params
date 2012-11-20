@@ -1,4 +1,0 @@
-algorithm = CoastColour
-ipfQWGUserDefinedRhoToa442Threshold = 0.03
-rhoAgReferenceWavelength = 865
-ipfOutputLandWater = true

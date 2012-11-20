@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<!DOCTYPE toc PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp TOC Version 1.0//EN" "http://java.sun.com/products/javahelp/toc_1_0.dtd">
+<toc version="1.0">
+  <tocitem target="sum" text="IDEPIX Software User Manual">
+    <tocitem target="sum.introduction" text="Introduction">
+      <tocitem target="sum.introduction.scope" text="Scope"/>
+      <tocitem target="sum.introduction.objectives" text="Objectives"/>
+      <tocitem target="sum.introduction.readerLevel" text="Reader Level"/>
+      <tocitem target="sum.introduction.acronymsAndNomenclature" text="Acronyms and Nomenclature">
+        <tocitem target="sum.introduction.acronyms" text="Acronyms"/>
+        <tocitem target="sum.introduction.nomenclature" text="Nomenclature"/>
+      </tocitem>
+      <tocitem target="sum.introduction.referenceDocuments" text="Reference Documents"/>
+    </tocitem>
+    <tocitem target="sum.installation" text="Software Installation">
+      <tocitem target="sum.installation.plugin" text="IDEPIX as BEAM plugin"/>
+      <tocitem target="sum.installation.addons" text="Additional Requirements"/>
+    </tocitem>
+    <tocitem target="sum.products" text="IDEPIX Products">
+      <tocitem target="sum.products.l2.qwg" text="Standard L2 Products">
+        <tocitem target="sum.products.l2.qwg.ctp" text="Cloud Top Pressure"/>
+        <tocitem target="sum.products.l2.qwg.psurf" text="Surface Pressure"/>
+        <tocitem target="sum.products.l2.qwg.cloudflag" text="Cloud Flags"/>
+      </tocitem>
+      <tocitem target="sum.products.o2" text="O2 Products">
+        <tocitem target="sum.products.o2.psurffub" text="Surface Pressure (FUB)"/>
+        <tocitem target="sum.products.o2.ptoalise" text="TOA Pressure ('P1', LISE)"/>
+        <tocitem target="sum.products.o2.psurflise" text="Surface Pressure (LISE)"/>
+        <tocitem target="sum.products.o2.praycorrlise" text="Rayleigh-corrected TOA Pressure ('P2', LISE)"/>
+        <tocitem target="sum.products.o2.pscattlise" text="Aerosol apparent pressure ('PScatt', LISE)"/>
+      </tocitem>
+      <tocitem target="sum.products.globcover" text="GlobCover Products">
+        <tocitem target="sum.products.globcover.blueband" text="Blue Bands"/>
+        <tocitem target="sum.products.globcover.cloudprob" text="Cloud Probability"/>
+      </tocitem>
+    </tocitem>
+    <tocitem target="sum.processor" text="IDEPIX Processor">
+      <tocitem target="sum.processor.io" text="I/O Parameters Tab Pane"/>
+      <tocitem target="sum.processor.cloudscreening" text="'Cloudscreening' Tab Pane"/>
+      <tocitem target="sum.processor.ipf" text="'IPF Compatible Products' Tab Pane"/>
+      <tocitem target="sum.processor.pressure" text="'Pressure Products' Tab Pane"/>
+      <tocitem target="sum.processor.pressure" text="'Cloud Products' Tab Pane"/>
+      <tocitem target="sum.processor.globalbedo" text="'GlobAlbedo' Tab Pane"/>
+      <tocitem target="sum.processor.control" text="Control Buttons"/>
+      <tocitem target="sum.processor.gpt" text="Processing from command line"/>
+    </tocitem>
+  </tocitem>
+</toc>
