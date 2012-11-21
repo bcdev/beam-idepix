@@ -16,12 +16,12 @@ import java.util.Map;
  *
  * @author Olaf Danne
  */
-class IdepixForm extends JTabbedPane {
+class IdepixDefaultForm extends JTabbedPane {
 
     private OperatorSpi operatorSpi;
     private Map<String, Object> parameterMap;
 
-    public IdepixForm(OperatorSpi operatorSpi, Map<String, Object> parameterMap) {
+    public IdepixDefaultForm(OperatorSpi operatorSpi, Map<String, Object> parameterMap) {
         this.operatorSpi = operatorSpi;
         this.parameterMap = parameterMap;
     }

@@ -1,8 +1,7 @@
-package org.esa.beam.idepix.algorithms.schiller;
+package org.esa.beam.idepix.algorithms.globcover;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -14,13 +13,10 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
-import org.esa.beam.idepix.operators.IdepixCloudShadowOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
+import org.esa.beam.meris.cloud.CloudEdgeOp;
+import org.esa.beam.meris.cloud.CloudShadowOp;
 import org.esa.beam.util.ProductUtils;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Idepix operator for pixel identification and classification with CoastColour algorithm.
@@ -33,7 +29,7 @@ import java.util.Map;
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with IPF (former MEPIX) algorithm.")
-public class SchillerOp extends BasisOp {
+public class GlobCoverOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
     private Product sourceProduct;
@@ -44,17 +40,6 @@ public class SchillerOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
     private boolean copyRadiances = true;
 
-    @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
-               valueSet = {
-                       IdepixConstants.ctpModeDefault,
-                       "850 hPa",
-                       "700 hPa",
-                       "500 hPa",
-                       "400 hPa",
-                       "300 hPa"
-               })
-    private String ctpMode;
-
     private Product ctpProduct;
 
     @Override
@@ -63,35 +48,37 @@ public class SchillerOp extends BasisOp {
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
-        processSchiller();
+        processGlobCover();
         renameL1bMaskNames(targetProduct);
     }
 
-    private void processSchiller() {
+    private void processGlobCover() {
+        Product brrProduct = IdepixProducts.computeBrrProduct(sourceProduct, true, true);
+        Product blueBandProduct = IdepixProducts.computeBlueBandProduct(sourceProduct, brrProduct);
+        Product cloudProbabilityProduct = IdepixProducts.computeCloudProbabilityProduct(sourceProduct);
+        Product combinedCloudProduct = IdepixProducts.computeCombinedCloudProduct(blueBandProduct, cloudProbabilityProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
 
-        // convert radiance bands to reflectance
-        Map<String, Object> relfParam = new HashMap<String, Object>(3);
-        relfParam.put("doRadToRefl", true);
-        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class),
-                                                relfParam, sourceProduct);
+        Operator cloudEdgeOp = new CloudEdgeOp();
+        cloudEdgeOp.setSourceProduct(combinedCloudProduct);
+        Product cloudEdgeProduct = cloudEdgeOp.getTargetProduct();
 
-        Operator operator = new SchillerClassificationOp();
-        operator.setSourceProduct(reflProduct);
-        Product cloudProduct = operator.getTargetProduct();
+        Operator cloudShadowOp = new CloudShadowOp();
+        cloudShadowOp.setSourceProduct("l1b", sourceProduct);
+        cloudShadowOp.setSourceProduct("cloud", cloudEdgeProduct);
+        cloudShadowOp.setSourceProduct("ctp", ctpProduct);
+        Product cloudShadowProduct = cloudShadowOp.getTargetProduct();
 
-        Map<String, Product> shadowInput = new HashMap<String, Product>(4);
-        shadowInput.put("l1b", sourceProduct);
-        shadowInput.put("cloud", cloudProduct);
-        shadowInput.put("ctp", ctpProduct);   // may be null
-        Map<String, Object> params = new HashMap<String, Object>(1);
-        params.put("ctpMode", ctpMode);
-        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
+        Operator idepixGlobCoverOp = new GlobCoverClassificationOp();
+        idepixGlobCoverOp.setSourceProduct("cloudProduct", cloudShadowProduct);
+        idepixGlobCoverOp.setSourceProduct("brrProduct", brrProduct);
+        targetProduct = idepixGlobCoverOp.getTargetProduct();
         if (copyRadiances) {
             for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                 ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct,
                                       true);
             }
+            ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME, sourceProduct, targetProduct, true);
         }
     }
 
@@ -103,7 +90,7 @@ public class SchillerOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(SchillerOp.class);
+            super(GlobCoverOp.class);
         }
     }
 }

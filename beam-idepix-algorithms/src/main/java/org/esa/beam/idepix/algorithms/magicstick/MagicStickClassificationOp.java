@@ -26,6 +26,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -44,12 +45,12 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-@OperatorMetadata(alias = "idepix.magicstick",
+@OperatorMetadata(alias = "idepix.magicstick.classification",
                   version = "1.0",
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Computed a cloud mask using an expression.")
-public class IdepixMagicStickOp extends Operator {
+public class MagicStickClassificationOp extends Operator {
 
     @SourceProduct
     private Product sourceProduct;
@@ -74,11 +75,11 @@ public class IdepixMagicStickOp extends Operator {
                                             sourceProduct.getSceneRasterWidth(),
                                             sourceProduct.getSceneRasterHeight());
 
-        Band flagBand = targetProduct.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
+        Band flagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createIdepixFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
-        IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
+        IdepixUtils.setupIdepixCloudscreeningBitmasks(targetProduct);
 
         try {
             watermaskClassifier = new WatermaskClassifier(50);
@@ -115,4 +116,14 @@ public class IdepixMagicStickOp extends Operator {
         IdepixUtils.setCloudBufferLC(targetBand, targetTile, rectangle);
     }
 
+    /**
+     * The Service Provider Interface (SPI) for the operator.
+     * It provides operator meta-data and is a factory for new operator instances.
+     */
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(MagicStickClassificationOp.class, "idepix.magicstick");
+        }
+    }
 }

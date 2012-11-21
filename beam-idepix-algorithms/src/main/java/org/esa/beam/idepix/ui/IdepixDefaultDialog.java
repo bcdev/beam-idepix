@@ -23,14 +23,14 @@ import java.util.List;
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  *
  */
-class IdepixDialog extends SingleTargetProductDialog {
+public class IdepixDefaultDialog extends SingleTargetProductDialog {
 
     private List<SourceProductSelector> sourceProductSelectorList;
     private Map<Field, SourceProductSelector> sourceProductSelectorMap;
 
     private String operatorName;
     private Map<String, Object> parameterMap;
-    private IdepixForm form;
+    private IdepixDefaultForm form;
     private String targetProductNameSuffix;
     private AppContext appContext;
 
@@ -40,9 +40,9 @@ class IdepixDialog extends SingleTargetProductDialog {
     private String helpID;
 
     /*
-     * IdepixDialog constructor
+     * IdepixDefaultDialog constructor
      */
-    IdepixDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
+    public IdepixDefaultDialog(String operatorName, AppContext appContext, String title, String helpID, String targetProductNameSuffix) {
         super(appContext, title, helpID);
         this.helpID = helpID;
         this.operatorName = operatorName;
@@ -92,7 +92,7 @@ class IdepixDialog extends SingleTargetProductDialog {
         }
         parameterMap = new LinkedHashMap<String, Object>(17);
 
-        form = new IdepixForm(operatorSpi, parameterMap);
+        form = new IdepixDefaultForm(operatorSpi, parameterMap);
 
         initComponents();
         
@@ -126,7 +126,7 @@ class IdepixDialog extends SingleTargetProductDialog {
                 new SourceProductSelectionListener(targetProductSelectorModel, targetProductNameSuffix);
         sourceProductSelectorList.get(0).addSelectionChangeListener(sourceProductSelectionListener);
 
-		form.setPreferredSize(new Dimension(IdepixDialog.DIALOG_WIDTH, IdepixDialog.DIALOG_HEIGHT));
+		form.setPreferredSize(new Dimension(IdepixDefaultDialog.DIALOG_WIDTH, IdepixDefaultDialog.DIALOG_HEIGHT));
         form.add("I/O Parameters", ioParametersPanel);
 
         final OperatorParameterSupport parameterSupport = new OperatorParameterSupport(operatorSpi.getOperatorClass(),

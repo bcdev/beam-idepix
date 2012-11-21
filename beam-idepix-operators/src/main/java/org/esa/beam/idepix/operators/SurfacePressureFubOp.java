@@ -49,7 +49,7 @@ import java.io.InputStreamReader;
  * @author Olaf Danne
  * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
  */
-@OperatorMetadata(alias = "idepix.SurfacePressureFub",
+@OperatorMetadata(alias = "Meris.SurfacePressureFub",
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",

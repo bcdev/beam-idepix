@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.idepix.algorithms.schiller;
+package org.esa.beam.idepix.algorithms;
 
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.idepix.util.NeuralNetWrapper;

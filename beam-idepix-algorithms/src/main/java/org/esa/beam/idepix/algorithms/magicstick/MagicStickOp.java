@@ -1,6 +1,5 @@
-package org.esa.beam.idepix.algorithms.schiller;
+package org.esa.beam.idepix.algorithms.magicstick;
 
-import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -16,8 +15,6 @@ import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.operators.IdepixCloudShadowOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
-import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,21 +25,18 @@ import java.util.Map;
  * @author Olaf Danne
  */
 @SuppressWarnings({"FieldCanBeLocal"})
-@OperatorMetadata(alias = "idepix.globcover",
+@OperatorMetadata(alias = "idepix.magicstick",
                   version = "1.4-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with IPF (former MEPIX) algorithm.")
-public class SchillerOp extends BasisOp {
+public class MagicStickOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
     private Product sourceProduct;
 
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
-
-    @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
-    private boolean copyRadiances = true;
 
     @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
                valueSet = {
@@ -59,25 +53,19 @@ public class SchillerOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
-        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.GlobCover);
+        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.MagicStick);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
-        processSchiller();
+        processMagicStick();
         renameL1bMaskNames(targetProduct);
     }
 
-    private void processSchiller() {
+    private void processMagicStick() {
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
 
-        // convert radiance bands to reflectance
-        Map<String, Object> relfParam = new HashMap<String, Object>(3);
-        relfParam.put("doRadToRefl", true);
-        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class),
-                                                relfParam, sourceProduct);
-
-        Operator operator = new SchillerClassificationOp();
-        operator.setSourceProduct(reflProduct);
+        Operator operator = new MagicStickClassificationOp();
+        operator.setSourceProduct(sourceProduct);
         Product cloudProduct = operator.getTargetProduct();
 
         Map<String, Product> shadowInput = new HashMap<String, Product>(4);
@@ -87,12 +75,6 @@ public class SchillerOp extends BasisOp {
         Map<String, Object> params = new HashMap<String, Object>(1);
         params.put("ctpMode", ctpMode);
         targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class), params, shadowInput);
-        if (copyRadiances) {
-            for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct, targetProduct,
-                                      true);
-            }
-        }
     }
 
 
@@ -103,7 +85,7 @@ public class SchillerOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(SchillerOp.class);
+            super(MagicStickOp.class, "idepix.magicstick");
         }
     }
 }

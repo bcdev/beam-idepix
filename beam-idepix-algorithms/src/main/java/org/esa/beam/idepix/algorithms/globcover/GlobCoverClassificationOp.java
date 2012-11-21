@@ -45,7 +45,7 @@ import org.esa.beam.util.BitSetter;
         authors = "Marco Zuehlke",
         copyright = "(c) 2012 by Brockmann Consult",
         description = "Adapts the output of the globcover chain to idepix.")
-public class IdepixGlobCoverOp extends SampleOperator {
+public class GlobCoverClassificationOp extends SampleOperator {
 
     @SourceProduct
     private Product cloudProduct;
@@ -60,11 +60,11 @@ public class IdepixGlobCoverOp extends SampleOperator {
         target.setName(brrProduct.getName());
         target.setProductType(brrProduct.getProductType());
 
-        Band flagBand = productConfigurer.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
+        Band flagBand = productConfigurer.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createIdepixFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         target.getFlagCodingGroup().add(flagCoding);
-        IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(target);
+        IdepixUtils.setupIdepixCloudscreeningBitmasks(target);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class IdepixGlobCoverOp extends SampleOperator {
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.defineSample(0, IdepixUtils.GA_CLOUD_FLAGS);
+        sampleConfigurer.defineSample(0, IdepixUtils.IDEPIX_CLOUD_FLAGS);
     }
 
     @Override

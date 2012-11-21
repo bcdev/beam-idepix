@@ -12,26 +12,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package org.esa.beam.idepix.ui;
+package org.esa.beam.idepix.ui.actions;
 
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.ui.command.CommandEvent;
-import org.esa.beam.idepix.algorithms.coastcolour.CoastColourOp;
+import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.ui.IdepixDefaultDialog;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
 /**
- * Idepix action for CoastColour algorithm.
+ * Idepix action for GlobAlbedo algorithm.
  *
  * @author Olaf Danne
  */
-public class IdepixCoastColourAction extends AbstractVisatAction {
+public class IdepixGlobAlbedoAction extends AbstractVisatAction {
     @Override
     public void actionPerformed(CommandEvent commandEvent) {
-        final IdepixDialog dialog =
-            new IdepixDialog(OperatorSpi.getOperatorAlias(CoastColourOp.class),
+        final IdepixDefaultDialog dialog =
+            new IdepixDefaultDialog(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class),
                     getAppContext(),
-                    "IDEPIX Pixel Identification Tool - CoastColour Algorithm - " + IdepixConstants.IDEPIX_VERSION,
+                    "IDEPIX Pixel Identification Tool - GlobAlbedo Algorithm -  " + IdepixConstants.IDEPIX_VERSION,
                     "idepixChain","");
         dialog.show();
     }

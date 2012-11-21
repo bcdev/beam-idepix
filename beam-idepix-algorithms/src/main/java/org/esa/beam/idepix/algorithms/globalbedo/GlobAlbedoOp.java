@@ -55,6 +55,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaComputeFlagsOnly;
     @Parameter(defaultValue = "false", label = " Copy pressure bands (MERIS)")
     private boolean gaCopyPressure;
+    @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances (MERIS)")
+    private boolean gaCopyRayleigh = false;
     @Parameter(defaultValue = "true", label = " Compute cloud shadow (MERIS)")
     private boolean gaComputeMerisCloudShadow;
     @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
@@ -67,6 +69,8 @@ public class GlobAlbedoOp extends BasisOp {
                        "300 hPa"
                })
     private String ctpMode;
+    @Parameter(defaultValue = "false", label = " Use GETASSE30 DEM for Barometric Pressure Computation")
+    private boolean gaUseGetasse = false;
     @Parameter(defaultValue = "false", label = " Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue = "true", label = " Use forward view for cloud flag determination (AATSR)")
@@ -78,11 +82,9 @@ public class GlobAlbedoOp extends BasisOp {
     private int wmResolution;
     @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
-    @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances")
-    private boolean gaOutputRayleigh = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
+    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm (MERIS)")
     private boolean gaComputeSchillerClouds = false;
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean gaUseWaterMaskFraction = true;
@@ -90,7 +92,7 @@ public class GlobAlbedoOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
-        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.GlobAlbedo.GlobAlbedo);
+        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.GlobAlbedo);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
@@ -101,15 +103,17 @@ public class GlobAlbedoOp extends BasisOp {
     private void processGlobAlbedo() {
         if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
             rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
-            pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct);
+            pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, gaUseGetasse);
             ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
-            pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct, true);
+            pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
+                                                                            true, true, true, false, false, true);
             merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
                                                                         pressureLiseProduct, pbaroProduct, true);
-            final Product gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct);
+            final Product gasProduct = IdepixProducts.
+                    computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
             final Product landProduct = IdepixProducts.computeLandClassificationProduct(sourceProduct, gasProduct);
             rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct, landProduct,
-                                                            merisCloudProduct, false, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
+                                                                              merisCloudProduct, false, LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         }
 
         // Cloud Classification
@@ -134,13 +138,13 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaComputeSchillerClouds", gaComputeSchillerClouds);
         gaCloudClassificationParameters.put("gaUseWaterMaskFraction", gaUseWaterMaskFraction);
 
-        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoCloudScreeningOp.class),
+        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
 
         // add cloud shadow flag to the cloud product computed above...
         if (gaComputeMerisCloudShadow && IdepixUtils.isValidMerisProduct(sourceProduct)) {
             Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
-            gaFinalCloudInput.put("gal1b", sourceProduct);
+            gaFinalCloudInput.put("l1b", sourceProduct);
             gaFinalCloudInput.put("cloud", gaCloudProduct);
             gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
             Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
@@ -151,7 +155,7 @@ public class GlobAlbedoOp extends BasisOp {
         }
 
         targetProduct = gaCloudProduct;
-        if (gaOutputRayleigh) {
+        if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
             addRayleighCorrectionBands();
         }
     }

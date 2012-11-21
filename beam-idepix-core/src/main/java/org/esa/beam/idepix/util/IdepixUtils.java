@@ -24,7 +24,7 @@ import java.util.Random;
 public class IdepixUtils {
 
     private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("aatsrrecalibration");
-    public static final String GA_CLOUD_FLAGS = "cloud_classif_flags";
+    public static final String IDEPIX_CLOUD_FLAGS = "cloud_classif_flags";
 
     private IdepixUtils() {
     }
@@ -70,7 +70,7 @@ public class IdepixUtils {
 
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
-        if (AlgorithmSelector.QWG == algorithm ||
+        if (AlgorithmSelector.IPF == algorithm ||
                 AlgorithmSelector.CoastColour == algorithm ||
                 AlgorithmSelector.GlobCover == algorithm ||
                 AlgorithmSelector.MagicStick == algorithm ||
@@ -173,7 +173,7 @@ public class IdepixUtils {
         return merisWavelengthIndexMap;
     }
 
-    public static FlagCoding createGAFlagCoding(String flagIdentifier) {
+    public static FlagCoding createIdepixFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, IdepixConstants.F_INVALID), null);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, IdepixConstants.F_CLOUD), null);
@@ -196,7 +196,7 @@ public class IdepixUtils {
     }
 
 
-    public static int setupGlobAlbedoCloudscreeningBitmasks(Product gaCloudProduct) {
+    public static int setupIdepixCloudscreeningBitmasks(Product gaCloudProduct) {
 
         int index = 0;
         int w = gaCloudProduct.getSceneRasterWidth();
@@ -296,7 +296,7 @@ public class IdepixUtils {
         //      in both x and y direction of reference pixel.
         //    - if 2x2 square also has non-cloudy pixels, do the same but with cloud buffer of only 1
 
-        if (band.isFlagBand() && band.getName().equals(GA_CLOUD_FLAGS)) {
+        if (band.isFlagBand() && band.getName().equals(IDEPIX_CLOUD_FLAGS)) {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
                     if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {

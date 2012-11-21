@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
@@ -47,7 +48,7 @@ import java.io.IOException;
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Computed a cloud mask using neural nets from Schiller.")
-public class IdepixSchillerOp extends Operator {
+public class SchillerClassificationOp extends Operator {
 
     @SourceProduct
     private Product sourceProduct;
@@ -72,11 +73,11 @@ public class IdepixSchillerOp extends Operator {
                                             sourceProduct.getSceneRasterWidth(),
                                             sourceProduct.getSceneRasterHeight());
 
-        Band flagBand = targetProduct.addBand(IdepixUtils.GA_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = IdepixUtils.createGAFlagCoding(IdepixUtils.GA_CLOUD_FLAGS);
+        Band flagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        FlagCoding flagCoding = IdepixUtils.createIdepixFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         flagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
-        IdepixUtils.setupGlobAlbedoCloudscreeningBitmasks(targetProduct);
+        IdepixUtils.setupIdepixCloudscreeningBitmasks(targetProduct);
 
         try {
             watermaskClassifier = new WatermaskClassifier(50);

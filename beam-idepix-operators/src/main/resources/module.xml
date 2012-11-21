@@ -66,7 +66,7 @@
         </action>
         <action>
             <id>coastcolourAlgo</id>
-            <class>org.esa.beam.idepix.ui.IdepixCoastColourAction</class>
+            <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
             <text>CoastColour...</text>
             <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
             <mnemonic>C</mnemonic>
@@ -75,7 +75,7 @@
         </action>
         <action>
             <id>globalbedoAlgo</id>
-            <class>org.esa.beam.idepix.ui.IdepixGlobAlbedoAction</class>
+            <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
             <text>GlobAlbedo...</text>
             <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
             <mnemonic>G</mnemonic>

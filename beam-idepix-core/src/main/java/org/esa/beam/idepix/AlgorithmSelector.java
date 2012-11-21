@@ -7,7 +7,7 @@ package org.esa.beam.idepix;
  * @version $Revision: $ $Date:  $
  */
 public enum AlgorithmSelector {
-    QWG,
+    IPF,
     GlobAlbedo,
     GlobCover,
     CoastColour,

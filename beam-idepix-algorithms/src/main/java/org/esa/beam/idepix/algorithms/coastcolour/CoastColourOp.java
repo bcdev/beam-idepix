@@ -115,7 +115,7 @@ public class CoastColourOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
-        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.CoastColour.CoastColour);
+        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.CoastColour);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
@@ -126,11 +126,14 @@ public class CoastColourOp extends BasisOp {
     private void processCoastColour() {
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
-        pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct, ccOutputL2CloudDetection);
+        pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
+                                                                        ccOutputL2CloudDetection,
+                                                                        false,
+                                                                        true, false, false, true);
         computeCoastColourMerisCloudProduct();
         Product gasProduct = null;
         if (ccOutputGaseous || ccOutputRayleigh) {
-            gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct);
+            gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
         }
 
 
@@ -140,8 +143,8 @@ public class CoastColourOp extends BasisOp {
             rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct,
                                                                               merisCloudProduct, merisCloudProduct,
                                                                               ccOutputRayleigh,
-                                             CoastColourCloudClassificationOp.CLOUD_FLAGS + ".F_LAND");
-            smaProduct = IdepixProducts.computeSpectralUnmixingProduct(rayleighProduct);
+                                             CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
+            smaProduct = IdepixProducts.computeSpectralUnmixingProduct(rayleighProduct, true);
         }
 
         // Post Cloud Classification and computation of Mixed Pixel Flag
@@ -166,13 +169,13 @@ public class CoastColourOp extends BasisOp {
         }
 
         if (ccOutputL2CloudDetection) {
-            Band cloudFlagBand = targetProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS);
+            Band cloudFlagBand = targetProduct.getBand(CoastColourClassificationOp.CLOUD_FLAGS);
             cloudFlagBand.setSourceImage(
-                    ccPostProcessingProduct.getBand(CoastColourCloudClassificationOp.CLOUD_FLAGS).getSourceImage());
+                    ccPostProcessingProduct.getBand(CoastColourClassificationOp.CLOUD_FLAGS).getSourceImage());
         }
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
-        CoastColourCloudClassificationOp.addBitmasks(targetProduct);
+        CoastColourClassificationOp.addBitmasks(targetProduct);
     }
 
     private void computeCoastColourMerisCloudProduct() {
@@ -203,7 +206,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
         cloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
         cloudClassificationParameters.put("schillerSure", ccSchillerSure);
-        merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourCloudClassificationOp.class),
+        merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                                               cloudClassificationParameters, cloudInputProducts);
     }
 
@@ -228,11 +231,11 @@ public class CoastColourOp extends BasisOp {
     }
 
     private void addCloudClassificationFlagBandCoastColour() {
-        FlagCoding flagCoding = CoastColourCloudClassificationOp.createFlagCoding(
-                CoastColourCloudClassificationOp.CLOUD_FLAGS);
+        FlagCoding flagCoding = CoastColourClassificationOp.createFlagCoding(
+                CoastColourClassificationOp.CLOUD_FLAGS);
         targetProduct.getFlagCodingGroup().add(flagCoding);
         for (Band band : merisCloudProduct.getBands()) {
-            if (band.getName().equals(CoastColourCloudClassificationOp.CLOUD_FLAGS)) {
+            if (band.getName().equals(CoastColourClassificationOp.CLOUD_FLAGS)) {
                 Band targetBand = ProductUtils.copyBand(band.getName(), merisCloudProduct, targetProduct, true);
                 targetBand.setSampleCoding(flagCoding);
             }

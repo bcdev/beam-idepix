@@ -36,7 +36,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
-import org.esa.beam.idepix.algorithms.schiller.SchillerAlgorithm;
+import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.seaice.SeaIceClassification;
 import org.esa.beam.idepix.seaice.SeaIceClassifier;
@@ -60,8 +60,6 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Map;
 
-import static org.esa.beam.meris.l2auxdata.Constants.*;
-
 
 /**
  * This class provides the Mepix QWG cloud classification.
@@ -72,7 +70,7 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
                   description = "MERIS L2 cloud classification (version from MEPIX processor).")
-public class CoastColourCloudClassificationOp extends MerisBasisOp {
+public class CoastColourClassificationOp extends MerisBasisOp {
 
     public static final String CLOUD_FLAGS = "cloud_classif_flags";
     public static final String PRESSURE_CTP = "cloud_top_press";
@@ -780,7 +778,7 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(CoastColourCloudClassificationOp.class);
+            super(CoastColourClassificationOp.class);
         }
     }
 }
