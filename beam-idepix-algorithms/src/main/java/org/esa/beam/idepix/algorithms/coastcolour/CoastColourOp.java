@@ -43,6 +43,7 @@ public class CoastColourOp extends BasisOp {
     private Product targetProduct;
 
     private Product merisCloudProduct;
+    private Product gasProduct;
     private Product rayleighProduct;
     private Product pressureLiseProduct;
     private Product rad2reflProduct;
@@ -120,7 +121,6 @@ public class CoastColourOp extends BasisOp {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
         processCoastColour();
-        renameL1bMaskNames(targetProduct);
     }
 
     private void processCoastColour() {
@@ -130,8 +130,10 @@ public class CoastColourOp extends BasisOp {
                                                                         ccOutputL2CloudDetection,
                                                                         false,
                                                                         true, false, false, true);
+
+
         computeCoastColourMerisCloudProduct();
-        Product gasProduct = null;
+
         if (ccOutputGaseous || ccOutputRayleigh) {
             gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
         }
@@ -152,10 +154,11 @@ public class CoastColourOp extends BasisOp {
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
-        addBandsToTargetProduct(gasProduct);
+        addBandsToTargetProduct();
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         CoastColourClassificationOp.addBitmasks(targetProduct);
+        renameL1bMaskNames(targetProduct);
     }
 
     private void computeCoastColourMerisCloudProduct() {
@@ -203,7 +206,7 @@ public class CoastColourOp extends BasisOp {
         ccPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourPostProcessOp.class), params, input);
     }
 
-    private void addBandsToTargetProduct(Product gasProduct) {
+    private void addBandsToTargetProduct() {
         if (ccOutputRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }

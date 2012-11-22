@@ -156,7 +156,6 @@ public class IpfOp extends BasisOp {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
         processQwg();
-        renameL1bMaskNames(targetProduct);
     }
 
     private void processQwg() {
@@ -240,6 +239,7 @@ public class IpfOp extends BasisOp {
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         MerisClassificationOp.addBitmasks(sourceProduct, targetProduct);
+        renameL1bMaskNames(targetProduct);
     }
 
     private void addBandsToTargetProduct(Product ctpStraylightProduct, Product gasProduct, Product landProduct, Product blueBandProduct, Product cloudProbabilityProduct, Product psurfNNProduct, Product combinedCloudProduct) {
