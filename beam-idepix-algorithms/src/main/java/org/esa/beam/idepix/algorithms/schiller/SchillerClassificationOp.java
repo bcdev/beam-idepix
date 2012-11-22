@@ -26,6 +26,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
@@ -43,7 +44,7 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-@OperatorMetadata(alias = "idepix.schiller",
+@OperatorMetadata(alias = "idepix.schiller.classification",
                   version = "1.0",
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
@@ -140,4 +141,14 @@ public class SchillerClassificationOp extends Operator {
         IdepixUtils.setCloudBufferLC(targetBand, targetTile, rectangle);
     }
 
+    /**
+     * The Service Provider Interface (SPI) for the operator.
+     * It provides operator meta-data and is a factory for new operator instances.
+     */
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(SchillerClassificationOp.class, "idepix.schiller.classification");
+        }
+    }
 }

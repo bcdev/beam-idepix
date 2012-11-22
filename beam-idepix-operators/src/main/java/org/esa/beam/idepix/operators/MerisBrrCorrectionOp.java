@@ -7,6 +7,7 @@ import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
@@ -20,6 +21,11 @@ import java.awt.Rectangle;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@OperatorMetadata(alias = "idepix.operators.MerisBrrCorrection",
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008 by Brockmann Consult",
+                  description = "BRR correction over clouds using CTP.")
 public class MerisBrrCorrectionOp extends Operator {
 
     @SourceProduct(alias = "l1b")
@@ -67,11 +73,11 @@ public class MerisBrrCorrectionOp extends Operator {
         Tile rad2reflTile = getSourceTile(rad2reflProduct.getBand("rho_toa_" + bandNumber), rectangle);
         Tile isInvalid = getSourceTile(invalidBand, rectangle);
 
-        Tile surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE),
+        Tile surfacePressureTile = getSourceTile(cloudProduct.getBand(MerisClassificationOp.PRESSURE_SURFACE),
                                                  rectangle);
-        Tile cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP),
+        Tile cloudTopPressureTile = getSourceTile(cloudProduct.getBand(MerisClassificationOp.PRESSURE_CTP),
                                                   rectangle);
-        Tile cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
+        Tile cloudFlagsTile = getSourceTile(cloudProduct.getBand(MerisClassificationOp.CLOUD_FLAGS), rectangle);
         Tile landFlagsTile = getSourceTile(landProduct.getBand(LandClassificationOp.LAND_FLAGS), rectangle);
 
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
@@ -80,7 +86,7 @@ public class MerisBrrCorrectionOp extends Operator {
                 if (isInvalid.getSampleBoolean(x, y)) {
                     brrCorr = -1.0f;
                 } else {
-                    if (cloudFlagsTile.getSampleBit(x, y, IdepixCloudClassificationOp.F_CLOUD)) {
+                    if (cloudFlagsTile.getSampleBit(x, y, MerisClassificationOp.F_CLOUD)) {
                         final float surfacePressure = surfacePressureTile.getSampleFloat(x, y);
                         final float cloudTopPressure = cloudTopPressureTile.getSampleFloat(x, y);
                         final float rad2refl = rad2reflTile.getSampleFloat(x, y);
@@ -101,7 +107,7 @@ public class MerisBrrCorrectionOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MerisBrrCorrectionOp.class);
+            super(MerisBrrCorrectionOp.class, "idepix.operators.MerisBrrCorrection");
         }
     }
 }

@@ -184,7 +184,7 @@ public class GlobAlbedoOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoOp.class);
+            super(GlobAlbedoOp.class, "idepix.globalbedo");
         }
     }
 }

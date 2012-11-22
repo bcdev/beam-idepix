@@ -48,15 +48,15 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
 
 
 /**
- * This class provides the Mepix QWG cloud classification.
+ * This class provides the pixel classification for MERIS (mainly based on IPF approach).
  */
-@OperatorMetadata(alias = "Meris.IdepixCloudClassification",
+@OperatorMetadata(alias = "idepix.operators.MerisClassification",
                   version = "1.0",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
                   description = "MERIS L2 cloud classification (version from MEPIX processor).")
-public class IdepixCloudClassificationOp extends MerisBasisOp {
+public class MerisClassificationOp extends MerisBasisOp {
 
     public static final String CLOUD_FLAGS = "cloud_classif_flags";
     public static final String PRESSURE_CTP = "cloud_top_press";
@@ -65,9 +65,9 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     public static final String RHO_THRESH_TERM = "rho442_thresh_term";
     public static final String MDSI = "mdsi";
 
-    private static final int BAND_BRIGHT_N = 0;
-    private static final int BAND_SLOPE_N_1 = 1;
-    private static final int BAND_SLOPE_N_2 = 2;
+    public static final int BAND_BRIGHT_N = 0;
+    public static final int BAND_SLOPE_N_1 = 1;
+    public static final int BAND_SLOPE_N_2 = 2;
 
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
@@ -537,7 +537,7 @@ public class IdepixCloudClassificationOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixCloudClassificationOp.class);
+            super(MerisClassificationOp.class, "idepix.operators.MerisClassification");
         }
     }
 }

@@ -32,7 +32,7 @@ import java.awt.Rectangle;
 import java.util.Map;
 
 
-@OperatorMetadata(alias = "Meris.IdepixRayleighCorrection",
+@OperatorMetadata(alias = "idepix.operators.IdepixRayleighCorrection",
                   version = "1.0",
                   internal = true,
                   authors = "Marco Zuehlke, Olaf Danne",
@@ -218,11 +218,11 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
             Tile cloudTopPressureTile = null;
             Tile cloudFlagsTile = null;
             if (cloudProduct != null) {
-                surfacePressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_SURFACE),
+                surfacePressureTile = getSourceTile(cloudProduct.getBand(MerisClassificationOp.PRESSURE_SURFACE),
                                                     rectangle);
-                cloudTopPressureTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.PRESSURE_CTP),
+                cloudTopPressureTile = getSourceTile(cloudProduct.getBand(MerisClassificationOp.PRESSURE_CTP),
                                                      rectangle);
-                cloudFlagsTile = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS),
+                cloudFlagsTile = getSourceTile(cloudProduct.getBand(MerisClassificationOp.CLOUD_FLAGS),
                                                rectangle);
             }
 
@@ -394,7 +394,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixRayleighCorrectionOp.class);
+            super(IdepixRayleighCorrectionOp.class, "idepix.operators.IdepixRayleighCorrection");
         }
     }
 }

@@ -49,7 +49,7 @@ import java.io.InputStreamReader;
  * @author Olaf Danne
  * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
  */
-@OperatorMetadata(alias = "Meris.SurfacePressureFub",
+@OperatorMetadata(alias = "idepix.operators.SurfacePressureFub",
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -172,7 +172,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
 
             final Raster isInvalid = invalidImage.getData(rectangle);
             // TODO (mp 20.12.2010) - cloudFlags is never used
-//			Tile cloudFlags = getSourceTile(cloudProduct.getBand(IdepixCloudClassificationOp.CLOUD_FLAGS), rectangle);
+//			Tile cloudFlags = getSourceTile(cloudProduct.getBand(MerisClassificationOp.CLOUD_FLAGS), rectangle);
 
             final double[] nnIn = new double[7];
             final double[] nnOut = new double[1];
@@ -261,7 +261,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(SurfacePressureFubOp.class, "Meris.SurfacePressureFub");
+            super(SurfacePressureFubOp.class, "idepix.operators.SurfacePressureFub");
         }
     }
 }

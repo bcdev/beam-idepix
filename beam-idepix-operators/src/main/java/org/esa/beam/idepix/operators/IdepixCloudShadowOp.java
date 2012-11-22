@@ -31,7 +31,7 @@ import java.awt.Rectangle;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "idepix.CloudShadow",
+@OperatorMetadata(alias = "idepix.operators.CloudShadow",
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -298,7 +298,7 @@ public class IdepixCloudShadowOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixCloudShadowOp.class, "idepix.CloudShadow");
+            super(IdepixCloudShadowOp.class, "idepix.operators.CloudShadow");
         }
     }
 }

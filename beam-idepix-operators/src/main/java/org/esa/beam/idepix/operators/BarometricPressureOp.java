@@ -36,7 +36,7 @@ import java.util.StringTokenizer;
  * @author Olaf Danne
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  */
-@OperatorMetadata(alias = "Meris.BarometricPressure",
+@OperatorMetadata(alias = "idepix.operators.BarometricPressure",
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -281,7 +281,7 @@ public class BarometricPressureOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(BarometricPressureOp.class, "Meris.BarometricPressure");
+            super(BarometricPressureOp.class, "idepix.operators.BarometricPressure");
         }
     }
 }

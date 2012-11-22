@@ -1,6 +1,6 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>beam-idepix</symbolicName>
+    <symbolicName>beam-idepix-core</symbolicName>
     <version>1.4</version>
     <name>Generic classification of pixels</name>
     <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.

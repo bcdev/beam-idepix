@@ -5,9 +5,15 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 
+@OperatorMetadata(alias = "idepix.operators.Basis",
+                  version = "1.4-SNAPSHOT",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2012 by Brockmann Consult",
+                  description = "Idepix operator for basic product generation.")
 public abstract class BasisOp extends Operator {
 
     /**
@@ -85,4 +91,14 @@ public abstract class BasisOp extends Operator {
         targetProduct.setEndTime(sourceProduct.getEndTime());
     }
 
+    /**
+     * The Service Provider Interface (SPI) for the operator.
+     * It provides operator meta-data and is a factory for new operator instances.
+     */
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(BasisOp.class, "idepix.operators.Basis");
+        }
+    }
 }

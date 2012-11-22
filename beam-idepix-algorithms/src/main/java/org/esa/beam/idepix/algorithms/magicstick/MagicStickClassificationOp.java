@@ -123,7 +123,7 @@ public class MagicStickClassificationOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MagicStickClassificationOp.class, "idepix.magicstick");
+            super(MagicStickClassificationOp.class, "idepix.magicstick.classification");
         }
     }
 }

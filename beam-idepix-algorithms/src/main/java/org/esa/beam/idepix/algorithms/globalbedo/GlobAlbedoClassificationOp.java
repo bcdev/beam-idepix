@@ -30,7 +30,7 @@ import java.io.IOException;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "idepix.GACloudScreening",
+@OperatorMetadata(alias = "idepix.globalbedo.classification",
                   version = "1.0",
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -769,7 +769,7 @@ public class GlobAlbedoClassificationOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoClassificationOp.class, "idepix.GACloudScreening");
+            super(GlobAlbedoClassificationOp.class, "idepix.globalbedo.classification");
         }
     }
 

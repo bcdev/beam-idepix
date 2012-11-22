@@ -28,7 +28,7 @@ import java.util.Map;
  * @author Olaf Danne
  */
 @SuppressWarnings({"FieldCanBeLocal"})
-@OperatorMetadata(alias = "idepix.globcover",
+@OperatorMetadata(alias = "idepix.schiller",
                   version = "1.4-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
@@ -103,7 +103,7 @@ public class SchillerOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(SchillerOp.class);
+            super(SchillerOp.class, "idepix.schiller");
         }
     }
 }

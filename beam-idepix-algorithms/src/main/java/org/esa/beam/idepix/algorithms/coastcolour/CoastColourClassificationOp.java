@@ -38,6 +38,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.operators.LisePressureOp;
+import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.seaice.SeaIceClassification;
 import org.esa.beam.idepix.seaice.SeaIceClassifier;
 import org.esa.beam.idepix.util.IdepixUtils;
@@ -64,7 +65,7 @@ import java.util.Map;
 /**
  * This class provides the Mepix QWG cloud classification.
  */
-@OperatorMetadata(alias = "Meris.CoastColourCloudClassification",
+@OperatorMetadata(alias = "idepix.coastcolour.classification",
                   version = "1.0",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
@@ -72,22 +73,18 @@ import java.util.Map;
                   description = "MERIS L2 cloud classification (version from MEPIX processor).")
 public class CoastColourClassificationOp extends MerisBasisOp {
 
-    public static final String CLOUD_FLAGS = "cloud_classif_flags";
-    public static final String PRESSURE_CTP = "cloud_top_press";
-    public static final String PRESSURE_SURFACE = "surface_press";
-    public static final String SCATT_ANGLE = "scattering_angle";
-    public static final String RHO_THRESH_TERM = "rho442_thresh_term";
-    public static final String RHO_GLINT = "rho_glint";
-    public static final String MDSI = "mdsi";
-
-    private static final int BAND_BRIGHT_N = 0;
-    private static final int BAND_SLOPE_N_1 = 1;
-    private static final int BAND_SLOPE_N_2 = 2;
+    public static final String CLOUD_FLAGS = MerisClassificationOp.CLOUD_FLAGS;
+    public static final String PRESSURE_CTP = MerisClassificationOp.PRESSURE_CTP;
+    public static final String PRESSURE_SURFACE = MerisClassificationOp.PRESSURE_SURFACE;
+    public static final String SCATT_ANGLE = MerisClassificationOp.SCATT_ANGLE;
+    public static final String RHO_THRESH_TERM = MerisClassificationOp.RHO_THRESH_TERM;
+    public static final String MDSI = MerisClassificationOp.MDSI;
 
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
     public static final int F_BRIGHT_RC = 2;
     public static final int F_LOW_PSCATT = 3;
+    public static final int F_CLOUD_AMBIGUOUS = 4;
     public static final int F_SLOPE_1 = 5;
     public static final int F_SLOPE_2 = 6;
     public static final int F_BRIGHT_TOA = 7;
@@ -99,7 +96,12 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final int F_LAND = 13;
     public static final int F_COASTLINE = 14;
     public static final int F_MIXED_PIXEL = 15;
-    public static final int F_CLOUD_AMBIGUOUS = 4;
+
+    private static final String RHO_GLINT = "rho_glint";
+
+    private static final int BAND_BRIGHT_N = MerisClassificationOp.BAND_BRIGHT_N;
+    private static final int BAND_SLOPE_N_1 = MerisClassificationOp.BAND_SLOPE_N_1;
+    private static final int BAND_SLOPE_N_2 = MerisClassificationOp.BAND_SLOPE_N_2;
 
     private SchillerAlgorithm landWaterNN;
     private L2AuxData auxData;
@@ -778,7 +780,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(CoastColourClassificationOp.class);
+            super(CoastColourClassificationOp.class, "idepix.coastcolour.classification");
         }
     }
 }

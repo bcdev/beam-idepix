@@ -13,10 +13,9 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
-import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 import org.esa.beam.idepix.operators.BasisOp;
-import org.esa.beam.idepix.operators.IdepixCloudClassificationOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
+import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.GaseousCorrectionOp;
 import org.esa.beam.meris.brr.LandClassificationOp;
@@ -123,17 +122,11 @@ public class IpfOp extends BasisOp {
                label = " L2 Cloud Top Pressure with FUB Straylight Correction (applied to RR products only!)")
     private boolean pressureQWGOutputCtpStraylightCorrFub = false;
 
-    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
-    private boolean pressureOutputP1Lise = false;
-
     @Parameter(defaultValue = "false", label = " Surface Pressure (LISE, O2 project, land)")
     private boolean pressureOutputPSurfLise = false;
 
     @Parameter(defaultValue = "false", label = " 'P2' (LISE, O2 project, ocean)")
     private boolean pressureOutputP2Lise = false;
-
-    @Parameter(defaultValue = "false", label = " 'PScatt' (LISE, O2 project, ocean)")
-    private boolean pressureOutputPScattLise = false;
 
 
     // Cloud product parameters
@@ -182,15 +175,15 @@ public class IpfOp extends BasisOp {
         pressureLiseProduct = IdepixProducts.
                 computePressureLiseProduct(sourceProduct, rad2reflProduct, ipfOutputL2CloudDetection,
                                            straylightCorr,
-                                           pressureOutputP1Lise,
+                                           true,
                                            pressureOutputPSurfLise,
                                            pressureOutputP2Lise,
-                                           pressureOutputPScattLise);
+                                           true);
 
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
                 pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection) {
             merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
-                                                    pressureLiseProduct, pbaroProduct,ipfOutputL2Pressures);
+                                                                        pressureLiseProduct, pbaroProduct, ipfOutputL2Pressures);
         }
 
         Product gasProduct = null;
@@ -241,179 +234,53 @@ public class IpfOp extends BasisOp {
         }
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
+
+        addBandsToTargetProduct(ctpStraylightProduct, gasProduct, landProduct, blueBandProduct,
+                                cloudProbabilityProduct, psurfNNProduct, combinedCloudProduct);
+
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+        MerisClassificationOp.addBitmasks(sourceProduct, targetProduct);
+    }
+
+    private void addBandsToTargetProduct(Product ctpStraylightProduct, Product gasProduct, Product landProduct, Product blueBandProduct, Product cloudProbabilityProduct, Product psurfNNProduct, Product combinedCloudProduct) {
         if (ipfOutputRad2Refl) {
-            addRadiance2ReflectanceBands();
+            IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }
 
         if (ipfOutputL2CloudDetection) {
-            addCloudClassificationFlagBand();
+            IdepixProducts.addCloudClassificationFlagBand(merisCloudProduct, targetProduct);
         }
 
         if (ipfOutputGaseous) {
-            addGaseousCorrectionBands(gasProduct);
+            IdepixProducts.addGaseousCorrectionBands(gasProduct, targetProduct);
         }
         if (ipfOutputRayleigh) {
-            addRayleighCorrectionBands();
+            IdepixProducts.addRayleighCorrectionBands(rayleighProduct, targetProduct);
         }
         if (ipfOutputLandWater) {
-            addLandClassificationBand(landProduct);
+            IdepixProducts.addLandClassificationBand(landProduct, targetProduct);
         }
         if (straylightCorr && pressureQWGOutputCtpStraylightCorrFub) {
-            addCtpStraylightProductBands(ctpStraylightProduct);
+            IdepixProducts.addCtpStraylightProductBands(ctpStraylightProduct, targetProduct);
         }
         if (pressureOutputPbaro) {
-            addBarometricPressureProductBands();
+            IdepixProducts.addBarometricPressureProductBands(pbaroProduct, targetProduct);
         }
         if (pressureOutputPsurfFub) {
-            addPsurfNNProductBands(psurfNNProduct);
+            IdepixProducts.addPsurfNNProductBands(psurfNNProduct, targetProduct);
         }
-        addPressureLiseProductBands();
+        IdepixProducts.addPressureLiseProductBands(pressureLiseProduct, targetProduct,
+                                                   pressureOutputPSurfLise, pressureOutputP2Lise);
         if (cloudOutputBlueBand) {
-            addBlueBandProductBands(blueBandProduct);
+            IdepixProducts.addBlueBandProductBands(blueBandProduct, targetProduct);
         }
         if (cloudOutputCloudProbability) {
-            addCloudProbabilityProductBands(cloudProbabilityProduct);
+            IdepixProducts.addCloudProbabilityProductBands(cloudProbabilityProduct, targetProduct);
         }
         if (cloudOutputCombinedCloud) {
-            addCombinedCloudProductBands(combinedCloudProduct);
-        }
-
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
-        IdepixCloudClassificationOp.addBitmasks(sourceProduct, targetProduct);
-    }
-
-    private void addCombinedCloudProductBands(Product combinedCloudProduct) {
-        FlagCoding flagCoding = CombinedCloudOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        Band band = combinedCloudProduct.getBand(CombinedCloudOp.FLAG_BAND_NAME);
-        band.setSampleCoding(flagCoding);
-        moveBand(combinedCloudProduct, CombinedCloudOp.FLAG_BAND_NAME);
-    }
-
-    private void addCloudProbabilityProductBands(Product cloudProbabilityProduct) {
-        FlagCoding flagCoding = CloudProbabilityOp.createCloudFlagCoding(targetProduct);
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : cloudProbabilityProduct.getBands()) {
-            if (!targetProduct.containsBand(band.getName())) {
-                if (band.getName().equals(CloudProbabilityOp.CLOUD_FLAG_BAND)) {
-                    band.setSampleCoding(flagCoding);
-                }
-                targetProduct.addBand(band);
-            }
+            IdepixProducts.addCombinedCloudProductBands(combinedCloudProduct, targetProduct);
         }
     }
-
-    private void addRadiance2ReflectanceBands() {
-        for (String bandname : rad2reflProduct.getBandNames()) {
-            moveBand(rad2reflProduct, bandname);
-        }
-    }
-
-    private void addCloudClassificationFlagBand() {
-        FlagCoding flagCoding = CoastColourClassificationOp.createFlagCoding(
-                CoastColourClassificationOp.CLOUD_FLAGS);
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : merisCloudProduct.getBands()) {
-            if (band.getName().equals(CoastColourClassificationOp.CLOUD_FLAGS)) {
-                band.setSampleCoding(flagCoding);
-                targetProduct.addBand(band);
-            }
-        }
-    }
-
-    private void moveBand(Product product, String bandname) {
-        if (!targetProduct.containsBand(bandname)) {
-            targetProduct.addBand(product.getBand(bandname));
-        }
-    }
-
-    private void addBlueBandProductBands(Product blueBandProduct) {
-        FlagCoding flagCoding = BlueBandOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        Band band = blueBandProduct.getBand(BlueBandOp.BLUE_FLAG_BAND);
-        band.setSampleCoding(flagCoding);
-        moveBand(blueBandProduct, BlueBandOp.BLUE_FLAG_BAND);
-    }
-
-    private void addPressureLiseProductBands() {
-        if (pressureOutputP1Lise) {
-            addPressureLiseProductBand(LisePressureOp.PRESSURE_LISE_P1);
-        }
-        if (pressureOutputPSurfLise) {
-            addPressureLiseProductBand(LisePressureOp.PRESSURE_LISE_PSURF);
-        }
-        if (pressureOutputP2Lise) {
-            addPressureLiseProductBand(LisePressureOp.PRESSURE_LISE_P2);
-        }
-        if (pressureOutputPScattLise) {
-            addPressureLiseProductBand(LisePressureOp.PRESSURE_LISE_PSCATT);
-        }
-    }
-
-
-    private void addPressureLiseProductBand(String bandname) {
-        moveBand(pressureLiseProduct, bandname);
-    }
-
-    private void addPsurfNNProductBands(Product psurfNNProduct) {
-        for (String bandname : psurfNNProduct.getBandNames()) {
-            moveBand(psurfNNProduct, bandname);
-        }
-    }
-
-    private void addBarometricPressureProductBands() {
-        for (String bandname : pbaroProduct.getBandNames()) {
-            moveBand(pbaroProduct, bandname);
-        }
-    }
-
-
-    private void addCtpStraylightProductBands(Product ctpProductStraylight) {
-        for (String bandname : ctpProductStraylight.getBandNames()) {
-            if (!bandname.equals(IdepixCloudClassificationOp.CLOUD_FLAGS)) {
-                moveBand(ctpProductStraylight, bandname);
-            }
-        }
-    }
-
-    private void addLandClassificationBand(Product landProduct) {
-        FlagCoding flagCoding = LandClassificationOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : landProduct.getBands()) {
-            if (!targetProduct.containsBand(band.getName())) {
-                if (band.getName().equals(LandClassificationOp.LAND_FLAGS)) {
-                    band.setSampleCoding(flagCoding);
-                }
-                targetProduct.addBand(band);
-            }
-        }
-    }
-
-    private void addRayleighCorrectionBands() {
-        int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
-        FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : rayleighProduct.getBands()) {
-            // do not add the normalized bands
-            if (!targetProduct.containsBand(band.getName()) && !band.getName().endsWith("_n")) {
-                if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
-                    band.setSampleCoding(flagCoding);
-                }
-                targetProduct.addBand(band);
-                targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
-            }
-        }
-    }
-
-    private void addGaseousCorrectionBands(Product gasProduct) {
-        FlagCoding flagCoding = GaseousCorrectionOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        Band band = gasProduct.getBand(GaseousCorrectionOp.GAS_FLAGS);
-        band.setSampleCoding(flagCoding);
-        targetProduct.addBand(band);
-    }
-
-
 
     /**
      * The Service Provider Interface (SPI) for the operator.
@@ -422,7 +289,7 @@ public class IpfOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IpfOp.class);
+            super(IpfOp.class, "idepix.ipf");
         }
     }
 }

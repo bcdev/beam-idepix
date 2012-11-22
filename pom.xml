@@ -85,6 +85,26 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- IDEPIX Libraries ############################################# -->
+
+            <dependency>
+                <groupId>org.esa.beam.idepix</groupId>
+                <artifactId>beam-idepix-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam.idepix</groupId>
+                <artifactId>beam-idepix-algorithms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam.idepix</groupId>
+                <artifactId>beam-idepix-operators</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Ceres System Level Module ############################################# -->
 
             <dependency>

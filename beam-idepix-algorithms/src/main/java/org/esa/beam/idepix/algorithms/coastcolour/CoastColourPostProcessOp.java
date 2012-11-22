@@ -34,7 +34,7 @@ import java.util.List;
  * @author Marco
  * @since Idepix 1.3.1
  */
-@OperatorMetadata(alias = "Meris.CoastColourPostProcessCloud",
+@OperatorMetadata(alias = "idepix.coastcolour.postprocess",
                   version = "1.1",
                   internal = true,
                   authors = "Marco Peters",
@@ -548,7 +548,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(CoastColourPostProcessOp.class);
+            super(CoastColourPostProcessOp.class, "idepix.coastcolour.postprocess");
         }
     }
 }
