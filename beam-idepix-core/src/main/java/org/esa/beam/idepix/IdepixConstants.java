@@ -29,64 +29,6 @@ public class IdepixConstants {
     public static final int F_VEG_RISK = 14;
     public static final int F_GLINT_RISK = 15;
 
-    public static final String[] ipfParameterNames = new String[]{
-            "ipfOutputRad2Refl", "ipfOutputGaseous", "ipfOutputLandWater", "ipfOutputRayleigh",
-            "ipfOutputL2Pressures", "ipfOutputL2CloudDetection",
-            "ipfQWGUserDefinedP1PressureThreshold", "ipfQWGUserDefinedPScattPressureThreshold",
-            "ipfQWGUserDefinedRhoToa442Threshold", "ipfQWGUserDefinedDeltaRhoToa442Threshold",
-            "ipfQWGUserDefinedRhoToa753Threshold", "ipfQWGUserDefinedRhoToaRatio753775Threshold",
-            "ipfQWGUserDefinedMDSIThreshold"
-    };
-
-    public static final String[] pressureParameterNames = new String[]{
-            "pressureOutputPbaro", "pressurePbaroGetasse", "pressureOutputPsurfFub", "pressureFubTropicalAtmosphere",
-            "pressureQWGOutputCtpStraylightCorrFub", "pressureOutputP1Lise", "pressureOutputPSurfLise",
-            "pressureOutputP2Lise", "pressureOutputPScattLise"
-    };
-
-    public static final String[] cloudProductParameterNames = new String[]{
-            "cloudOutputBlueBand", "cloudOutputCloudProbability", "cloudOutputCombinedCloud"
-    };
-
-    public static final String[] cloudScreeningParameterNames = new String[]{
-            "algorithm"
-    };
-
-    public static final String[] globalbedoParameterNames = new String[]{
-            "gaCopyRadiances",
-            "gaComputeFlagsOnly",
-            "gaCopyPressure",
-            "gaComputeMerisCloudShadow",
-            "ctpMode",
-            "gaCopyAnnotations",
-            "gaUseAatsrFwardForClouds",
-            "gaCloudBufferWidth",
-            "wmResolution",
-            "wmFill",
-            "gaUseL1bLandWaterFlag",
-            "gaUseWaterMaskFraction"
-    };
-
-    public static final String[] coastcolourParameterNames = new String[]{
-            "ccOutputRad2Refl", "ccOutputGaseous", "ccOutputRayleigh",
-            "ccOutputL2Pressures", "ccOutputL2CloudDetection",
-            "ccUserDefinedPScattPressureThreshold",
-            "ccUserDefinedGlintThreshold",
-            "ccUserDefinedRhoToa753Threshold",
-            "ccUserDefinedMDSIThreshold",
-            "ccUserDefinedNDVIThreshold",
-            "ccUserDefinedRhoToa442Threshold",
-            "ccRhoAgReferenceWavelength",
-            "ccCloudBufferWidth",
-            "ccUseL1bLandFlag",
-            "ccLandMaskResolution",
-            "ccOversamplingFactorX",
-            "ccOversamplingFactorY",
-            "ccSeaIceThreshold",
-            "ccSchillerAmbiguous",
-            "ccSchillerSure"
-    };
-
 
     public static String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
 
@@ -99,8 +41,6 @@ public class IdepixConstants {
     public static String VGT_RADIANCE_2_BAND_NAME = "B2";
     public static String VGT_RADIANCE_3_BAND_NAME = "B3";
     public static String VGT_RADIANCE_MIR_BAND_NAME = "MIR";
-
-    public static String VGT_SM_FLAG_BAND_NAME = "SM";
 
     public static final int NO_DATA_VALUE = -1;
 
@@ -158,13 +98,6 @@ public class IdepixConstants {
     };
     public static final float[] AATSR_TEMP_WAVELENGTHS = {370.0f, 1100.0f, 1200.0f, 370.0f, 1100.0f, 1200.0f};
 
-    public static String[] AATSR_FLAG_BAND_NAMES = {
-            "confid_flags_nadir", // 0
-            "cloud_flags_nadir", // 1
-            "confid_flags_fward", // 2
-            "cloud_flags_fward", // 3
-    };
-
     public static final float[] MERIS_WAVELENGTHS =
             {
                     412.7f, 442.5f, 489.9f, 509.8f, 559.7f, 619.6f, 664.6f, 680.8f,
@@ -194,14 +127,6 @@ public class IdepixConstants {
                     " - GlobColour for MERIS, AATSR, VGT products \n" +
                     " - CoastColour for MERIS products ";
 
-
-    public static final int IO_TAB_INDEX = 0;
-    public static final int CLOUDSCREENING_TAB_INDEX = 1;
-    public static final int IPF_TAB_INDEX = 2;
-    public static final int PRESSURE_TAB_INDEX = 3;
-    public static final int CLOUDS_TAB_INDEX = 4;
-    public static final int GLOBALBEDO_TAB_INDEX = 5;
-    public static final int COASTCOLOUR_TAB_INDEX = 6;
 
     public static final String ctpModeDefault = "Derive from Neural Net";
 

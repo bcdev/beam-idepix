@@ -11,10 +11,6 @@ import java.util.List;
  * Bresenham's famous line drawing algorithm. Works for 2D.
  */
 public class Bresenham {
-    /**
-     * The start and end of the line
-     */
-    private int x1, y1, x2, y2;
 
     /**
      * Used for calculation
@@ -38,10 +34,9 @@ public class Bresenham {
      * @return the length of the line (which will be 1 more than you are expecting).
      */
     public int plot(int x1, int y1, int x2, int y2) {
-        this.x1 = x1;
-        this.x2 = x2;
-        this.y1 = y1;
-        this.y2 = y2;
+        /*
+      The start and end of the line
+     */
 
         // compute horizontal and vertical deltas
         dx = x2 - x1;
@@ -225,7 +220,6 @@ public class Bresenham {
                     yPos = h;
                 } else {
                     // check fourth quadrant
-                    // todo
                     double lrAngle = 270.0 + MathUtils.RTOD * Math.atan((w - x) * 1.0 / (h - y));
                     if (angle > 270.0 && angle <= lrAngle) {
                         // border pixel is in seventh octant

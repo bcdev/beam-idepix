@@ -18,11 +18,7 @@ package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -41,8 +37,7 @@ import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 
 import static org.esa.beam.meris.l2auxdata.Constants.*;
 
@@ -205,7 +200,7 @@ public class MerisClassificationOp extends MerisBasisOp {
     }
 
 
-    private SourceData loadSourceTiles(Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
+    private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
 
         SourceData sd = new SourceData();
         sd.rhoToa = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS][0];
@@ -250,7 +245,7 @@ public class MerisClassificationOp extends MerisBasisOp {
 
         Rectangle rectangle = targetTile.getRectangle();
         try {
-            SourceData sd = loadSourceTiles(rectangle, pm);
+            SourceData sd = loadSourceTiles(rectangle);
 
             Tile ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), rectangle);
             Tile pbaroTile = getSourceTile(pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC), rectangle);
@@ -281,6 +276,7 @@ public class MerisClassificationOp extends MerisBasisOp {
                         pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
                         pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
+                        pixelInfo.angleInfo = getAngleInfo(sd, pixelInfo);
 
                         if (band == cloudFlagBand) {
                             classifyCloud(sd, pixelInfo, targetTile);
@@ -293,13 +289,12 @@ public class MerisClassificationOp extends MerisBasisOp {
                         }
 
                         // test, 30.10.09
-                        // todo: check with CB if we still need these
                         if (band == scattAngleOutputBand) {
-                            final double thetaScatt = calcScatteringAngle(sd, pixelInfo);
+                            final double thetaScatt = calcScatteringAngle(pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, thetaScatt);
                         }
                         if (band == rhoThreshOutputBand) {
-                            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(sd, pixelInfo);
+                            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoThreshOffsetTerm);
                         }
                         // end test
@@ -376,29 +371,32 @@ public class MerisClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, mdsi);
     }
 
-    private double calcScatteringAngle(SourceData dc, PixelInfo pixelInfo) {
-        // todo: refactor: code duplication R1
-        // todo: optimize: compute value once, store as dc.sins, dc.sinv, etc.
-        double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
-        double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
-        double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
-        double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+    private AngleInfo getAngleInfo(SourceData dc, PixelInfo pixelInfo) {
+        AngleInfo angleInfo = new AngleInfo();
+
+        angleInfo.sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        angleInfo.sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
+        angleInfo.coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
+        angleInfo.cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         // delta azimuth in degree
-        // todo: optimize: compute value once, store as dc.deltaAzimuth
-        final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
+        angleInfo.deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
                                                                              dc.saa[pixelInfo.index]);
 
-        // Compute the geometric conditions
-        final double cosphi = Math.cos(deltaAzimuth * MathUtils.DTOR);
-
-        // scattering angle in degree
-        return MathUtils.RTOD * Math.acos(-coss * cosv - sins * sinv * cosphi);
+        return angleInfo;
     }
 
-    private double calcRhoToa442ThresholdTerm(SourceData dc, PixelInfo pixelInfo) {
-        final double thetaScatt = calcScatteringAngle(dc, pixelInfo) * MathUtils.DTOR;
+    private double calcScatteringAngle(PixelInfo pixelInfo) {
+        final AngleInfo ai = pixelInfo.angleInfo;
+        // Compute the geometric conditions
+        final double cosphi = Math.cos(ai.deltaAzimuth * MathUtils.DTOR);
+
+        // scattering angle in degree
+        return MathUtils.RTOD * Math.acos(-ai.coss * ai.cosv - ai.sins * ai.sinv * cosphi);
+    }
+
+    private double calcRhoToa442ThresholdTerm(PixelInfo pixelInfo) {
+        final double thetaScatt = calcScatteringAngle(pixelInfo) * MathUtils.DTOR;
         return userDefinedRhoToa442Threshold + userDefinedDeltaRhoToa442Threshold *
-//                                             userDefinedDeltaRhoToa442ThresholdFactor *
                 Math.cos(thetaScatt) * Math.cos(thetaScatt);
     }
 
@@ -421,18 +419,9 @@ public class MerisClassificationOp extends MerisBasisOp {
         //Rayleigh correction
         final double[] rhoRay = new double[L1_BAND_NUM];
 
-        // todo: refactor: code duplication R1
-        // todo: optimize: compute value once, store as dc.sins, dc.sinv, etc.
-        double sins = Math.sin(dc.sza[pixelInfo.index] * MathUtils.DTOR);
-        double sinv = Math.sin(dc.vza[pixelInfo.index] * MathUtils.DTOR);
-        double coss = Math.cos(dc.sza[pixelInfo.index] * MathUtils.DTOR);
-        double cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
-        // todo: optimize: compute value once, store as dc.deltaAzimuth
-        final double deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
-                                                                             dc.saa[pixelInfo.index]);
-
+        final AngleInfo ai = pixelInfo.angleInfo;
         /* Rayleigh phase function Fourier decomposition */
-        rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
+        rayleighCorrection.phase_rayleigh(ai.coss, ai.cosv, ai.sins, ai.sinv, phaseR);
 
         double press = pixelInfo.ecmwfPressure; /* DPM #2.1.7-1 v1.1 */
 
@@ -440,8 +429,8 @@ public class MerisClassificationOp extends MerisBasisOp {
         rayleighCorrection.tau_rayleigh(press, tauR); /* DPM #2.1.7-2 */
 
         /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
-        rayleighCorrection.ref_rayleigh(deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
-                                        coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
+        rayleighCorrection.ref_rayleigh(ai.deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
+                                        ai.coss, ai.cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
 
         /* DPM #2.1.7-4 */
         for (int band = bb412; band <= bb900; band++) {
@@ -451,13 +440,10 @@ public class MerisClassificationOp extends MerisBasisOp {
         PixelId pixelId = new PixelId(auxData);
         boolean isLand = dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND);
         /* Interpolate threshold on rayleigh corrected reflectance - DPM #2.1.7-9 */
-        double rhorc_442_thr = pixelId.getRhoRC442thr(dc.sza[pixelInfo.index], dc.vza[pixelInfo.index], deltaAzimuth, isLand);
+        double rhorc_442_thr = pixelId.getRhoRC442thr(dc.sza[pixelInfo.index], dc.vza[pixelInfo.index], ai.deltaAzimuth, isLand);
 
         /* Derive bright flag by reflectance comparison to threshold - DPM #2.1.7-10 */
         boolean bright_f;
-        // TODO (20.12.2010) - assignment is never used
-//        boolean bright_f = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-//                           || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
 
         /* Spectral slope processor.brr 1 */
         boolean slope1_f = pixelId.isSpectraSlope1Flag(rhoAg, dc.radiance[BAND_SLOPE_N_1].getSampleFloat(pixelInfo.x, pixelInfo.y));
@@ -465,7 +451,6 @@ public class MerisClassificationOp extends MerisBasisOp {
         boolean slope2_f = pixelId.isSpectraSlope2Flag(rhoAg, dc.radiance[BAND_SLOPE_N_2].getSampleFloat(pixelInfo.x, pixelInfo.y));
 
         boolean bright_toa_f = false;
-        // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
                 || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (dc.l1Flags.getSampleBit(pixelInfo.x, pixelInfo.y, L1_F_LAND)) {   /* land pixel */
@@ -473,7 +458,7 @@ public class MerisClassificationOp extends MerisBasisOp {
         } else {
 
             // test, 30.10.09:
-            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
+            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(pixelInfo);
             bright_toa_f = (dc.rhoToa[bb442][pixelInfo.index] > rhoThreshOffsetTerm);
             bright_f = bright_rc || bright_toa_f;
         }
@@ -532,7 +517,17 @@ public class MerisClassificationOp extends MerisBasisOp {
         float p1Pressure;
         float pscattPressure;
         float ctp;
+        AngleInfo angleInfo;
     }
+
+    private static class AngleInfo {
+        double sins;
+        double sinv;
+        double coss;
+        double cosv;
+        double deltaAzimuth;
+    }
+
 
     public static class Spi extends OperatorSpi {
 

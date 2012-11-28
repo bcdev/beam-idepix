@@ -5,10 +5,7 @@ import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 19.11.12
- * Time: 10:24
+ * IDEPIX pixel identification algorithm for GlobAlbedo/VGT
  *
  * @author olafd
  */
@@ -31,16 +28,15 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     public static final int SM_F_LAND = 3;
 
     private boolean smLand;
-    private float ndsiThresh;
 
     @Override
     public boolean isCloud() {
-        if (isInvalid()) {
-            return false;
+        if (!isInvalid()) {
+            if (((whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && !isClearSnow())) {
+                return true;
+            }
         }
-        return (!isInvalid() &&
-                (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) &&
-                !isClearSnow());
+        return false;
     }
 
     @Override
@@ -72,8 +68,7 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
                                                         IdepixConstants.VGT_WAVELENGTHS[1],
                                                         IdepixConstants.VGT_WAVELENGTHS[2]);
         final double flatness = 1.0f - Math.abs(2000.0 * (slope0 + slope1) / 2.0);
-        float result = (float) Math.max(0.0f, flatness);
-        return result;
+        return (float) Math.max(0.0f, flatness);
     }
 
     @Override
@@ -202,10 +197,6 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setSmLand(boolean smLand) {
         this.smLand = smLand;
-    }
-
-    public void setNdsiThresh(float ndsiThresh) {
-        this.ndsiThresh = ndsiThresh;
     }
 
     public void setRefl(float[] refl) {

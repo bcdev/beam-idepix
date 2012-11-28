@@ -152,7 +152,6 @@ public class GlobAlbedoClassificationOp extends Operator {
         }
 
         switch (sourceProductTypeId) {
-            // todo - put different sensor computations into different strategy modules
             case IdepixConstants.PRODUCT_TYPE_MERIS:
                 strategy = new MerisWatermaskStrategy();
                 break;
@@ -640,10 +639,6 @@ public class GlobAlbedoClassificationOp extends Operator {
             pixelPos.setLocation(x + 0.5f, y + 0.5f);
             final GeoPos geoPos = new GeoPos();
             geoCoding.getGeoPos(pixelPos, geoPos);
-            final float latitude = geoPos.getLat();
-            if (Math.abs(latitude) > 70.0f) {
-                gaAlgorithm.setNdsiThresh(0.65f);  // works better for polar regions, e.g. at DomeC site
-            }
         }
 
         return gaAlgorithm;
@@ -675,7 +670,6 @@ public class GlobAlbedoClassificationOp extends Operator {
         final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, GlobAlbedoAatsrAlgorithm.L1B_F_LAND) &&
                 !(watermaskSample == WatermaskClassifier.WATER_VALUE);
         gaAlgorithm.setL1FlagLand(isLand);
-        gaAlgorithm.setL1FlagGlintRisk(aatsrL1bFlagTile.getSampleBit(x, y, GlobAlbedoAatsrAlgorithm.L1B_F_GLINT_RISK));
         setIsWater(watermaskSample, gaAlgorithm);
 
         return gaAlgorithm;
@@ -747,19 +741,19 @@ public class GlobAlbedoClassificationOp extends Operator {
     }
 
     // currently not used
-    private void printPixelFeatures(GlobAlbedoAlgorithm algorithm) {
-        System.out.println("bright            = " + algorithm.brightValue());
-        System.out.println("white             = " + algorithm.whiteValue());
-        System.out.println("temperature       = " + algorithm.temperatureValue());
-        System.out.println("spec_flat         = " + algorithm.spectralFlatnessValue());
-        System.out.println("ndvi              = " + algorithm.ndviValue());
-        System.out.println("ndsi              = " + algorithm.ndsiValue());
-        System.out.println("pressure          = " + algorithm.pressureValue());
-        System.out.println("cloudy            = " + algorithm.isCloud());
-        System.out.println("clear snow        = " + algorithm.isClearSnow());
-        System.out.println("radiometric_land  = " + algorithm.radiometricLandValue());
-        System.out.println("radiometric_water = " + algorithm.radiometricWaterValue());
-    }
+//    private void printPixelFeatures(GlobAlbedoAlgorithm algorithm) {
+//        System.out.println("bright            = " + algorithm.brightValue());
+//        System.out.println("white             = " + algorithm.whiteValue());
+//        System.out.println("temperature       = " + algorithm.temperatureValue());
+//        System.out.println("spec_flat         = " + algorithm.spectralFlatnessValue());
+//        System.out.println("ndvi              = " + algorithm.ndviValue());
+//        System.out.println("ndsi              = " + algorithm.ndsiValue());
+//        System.out.println("pressure          = " + algorithm.pressureValue());
+//        System.out.println("cloudy            = " + algorithm.isCloud());
+//        System.out.println("clear snow        = " + algorithm.isClearSnow());
+//        System.out.println("radiometric_land  = " + algorithm.radiometricLandValue());
+//        System.out.println("radiometric_water = " + algorithm.radiometricWaterValue());
+//    }
 
 
     /**

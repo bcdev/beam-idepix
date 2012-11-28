@@ -5,7 +5,6 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.idepix.util.IdepixUtils;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**

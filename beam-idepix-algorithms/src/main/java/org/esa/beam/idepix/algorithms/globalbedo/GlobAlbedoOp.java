@@ -106,7 +106,7 @@ public class GlobAlbedoOp extends BasisOp {
             pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, gaUseGetasse);
             ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
             pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                                                                            true, true, true, false, false, true);
+                                                                            true, false, true, false, false, true);
             merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
                                                                         pressureLiseProduct, pbaroProduct, true);
             final Product gasProduct = IdepixProducts.

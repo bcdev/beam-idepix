@@ -14,10 +14,7 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
-import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.GaseousCorrectionOp;
-import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
@@ -60,6 +57,9 @@ public class CoastColourOp extends BasisOp {
 
     @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances and Mixed Pixel Flag")
     private boolean ccOutputRayleigh = true;
+
+    @Parameter(defaultValue = "true", label = " Mixed Pixel Flag")
+    private boolean ccMixedPixel= true;
 
     @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
     private boolean ccOutputL2Pressures = true;
@@ -131,21 +131,18 @@ public class CoastColourOp extends BasisOp {
                                                                         false,
                                                                         true, false, false, true);
 
-
         computeCoastColourMerisCloudProduct();
 
-        if (ccOutputGaseous || ccOutputRayleigh) {
-            gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
-        }
+        gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
 
+        // todo: check if it is ok to use merisCloudProduct as 'land product' (as implemented in old Idepix)
+        rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct,
+                                                                          merisCloudProduct, merisCloudProduct,
+                                                                          ccOutputRayleigh,
+                                                                          CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
 
         Product smaProduct = null;
-        if (ccOutputRayleigh) {
-            // todo: check if it is ok to use merisCloudProduct as 'land product' (as implemented in old Idepix)
-            rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct,
-                                                                              merisCloudProduct, merisCloudProduct,
-                                                                              ccOutputRayleigh,
-                                                                              CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
+        if (ccMixedPixel) {
             smaProduct = IdepixProducts.computeSpectralUnmixingProduct(rayleighProduct, true);
         }
 

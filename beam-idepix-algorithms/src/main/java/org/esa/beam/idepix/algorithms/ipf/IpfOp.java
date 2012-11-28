@@ -1,8 +1,6 @@
 package org.esa.beam.idepix.algorithms.ipf;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -14,15 +12,9 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
-import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.GaseousCorrectionOp;
 import org.esa.beam.meris.brr.LandClassificationOp;
-import org.esa.beam.meris.brr.RayleighCorrectionOp;
-import org.esa.beam.meris.cloud.BlueBandOp;
-import org.esa.beam.meris.cloud.CloudProbabilityOp;
-import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.util.ProductUtils;
 
 /**

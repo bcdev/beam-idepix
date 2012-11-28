@@ -35,8 +35,4 @@ public abstract class AbstractPixelProperties implements PixelProperties {
     public void setIsWater(boolean isWater) {
         this.isWater = isWater;
     }
-
-    public void setUsel1bLandWaterFlag(boolean usel1bLandWaterFlag) {
-        this.usel1bLandWaterFlag = usel1bLandWaterFlag;
-    }
 }

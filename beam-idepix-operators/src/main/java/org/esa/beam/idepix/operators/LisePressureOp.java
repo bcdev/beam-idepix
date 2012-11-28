@@ -172,7 +172,6 @@ public class LisePressureOp extends BasisOp {
 
     private L2AuxData auxData;
     private VirtualBandOpImage invalidImage;
-    private VirtualBandOpImage invalidOceanImage;
     private VirtualBandOpImage invalidLandImage;
     private LUT coeffLUT;
     private Band psurfLiseBand;
@@ -203,12 +202,14 @@ public class LisePressureOp extends BasisOp {
      * This method computes the different Lise pressures for a given pixel
      *
      *
+     *
+     *
      * @param rayleighCorrection
      * @param auxData
-     *@param pressureIndex:      - 0: press_toa
-     *                            - 1: press_surface
-     *                            - 2: press_bottom_rayleigh
-     *                            - 3: press_bottom_fresnel
+     * @param pressureIndex:      - 0: press_toa
+ *                            - 1: press_surface
+ *                            - 2: press_bottom_rayleigh
+ *                            - 3: press_bottom_fresnel
      * @param szaDeg              - sun zenith angle (degrees)
      * @param vzaDeg              - view zenith angle (degrees)
      * @param csza                - cosine of sza
@@ -220,11 +221,8 @@ public class LisePressureOp extends BasisOp {
      * @param rhoToa11            - reflectance band 11
      * @param rhoToa12            - reflectance band 12
      * @param w0
-     * @param altitude
-     * @param ecmwfPressure
-     * @param pressureScaleHeight
      * @param airMass
-*                 @return
+     * @return
      */
     public double computeLisePressures(RayleighCorrection rayleighCorrection,
                                        L2AuxData auxData, final int pressureIndex,
@@ -232,7 +230,6 @@ public class LisePressureOp extends BasisOp {
                                        final double ssza, final double svza, final double azimDiff,
                                        final double rhoToa10, final double rhoToa11, final double rhoToa12,
                                        final double w0,
-                                       final float altitude, final float ecmwfPressure, double pressureScaleHeight,
                                        final double airMass) {
 
         // Determine nearest filter
@@ -289,9 +286,8 @@ public class LisePressureOp extends BasisOp {
         // Compute Rayleigh reflectance at 761
         double ray761;
         if (rayleighCorrection != null && auxData != null) {
-            final double press = HelperFunctions.correctEcmwfPressure(ecmwfPressure, altitude, pressureScaleHeight); /* DPM #2.6.15.1-3 */
             ray761 = computeRayleighReflectanceCh11(rayleighCorrection, auxData, szaDeg, vzaDeg,
-                                                    ssza, svza, csza, cvza, azimDiff, press);
+                                                    ssza, svza, csza, cvza, azimDiff);
         } else {
             ray761 = computeRayleighReflectance(szaDeg, vzaDeg, theta, standardSeaSurfacePressure);
         }
@@ -809,7 +805,7 @@ public class LisePressureOp extends BasisOp {
                                                   double szaDeg,
                                                   double vzaDeg,
                                                   double sins, double sinv, double mus, double muv,
-                                                  double azimDiff, double pressure) {
+                                                  double azimDiff) {
         final double sza = szaDeg * MathUtils.DTOR;
         final double vza = vzaDeg * MathUtils.DTOR;
         final double azimDiffDeg = azimDiff * MathUtils.RTOD;
@@ -978,8 +974,8 @@ public class LisePressureOp extends BasisOp {
 
 
     private double getPressureResult(RayleighCorrection rayleighCorrection, int pressureResultIndex, Tile sza,
-                                     Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                                     Tile ecmwfPressureTile, Tile rhoToa10Tile, Tile rhoToa11Tile, Tile rhoToa12Tile,
+                                     Tile vza, Tile saa, Tile vaa,
+                                     Tile rhoToa10Tile, Tile rhoToa11Tile, Tile rhoToa12Tile,
                                      int y, int x,
                                      final int detectorIndex) {
         final float szaDeg = sza.getSampleFloat(x, y);
@@ -994,8 +990,6 @@ public class LisePressureOp extends BasisOp {
         double rhoToa11 = rhoToa11Tile.getSampleDouble(x, y);
         final double rhoToa12 = rhoToa12Tile.getSampleDouble(x, y);
 
-        final float altitude = altitudeTile.getSampleFloat(x, y);
-        final float ecmwfPressure = ecmwfPressureTile.getSampleFloat(x, y);
         final double airMass = HelperFunctions.calculateAirMass(vzaDeg, szaDeg);
 
         double centralWvl760 = auxData.central_wavelength[BB760][detectorIndex];
@@ -1005,14 +999,14 @@ public class LisePressureOp extends BasisOp {
         return computeLisePressures(rayleighCorrection, auxData, pressureResultIndex,
                                     szaDeg, vzaDeg, csza, cvza, ssza, svza, azimDiff, rhoToa10,
                                     rhoToa11, rhoToa12,
-                                    centralWvl760, altitude, ecmwfPressure,
-                                    auxData.press_scale_height, airMass);
+                                    centralWvl760,
+                                    airMass);
     }
 
     private void computePressureResult(RayleighCorrection rayleighCorrection, Tile targetTile,
                                        int pressureResultIndex, Rectangle rectangle, Tile detector, Tile sza,
-                                       Tile vza, Tile saa, Tile vaa, Tile altitudeTile,
-                                       Tile ecmwfPressureTile, Tile rhoToa10Tile, Tile rhoToa11Tile, Tile rhoToa12Tile,
+                                       Tile vza, Tile saa, Tile vaa,
+                                       Tile rhoToa10Tile, Tile rhoToa11Tile, Tile rhoToa12Tile,
                                        Raster isInvalid) {
         for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
@@ -1022,7 +1016,7 @@ public class LisePressureOp extends BasisOp {
                     final int detectorIndex = detector.getSampleInt(x, y);
                     final double pressureResult = getPressureResult(rayleighCorrection,
                                                                     pressureResultIndex, sza, vza, saa, vaa,
-                                                                    altitudeTile, ecmwfPressureTile, rhoToa10Tile,
+                                                                    rhoToa10Tile,
                                                                     rhoToa11Tile, rhoToa12Tile, y, x,
                                                                     detectorIndex);
 
@@ -1053,8 +1047,6 @@ public class LisePressureOp extends BasisOp {
 
         invalidImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION, sourceProduct, ResolutionLevel.MAXRES);
 
-        invalidOceanImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION_OCEAN, sourceProduct, ResolutionLevel.MAXRES);
-
         invalidLandImage = VirtualBandOpImage.createMask(INVALID_EXPRESSION_LAND, sourceProduct, ResolutionLevel.MAXRES);
     }
 
@@ -1083,9 +1075,6 @@ public class LisePressureOp extends BasisOp {
                                      rectangle);
             Tile vaa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
                                      rectangle);
-            Tile altitudeTile = getSourceTile(
-                    sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME), rectangle);
-            Tile ecmwfPressureTile = getSourceTile(sourceProduct.getTiePointGrid("atm_press"), rectangle);
 
             Tile rhoToa10 = getSourceTile(rhoToaProduct.getBand("rho_toa_10"),rectangle);
             Tile rhoToa11 = getSourceTile(rhoToaProduct.getBand("rho_toa_11"),rectangle);
@@ -1114,7 +1103,6 @@ public class LisePressureOp extends BasisOp {
             if (pressureResultIndex >= 0) {
                 computePressureResult(rayleighCorrection, targetTile, pressureResultIndex, rectangle, detector,
                                       sza, vza, saa, vaa,
-                                      altitudeTile, ecmwfPressureTile,
                                       rhoToa10, rhoToa11, rhoToa12, isInvalid);
             }
         } catch (RuntimeException e) {

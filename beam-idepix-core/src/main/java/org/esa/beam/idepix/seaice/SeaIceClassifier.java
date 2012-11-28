@@ -18,13 +18,10 @@ package org.esa.beam.idepix.seaice;
 
 import org.esa.beam.util.io.CsvReader;
 
-import javax.xml.stream.events.NotationDeclaration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 

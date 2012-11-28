@@ -36,7 +36,7 @@ import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.Raster;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -171,8 +171,6 @@ public class SurfacePressureFubOp extends MerisBasisOp {
             Tile toar12 = getSourceTile(band12, rectangle);
 
             final Raster isInvalid = invalidImage.getData(rectangle);
-            // TODO (mp 20.12.2010) - cloudFlags is never used
-//			Tile cloudFlags = getSourceTile(cloudProduct.getBand(MerisClassificationOp.CLOUD_FLAGS), rectangle);
 
             final double[] nnIn = new double[7];
             final double[] nnOut = new double[1];

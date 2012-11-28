@@ -18,12 +18,7 @@ package org.esa.beam.idepix.algorithms;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.PixelGeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.OperatorSpiRegistry;
@@ -32,8 +27,6 @@ import org.junit.*;
 
 import java.util.HashMap;
 import java.util.Set;
-
-import static junit.framework.Assert.*;
 
 public class IdepixWithFSGProductTest {
 
@@ -83,7 +76,8 @@ public class IdepixWithFSGProductTest {
     public void testCreatingTargetProduct_CoastColour_Algo() {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "CoastColour");
-        parameters.put("ccOutputRayleigh", false);
+        parameters.put("ccOutputRayleigh", true);
+        parameters.put("ccMixedPixel", false);
         final Product product = GPF.createProduct("idepix.coastcolour", parameters, sourceProduct);
         Assert.assertNotNull(product);
         Assert.assertNotNull(product.getGeoCoding());

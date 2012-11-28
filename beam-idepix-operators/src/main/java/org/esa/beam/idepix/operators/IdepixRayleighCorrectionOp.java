@@ -112,7 +112,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
         }
 
         flagBand = targetProduct.addBand(RAY_CORR_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = createFlagCoding(brrBands.length);
+        FlagCoding flagCoding = createFlagCoding();
         flagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
@@ -142,7 +142,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
         return bands;
     }
 
-    public static FlagCoding createFlagCoding(int bandLength) {
+    public static FlagCoding createFlagCoding() {
         FlagCoding flagCoding = new FlagCoding(RAY_CORR_FLAGS);
         int bitIndex = 0;
         for (int bandId : BANDS_TO_CORRECT) {

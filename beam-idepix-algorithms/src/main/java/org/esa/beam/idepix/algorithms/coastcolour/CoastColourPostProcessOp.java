@@ -2,13 +2,7 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -25,11 +19,15 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.List;
 
 /**
- * Operator used to consolidate cloud flag for CoastColour
+ * Operator used to consolidate cloud flag for CoastColour:
+ * - cloud shadow
+ * - cloud buffer
+ * - mixed pixel
+ * - coastline refinement
  *
  * @author Marco
  * @since Idepix 1.3.1
@@ -92,13 +90,15 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         vaaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
         ctpBand = ctpProduct.getBand("cloud_top_press");
         int shadowWidth;
+        int shadowHeight;
         if (l1bProduct.getProductType().equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
             altitudeRDN = l1bProduct.getBand("altitude");
             shadowWidth = 64;
+            shadowHeight = 64;
         } else {
             altitudeRDN = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
             shadowWidth = 16;
-
+            shadowHeight = 16;
         }
 
         if (smaProduct != null) {
@@ -115,7 +115,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
                                                              l1bProduct.getSceneRasterHeight()),
-                                               shadowWidth, shadowWidth);
+                                               shadowWidth, shadowHeight);
 
 
         ProductUtils.copyBand(CloudClassificationOp.CLOUD_FLAGS, merisCloudProduct, postProcessedCloudProduct, false);
@@ -299,13 +299,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         }
 
         if (removeCloudFlag) {
-            // todo
-            //// this does not work correctly, but will be fixed in BEAM 4.10.4
-//            targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD, false);
-            // in the meantime, use this instead:
-            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
-            targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourClassificationOp.F_CLOUD));
-            ////
+            targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD, false);
             targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, true);
         }
         // return whether this is still a cloud
@@ -315,9 +309,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     private void refineSnowIceFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile targetTile) {
         final boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_SNOW_ICE);
         if (isSnowIce) {
-            final int sourceSample = sourceFlagTile.getSampleInt(x, y);
-            // todo: adjust this when Beam 4.10.4 is available (s.a.)
-            targetTile.setSample(x, y, sourceSample - Math.pow(2.0, CoastColourClassificationOp.F_SNOW_ICE));
+            targetTile.setSample(x, y, CoastColourClassificationOp.F_SNOW_ICE, false);
         }
     }
 
@@ -337,51 +329,6 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         return (surroundingPixelCount * 1.0 / 9 >= 0.7);  // at least 6 pixel in a 3x3 box
     }
-
-    // old cloud shadow derival - currently not used (2012/08/02)
-//    private void computeCloudShadow(int x, int y, Tile szaTile, Tile vzaTile, Tile saaTile, Tile vaaTile,
-//                                    Tile altitudeTile, Tile ctpTile, Tile sourceFlagTile, Tile targetTile) {
-//        float ctp = ctpTile.getSampleFloat(x, y);
-//        if (ctp > 0) {
-//            boolean is_cloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
-//            if (is_cloud) {
-//                GeoCoding geoCoding = l1bProduct.getGeoCoding();
-//                GeoPos cloudGeoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-//
-//                float cloudHeight = computeHeightFromPressure(ctp);
-//                GeoPos shadowGeoPos = getCloudShadowPosition(x, y, szaTile, vzaTile, saaTile, vaaTile, altitudeTile,
-//                                                             cloudHeight, geoCoding, cloudGeoPos);
-//                if (shadowGeoPos != null) {
-//                    PixelPos shadowPixelPos = geoCoding.getPixelPos(shadowGeoPos, null);
-//                    final int shadowPixelX = MathUtils.floorInt(shadowPixelPos.x);
-//                    final int shadowPixelY = MathUtils.floorInt(shadowPixelPos.y);
-//                    Rectangle rectangle = targetTile.getRectangle();
-//                    boolean isAlreadyCloud = isPixelAlreadyMarkedAsCloud(shadowPixelX, shadowPixelY, sourceFlagTile);
-//                    if (!isAlreadyCloud && rectangle.contains(shadowPixelX, shadowPixelY)) {
-//                        targetTile.setSample(shadowPixelX, shadowPixelY,
-//                                             CoastColourClassificationOp.F_CLOUD_SHADOW, true);
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    private boolean isPixelAlreadyMarkedAsCloud(int pixelX, int pixelY, Tile sourceFlagTile) {
-//        boolean is_already_cloud = false;
-//        if (sourceFlagTile.getRectangle().contains(pixelX, pixelY)) {
-//            is_already_cloud = sourceFlagTile.getSampleBit(pixelX, pixelY, CoastColourClassificationOp.F_CLOUD);
-//        }
-//        return is_already_cloud;
-//    }
-//
-//    private GeoPos getCloudShadowPosition(int x, int y, Tile szaTile, Tile vzaTile, Tile saaTile, Tile vaaTile,
-//                                          Tile altitudeTile, float cloudHeight, GeoCoding geoCoding, GeoPos geoPos) {
-//        float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-//        float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-//        float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-//        float vaa = vaaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
-//        return IdepixCloudShadowOp.getCloudShadow(altitudeTile, geoCoding, sza, saa, vza, vaa, cloudHeight, geoPos);
-//    }
 
     private float computeHeightFromPressure(float pressure) {
         return (float) (-8000 * Math.log(pressure / 1013.0f));

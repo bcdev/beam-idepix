@@ -5,10 +5,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 19.11.12
- * Time: 10:18
+ * IDEPIX instrument-specific pixel identification algorithm for GlobAlbedo: abstract superclass
  *
  * @author olafd
  */

@@ -4,10 +4,7 @@ import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 19.11.12
- * Time: 10:23
+ * IDEPIX pixel identification algorithm for GlobAlbedo/MERIS
  *
  * @author olafd
  */
@@ -54,8 +51,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
 
 
         final double flatness = 1.0f - Math.abs(1000.0 * (slope0 + slope1 + slope2) / 3.0);
-        float result = (float) Math.max(0.0f, flatness);
-        return result;
+        return (float) Math.max(0.0f, flatness);
     }
 
     @Override
@@ -244,18 +240,10 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
             final float ndvi = (refl[12] - refl[6]) / (refl[12] + refl[6]);
             final float ndsi = (refl[9] - refl[12]) / (refl[9] + refl[12]);
             final float po2 = refl[10] / refl[9];
-            if (((ndvi <= R1_BBT * ndsi + R2_BBT) ||
-                    (ndsi >= R3_BBT))
-                    && (po2 <= R7_BBT)) {
-                return false;
-            } else {
-                if ((refl[12] <= R4_BBT * refl[6] + R5_BBT) &&
-                        (refl[12] <= R6_BBT) && (po2 <= R7_BBT)) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
+            return !(((ndvi <= R1_BBT * ndsi + R2_BBT) || (ndsi >= R3_BBT)) &&
+                    (po2 <= R7_BBT)) &&
+                    !((refl[12] <= R4_BBT * refl[6] + R5_BBT) &&
+                            (refl[12] <= R6_BBT) && (po2 <= R7_BBT));
         }
         return false;
     }

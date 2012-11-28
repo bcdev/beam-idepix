@@ -18,16 +18,7 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNodeGroup;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -55,8 +46,7 @@ import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Map;
@@ -625,8 +615,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         Interp.interpCoord(delta, auxData.rog.getTab(2), rogIndex[2]);
         Interp.interpCoord(windm, auxData.rog.getTab(3), rogIndex[3]);
         Interp.interpCoord(thetas, auxData.rog.getTab(4), rogIndex[4]);
-        double rhoGlint = Interp.interpolate(auxData.rog.getJavaArray(), rogIndex);
-        return rhoGlint;
+        return Interp.interpolate(auxData.rog.getJavaArray(), rogIndex);
     }
 
     private double calcScatteringAngle(SourceData dc, PixelInfo pixelInfo) {
@@ -660,7 +649,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
      * @param result_flags the return values, <code>resultFlags[0]</code> contains low NN pressure flag (low_P_nn),
      *                     <code>resultFlags[1]</code> contains low polynomial pressure flag (low_P_poly),
      *                     <code>resultFlags[2]</code> contains pressure range flag (delta_p).
-     * @param isLand
+     * @param isLand       land/water flag
      */
     private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags, boolean isLand) {
         final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
@@ -707,7 +696,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         boolean slope2_f = pixelId.isSpectraSlope2Flag(rhoAg, dc.radiance[BAND_SLOPE_N_2].getSampleFloat(pixelInfo.x, pixelInfo.y));
 
         boolean bright_toa_f = false;
-        // todo implement DPM 8, new #2.1.7-10, #2.1.7-11
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
                 || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (isLand) {   /* land pixel */

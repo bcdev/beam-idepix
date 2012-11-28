@@ -4,10 +4,7 @@ import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 19.11.12
- * Time: 10:26
+ * IDEPIX pixel identification algorithm for GlobAlbedo/AATSR
  *
  * @author olafd
  */
@@ -26,16 +23,19 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
     private static final float TEMPERATURE_THRESH = 0.6f;
 
     public static final int L1B_F_LAND = 0;
-    public static final int L1B_F_GLINT_RISK = 2;
 
     private float btemp1200;
     private boolean l1FlagLand;
-    private boolean l1FlagGlintRisk;
     private boolean useFwardViewForCloudMask;
 
     @Override
     public boolean isCloud() {
-        return (whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH && !isClearSnow());
+        if (!isInvalid()) {
+            if (((whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && !isClearSnow())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -73,8 +73,7 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
                                                         IdepixConstants.AATSR_REFL_WAVELENGTHS[2]);
 
         final double flatness = (1.0f - Math.abs(20.0 * (slope0 + slope1) / 2.0));
-        float result = (float) Math.max(0.0f, flatness);
-        return result;
+        return (float) Math.max(0.0f, flatness);
     }
 
     @Override
@@ -194,10 +193,6 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setBtemp1200(float btemp1200) {
         this.btemp1200 = btemp1200;
-    }
-
-    public void setL1FlagGlintRisk(boolean l1FlagGlintRisk) {
-        this.l1FlagGlintRisk = l1FlagGlintRisk;
     }
 
     public void setL1FlagLand(boolean l1FlagLand) {
