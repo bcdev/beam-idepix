@@ -219,7 +219,7 @@ public class ComputeChainOp extends BasisOp {
     @Parameter(defaultValue = "false", label = " Gas Absorption Corrected Reflectances")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances and Mixed Pixel Flag")
+    @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances")
     private boolean ccOutputRayleigh = true;
 
     @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
