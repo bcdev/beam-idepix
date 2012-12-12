@@ -1,0 +1,139 @@
+<bundleDescriptor>
+    <bundleName>beam-idepix</bundleName>
+    <bundleVersion>1.3.5-SNAPSHOT</bundleVersion>
+
+    <processorDescriptors>
+
+        <processorDescriptor>
+            <executableName>idepix.ComputeChain</executableName>
+            <processorName>Idepix (CC Algorithm)</processorName>
+            <processorVersion>1.3.5-SNAPSHOT</processorVersion>
+            <defaultParameters><![CDATA[<parameters>
+    <!-- ***********Idepix CC Parameters start here*********** -->
+
+     <!-- Whether to additionally write Rayleigh Corrected Reflectances -->
+     <ccOutputRayleigh>false</ccOutputRayleigh>
+
+     <!-- Whether to additionally write L2 Cloud Top Pressure and Surface Pressure -->
+     <ccOutputL2Pressures>false</ccOutputL2Pressures>
+
+</parameters>]]></defaultParameters>
+            <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+            <descriptionHtml>
+                <![CDATA[<p>Performs Idepix pixel identification with CoastColour algorithm.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B</inputProductTypes>
+            <outputProductType>IDEPIX_L2</outputProductType>
+            <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
+
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.hadoop.mapred.child.java.opts</name>
+                    <value>-Xmx1500M</value>
+                </jobParameter>
+
+                <jobParameter>
+                    <name>calvalus.system.beam.envisat.usePixelGeoCoding</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
+                    <value>true</value>
+                </jobParameter>
+
+                <jobParameter>
+                    <name>calvalus.output.compression</name>
+                    <value>NONE</value>
+                </jobParameter>
+            </jobConfig>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>rho_toa_1</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_2</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_3</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_4</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_5</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_6</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_7</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_8</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_9</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_10</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_11</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_12</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_13</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_14</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				<outputVariable>
+                    <name>rho_toa_15</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+				
+                <outputVariable>
+                    <name>l1_flags</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>cloud_classif_flags</name>
+                </outputVariable>
+            </outputVariables>
+
+        </processorDescriptor>
+
+    </processorDescriptors>
+
+</bundleDescriptor>

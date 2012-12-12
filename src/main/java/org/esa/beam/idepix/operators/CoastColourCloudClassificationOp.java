@@ -296,9 +296,6 @@ public class CoastColourCloudClassificationOp extends MerisBasisOp {
         maskGroup.add(Mask.BandMathsType.create("cc_interm_prel_bright", "IDEPIX CC result of preliminary bright test",
                                                 w, h, CLOUD_FLAGS + ".F_BRIGHT_RC", Color.YELLOW.darker().darker(),
                                                 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC result of spectral unmixing",
-                                                w, h, CLOUD_FLAGS + ".F_MIXED_PIXEL", Color.GREEN.darker(),
-                                                0.5f));
 
         // not used as masks but still available as flag
 //        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
