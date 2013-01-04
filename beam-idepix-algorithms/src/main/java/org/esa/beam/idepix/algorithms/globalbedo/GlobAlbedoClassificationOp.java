@@ -1,7 +1,5 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
-import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -13,11 +11,8 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
-import org.esa.beam.idepix.operators.BarometricPressureOp;
-import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
@@ -25,7 +20,7 @@ import java.awt.*;
 import java.io.IOException;
 
 /**
- * Operator for GlobAlbedo cloud screening
+ * Basic operator for GlobAlbedo pixel classification
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -33,198 +28,77 @@ import java.io.IOException;
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
                   version = "1.0",
                   authors = "Olaf Danne",
-                  copyright = "(c) 2008 by Brockmann Consult",
-                  description = "This operator provides cloud screening from SPOT VGT data.")
-public class GlobAlbedoClassificationOp extends Operator {
+                  copyright = "(c) 2008, 2012 by Brockmann Consult",
+                  description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
+public abstract class GlobAlbedoClassificationOp extends Operator {
 
     @SourceProduct(alias = "gal1b", description = "The source product.")
     Product sourceProduct;
-    @SourceProduct(alias = "cloud", optional = true)
-    private Product cloudProduct;
-    @SourceProduct(alias = "rayleigh", optional = true)
-    private Product rayleighProduct;
-    @SourceProduct(alias = "refl", optional = true)
-    private Product rad2reflProduct;
-    @SourceProduct(alias = "pressure", optional = true)
-    private Product pressureProduct;
-    @SourceProduct(alias = "pbaro", optional = true)
-    private Product pbaroProduct;
+
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
     @Parameter(defaultValue = "false", label = "Copy input radiance bands")
-    private boolean gaCopyRadiances;
+    boolean gaCopyRadiances;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
-    private boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")
-    private boolean gaCopyPressure;
-    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
-    private boolean gaCopyAnnotations;
-    @Parameter(defaultValue = "true", label = "Use forward view for cloud flag determination (AATSR)")
-    private boolean gaUseAatsrFwardForClouds;
+    boolean gaComputeFlagsOnly;
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int gaCloudBufferWidth;
+    int gaCloudBufferWidth;
+    @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
+    boolean gaUseL1bLandWaterFlag;
+    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+    boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "true", label = " Consider water mask fraction")
+    boolean gaUseWaterMaskFraction = true;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
-    private int wmResolution;
-    @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
-    private boolean gaUseL1bLandWaterFlag;
-    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
-    private boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
-    private boolean gaComputeSchillerClouds = false;
-    @Parameter(defaultValue = "true", label = " Consider water mask fraction")
-    private boolean gaUseWaterMaskFraction = true;
+    int wmResolution;
 
+    WatermaskClassifier classifier;
+    WatermaskStrategy strategy = null;
 
-    private int sourceProductTypeId;
+    static final byte WATERMASK_FRACTION_THRESH = 23;   // for 3x3 subsampling, this means 2 subpixels water
 
-    private WatermaskClassifier classifier;
-    private static final byte WATERMASK_FRACTION_THRESH = 23;   // for 3x3 subsampling, this means 2 subpixels water
+    Band temperatureBand;
+    Band cloudFlagBand;
+    Band brightBand;
+    Band whiteBand;
+    Band brightWhiteBand;
+    Band spectralFlatnessBand;
+    Band ndviBand;
+    Band ndsiBand;
+    Band glintRiskBand;
+    Band radioLandBand;
+    Band radioWaterBand;
+    Band pressureBand;
+    Band pbaroOutputBand;
+    Band p1OutputBand;
 
-    private Band[] merisReflBands;
-    private Band[] merisBrrBands;
-    private Band brr442Band;
-    private Band brr442ThreshBand;
-    private Band p1Band;
-    private Band pbaroBand;
-    private Band pscattBand;
-
-    // AATSR bands:
-    private Band[] aatsrReflectanceBands;
-    private Band[] aatsrBtempBands;
-
-    // VGT bands:
-    private Band[] vgtReflectanceBands;
-    private Band temperatureBand;
-
-
-    private Band cloudFlagBand;
-    private Band brightBand;
-    private Band whiteBand;
-    private Band brightWhiteBand;
-    private Band spectralFlatnessBand;
-    private Band ndviBand;
-    private Band ndsiBand;
-    private Band glintRiskBand;
-    private Band radioLandBand;
-    private Band radioWaterBand;
-    private Band pressureBand;
-    private Band pbaroOutputBand;
-    private Band p1OutputBand;
-    private Band pscattOutputBand;
-
-    private WatermaskStrategy strategy = null;
-    private SchillerAlgorithm landNN = null;
+    Band pscattOutputBand;
 
     @Override
     public void initialize() throws OperatorException {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
-        setSourceProductTypeId();
         setBands();
         setWatermaskStrategy();
-
         createTargetProduct();
+        extendTargetProduct();
     }
 
-    @Override
-    public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        switch (sourceProductTypeId) {
-            case IdepixConstants.PRODUCT_TYPE_MERIS:
-                computeMerisTile(band, targetTile);
-                break;
-            case IdepixConstants.PRODUCT_TYPE_AATSR:
-                computeAatsrTile(band, targetTile);
-                break;
-            case IdepixConstants.PRODUCT_TYPE_VGT:
-                computeVgtTile(band, targetTile);
-                break;
-            default:
-                break;
-        }
-    }
+    abstract void setBands();
+    abstract void extendTargetProduct();
 
-    private void setWatermaskStrategy() {
+    void setWatermaskStrategy() {
         try {
             classifier = new WatermaskClassifier(wmResolution, 3, 3);
         } catch (IOException e) {
             getLogger().warning("Watermask classifier could not be initialized - fallback mode is used.");
         }
-
-        switch (sourceProductTypeId) {
-            case IdepixConstants.PRODUCT_TYPE_MERIS:
-                strategy = new MerisWatermaskStrategy();
-                break;
-            case IdepixConstants.PRODUCT_TYPE_AATSR:
-                strategy = new MerisWatermaskStrategy();
-                break;
-            case IdepixConstants.PRODUCT_TYPE_VGT:
-                strategy = new MerisWatermaskStrategy();
-                break;
-        }
+        strategy = new DefaultWatermaskStrategy(classifier);
     }
 
-    private void setBands() {
-        switch (sourceProductTypeId) {
-            case IdepixConstants.PRODUCT_TYPE_MERIS:
-                merisReflBands = new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-                for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                    merisReflBands[i] = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1));
-                }
-                brr442Band = rayleighProduct.getBand("brr_2");
-                merisBrrBands = new Band[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
-                for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
-                    merisBrrBands[i] = rayleighProduct.getBand(IdepixConstants.MERIS_BRR_BAND_NAMES[i]);
-                }
-                p1Band = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
-                pbaroBand = pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC);
-                pscattBand = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
-                brr442ThreshBand = cloudProduct.getBand("rho442_thresh_term");
 
-                if (gaComputeSchillerClouds) {
-                    landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
-                }
-                break;
-            case IdepixConstants.PRODUCT_TYPE_AATSR:
-                aatsrReflectanceBands = new Band[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
-                for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
-                    aatsrReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i]);
-                }
-                aatsrBtempBands = new Band[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
-                for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
-                    aatsrBtempBands[i] = sourceProduct.getBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i]);
-                    if (aatsrBtempBands[i] == null) {
-                        throw new OperatorException
-                                ("AATSR temperature bands missing or incomplete in source product - cannot proceed.");
-                    }
-                }
-
-                break;
-            case IdepixConstants.PRODUCT_TYPE_VGT:
-                vgtReflectanceBands = new Band[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
-                for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-                    vgtReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i]);
-                }
-
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void setSourceProductTypeId() {
-        if (sourceProduct.getProductType().startsWith("MER")) {
-            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_MERIS;
-        } else if (sourceProduct.getProductType().startsWith("ATS")) {
-            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_AATSR;
-        } else if (sourceProduct.getProductType().startsWith("VGT")) {
-            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_VGT;
-        } else {
-            sourceProductTypeId = IdepixConstants.PRODUCT_TYPE_INVALID;
-        }
-    }
-
-    private void createTargetProduct() throws OperatorException {
+    void createTargetProduct() throws OperatorException {
         int sceneWidth = sourceProduct.getSceneRasterWidth();
         int sceneHeight = sourceProduct.getSceneRasterHeight();
 
@@ -267,284 +141,13 @@ public class GlobAlbedoClassificationOp extends Operator {
             radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "",
                                              IdepixConstants.NO_DATA_VALUE, true);
-
-            if (sourceProductTypeId == IdepixConstants.PRODUCT_TYPE_MERIS && gaCopyPressure) {
-                pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
-                pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-                                                 IdepixConstants.NO_DATA_VALUE,
-                                                 true);
-                p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-                                                 true);
-                pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
-                IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-                                                 IdepixConstants.NO_DATA_VALUE,
-                                                 true);
-            }
         }
         // new bit masks:
         IdepixUtils.setupIdepixCloudscreeningBitmasks(targetProduct);
 
-        if (gaCopyRadiances) {
-            copyRadiances();
-            ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
-        }
-
-        if (gaCopyAnnotations) {
-            copyAnnotations();
-        }
-
     }
 
-    private void copyAnnotations() {
-        switch (sourceProductTypeId) {
-            case IdepixConstants.PRODUCT_TYPE_VGT:
-                for (String bandName : IdepixConstants.VGT_ANNOTATION_BAND_NAMES) {
-                    ProductUtils.copyBand(bandName, sourceProduct, targetProduct, true);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void copyRadiances() {
-        switch (sourceProductTypeId) {
-            case IdepixConstants.PRODUCT_TYPE_MERIS:
-                for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                    ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                                          targetProduct, true);
-                }
-                for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                    ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
-                                          targetProduct, true);
-                }
-                break;
-            case IdepixConstants.PRODUCT_TYPE_AATSR:
-                for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
-                    ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
-                                          targetProduct, true);
-                }
-                for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
-                    ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
-                                          targetProduct, true);
-                }
-                break;
-            case IdepixConstants.PRODUCT_TYPE_VGT:
-                for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-                    // write the original reflectance bands:
-                    ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct,
-                                          targetProduct, true);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void computeMerisTile(Band band, Tile targetTile) throws OperatorException {
-        final Rectangle rectangle = targetTile.getRectangle();
-
-        // MERIS variables
-        final Tile brr442Tile = getSourceTile(brr442Band, rectangle);
-        final Tile brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle);
-        final Tile p1Tile = getSourceTile(p1Band, rectangle);
-        final Tile pbaroTile = getSourceTile(pbaroBand, rectangle);
-        final Tile pscattTile = getSourceTile(pscattBand, rectangle);
-
-        final Band merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
-        final Tile merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
-
-        Tile[] merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
-        float[] merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
-        for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
-            merisBrrTiles[i] = getSourceTile(merisBrrBands[i], rectangle);
-        }
-
-        Tile[] merisReflectanceTiles = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-        float[] merisReflectance = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            merisReflectanceTiles[i] = getSourceTile(merisReflBands[i], rectangle);
-        }
-
-        GeoPos geoPos = null;
-        try {
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                checkForCancellation();
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-
-                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
-                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
-                    if (!gaUseL1bLandWaterFlag) {
-                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-                        if (geoCoding.canGetGeoPos()) {
-                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
-                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
-                        }
-                    }
-
-                    // set up pixel properties for given instruments...
-                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAlgorithm(merisL1bFlagTile,
-                                                                                   brr442Tile, p1Tile,
-                                                                                   pbaroTile, pscattTile, brr442ThreshTile,
-                                                                                   merisReflectanceTiles,
-                                                                                   merisReflectance,
-                                                                                   merisBrrTiles, merisBrr, waterMaskSample,
-                                                                                   waterMaskFraction,
-                                                                                   y,
-                                                                                   x);
-
-                    if (band == cloudFlagBand) {
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
-
-                        if (landNN != null && !targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-                            final int finalX = x;
-                            final int finalY = y;
-                            final Tile[] finalMerisRefl = merisReflectanceTiles;
-                            SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
-                                @Override
-                                public double get(int index) {
-                                    return finalMerisRefl[index].getSampleDouble(finalX, finalY);
-                                }
-                            };
-                            float schillerCloud = landNN.compute(accessor);
-                            if (schillerCloud > 1.4) {
-                                targetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
-                            }
-                        }
-                    }
-
-                    // for given instrument, compute more pixel properties and write to distinct band
-                    setPixelSamples(band, targetTile, p1Tile, pbaroTile, pscattTile, y, x, globAlbedoAlgorithm);
-                }
-            }
-            // set cloud buffer flags...
-            if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band, targetTile, rectangle);
-            } else {
-                setCloudBuffer(band, targetTile, rectangle);
-            }
-
-        } catch (Exception e) {
-            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
-        }
-    }
-
-    public void computeAatsrTile(Band band, Tile targetTile) throws OperatorException {
-        final Rectangle rectangle = targetTile.getRectangle();
-
-        // AATSR variables
-        final Band aatsrL1bFlagBand = sourceProduct.getBand(EnvisatConstants.AATSR_L1B_CLOUD_FLAGS_NADIR_BAND_NAME);
-        final Tile aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle);
-
-        Tile[] aatsrReflectanceTiles = new Tile[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
-        float[] aatsrReflectance = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
-        for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
-            aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle);
-        }
-
-        Tile[] aatsrBtempTiles = new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
-        float[] aatsrBtemp = new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
-        for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
-            aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
-        }
-
-        GeoPos geoPos = null;
-        try {
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                checkForCancellation();
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-
-                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
-                    if (!gaUseL1bLandWaterFlag) {
-                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-                        if (geoCoding.canGetGeoPos()) {
-                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
-                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                        }
-                    }
-
-                    // set up pixel properties for given instruments...
-                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createAatsrAlgorithm(band, targetTile, aatsrL1bFlagTile,
-                                                               aatsrReflectanceTiles, aatsrReflectance,
-                                                               aatsrBtempTiles,
-                                                               aatsrBtemp, waterMaskSample, y, x);
-
-                    if (band == cloudFlagBand) {
-                        // for given instrument, compute boolean pixel properties and write to cloud flag band
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
-                    }
-                    setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
-                }
-            }
-            // set cloud buffer flags...
-            if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band, targetTile, rectangle);
-            } else {
-                setCloudBuffer(band, targetTile, rectangle);
-            }
-
-        } catch (Exception e) {
-            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
-        }
-    }
-
-    public void computeVgtTile(Band band, Tile targetTile) throws OperatorException {
-        final Rectangle rectangle = targetTile.getRectangle();
-
-        // VGT variables
-        final Band smFlagBand = sourceProduct.getBand("SM");
-        final Tile smFlagTile = getSourceTile(smFlagBand, rectangle);
-
-        Tile[] vgtReflectanceTiles = new Tile[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
-        float[] vgtReflectance = new float[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
-        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-            vgtReflectanceTiles[i] = getSourceTile(vgtReflectanceBands[i], rectangle);
-        }
-
-        GeoPos geoPos = null;
-        try {
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                checkForCancellation();
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-
-                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
-                    if (!gaUseL1bLandWaterFlag) {
-                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-                        if (geoCoding.canGetGeoPos()) {
-                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
-                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                        }
-                    }
-
-                    // set up pixel properties for given instruments...
-                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createVgtAlgorithm(smFlagTile, vgtReflectanceTiles,
-                                                             vgtReflectance,
-                                                             waterMaskSample, y, x);
-
-                    if (band == cloudFlagBand) {
-                        // for given instrument, compute boolean pixel properties and write to cloud flag band
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
-                    }
-                    setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
-                }
-            }
-            // set cloud buffer flags...
-            if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band, targetTile, rectangle);
-            } else {
-                setCloudBuffer(band, targetTile, rectangle);
-            }
-
-        } catch (Exception e) {
-            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
-        }
-    }
-
-    private void setPixelSamples(Band band, Tile targetTile, Tile p1Tile, Tile pbaroTile, Tile pscattTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
+    void setPixelSamples(Band band, Tile targetTile, Tile p1Tile, Tile pbaroTile, Tile pscattTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute more pixel properties and write to distinct band
         if (band == brightBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.brightValue());
@@ -577,7 +180,7 @@ public class GlobAlbedoClassificationOp extends Operator {
         }
     }
 
-    private void setCloudFlag(Tile targetTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
+    void setCloudFlag(Tile targetTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute boolean pixel properties and write to cloud flag band
         targetTile.setSample(x, y, IdepixConstants.F_INVALID, globAlbedoAlgorithm.isInvalid());
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD, globAlbedoAlgorithm.isCloud());
@@ -596,7 +199,7 @@ public class GlobAlbedoClassificationOp extends Operator {
         targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, globAlbedoAlgorithm.isGlintRisk());
     }
 
-    private void setCloudBuffer(Band band, Tile targetTile, Rectangle rectangle) {
+    void setCloudBuffer(Band band, Tile targetTile, Rectangle rectangle) {
         if (band.isFlagBand() && band.getName().equals(IdepixUtils.IDEPIX_CLOUD_FLAGS)) {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
@@ -616,109 +219,7 @@ public class GlobAlbedoClassificationOp extends Operator {
         }
     }
 
-    private GlobAlbedoAlgorithm createVgtAlgorithm(Tile smFlagTile, Tile[] vgtReflectanceTiles,
-                                                   float[] vgtReflectance, byte watermaskSample, int y, int x) {
-
-        GlobAlbedoVgtAlgorithm gaAlgorithm = new GlobAlbedoVgtAlgorithm();
-
-        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-            vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
-        }
-        float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
-        gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);
-
-        final boolean isLand = smFlagTile.getSampleBit(x, y, GlobAlbedoVgtAlgorithm.SM_F_LAND) &&
-                !(watermaskSample == WatermaskClassifier.WATER_VALUE);
-        gaAlgorithm.setSmLand(isLand);
-        setIsWater(watermaskSample, gaAlgorithm);
-
-        // specific threshold for polar regions:
-        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-        if (geoCoding != null) {
-            final PixelPos pixelPos = new PixelPos();
-            pixelPos.setLocation(x + 0.5f, y + 0.5f);
-            final GeoPos geoPos = new GeoPos();
-            geoCoding.getGeoPos(pixelPos, geoPos);
-        }
-
-        return gaAlgorithm;
-    }
-
-    private GlobAlbedoAlgorithm createAatsrAlgorithm(Band band, Tile targetTile, Tile aatsrL1bFlagTile,
-                                                     Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
-                                                     Tile[] aatsrBtempTiles, float[] aatsrBtemp,
-                                                     byte watermaskSample, int y, int x) {
-
-        GlobAlbedoAatsrAlgorithm gaAlgorithm = new GlobAlbedoAatsrAlgorithm();
-
-        for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
-            aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
-            if (band.getName().equals(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i])) {
-                targetTile.setSample(x, y, aatsrReflectance[i]);
-            }
-        }
-        for (int i = 0; i < IdepixConstants.AATSR_BTEMP_BAND_NAMES.length; i++) {
-            aatsrBtemp[i] = aatsrBtempTiles[i].getSampleFloat(x, y);
-            if (band.getName().equals(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i])) {
-                targetTile.setSample(x, y, aatsrBtemp[i]);
-            }
-        }
-
-        gaAlgorithm.setUseFwardViewForCloudMask(gaUseAatsrFwardForClouds);
-        gaAlgorithm.setRefl(aatsrReflectance);
-        gaAlgorithm.setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
-        final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, GlobAlbedoAatsrAlgorithm.L1B_F_LAND) &&
-                !(watermaskSample == WatermaskClassifier.WATER_VALUE);
-        gaAlgorithm.setL1FlagLand(isLand);
-        setIsWater(watermaskSample, gaAlgorithm);
-
-        return gaAlgorithm;
-    }
-
-
-    private GlobAlbedoAlgorithm createMerisAlgorithm(Tile merisL1bFlagTile,
-                                                     Tile brr442Tile, Tile p1Tile,
-                                                     Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
-                                                     Tile[] merisReflectanceTiles,
-                                                     float[] merisReflectance,
-                                                     Tile[] merisBrrTiles, float[] merisBrr,
-                                                     byte watermask,
-                                                     byte watermaskFraction,
-                                                     int y,
-                                                     int x) {
-        GlobAlbedoMerisAlgorithm gaAlgorithm = new GlobAlbedoMerisAlgorithm();
-
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
-        }
-
-        gaAlgorithm.setRefl(merisReflectance);
-        for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
-            merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
-        }
-        gaAlgorithm.setBrr(merisBrr);
-        gaAlgorithm.setBrr442(brr442Tile.getSampleFloat(x, y));
-        gaAlgorithm.setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
-        gaAlgorithm.setP1(p1Tile.getSampleFloat(x, y));
-        gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
-        gaAlgorithm.setPscatt(pscattTile.getSampleFloat(x, y));
-        if (gaUseWaterMaskFraction) {
-            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
-                    watermaskFraction < WATERMASK_FRACTION_THRESH;
-            gaAlgorithm.setL1FlagLand(isLand);
-            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
-        } else {
-            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
-                    !(watermask == WatermaskClassifier.WATER_VALUE);
-            gaAlgorithm.setL1FlagLand(isLand);
-            setIsWater(watermask, gaAlgorithm);
-        }
-
-        return gaAlgorithm;
-    }
-
-
-    private void setIsWater(byte watermask, AbstractPixelProperties pixelProperties) {
+    void setIsWater(byte watermask, AbstractPixelProperties pixelProperties) {
         boolean isWater;
         if (watermask == WatermaskClassifier.INVALID_VALUE) {
             // fallback
@@ -729,7 +230,7 @@ public class GlobAlbedoClassificationOp extends Operator {
         pixelProperties.setIsWater(isWater);
     }
 
-    private void setIsWaterByFraction(byte watermaskFraction, AbstractPixelProperties pixelProperties) {
+    void setIsWaterByFraction(byte watermaskFraction, AbstractPixelProperties pixelProperties) {
         boolean isWater;
         if (watermaskFraction == WatermaskClassifier.INVALID_VALUE) {
             // fallback
@@ -764,36 +265,6 @@ public class GlobAlbedoClassificationOp extends Operator {
 
         public Spi() {
             super(GlobAlbedoClassificationOp.class, "idepix.globalbedo.classification");
-        }
-    }
-
-    private interface WatermaskStrategy {
-
-        byte getWatermaskSample(float lat, float lon);
-
-        byte getWatermaskFraction(GeoCoding geoCoding, int x, int y);
-    }
-
-    private class MerisWatermaskStrategy implements WatermaskStrategy {
-
-        @Override
-        public byte getWatermaskSample(float lat, float lon) {
-            int waterMaskSample = WatermaskClassifier.INVALID_VALUE;
-            if (classifier != null && lat > -60f) {
-                //TODO the watermask does not work below -60 degree (mz, 2012-03-06)
-                waterMaskSample = classifier.getWaterMaskSample(lat, lon);
-            }
-            return (byte) waterMaskSample;
-        }
-
-        @Override
-        public byte getWatermaskFraction(GeoCoding geoCoding, int x, int y) {
-            int waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
-            final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
-            if (classifier != null && geoPos.getLat() > -60f) {
-                waterMaskFraction = classifier.getWaterMaskFraction(geoCoding, x, y);
-            }
-            return (byte) waterMaskFraction;
         }
     }
 }

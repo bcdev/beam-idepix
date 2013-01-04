@@ -36,8 +36,9 @@ public class IdepixUtils {
     public static boolean isInputValid(Product inputProduct) {
         if (!isValidMerisProduct(inputProduct) &&
                 !isValidAatsrProduct(inputProduct) &&
-                !isValidVgtProduct(inputProduct)) {
-            logErrorMessage("Input product must be either MERIS, AATSR or VGT L1b!");
+                !isValidVgtProduct(inputProduct) &&
+                !isValidMerisAatsrSynergyProduct(inputProduct)) {
+            logErrorMessage("Input product must be either MERIS, AATSR, colocated MERIS/AATSR, or VGT L1b!");
         }
         return true;
     }
@@ -68,6 +69,10 @@ public class IdepixUtils {
         return product.getProductType().startsWith(IdepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
     }
 
+    public static boolean isValidMerisAatsrSynergyProduct(Product product) {
+        // todo: implement
+        return false;  //To change body of created methods use File | Settings | File Templates.
+    }
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
         if (AlgorithmSelector.IPF == algorithm ||
@@ -368,4 +373,5 @@ public class IdepixUtils {
             }
         }
     }
+
 }
