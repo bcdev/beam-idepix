@@ -70,8 +70,8 @@ public class IdepixUtils {
     }
 
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
-        // todo: implement
-        return false;  //To change body of created methods use File | Settings | File Templates.
+        // todo: needs to be more strict, but for the moment we assume this is enough...
+        return product.getProductType().contains("COLLOCATED");
     }
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
@@ -85,7 +85,8 @@ public class IdepixUtils {
         return AlgorithmSelector.GlobAlbedo == algorithm &&
                 (isValidMerisProduct(sourceProduct) ||
                         isValidAatsrProduct(sourceProduct) ||
-                        isValidVgtProduct(sourceProduct));
+                        isValidVgtProduct(sourceProduct) ||
+                        isValidMerisAatsrSynergyProduct(sourceProduct));
     }
 
     public static void logErrorMessage(String msg) {
@@ -187,10 +188,10 @@ public class IdepixUtils {
         flagCoding.addFlag("F_CLEAR_SNOW", BitSetter.setFlag(0, IdepixConstants.F_CLEAR_SNOW), null);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, IdepixConstants.F_LAND), null);
         flagCoding.addFlag("F_WATER", BitSetter.setFlag(0, IdepixConstants.F_WATER), null);
+        flagCoding.addFlag("F_SEAICE", BitSetter.setFlag(0, IdepixConstants.F_SEAICE), null);
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, IdepixConstants.F_BRIGHT), null);
         flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, IdepixConstants.F_WHITE), null);
         flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, IdepixConstants.F_BRIGHTWHITE), null);
-        flagCoding.addFlag("F_COLD", BitSetter.setFlag(0, IdepixConstants.F_COLD), null);
         flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, IdepixConstants.F_HIGH), null);
         flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, IdepixConstants.F_VEG_RISK), null);
         flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, IdepixConstants.F_GLINT_RISK), null);
@@ -234,6 +235,9 @@ public class IdepixUtils {
         mask = Mask.BandMathsType.create("F_WATER", "Pixels over water", w, h, "cloud_classif_flags.F_WATER",
                                          getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_SEAICE", "Sea ice pixels", w, h, "cloud_classif_flags.F_SEAICE",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_BRIGHT", "Pixels classified as bright", w, h,
                                          "cloud_classif_flags.F_BRIGHT", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
@@ -242,9 +246,6 @@ public class IdepixUtils {
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_BRIGHTWHITE", "Pixels classified as 'brightwhite'", w, h,
                                          "cloud_classif_flags.F_BRIGHTWHITE", getRandomColour(r), 0.5f);
-        gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_COLD", "Cold pixels", w, h, "cloud_classif_flags.F_COLD",
-                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_HIGH", "High pixels", w, h, "cloud_classif_flags.F_HIGH",
                                          getRandomColour(r), 0.5f);

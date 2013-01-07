@@ -21,6 +21,8 @@ interface PixelProperties {
 
     boolean isClearSnow();
 
+    boolean isSeaIce();
+
     boolean isLand();
 
     boolean isWater();
@@ -30,8 +32,6 @@ interface PixelProperties {
     boolean isBright();
 
     boolean isWhite();
-
-    boolean isCold();
 
     boolean isVegRisk();
 

@@ -5,6 +5,7 @@ org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoAatsrClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoVgtClassificationOp$Spi
+org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisAatsrSynergyClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp$Spi
 org.esa.beam.idepix.algorithms.ipf.IpfOp$Spi
 org.esa.beam.idepix.algorithms.globcover.GlobCoverOp$Spi

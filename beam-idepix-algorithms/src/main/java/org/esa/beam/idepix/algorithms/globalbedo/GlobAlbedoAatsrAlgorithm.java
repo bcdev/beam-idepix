@@ -39,6 +39,12 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
+    public boolean isSeaIce() {
+        // no algorithm available for AATSR only
+        return false;
+    }
+
+    @Override
     public float brightValue() {
         double value = (refl[0] + refl[1] + refl[2]) / 300.0f;
         value = Math.min(value, 1.0);

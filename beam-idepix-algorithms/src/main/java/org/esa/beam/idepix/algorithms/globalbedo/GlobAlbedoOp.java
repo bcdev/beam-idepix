@@ -89,6 +89,15 @@ public class GlobAlbedoOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean gaUseWaterMaskFraction = true;
 
+    @Parameter(defaultValue = "_M", label = "Colocation master product band names extension")
+    private String bandExtensionMaster;
+    @Parameter(defaultValue = "_S", label = "Colocation slave product band names extension")
+    private String bandExtensionSlave;
+
+    @Parameter(defaultValue = "RR", label = "MERIS resolution")
+    private String merisResolution;
+
+
     private Map<String, Object> gaCloudClassificationParameters;
 
     @Override
@@ -131,28 +140,9 @@ public class GlobAlbedoOp extends BasisOp {
     }
 
     private void processGlobAlbedoMeris() {
-        rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
-        pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, gaUseGetasse);
-        ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
-        pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                                                                        true, false, true, false, false, true);
-        merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
-                                                                    pressureLiseProduct, pbaroProduct, true);
-        final Product gasProduct = IdepixProducts.
-                computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
-        final Product landProduct = IdepixProducts.computeLandClassificationProduct(sourceProduct, gasProduct);
-        rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct, landProduct,
-                                                                          merisCloudProduct, false,
-                                                                          LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
-
         Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
-        gaCloudInput.put("gal1b", sourceProduct);
-        gaCloudInput.put("cloud", merisCloudProduct);
-        gaCloudInput.put("rayleigh", rayleighProduct);
-        gaCloudInput.put("pressure", pressureLiseProduct);
-        gaCloudInput.put("pbaro", pbaroProduct);
-        gaCloudInput.put("refl", rad2reflProduct);
+        computeMerisAlgorithmInputProducts(gaCloudInput);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
@@ -171,6 +161,29 @@ public class GlobAlbedoOp extends BasisOp {
         if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
             addRayleighCorrectionBands();
         }
+    }
+
+    private void computeMerisAlgorithmInputProducts(Map<String, Product> gaCloudInput) {
+        gaCloudInput.put("gal1b", sourceProduct);
+        rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
+        gaCloudInput.put("refl", rad2reflProduct);
+        pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, gaUseGetasse);
+        gaCloudInput.put("pbaro", pbaroProduct);
+        ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
+        pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
+                                                                        true, false, true, false, false, true);
+        gaCloudInput.put("pressure", pressureLiseProduct);
+        merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
+                                                                    pressureLiseProduct, pbaroProduct, true);
+        gaCloudInput.put("cloud", merisCloudProduct);
+        final Product gasProduct = IdepixProducts.
+                computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
+        final Product landProduct = IdepixProducts.computeLandClassificationProduct(sourceProduct, gasProduct);
+        rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct, landProduct,
+                                                                          merisCloudProduct, false,
+                                                                          LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
+        gaCloudInput.put("rayleigh", rayleighProduct);
+
     }
 
     private void processGlobAlbedoAatsr() {
@@ -198,15 +211,30 @@ public class GlobAlbedoOp extends BasisOp {
     }
 
     private void processGlobAlbedoMerisAatsrSynergy() {
+        sourceProduct.setProductType("MER_" + merisResolution + "_" + sourceProduct.getProductType());
+        removeCollocatedMasterSlaveExtensions();
+
         // new approach for GA CCN...
         Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
-        gaCloudInput.put("gal1b", sourceProduct);
+        computeMerisAlgorithmInputProducts(gaCloudInput);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisAatsrSynergyClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
 
         targetProduct = gaCloudProduct;
+    }
+
+    private void removeCollocatedMasterSlaveExtensions() {
+        for (Band band : sourceProduct.getBands()) {
+            final String name = band.getName();
+            if (name.endsWith(bandExtensionMaster)) {
+                band.setName(name.substring(0, name.length() - bandExtensionMaster.length()));
+            }
+            if (name.endsWith(bandExtensionSlave)) {
+                band.setName(name.substring(0, name.length() - bandExtensionSlave.length()));
+            }
+        }
     }
 
     private void addRayleighCorrectionBands() {

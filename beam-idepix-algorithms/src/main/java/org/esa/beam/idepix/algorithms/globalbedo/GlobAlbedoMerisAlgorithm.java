@@ -32,10 +32,16 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public boolean isCloud() {
         boolean threshTest = whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH;
-        boolean bbtest = isBlueDenseCloud();
+//        boolean bbtest = isBlueDenseCloud();
+        boolean bbtest = false;
         return ((threshTest || bbtest) && !isClearSnow());
     }
 
+    @Override
+    public boolean isSeaIce() {
+        // no algorithm available for MERIS only
+        return false;
+    }
 
     @Override
     public float spectralFlatnessValue() {

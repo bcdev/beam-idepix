@@ -38,7 +38,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    @Parameter(defaultValue = "false", label = "Copy input radiance bands")
+    @Parameter(defaultValue = "true", label = "Copy input radiance bands")
     boolean gaCopyRadiances;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
     boolean gaComputeFlagsOnly;
@@ -190,10 +190,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, globAlbedoAlgorithm.isClearSnow());
         targetTile.setSample(x, y, IdepixConstants.F_LAND, globAlbedoAlgorithm.isLand());
         targetTile.setSample(x, y, IdepixConstants.F_WATER, globAlbedoAlgorithm.isWater());
+        targetTile.setSample(x, y, IdepixConstants.F_SEAICE, globAlbedoAlgorithm.isSeaIce());
         targetTile.setSample(x, y, IdepixConstants.F_BRIGHT, globAlbedoAlgorithm.isBright());
         targetTile.setSample(x, y, IdepixConstants.F_WHITE, globAlbedoAlgorithm.isWhite());
         targetTile.setSample(x, y, IdepixConstants.F_BRIGHTWHITE, globAlbedoAlgorithm.isBrightWhite());
-        targetTile.setSample(x, y, IdepixConstants.F_COLD, globAlbedoAlgorithm.isCold());
         targetTile.setSample(x, y, IdepixConstants.F_HIGH, globAlbedoAlgorithm.isHigh());
         targetTile.setSample(x, y, IdepixConstants.F_VEG_RISK, globAlbedoAlgorithm.isVegRisk());
         targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, globAlbedoAlgorithm.isGlintRisk());

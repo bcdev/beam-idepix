@@ -17,6 +17,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     // F_CLOUD_BUFFER
     // F_CLOUD_SHADOW
     // F_WATER
+    // F_SEA_ICE // new
 
     static final float BRIGHTWHITE_THRESH = 1.5f;
     static final float NDSI_THRESH = 0.68f;
@@ -30,6 +31,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     static final float PRESSURE_THRESH = 0.9f;
 
     // MERIS
+    private float[] reflMeris;
     private float[] brrMeris;
     private boolean l1FlagLandMeris;
     private float p1Meris;
@@ -37,9 +39,10 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float pbaroMeris;
     private float brr442Meris;
     private float brr442ThreshMeris;
-
     // AATSR
     private float btemp1200Aatsr;
+    private float[] reflAatsr;
+    private float[] btempAatsr;
     private boolean l1FlagLandAatsr;
     private boolean useFwardViewForCloudMaskAatsr;
 
@@ -50,16 +53,21 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
         return ((threshTest || bbtest) && !isClearSnow());
     }
 
+    @Override
+    public boolean isSeaIce() {
+        // todo implement
+        return isCloud() && btempAatsr[2] < 258.0;
+    }
 
     @Override
     public float spectralFlatnessValue() {
-        final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[2],
+        final double slope0 = IdepixUtils.spectralSlope(reflMeris[0], reflMeris[2],
                                                         IdepixConstants.MERIS_WAVELENGTHS[0],
                                                         IdepixConstants.MERIS_WAVELENGTHS[2]);
-        final double slope1 = IdepixUtils.spectralSlope(refl[4], refl[5],
+        final double slope1 = IdepixUtils.spectralSlope(reflMeris[4], reflMeris[5],
                                                         IdepixConstants.MERIS_WAVELENGTHS[4],
                                                         IdepixConstants.MERIS_WAVELENGTHS[5]);
-        final double slope2 = IdepixUtils.spectralSlope(refl[6], refl[9],
+        final double slope2 = IdepixUtils.spectralSlope(reflMeris[6], reflMeris[9],
                                                         IdepixConstants.MERIS_WAVELENGTHS[6],
                                                         IdepixConstants.MERIS_WAVELENGTHS[9]);
 
@@ -209,6 +217,22 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setUseFwardViewForCloudMaskAatsr(boolean useFwardViewForCloudMaskAatsr) {
         this.useFwardViewForCloudMaskAatsr = useFwardViewForCloudMaskAatsr;
+    }
+
+    public void setReflMeris(float[] reflMeris) {
+        this.reflMeris = reflMeris;
+    }
+
+    public void setPbaroMeris(float pbaroMeris) {
+        this.pbaroMeris = pbaroMeris;
+    }
+
+    public void setReflAatsr(float[] reflAatsr) {
+        this.reflAatsr = reflAatsr;
+    }
+
+    public void setBtempAatsr(float[] btempAatsr) {
+        this.btempAatsr = btempAatsr;
     }
 
     // THRESHOLD GETTERS

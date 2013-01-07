@@ -2,8 +2,7 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -11,8 +10,10 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.operators.BarometricPressureOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
@@ -43,11 +44,6 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "_M", label = "Colocation master product band names extension")
-    private boolean bandExtensionMaster;
-    @Parameter(defaultValue = "_S", label = "Colocation slave product band names extension")
-    private boolean bandExtensionSlave;
-
     @Parameter(defaultValue = "true", label = "Use forward view for cloud flag determination (AATSR)")
     private boolean gaUseAatsrFwardForClouds;
 
@@ -66,7 +62,94 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         final Rectangle rectangle = targetTile.getRectangle();
 
-        // todo
+        // todo: write only cloud_classif_flags obtained from synergy algorithm, and optionally copy
+        // master and slave radiances/reflectances from colocation product
+
+        // MERIS variables
+        final Tile merisBrr442Tile = getSourceTile(merisBrr442Band, rectangle);
+        final Tile merisBrr442ThreshTile = getSourceTile(merisBrr442ThreshBand, rectangle);
+        final Tile merisP1Tile = getSourceTile(merisP1Band, rectangle);
+        final Tile merisPbaroTile = getSourceTile(merisPbaroBand, rectangle);
+        final Tile merisPscattTile = getSourceTile(merisPscattBand, rectangle);
+
+        final Band merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
+        final Tile merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
+
+        Tile[] merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
+        float[] merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
+        for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
+            merisBrrTiles[i] = getSourceTile(merisBrrBands[i], rectangle);
+        }
+
+        Tile[] merisReflectanceTiles = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
+        float[] merisReflectance = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            merisReflectanceTiles[i] = getSourceTile(merisReflBands[i], rectangle);
+        }
+
+        // AATSR variables
+        final Band aatsrL1bFlagBand = sourceProduct.getBand(EnvisatConstants.AATSR_L1B_CLOUD_FLAGS_NADIR_BAND_NAME);
+        final Tile aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle);
+
+        Tile[] aatsrReflectanceTiles = new Tile[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
+        float[] aatsrReflectance = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
+        for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
+            aatsrReflectanceTiles[i] = getSourceTile(aatsrReflectanceBands[i], rectangle);
+        }
+
+        Tile[] aatsrBtempTiles = new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
+        float[] aatsrBtemp = new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
+        for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
+            aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
+        }
+
+
+        GeoPos geoPos = null;
+        try {
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                checkForCancellation();
+                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+
+                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
+                    if (!gaUseL1bLandWaterFlag) {
+                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                        if (geoCoding.canGetGeoPos()) {
+                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
+                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                        }
+                    }
+
+                    // set up pixel properties for given instruments...
+                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAatsrSynergyAlgorithm(merisL1bFlagTile,
+                                                                                               merisBrr442Tile, merisP1Tile,
+                                                                                               merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
+                                                                                               merisReflectanceTiles,
+                                                                                               merisReflectance,
+                                                                                               merisBrrTiles, merisBrr,
+                                                                                               aatsrL1bFlagTile,
+                                                                                               aatsrReflectanceTiles, aatsrReflectance,
+                                                                                               aatsrBtempTiles, aatsrBtemp,
+                                                                                               waterMaskSample,
+                                                                                               waterMaskFraction,
+                                                                                               y,
+                                                                                               x);
+
+                    if (band == cloudFlagBand) {
+                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
+                    }
+
+                    // todo: remove this later
+                    setPixelSamples(band, targetTile, merisP1Tile, merisPbaroTile, merisPscattTile, y, x, globAlbedoAlgorithm);
+                }
+            }
+            // set cloud buffer flags...
+            setCloudBuffer(band, targetTile, rectangle);
+
+        } catch (Exception e) {
+            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -106,22 +189,40 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     void extendTargetProduct() {
         // L1 flags (MERIS), confid flags, cloud flags (AATSR)
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+
+        if (gaCopyRadiances) {
+            copyRadiances();
+        }
     }
 
+    private void copyRadiances() {
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
+                                  targetProduct, true);
+        }
+        for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
+            ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
+                                  targetProduct, true);
+        }
+        for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
+            ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
+                                  targetProduct, true);
+        }
+    }
 
     private GlobAlbedoAlgorithm createMerisAatsrSynergyAlgorithm(Tile merisL1bFlagTile,
-                                                     Tile brr442Tile, Tile p1Tile,
-                                                     Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
-                                                     Tile[] merisReflectanceTiles,
-                                                     float[] merisReflectance,
-                                                     Tile[] merisBrrTiles, float[] merisBrr,
-                                                     Tile aatsrL1bFlagTile,
-                                                     Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
-                                                     Tile[] aatsrBtempTiles, float[] aatsrBtemp,
-                                                     byte watermask,
-                                                     byte watermaskFraction,
-                                                     int y,
-                                                     int x) {
+                                                                 Tile brr442Tile, Tile p1Tile,
+                                                                 Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
+                                                                 Tile[] merisReflectanceTiles,
+                                                                 float[] merisReflectance,
+                                                                 Tile[] merisBrrTiles, float[] merisBrr,
+                                                                 Tile aatsrL1bFlagTile,
+                                                                 Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
+                                                                 Tile[] aatsrBtempTiles, float[] aatsrBtemp,
+                                                                 byte watermask,
+                                                                 byte watermaskFraction,
+                                                                 int y,
+                                                                 int x) {
         GlobAlbedoMerisAatsrSynergyAlgorithm gaAlgorithm = new GlobAlbedoMerisAatsrSynergyAlgorithm();
 
         // MERIS part:
@@ -129,7 +230,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
             merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
         }
 
-        gaAlgorithm.setRefl(merisReflectance);
+        gaAlgorithm.setReflMeris(merisReflectance);
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
             merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
         }
@@ -139,6 +240,23 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         gaAlgorithm.setP1Meris(p1Tile.getSampleFloat(x, y));
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscattMeris(pscattTile.getSampleFloat(x, y));
+
+        // AATSR part:
+        for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
+            aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
+        }
+        for (int i = 0; i < IdepixConstants.AATSR_BTEMP_BAND_NAMES.length; i++) {
+            aatsrBtemp[i] = aatsrBtempTiles[i].getSampleFloat(x, y);
+        }
+
+        gaAlgorithm.setUseFwardViewForCloudMaskAatsr(gaUseAatsrFwardForClouds);
+        gaAlgorithm.setReflAatsr(aatsrReflectance);
+        gaAlgorithm.setBtempAatsr(aatsrBtemp);
+
+        float[] merisAatsrReflectance = concatMerisAatsrReflectanceArrays(merisReflectance, aatsrReflectance);
+        gaAlgorithm.setRefl(merisAatsrReflectance);
+
+        // water mask part
         if (gaUseWaterMaskFraction) {
             final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
                     watermaskFraction < WATERMASK_FRACTION_THRESH;
@@ -151,14 +269,15 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
             setIsWater(watermask, gaAlgorithm);
         }
 
-        // AATSR part:
-        gaAlgorithm.setUseFwardViewForCloudMaskAatsr(gaUseAatsrFwardForClouds);
-        gaAlgorithm.setRefl(aatsrReflectance);
-        gaAlgorithm.setBtemp1200Aatsr(aatsrBtempTiles[2].getSampleFloat(x, y));
-
         return gaAlgorithm;
     }
 
+    private float[] concatMerisAatsrReflectanceArrays(float[] merisReflectance, float[] aatsrReflectance) {
+        float[] merisAatsrReflectance = new float[merisReflectance.length+aatsrReflectance.length];
+        System.arraycopy(merisReflectance, 0, merisAatsrReflectance, 0, merisReflectance.length);
+        System.arraycopy(aatsrReflectance, 0, merisAatsrReflectance, merisReflectance.length, aatsrReflectance.length);
+        return merisAatsrReflectance;
+    }
 
     /**
      * The Service Provider Interface (SPI) for the operator.

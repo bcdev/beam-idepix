@@ -21,10 +21,10 @@ public class IdepixConstants {
     public static final int F_CLEAR_SNOW = 6;
     public static final int F_LAND = 7;
     public static final int F_WATER = 8;
-    public static final int F_BRIGHT = 9;
-    public static final int F_WHITE = 10;
-    public static final int F_BRIGHTWHITE = 11;
-    public static final int F_COLD = 12;
+    public static final int F_SEAICE = 9;
+    public static final int F_BRIGHT = 10;
+    public static final int F_WHITE = 11;
+    public static final int F_BRIGHTWHITE = 12;
     public static final int F_HIGH = 13;
     public static final int F_VEG_RISK = 14;
     public static final int F_GLINT_RISK = 15;

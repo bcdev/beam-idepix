@@ -40,6 +40,12 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
+    public boolean isSeaIce() {
+        // no algorithm available for VGT only
+        return false;
+    }
+
+    @Override
     public float brightValue() {
         double value;
         if (isLand()) {

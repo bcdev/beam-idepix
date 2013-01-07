@@ -25,8 +25,9 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
         return (whiteValue() + brightValue() > getBrightWhiteThreshold());
     }
 
-    // implementation is instrument-dependent:
+    // implementations are instrument-dependent:
     public abstract boolean isCloud();
+    public abstract boolean isSeaIce();
 
     @Override
     public boolean isClearLand() {
@@ -74,11 +75,6 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
     @Override
     public boolean isWhite() {
         return (!isInvalid() && whiteValue() > getWhiteThreshold());
-    }
-
-    @Override
-    public boolean isCold() {
-        return (!isInvalid() && temperatureValue() > getTemperatureThreshold());
     }
 
     @Override
