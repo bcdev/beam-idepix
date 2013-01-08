@@ -1,6 +1,9 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -10,7 +13,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -26,10 +28,10 @@ import java.io.IOException;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-                  version = "1.0",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2008, 2012 by Brockmann Consult",
-                  description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
+        version = "1.0",
+        authors = "Olaf Danne",
+        copyright = "(c) 2008, 2012 by Brockmann Consult",
+        description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
 public abstract class GlobAlbedoClassificationOp extends Operator {
 
     @SourceProduct(alias = "gal1b", description = "The source product.")
@@ -51,7 +53,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     boolean gaUseWaterMaskFraction = true;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+            description = "Resolution in m/pixel")
     int wmResolution;
 
     WatermaskClassifier classifier;
@@ -86,6 +88,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     }
 
     abstract void setBands();
+
     abstract void extendTargetProduct();
 
     void setWatermaskStrategy() {
@@ -123,12 +126,12 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             IdepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
             brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    true);
             temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", IdepixConstants.NO_DATA_VALUE, true);
             spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl",
-                                             IdepixConstants.NO_DATA_VALUE, true);
+                    IdepixConstants.NO_DATA_VALUE, true);
             ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", IdepixConstants.NO_DATA_VALUE, true);
             ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
@@ -137,10 +140,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             IdepixUtils.setNewBandProperties(glintRiskBand, "GLINT_RISK", "dl", IdepixConstants.NO_DATA_VALUE, true);
             radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    true);
             radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "",
-                                             IdepixConstants.NO_DATA_VALUE, true);
+                    IdepixConstants.NO_DATA_VALUE, true);
         }
         // new bit masks:
         IdepixUtils.setupIdepixCloudscreeningBitmasks(targetProduct);
@@ -165,11 +168,14 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             targetTile.setSample(x, y, globAlbedoAlgorithm.ndsiValue());
         } else if (band == glintRiskBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.glintRiskValue());
-        } else if (band == pressureBand) {
+        } else if (band == pressureBand) {     // todo: check why pressure bands are not written to target
             targetTile.setSample(x, y, globAlbedoAlgorithm.pressureValue());
         } else if (band == pbaroOutputBand) {
             targetTile.setSample(x, y, pbaroTile.getSampleFloat(x, y));
         } else if (band == p1OutputBand) {
+            if (x == 320 && y == 400) {
+                System.out.println("x = " + x);
+            }
             targetTile.setSample(x, y, p1Tile.getSampleFloat(x, y));
         } else if (band == pscattOutputBand) {
             targetTile.setSample(x, y, pscattTile.getSampleFloat(x, y));

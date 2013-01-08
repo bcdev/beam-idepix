@@ -46,11 +46,11 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
  * This class provides the pixel classification for MERIS (mainly based on IPF approach).
  */
 @OperatorMetadata(alias = "idepix.operators.MerisClassification",
-                  version = "1.0",
-                  internal = true,
-                  authors = "Marco Zühlke, Olaf Danne",
-                  copyright = "(c) 2007 by Brockmann Consult",
-                  description = "MERIS L2 cloud classification (version from MEPIX processor).")
+        version = "1.0",
+        internal = true,
+        authors = "Marco Zühlke, Olaf Danne",
+        copyright = "(c) 2007 by Brockmann Consult",
+        description = "MERIS L2 cloud classification (version from MEPIX processor).")
 public class MerisClassificationOp extends MerisBasisOp {
 
     public static final String CLOUD_FLAGS = "cloud_classif_flags";
@@ -104,26 +104,20 @@ public class MerisClassificationOp extends MerisBasisOp {
 
     @Parameter(description = "If 'true' the algorithm will compute L2 Pressures.", defaultValue = "true")
     private boolean l2Pressures;
-    @Parameter(label = "L2 Cloud Detection Flags with LISE 'PScatt'", defaultValue = "false")
-    private boolean pressureOutputL2CloudDetectionLisePScatt;
     @Parameter(description = "User Defined P1 Pressure Threshold.", defaultValue = "125.0")
     private double userDefinedP1PressureThreshold;
     @Parameter(description = "User Defined PScatt Pressure Threshold.", defaultValue = "700.0")
     private double userDefinedPScattPressureThreshold;
-    @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.185")
+    @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedRhoToa442Threshold;
-
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold;
-
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
     @Parameter(description = "User Defined RhoTOA Ratio 753/775 Threshold.", defaultValue = "0.15")
     private double userDefinedRhoToaRatio753775Threshold;
     @Parameter(description = "User Defined MDSI Threshold.", defaultValue = "0.01")
     private double userDefinedMDSIThreshold;
-    @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
-    private double userDefinedNDVIThreshold;
     private Band cloudFlagBand;
 
 
@@ -175,26 +169,26 @@ public class MerisClassificationOp extends MerisBasisOp {
         int h = sourceProduct.getSceneRasterHeight();
 
         bitmaskDefs[0] = Mask.BandMathsType.create("f_cloud", "IDEPIX final cloud flag", w, h, CLOUD_FLAGS + ".F_CLOUD",
-                                                   Color.CYAN, 0.5f);
+                Color.CYAN, 0.5f);
         bitmaskDefs[1] = Mask.BandMathsType.create("f_bright", "IDEPIX combined of old and second bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT", new Color(0, 153, 153), 0.5f);
+                CLOUD_FLAGS + ".F_BRIGHT", new Color(0, 153, 153), 0.5f);
         bitmaskDefs[2] = Mask.BandMathsType.create("f_bright_rc", "IDEPIX old bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204, 255, 204), 0.5f);
+                CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204, 255, 204), 0.5f);
         bitmaskDefs[3] = Mask.BandMathsType.create("f_low_p_pscatt", "IDEPIX test on apparent scattering (over ocean)",
-                                                   w, h, CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153, 153, 0), 0.5f);
+                w, h, CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153, 153, 0), 0.5f);
         bitmaskDefs[4] = Mask.BandMathsType.create("f_low_p_p1", "IDEPIX test on P1 (over land)", w, h,
-                                                   CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f);
+                CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f);
         bitmaskDefs[5] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
-                                                   CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
+                CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
         bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_2", "IDEPIX old slope 2 test", w, h,
-                                                   CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
+                CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
         bitmaskDefs[7] = Mask.BandMathsType.create("f_bright_toa", "IDEPIX second bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
+                CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
         bitmaskDefs[8] = Mask.BandMathsType.create("f_high_mdsi",
-                                                   "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
-                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
+                "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
+                w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
         bitmaskDefs[9] = Mask.BandMathsType.create("f_snow_ice", "IDEPIX snow/ice flag", w, h,
-                                                   CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f);
+                CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f);
 
         return bitmaskDefs;
     }
@@ -224,17 +218,17 @@ public class MerisClassificationOp extends MerisBasisOp {
                 l1bProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME),
                 rectangle).getRawSamples().getElems();
         sd.sza = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.vza = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.saa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.vaa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.altitude = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME),
-                                              rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
-                                                   rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.l1Flags = getSourceTile(l1bProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME), rectangle);
 
         return sd;
@@ -251,7 +245,7 @@ public class MerisClassificationOp extends MerisBasisOp {
             Tile pbaroTile = getSourceTile(pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC), rectangle);
             Tile liseP1Tile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1), rectangle);
             Tile lisePScattTile = getSourceTile(lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT),
-                                                rectangle);
+                    rectangle);
 
             PixelInfo pixelInfo = new PixelInfo();
             int i = 0;
@@ -267,8 +261,8 @@ public class MerisClassificationOp extends MerisBasisOp {
                             // ECMWF pressure is only corrected for positive
                             // altitudes and only for land pixels
                             pixelInfo.ecmwfPressure = HelperFunctions.correctEcmwfPressure(sd.ecmwfPressure[i],
-                                                                                           sd.altitude[i],
-                                                                                           auxData.press_scale_height);
+                                    sd.altitude[i],
+                                    auxData.press_scale_height);
                         } else {
                             pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
                         }
@@ -314,9 +308,9 @@ public class MerisClassificationOp extends MerisBasisOp {
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         PixelId pixelId = new PixelId(auxData);
         PixelId.Pressure press = pixelId.computePressure(sd.rhoToa[bb753][pixelInfo.index],
-                                                         sd.rhoToa[bb760][pixelInfo.index],
-                                                         pixelInfo.airMass,
-                                                         sd.detectorIndex[pixelInfo.index]);
+                sd.rhoToa[bb760][pixelInfo.index],
+                pixelInfo.airMass,
+                sd.detectorIndex[pixelInfo.index]);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, Math.max(0.0, press.value));
     }
 
@@ -380,7 +374,7 @@ public class MerisClassificationOp extends MerisBasisOp {
         angleInfo.cosv = Math.cos(dc.vza[pixelInfo.index] * MathUtils.DTOR);
         // delta azimuth in degree
         angleInfo.deltaAzimuth = HelperFunctions.computeAzimuthDifference(dc.vaa[pixelInfo.index],
-                                                                             dc.saa[pixelInfo.index]);
+                dc.saa[pixelInfo.index]);
 
         return angleInfo;
     }
@@ -430,7 +424,7 @@ public class MerisClassificationOp extends MerisBasisOp {
 
         /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
         rayleighCorrection.ref_rayleigh(ai.deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
-                                        ai.coss, ai.cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
+                ai.coss, ai.cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
 
         /* DPM #2.1.7-4 */
         for (int band = bb412; band <= bb900; band++) {

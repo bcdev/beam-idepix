@@ -3,26 +3,22 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.operators.BarometricPressureOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
-import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.*;
-import java.io.IOException;
 
 /**
  * Operator for GlobAlbedo MERIS cloud screening
@@ -31,10 +27,10 @@ import java.io.IOException;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.meris",
-                  version = "1.0",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2008, 2012 by Brockmann Consult",
-                  description = "This operator provides cloud screening from MERIS data.")
+        version = "1.0",
+        authors = "Olaf Danne",
+        copyright = "(c) 2008, 2012 by Brockmann Consult",
+        description = "This operator provides cloud screening from MERIS data.")
 public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp {
 
     @SourceProduct(alias = "cloud", optional = true)
@@ -73,6 +69,10 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
+
+        // todo: implement computeTileStack instead of compute tile!!
+        // --> most stuff we only need to do once, i.e. in case of cloud_classif_bands!
+
         final Rectangle rectangle = targetTile.getRectangle();
 
         // MERIS variables
@@ -116,16 +116,19 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAlgorithm(merisL1bFlagTile,
-                                                                                   brr442Tile, p1Tile,
-                                                                                   pbaroTile, pscattTile, brr442ThreshTile,
-                                                                                   merisReflectanceTiles,
-                                                                                   merisReflectance,
-                                                                                   merisBrrTiles, merisBrr, waterMaskSample,
-                                                                                   waterMaskFraction,
-                                                                                   y,
-                                                                                   x);
+                            brr442Tile, p1Tile,
+                            pbaroTile, pscattTile, brr442ThreshTile,
+                            merisReflectanceTiles,
+                            merisReflectance,
+                            merisBrrTiles, merisBrr, waterMaskSample,
+                            waterMaskFraction,
+                            y,
+                            x);
 
                     if (band == cloudFlagBand) {
+                        if (x == 320 && y == 400) {
+                            System.out.println("x = " + x);
+                        }
                         setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
 
                         if (landNN != null && !targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
@@ -189,15 +192,15 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
             IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
             pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-                                             IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    IdepixConstants.NO_DATA_VALUE,
+                    true);
             p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    true);
             pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-                                             IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    IdepixConstants.NO_DATA_VALUE,
+                    true);
         }
         if (gaCopyRadiances) {
             copyRadiances();
@@ -208,11 +211,11 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private void copyRadiances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                                  targetProduct, true);
+                    targetProduct, true);
         }
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
-                                  targetProduct, true);
+                    targetProduct, true);
         }
     }
 
@@ -236,6 +239,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
             merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
         }
+
         gaAlgorithm.setBrr(merisBrr);
         gaAlgorithm.setBrr442(brr442Tile.getSampleFloat(x, y));
         gaAlgorithm.setBrr442Thresh(brr442ThreshTile.getSampleFloat(x, y));
