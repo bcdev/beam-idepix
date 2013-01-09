@@ -79,9 +79,9 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
             }
             // set cloud buffer flags...
             if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band, targetTile, rectangle);
+                IdepixUtils.setCloudBufferLC(band.getName(), targetTile, rectangle);
             } else {
-                setCloudBuffer(band, targetTile, rectangle);
+                setCloudBuffer(band.getName(), targetTile, rectangle);
             }
 
         } catch (Exception e) {

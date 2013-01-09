@@ -19,6 +19,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.*;
+import java.util.Map;
 
 /**
  * Operator for GlobAlbedo MERIS cloud screening
@@ -27,10 +28,10 @@ import java.awt.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.meris",
-        version = "1.0",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008, 2012 by Brockmann Consult",
-        description = "This operator provides cloud screening from MERIS data.")
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008, 2012 by Brockmann Consult",
+                  description = "This operator provides cloud screening from MERIS data.")
 public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp {
 
     @SourceProduct(alias = "cloud", optional = true)
@@ -64,6 +65,98 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private Band pscattOutputBand;
 
     private SchillerAlgorithm landNN = null;
+
+//    @Override
+//    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
+//        // MERIS variables
+//        final Tile brr442Tile = getSourceTile(brr442Band, rectangle);
+//        final Tile brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle);
+//        final Tile p1Tile = getSourceTile(p1Band, rectangle);
+//        final Tile pbaroTile = getSourceTile(pbaroBand, rectangle);
+//        final Tile pscattTile = getSourceTile(pscattBand, rectangle);
+//
+//        final Band merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
+//        final Tile merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
+//
+//        Tile[] merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
+//        float[] merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
+//        for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
+//            merisBrrTiles[i] = getSourceTile(merisBrrBands[i], rectangle);
+//        }
+//
+//        Tile[] merisReflectanceTiles = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
+//        float[] merisReflectance = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
+//        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+//            merisReflectanceTiles[i] = getSourceTile(merisReflBands[i], rectangle);
+//        }
+//
+//        GeoPos geoPos = null;
+//        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+//        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
+//        try {
+//            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+//                checkForCancellation();
+//                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+//
+//                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+//                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
+//                    if (!gaUseL1bLandWaterFlag) {
+//                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
+//                        if (geoCoding.canGetGeoPos()) {
+//                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
+//                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+//                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+//                        }
+//                    }
+//
+//                    // set up pixel properties for given instruments...
+//                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAlgorithm(merisL1bFlagTile,
+//                                                                                   brr442Tile, p1Tile,
+//                                                                                   pbaroTile, pscattTile, brr442ThreshTile,
+//                                                                                   merisReflectanceTiles,
+//                                                                                   merisReflectance,
+//                                                                                   merisBrrTiles, merisBrr, waterMaskSample,
+//                                                                                   waterMaskFraction,
+//                                                                                   y,
+//                                                                                   x);
+//
+//                    setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
+//
+//                    if (landNN != null && !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+//                        final int finalX = x;
+//                        final int finalY = y;
+//                        final Tile[] finalMerisRefl = merisReflectanceTiles;
+//                        SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
+//                            @Override
+//                            public double get(int index) {
+//                                return finalMerisRefl[index].getSampleDouble(finalX, finalY);
+//                            }
+//                        };
+//                        float schillerCloud = landNN.compute(accessor);
+//                        if (schillerCloud > 1.4) {
+//                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+//                        }
+//                    }
+//
+//                    // for given instrument, compute more pixel properties and write to distinct band
+//                    // todo: find a more clever mapping of target bands and 'values' to write into
+//                    for (Band band : targetProduct.getBands()) {
+//                        final Tile targetTile = targetTiles.get(band);
+//                        setPixelSamples(band, targetTile, p1Tile, pbaroTile, pscattTile, y, x, globAlbedoAlgorithm);
+//                    }
+//                }
+//            }
+//            // set cloud buffer flags...
+//            if (gaLcCloudBuffer) {
+//                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
+//            } else {
+//                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
+//            }
+//
+//        } catch (Exception e) {
+//            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+//        }
+//    }
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
@@ -114,14 +207,14 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAlgorithm(merisL1bFlagTile,
-                            brr442Tile, p1Tile,
-                            pbaroTile, pscattTile, brr442ThreshTile,
-                            merisReflectanceTiles,
-                            merisReflectance,
-                            merisBrrTiles, merisBrr, waterMaskSample,
-                            waterMaskFraction,
-                            y,
-                            x);
+                                                                                   brr442Tile, p1Tile,
+                                                                                   pbaroTile, pscattTile, brr442ThreshTile,
+                                                                                   merisReflectanceTiles,
+                                                                                   merisReflectance,
+                                                                                   merisBrrTiles, merisBrr, waterMaskSample,
+                                                                                   waterMaskFraction,
+                                                                                   y,
+                                                                                   x);
 
                     if (band == cloudFlagBand) {
                         if (x == 320 && y == 400) {
@@ -152,9 +245,9 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
             }
             // set cloud buffer flags...
             if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band, targetTile, rectangle);
+                IdepixUtils.setCloudBufferLC(band.getName(), targetTile, rectangle);
             } else {
-                setCloudBuffer(band, targetTile, rectangle);
+                setCloudBuffer(band.getName(), targetTile, rectangle);
             }
 
         } catch (Exception e) {
@@ -190,15 +283,15 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
             IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
             pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-                    IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             IdepixConstants.NO_DATA_VALUE,
+                                             true);
             p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             true);
             pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-                    IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             IdepixConstants.NO_DATA_VALUE,
+                                             true);
         }
         if (gaCopyRadiances) {
             copyRadiances();
@@ -209,11 +302,11 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private void copyRadiances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                    targetProduct, true);
+                                  targetProduct, true);
         }
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
-                    targetProduct, true);
+                                  targetProduct, true);
         }
     }
 

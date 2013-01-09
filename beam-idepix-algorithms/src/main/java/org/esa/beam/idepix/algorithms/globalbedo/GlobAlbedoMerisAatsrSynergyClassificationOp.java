@@ -62,9 +62,6 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         final Rectangle rectangle = targetTile.getRectangle();
 
-        // todo: write only cloud_classif_flags obtained from synergy algorithm, and optionally copy
-        // master and slave radiances/reflectances from colocation product
-
         // MERIS variables
         final Tile merisBrr442Tile = getSourceTile(merisBrr442Band, rectangle);
         final Tile merisBrr442ThreshTile = getSourceTile(merisBrr442ThreshBand, rectangle);
@@ -156,7 +153,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                 }
             }
             // set cloud buffer flags...
-            setCloudBuffer(band, targetTile, rectangle);
+            setCloudBuffer(band.getName(), targetTile, rectangle);
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);

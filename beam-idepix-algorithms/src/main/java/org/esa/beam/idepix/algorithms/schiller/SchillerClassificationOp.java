@@ -132,7 +132,7 @@ public class SchillerClassificationOp extends Operator {
     
             targetTile.setSample(pos.x, pos.y, resultFlag);
         }
-        IdepixUtils.setCloudBufferLC(targetBand, targetTile, rectangle);
+        IdepixUtils.setCloudBufferLC(targetBand.getName(), targetTile, rectangle);
     }
 
     /**

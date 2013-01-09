@@ -107,7 +107,7 @@ public class MagicStickClassificationOp extends Operator {
             cloudFlag = BitSetter.setFlag(cloudFlag, IdepixConstants.F_WATER, isWater);
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
-        IdepixUtils.setCloudBufferLC(targetBand, targetTile, rectangle);
+        IdepixUtils.setCloudBufferLC(targetBand.getName(), targetTile, rectangle);
     }
 
     /**

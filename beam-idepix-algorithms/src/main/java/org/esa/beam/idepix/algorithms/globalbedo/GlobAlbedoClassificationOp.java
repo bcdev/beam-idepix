@@ -203,8 +203,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
         targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, globAlbedoAlgorithm.isGlintRisk());
     }
 
-    void setCloudBuffer(Band band, Tile targetTile, Rectangle rectangle) {
-        if (band.isFlagBand() && band.getName().equals(IdepixUtils.IDEPIX_CLOUD_FLAGS)) {
+    void setCloudBuffer(String bandName, Tile targetTile, Rectangle rectangle) {
+        if (bandName.equals(IdepixUtils.IDEPIX_CLOUD_FLAGS)) {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                     if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {

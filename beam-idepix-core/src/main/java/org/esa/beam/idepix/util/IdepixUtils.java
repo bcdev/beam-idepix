@@ -290,7 +290,7 @@ public class IdepixUtils {
         return new Color(rColor, gColor, bColor);
     }
 
-    public static void setCloudBufferLC(Band band, Tile targetTile, Rectangle rectangle) {
+    public static void setCloudBufferLC(String bandName, Tile targetTile, Rectangle rectangle) {
         //  set alternative cloud buffer flag as used in LC-CCI project:
         // 1. use 2x2 square with reference pixel in upper left
         // 2. move this square row-by-row over the tile
@@ -300,7 +300,7 @@ public class IdepixUtils {
         //      in both x and y direction of reference pixel.
         //    - if 2x2 square also has non-cloudy pixels, do the same but with cloud buffer of only 1
 
-        if (band.isFlagBand() && band.getName().equals(IDEPIX_CLOUD_FLAGS)) {
+        if (bandName.equals(IDEPIX_CLOUD_FLAGS)) {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
                     if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
