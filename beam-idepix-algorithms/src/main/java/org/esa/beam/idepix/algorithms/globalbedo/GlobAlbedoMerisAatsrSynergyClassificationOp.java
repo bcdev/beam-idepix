@@ -122,6 +122,12 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                     }
 
                     // set up pixel properties for given instruments...
+                    if (x == 320 && y == 400) {  // over water
+                        System.out.println("x = " + x);
+                    }
+                    if (x == 330 && y == 300) {  // land
+                        System.out.println("x = " + x);
+                    }
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAatsrSynergyAlgorithm(merisL1bFlagTile,
                                                                                                merisBrr442Tile, merisP1Tile,
                                                                                                merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
@@ -137,10 +143,15 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                                                                                                x);
 
                     if (band == cloudFlagBand) {
+                        if (x == 320 && y == 400) {  // over water
+                            System.out.println("x = " + x);
+                        }
+                        if (x == 330 && y == 300) {  // land
+                            System.out.println("x = " + x);
+                        }
                         setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
                     }
 
-                    // todo: remove this later
                     setPixelSamples(band, targetTile, merisP1Tile, merisPbaroTile, merisPscattTile, y, x, globAlbedoAlgorithm);
                 }
             }
@@ -187,6 +198,22 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
     @Override
     void extendTargetProduct() {
+        if (!gaComputeFlagsOnly && gaCopyPressure) {
+            pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
+            IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
+            pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
+            IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
+                                             IdepixConstants.NO_DATA_VALUE,
+                                             true);
+            p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
+            IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+                                             true);
+            pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
+            IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
+                                             IdepixConstants.NO_DATA_VALUE,
+                                             true);
+        }
+
         // L1 flags (MERIS), confid flags, cloud flags (AATSR)
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
 
@@ -257,7 +284,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         gaAlgorithm.setRefl(merisAatsrReflectance);
 
         // water mask part
-        if (gaUseWaterMaskFraction) {
+        if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
             final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
                     watermaskFraction < WATERMASK_FRACTION_THRESH;
             gaAlgorithm.setL1FlagLandMeris(isLand);

@@ -40,10 +40,12 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    @Parameter(defaultValue = "true", label = "Copy input radiance bands")
-    boolean gaCopyRadiances;
     @Parameter(defaultValue = "false", label = "Compute only the flag band")
     boolean gaComputeFlagsOnly;
+    @Parameter(defaultValue = "true", label = "Copy input radiance bands")
+    boolean gaCopyRadiances;
+    @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")
+    boolean gaCopyPressure;
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     int gaCloudBufferWidth;
     @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
@@ -80,7 +82,6 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         setBands();
         setWatermaskStrategy();
         createTargetProduct();
@@ -168,14 +169,11 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             targetTile.setSample(x, y, globAlbedoAlgorithm.ndsiValue());
         } else if (band == glintRiskBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.glintRiskValue());
-        } else if (band == pressureBand) {     // todo: check why pressure bands are not written to target
+        } else if (band == pressureBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.pressureValue());
         } else if (band == pbaroOutputBand) {
             targetTile.setSample(x, y, pbaroTile.getSampleFloat(x, y));
         } else if (band == p1OutputBand) {
-            if (x == 320 && y == 400) {
-                System.out.println("x = " + x);
-            }
             targetTile.setSample(x, y, p1Tile.getSampleFloat(x, y));
         } else if (band == pscattOutputBand) {
             targetTile.setSample(x, y, pscattTile.getSampleFloat(x, y));

@@ -10,15 +10,6 @@ import org.esa.beam.idepix.util.IdepixUtils;
  */
 public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
-    // todo: for further usage in GA (BbdrOp), we need the flags:
-    // F_CLEAR_LAND
-    // F_CLEAR_SNOW
-    // F_CLOUD
-    // F_CLOUD_BUFFER
-    // F_CLOUD_SHADOW
-    // F_WATER
-    // F_SEA_ICE // new
-
     static final float BRIGHTWHITE_THRESH = 1.5f;
     static final float NDSI_THRESH = 0.68f;
     static final float CLOUD_THRESH = 1.65f;
@@ -48,15 +39,18 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public boolean isCloud() {
-        boolean threshTest = whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH;
+        boolean threshTest = whiteValue() + 5.0*brightValue() + 0.5*pressureValue() + temperatureValue() > CLOUD_THRESH;
         boolean bbtest = isBlueDenseCloud();
-        return ((threshTest || bbtest) && !isClearSnow());
+        if (isLand()) {
+            return ((threshTest || bbtest) && !isClearSnow());
+        } else {
+            return threshTest && !isSeaIce();
+        }
     }
 
     @Override
     public boolean isSeaIce() {
-        // todo implement
-        return isCloud() && btempAatsr[2] < 258.0;
+        return isBright() && reflAatsr[3] < 2.0;
     }
 
     @Override
@@ -91,7 +85,8 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
             return IdepixConstants.NO_DATA_VALUE;
         }
         double value = 0.5 * brr442Meris / brr442ThreshMeris;    // GA delivery, Jan. 2011
-        value /= 3.0; // test
+//        value /= 3.0; // test
+        value /= 15.0; // test
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
         return (float) value;
@@ -125,6 +120,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
         } else {
             value = UNCERTAINTY_VALUE;
         }
+        value *= 2.0;
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
         return (float) value;
@@ -154,7 +150,20 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public float temperatureValue() {
-        return UNCERTAINTY_VALUE;
+        float temperature;
+
+        if (btempAatsr[2] < 225f) {
+            temperature = 0.99f;
+        } else if (225f <= btempAatsr[2] && 290f > btempAatsr[2]) {
+            temperature = 0.9f - 0.49f * ((btempAatsr[2] - 225f) / (290f - 225f));
+        } else if (290f <= btempAatsr[2] && 300f > btempAatsr[2]) {
+            temperature = 0.5f - 0.49f * ((btempAatsr[2] - 290f) / (300f - 290f));
+        } else {
+            temperature = 0.01f;
+        }
+
+        return temperature;
+//        return UNCERTAINTY_VALUE;
     }
 
     @Override

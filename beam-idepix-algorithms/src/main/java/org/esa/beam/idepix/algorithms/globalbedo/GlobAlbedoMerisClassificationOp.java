@@ -44,8 +44,6 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")
-    private boolean gaCopyPressure;
     @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
@@ -187,7 +185,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
     @Override
     public void extendTargetProduct() throws OperatorException {
-        if (!gaComputeFlagsOnly) {
+        if (!gaComputeFlagsOnly && gaCopyPressure) {
             pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
             pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
