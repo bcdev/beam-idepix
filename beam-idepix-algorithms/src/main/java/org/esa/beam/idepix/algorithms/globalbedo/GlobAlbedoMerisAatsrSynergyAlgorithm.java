@@ -50,7 +50,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public boolean isSeaIce() {
-        return isBright() && reflAatsr[3] < 2.0;
+        return isWater() && isBright() && reflAatsr[3] < 2.0;
     }
 
     @Override
@@ -163,7 +163,6 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
         }
 
         return temperature;
-//        return UNCERTAINTY_VALUE;
     }
 
     @Override

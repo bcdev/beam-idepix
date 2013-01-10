@@ -141,7 +141,7 @@ public class IdepixUtils {
 
     public static boolean areReflectancesValid(float[] reflectance) {
         for (float aReflectance : reflectance) {
-            if (!Float.isNaN(aReflectance)) {
+            if (!Float.isNaN(aReflectance) && aReflectance > 0.0f) {
                 return true;
             }
         }

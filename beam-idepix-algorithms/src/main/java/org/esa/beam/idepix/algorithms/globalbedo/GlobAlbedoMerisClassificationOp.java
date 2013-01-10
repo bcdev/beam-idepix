@@ -66,106 +66,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
     private SchillerAlgorithm landNN = null;
 
-//    @Override
-//    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
-//        // MERIS variables
-//        final Tile brr442Tile = getSourceTile(brr442Band, rectangle);
-//        final Tile brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle);
-//        final Tile p1Tile = getSourceTile(p1Band, rectangle);
-//        final Tile pbaroTile = getSourceTile(pbaroBand, rectangle);
-//        final Tile pscattTile = getSourceTile(pscattBand, rectangle);
-//
-//        final Band merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
-//        final Tile merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
-//
-//        Tile[] merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
-//        float[] merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
-//        for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
-//            merisBrrTiles[i] = getSourceTile(merisBrrBands[i], rectangle);
-//        }
-//
-//        Tile[] merisReflectanceTiles = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-//        float[] merisReflectance = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-//        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-//            merisReflectanceTiles[i] = getSourceTile(merisReflBands[i], rectangle);
-//        }
-//
-//        GeoPos geoPos = null;
-//        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
-//        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
-//        try {
-//            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-//                checkForCancellation();
-//                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-//
-//                    byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
-//                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
-//                    if (!gaUseL1bLandWaterFlag) {
-//                        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-//                        if (geoCoding.canGetGeoPos()) {
-//                            geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
-//                            waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-//                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
-//                        }
-//                    }
-//
-//                    // set up pixel properties for given instruments...
-//                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAlgorithm(merisL1bFlagTile,
-//                                                                                   brr442Tile, p1Tile,
-//                                                                                   pbaroTile, pscattTile, brr442ThreshTile,
-//                                                                                   merisReflectanceTiles,
-//                                                                                   merisReflectance,
-//                                                                                   merisBrrTiles, merisBrr, waterMaskSample,
-//                                                                                   waterMaskFraction,
-//                                                                                   y,
-//                                                                                   x);
-//
-//                    setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
-//
-//                    if (landNN != null && !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-//                        final int finalX = x;
-//                        final int finalY = y;
-//                        final Tile[] finalMerisRefl = merisReflectanceTiles;
-//                        SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
-//                            @Override
-//                            public double get(int index) {
-//                                return finalMerisRefl[index].getSampleDouble(finalX, finalY);
-//                            }
-//                        };
-//                        float schillerCloud = landNN.compute(accessor);
-//                        if (schillerCloud > 1.4) {
-//                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
-//                        }
-//                    }
-//
-//                    // for given instrument, compute more pixel properties and write to distinct band
-//                    // todo: find a more clever mapping of target bands and 'values' to write into
-//                    for (Band band : targetProduct.getBands()) {
-//                        final Tile targetTile = targetTiles.get(band);
-//                        setPixelSamples(band, targetTile, p1Tile, pbaroTile, pscattTile, y, x, globAlbedoAlgorithm);
-//                    }
-//                }
-//            }
-//            // set cloud buffer flags...
-//            if (gaLcCloudBuffer) {
-//                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
-//            } else {
-//                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
-//            }
-//
-//        } catch (Exception e) {
-//            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
-//        }
-//    }
-
     @Override
-    public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-
-        // todo: implement computeTileStack instead of compute tile!!
-        // --> most stuff we only need to do once, i.e. in case of cloud_classif_bands!
-
-        final Rectangle rectangle = targetTile.getRectangle();
-
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
         // MERIS variables
         final Tile brr442Tile = getSourceTile(brr442Band, rectangle);
         final Tile brr442ThreshTile = getSourceTile(brr442ThreshBand, rectangle);
@@ -189,6 +91,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         }
 
         GeoPos geoPos = null;
+        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
@@ -201,7 +105,9 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                            if (gaUseWaterMaskFraction) {
+                                waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                            }
                         }
                     }
 
@@ -211,43 +117,42 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                                                                                    pbaroTile, pscattTile, brr442ThreshTile,
                                                                                    merisReflectanceTiles,
                                                                                    merisReflectance,
-                                                                                   merisBrrTiles, merisBrr, waterMaskSample,
+                                                                                   merisBrrTiles, merisBrr,
+                                                                                   waterMaskSample,
                                                                                    waterMaskFraction,
                                                                                    y,
                                                                                    x);
 
-                    if (band == cloudFlagBand) {
-                        if (x == 320 && y == 400) {
-                            System.out.println("x = " + x);
-                        }
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
+                    setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
-                        if (landNN != null && !targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-                            final int finalX = x;
-                            final int finalY = y;
-                            final Tile[] finalMerisRefl = merisReflectanceTiles;
-                            SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
-                                @Override
-                                public double get(int index) {
-                                    return finalMerisRefl[index].getSampleDouble(finalX, finalY);
-                                }
-                            };
-                            float schillerCloud = landNN.compute(accessor);
-                            if (schillerCloud > 1.4) {
-                                targetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                    if (landNN != null && !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                        final int finalX = x;
+                        final int finalY = y;
+                        final Tile[] finalMerisRefl = merisReflectanceTiles;
+                        SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
+                            @Override
+                            public double get(int index) {
+                                return finalMerisRefl[index].getSampleDouble(finalX, finalY);
                             }
+                        };
+                        float schillerCloud = landNN.compute(accessor);
+                        if (schillerCloud > 1.4) {  // a magic number...
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                         }
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
-                    setPixelSamples(band, targetTile, p1Tile, pbaroTile, pscattTile, y, x, globAlbedoAlgorithm);
+                    for (Band band : targetProduct.getBands()) {
+                        final Tile targetTile = targetTiles.get(band);
+                        setPixelSamples(band, targetTile, p1Tile, pbaroTile, pscattTile, y, x, globAlbedoAlgorithm);
+                    }
                 }
             }
             // set cloud buffer flags...
             if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band.getName(), targetTile, rectangle);
+                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
             } else {
-                setCloudBuffer(band.getName(), targetTile, rectangle);
+                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
             }
 
         } catch (Exception e) {
@@ -337,13 +242,13 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         gaAlgorithm.setP1(p1Tile.getSampleFloat(x, y));
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscatt(pscattTile.getSampleFloat(x, y));
-        if (gaUseWaterMaskFraction) {
-            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
+        if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
                     watermaskFraction < WATERMASK_FRACTION_THRESH;
             gaAlgorithm.setL1FlagLand(isLand);
             setIsWaterByFraction(watermaskFraction, gaAlgorithm);
         } else {
-            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
                     !(watermask == WatermaskClassifier.WATER_VALUE);
             gaAlgorithm.setL1FlagLand(isLand);
             setIsWater(watermask, gaAlgorithm);

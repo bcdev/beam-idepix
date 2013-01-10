@@ -34,7 +34,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
         boolean threshTest = whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH;
 //        boolean bbtest = isBlueDenseCloud();
         boolean bbtest = false;
-        return ((threshTest || bbtest) && !isClearSnow());
+        return !isInvalid() && ((threshTest || bbtest) && !isClearSnow());
     }
 
     @Override

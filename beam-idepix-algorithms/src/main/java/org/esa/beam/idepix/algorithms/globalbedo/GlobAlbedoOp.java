@@ -73,14 +73,12 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseGetasse = false;
     @Parameter(defaultValue = "false", label = " Copy input annotation bands (VGT)")
     private boolean gaCopyAnnotations;
-    @Parameter(defaultValue = "true", label = " Use forward view for cloud flag determination (AATSR)")
-    private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
-    @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
+    @Parameter(defaultValue = "false", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
@@ -89,9 +87,9 @@ public class GlobAlbedoOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean gaUseWaterMaskFraction = true;
 
-    @Parameter(defaultValue = "_M", label = "Colocation master product band names extension")
+    @Parameter(defaultValue = "_M", label = "MERIS/AATSR collocation master product band names extension")
     private String bandExtensionMaster;
-    @Parameter(defaultValue = "_S", label = "Colocation slave product band names extension")
+    @Parameter(defaultValue = "_S", label = "MERIS/AATSR collocation slave product band names extension")
     private String bandExtensionSlave;
 
     @Parameter(defaultValue = "RR", label = "MERIS resolution")
@@ -128,7 +126,6 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaCopyPressure", gaCopyPressure);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
-        gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
         gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);

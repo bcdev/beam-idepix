@@ -80,6 +80,9 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     Band pscattOutputBand;
 
+    static final int MERIS_L1B_F_LAND = 4;
+    static final int AATSR_L1B_F_LAND = 0;
+
     @Override
     public void initialize() throws OperatorException {
         setBands();

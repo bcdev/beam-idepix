@@ -25,8 +25,6 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     private static final float GLINT_THRESH = -3.65E-4f;
     private static final float TEMPERATURE_THRESH = 0.9f;
 
-    public static final int SM_F_LAND = 3;
-
     private boolean smLand;
 
     @Override

@@ -10,7 +10,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.operators.BarometricPressureOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.util.IdepixUtils;
@@ -19,6 +18,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.*;
+import java.util.Map;
 
 /**
  * Idepix operator for cloud/sea ice discrimination from MERIS/AATSR synergistic approach.
@@ -59,9 +59,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     private Band[] aatsrBtempBands;
 
     @Override
-    public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        final Rectangle rectangle = targetTile.getRectangle();
-
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
         // MERIS variables
         final Tile merisBrr442Tile = getSourceTile(merisBrr442Band, rectangle);
         final Tile merisBrr442ThreshTile = getSourceTile(merisBrr442ThreshBand, rectangle);
@@ -85,9 +83,6 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         }
 
         // AATSR variables
-        final Band aatsrL1bFlagBand = sourceProduct.getBand(EnvisatConstants.AATSR_L1B_CLOUD_FLAGS_NADIR_BAND_NAME);
-        final Tile aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle);
-
         Tile[] aatsrReflectanceTiles = new Tile[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
         float[] aatsrReflectance = new float[IdepixConstants.AATSR_REFL_WAVELENGTHS.length];
         for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
@@ -100,8 +95,9 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
             aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
         }
 
-
         GeoPos geoPos = null;
+        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
@@ -114,24 +110,19 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                            if (gaUseWaterMaskFraction) {
+                                waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                            }
                         }
                     }
 
                     // set up pixel properties for given instruments...
-                    if (x == 320 && y == 400) {  // over water
-                        System.out.println("x = " + x);
-                    }
-                    if (x == 330 && y == 300) {  // land
-                        System.out.println("x = " + x);
-                    }
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAatsrSynergyAlgorithm(merisL1bFlagTile,
                                                                                                merisBrr442Tile, merisP1Tile,
                                                                                                merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
                                                                                                merisReflectanceTiles,
                                                                                                merisReflectance,
                                                                                                merisBrrTiles, merisBrr,
-                                                                                               aatsrL1bFlagTile,
                                                                                                aatsrReflectanceTiles, aatsrReflectance,
                                                                                                aatsrBtempTiles, aatsrBtemp,
                                                                                                waterMaskSample,
@@ -139,21 +130,15 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                                                                                                y,
                                                                                                x);
 
-                    if (band == cloudFlagBand) {
-                        if (x == 320 && y == 400) {  // over water
-                            System.out.println("x = " + x);
-                        }
-                        if (x == 330 && y == 300) {  // land
-                            System.out.println("x = " + x);
-                        }
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
+                    setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
+                    for (Band band : targetProduct.getBands()) {
+                        final Tile targetTile = targetTiles.get(band);
+                        setPixelSamples(band, targetTile, merisP1Tile, merisPbaroTile, merisPscattTile, y, x, globAlbedoAlgorithm);
                     }
-
-                    setPixelSamples(band, targetTile, merisP1Tile, merisPbaroTile, merisPscattTile, y, x, globAlbedoAlgorithm);
                 }
             }
             // set cloud buffer flags...
-            setCloudBuffer(band.getName(), targetTile, rectangle);
+            setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
@@ -240,7 +225,6 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                                                                  Tile[] merisReflectanceTiles,
                                                                  float[] merisReflectance,
                                                                  Tile[] merisBrrTiles, float[] merisBrr,
-                                                                 Tile aatsrL1bFlagTile,
                                                                  Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
                                                                  Tile[] aatsrBtempTiles, float[] aatsrBtemp,
                                                                  byte watermask,
@@ -282,12 +266,12 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
         // water mask part
         if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
-            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
                     watermaskFraction < WATERMASK_FRACTION_THRESH;
             gaAlgorithm.setL1FlagLandMeris(isLand);
             setIsWaterByFraction(watermaskFraction, gaAlgorithm);
         } else {
-            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, GlobAlbedoAlgorithm.L1B_F_LAND) &&
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
                     !(watermask == WatermaskClassifier.WATER_VALUE);
             gaAlgorithm.setL1FlagLandMeris(isLand);
             setIsWater(watermask, gaAlgorithm);
@@ -297,7 +281,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     }
 
     private float[] concatMerisAatsrReflectanceArrays(float[] merisReflectance, float[] aatsrReflectance) {
-        float[] merisAatsrReflectance = new float[merisReflectance.length+aatsrReflectance.length];
+        float[] merisAatsrReflectance = new float[merisReflectance.length + aatsrReflectance.length];
         System.arraycopy(merisReflectance, 0, merisAatsrReflectance, 0, merisReflectance.length);
         System.arraycopy(aatsrReflectance, 0, merisAatsrReflectance, merisReflectance.length, aatsrReflectance.length);
         return merisAatsrReflectance;

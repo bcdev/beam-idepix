@@ -16,6 +16,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.*;
+import java.util.Map;
 
 /**
  * Operator for GlobAlbedo VGT cloud screening
@@ -36,10 +37,10 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
     // VGT bands:
     private Band[] vgtReflectanceBands;
 
-    @Override
-    public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        final Rectangle rectangle = targetTile.getRectangle();
+    private static final int SM_F_LAND = 3;
 
+    @Override
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
         // VGT variables
         final Band smFlagBand = sourceProduct.getBand("SM");
         final Tile smFlagTile = getSourceTile(smFlagBand, rectangle);
@@ -51,37 +52,45 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         }
 
         GeoPos geoPos = null;
+        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
                     byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
                     if (!gaUseL1bLandWaterFlag) {
                         final GeoCoding geoCoding = sourceProduct.getGeoCoding();
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+                            if (gaUseWaterMaskFraction) {
+                                waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                            }
                         }
                     }
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createVgtAlgorithm(smFlagTile, vgtReflectanceTiles,
                                                                                  vgtReflectance,
-                                                                                 waterMaskSample, y, x);
+                                                                                 waterMaskSample,
+                                                                                 waterMaskFraction,
+                                                                                 y, x);
 
-                    if (band == cloudFlagBand) {
-                        // for given instrument, compute boolean pixel properties and write to cloud flag band
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
+                    setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
+                    for (Band band : targetProduct.getBands()) {
+                        final Tile targetTile = targetTiles.get(band);
+                        setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
                     }
-                    setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
                 }
             }
             // set cloud buffer flags...
             if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band.getName(), targetTile, rectangle);
+                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
             } else {
-                setCloudBuffer(band.getName(), targetTile, rectangle);
+                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
             }
 
         } catch (Exception e) {
@@ -124,7 +133,9 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
     }
 
     private GlobAlbedoAlgorithm createVgtAlgorithm(Tile smFlagTile, Tile[] vgtReflectanceTiles,
-                                                   float[] vgtReflectance, byte watermaskSample, int y, int x) {
+                                                   float[] vgtReflectance,
+                                                   byte watermask, byte watermaskFraction,
+                                                   int y, int x) {
 
         GlobAlbedoVgtAlgorithm gaAlgorithm = new GlobAlbedoVgtAlgorithm();
 
@@ -134,18 +145,16 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);
 
-        final boolean isLand = smFlagTile.getSampleBit(x, y, GlobAlbedoVgtAlgorithm.SM_F_LAND) &&
-                !(watermaskSample == WatermaskClassifier.WATER_VALUE);
-        gaAlgorithm.setSmLand(isLand);
-        setIsWater(watermaskSample, gaAlgorithm);
-
-        // specific threshold for polar regions:
-        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-        if (geoCoding != null) {
-            final PixelPos pixelPos = new PixelPos();
-            pixelPos.setLocation(x + 0.5f, y + 0.5f);
-            final GeoPos geoPos = new GeoPos();
-            geoCoding.getGeoPos(pixelPos, geoPos);
+        if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
+            final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
+                    watermaskFraction < WATERMASK_FRACTION_THRESH;
+            gaAlgorithm.setSmLand(isLand);
+            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
+        } else {
+            final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
+                    !(watermask == WatermaskClassifier.WATER_VALUE);
+            gaAlgorithm.setSmLand(isLand);
+            setIsWater(watermask, gaAlgorithm);
         }
 
         return gaAlgorithm;

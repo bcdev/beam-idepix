@@ -3,26 +3,17 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
-import org.esa.beam.idepix.operators.BarometricPressureOp;
-import org.esa.beam.idepix.operators.LisePressureOp;
-import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.*;
-import java.io.IOException;
+import java.util.Map;
 
 /**
  * Operator for GlobAlbedo AATSR cloud screening
@@ -37,17 +28,12 @@ import java.io.IOException;
                   description = "This operator provides cloud screening from AATSR data.")
 public class GlobAlbedoAatsrClassificationOp extends GlobAlbedoClassificationOp {
 
-    @Parameter(defaultValue = "true", label = "Use forward view for cloud flag determination (AATSR)")
-    private boolean gaUseAatsrFwardForClouds;
-
     // AATSR bands:
     private Band[] aatsrReflectanceBands;
     private Band[] aatsrBtempBands;
 
     @Override
-    public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        final Rectangle rectangle = targetTile.getRectangle();
-
+    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
         // AATSR variables
         final Band aatsrL1bFlagBand = sourceProduct.getBand(EnvisatConstants.AATSR_L1B_CLOUD_FLAGS_NADIR_BAND_NAME);
         final Tile aatsrL1bFlagTile = getSourceTile(aatsrL1bFlagBand, rectangle);
@@ -59,49 +45,60 @@ public class GlobAlbedoAatsrClassificationOp extends GlobAlbedoClassificationOp 
         }
 
         Tile[] aatsrBtempTiles = new Tile[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
-        float[] aatsrBtemp = new float[IdepixConstants.AATSR_TEMP_WAVELENGTHS.length];
         for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
             aatsrBtempTiles[i] = getSourceTile(aatsrBtempBands[i], rectangle);
         }
 
         GeoPos geoPos = null;
+        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
 
                     byte waterMaskSample = WatermaskClassifier.INVALID_VALUE;
+                    byte waterMaskFraction = WatermaskClassifier.INVALID_VALUE;
                     if (!gaUseL1bLandWaterFlag) {
                         final GeoCoding geoCoding = sourceProduct.getGeoCoding();
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
+                            if (gaUseWaterMaskFraction) {
+                                waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
+                            }
                         }
                     }
 
                     // set up pixel properties for given instruments...
-                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createAatsrAlgorithm(band, targetTile, aatsrL1bFlagTile,
+                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createAatsrAlgorithm(aatsrL1bFlagTile,
                                                                                    aatsrReflectanceTiles, aatsrReflectance,
                                                                                    aatsrBtempTiles,
-                                                                                   aatsrBtemp, waterMaskSample, y, x);
+                                                                                   waterMaskSample,
+                                                                                   waterMaskFraction,
+                                                                                   y, x);
 
-                    if (band == cloudFlagBand) {
-                        // for given instrument, compute boolean pixel properties and write to cloud flag band
-                        setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
+                    setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
+
+                    // for given instrument, compute more pixel properties and write to distinct band
+                    for (Band band : targetProduct.getBands()) {
+                        final Tile targetTile = targetTiles.get(band);
+                        setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
                     }
-                    setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
                 }
             }
             // set cloud buffer flags...
             if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(band.getName(), targetTile, rectangle);
+                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
             } else {
-                setCloudBuffer(band.getName(), targetTile, rectangle);
+                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
             }
+
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
         }
+
     }
 
     @Override
@@ -139,33 +136,32 @@ public class GlobAlbedoAatsrClassificationOp extends GlobAlbedoClassificationOp 
         }
     }
 
-    private GlobAlbedoAlgorithm createAatsrAlgorithm(Band band, Tile targetTile, Tile aatsrL1bFlagTile,
+    private GlobAlbedoAlgorithm createAatsrAlgorithm(Tile aatsrL1bFlagTile,
                                                      Tile[] aatsrReflectanceTiles, float[] aatsrReflectance,
-                                                     Tile[] aatsrBtempTiles, float[] aatsrBtemp,
-                                                     byte watermaskSample, int y, int x) {
+                                                     Tile[] aatsrBtempTiles,
+                                                     byte watermask,
+                                                     byte watermaskFraction, int y, int x) {
 
         GlobAlbedoAatsrAlgorithm gaAlgorithm = new GlobAlbedoAatsrAlgorithm();
 
         for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
             aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
-            if (band.getName().equals(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i])) {
-                targetTile.setSample(x, y, aatsrReflectance[i]);
-            }
-        }
-        for (int i = 0; i < IdepixConstants.AATSR_BTEMP_BAND_NAMES.length; i++) {
-            aatsrBtemp[i] = aatsrBtempTiles[i].getSampleFloat(x, y);
-            if (band.getName().equals(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i])) {
-                targetTile.setSample(x, y, aatsrBtemp[i]);
-            }
         }
 
-        gaAlgorithm.setUseFwardViewForCloudMask(gaUseAatsrFwardForClouds);
         gaAlgorithm.setRefl(aatsrReflectance);
         gaAlgorithm.setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
-        final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, GlobAlbedoAatsrAlgorithm.L1B_F_LAND) &&
-                !(watermaskSample == WatermaskClassifier.WATER_VALUE);
-        gaAlgorithm.setL1FlagLand(isLand);
-        setIsWater(watermaskSample, gaAlgorithm);
+
+        if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
+            final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND) &&
+                    watermaskFraction < WATERMASK_FRACTION_THRESH;
+            gaAlgorithm.setL1FlagLand(isLand);
+            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
+        } else {
+            final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND) &&
+                    !(watermask == WatermaskClassifier.WATER_VALUE);
+            gaAlgorithm.setL1FlagLand(isLand);
+            setIsWater(watermask, gaAlgorithm);
+        }
 
         return gaAlgorithm;
     }

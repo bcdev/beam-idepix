@@ -29,10 +29,10 @@ public abstract class AbstractPixelProperties implements PixelProperties {
 
     @Override
     public boolean isWater() {
-        return isWater;
+        return !isInvalid() && isWater;
     }
 
     public void setIsWater(boolean isWater) {
-        this.isWater = isWater;
+        this.isWater = !isInvalid() && isWater;
     }
 }

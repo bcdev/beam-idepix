@@ -6,10 +6,7 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 04.01.13
- * Time: 15:21
+ * WatermaskStrategy default implementation.
  *
  * @author olafd
  */

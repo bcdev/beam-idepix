@@ -11,8 +11,6 @@ import org.esa.beam.util.math.MathUtils;
  */
 public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
 
-    public static final int L1B_F_LAND = 4;
-
     static final float UNCERTAINTY_VALUE = 0.5f;
     static final float LAND_THRESH = 0.9f;
     static final float WATER_THRESH = 0.9f;
@@ -22,7 +20,7 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
 
     @Override
     public boolean isBrightWhite() {
-        return (whiteValue() + brightValue() > getBrightWhiteThreshold());
+        return !isInvalid() && (whiteValue() + brightValue() > getBrightWhiteThreshold());
     }
 
     // implementations are instrument-dependent:
@@ -64,7 +62,7 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
 
     @Override
     public boolean isClearSnow() {
-        return (!isInvalid() && isBrightWhite() && ndsiValue() > getNdsiThreshold());
+        return (!isInvalid() && isLand() && isBrightWhite() && ndsiValue() > getNdsiThreshold());
     }
 
     @Override
@@ -80,7 +78,7 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
     @Override
     public boolean isLand() {
         final boolean isLand1 = !usel1bLandWaterFlag && !isWater;
-        return (isLand1 || (!isInvalid() && aPrioriLandValue() > LAND_THRESH));
+        return !isInvalid() && (isLand1 || (aPrioriLandValue() > LAND_THRESH));
     }
 
     @Override
@@ -95,7 +93,7 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
 
     @Override
     public boolean isGlintRisk() {
-        return isWater() && isCloud() && (glintRiskValue() > getGlintThreshold());
+        return !isInvalid() && isWater() && isCloud() && (glintRiskValue() > getGlintThreshold());
     }
 
     @Override

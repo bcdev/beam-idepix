@@ -15,7 +15,8 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
     private static final float PRESSURE_THRESH = 0.9f;
     private static final float CLOUD_THRESH = 1.3f;
     private static final float UNCERTAINTY_VALUE = 0.5f;
-    private static final float BRIGHT_THRESH = 0.2f;
+//    private static final float BRIGHT_THRESH = 0.2f;
+    private static final float BRIGHT_THRESH = 0.1f;
     private static final float WHITE_THRESH = 0.9f;
     private static final float BRIGHT_FOR_WHITE_THRESH = 0.2f;
     private static final float NDVI_THRESH = 0.4f;
@@ -26,12 +27,17 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
 
     private float btemp1200;
     private boolean l1FlagLand;
-    private boolean useFwardViewForCloudMask;
 
     @Override
     public boolean isCloud() {
         if (!isInvalid()) {
-            if (((whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && !isClearSnow())) {
+            boolean noSnowOrIce;
+            if (isLand()) {
+                noSnowOrIce = !isClearSnow();
+            } else {
+                noSnowOrIce = !isSeaIce();
+            }
+            if (((whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && noSnowOrIce)) {
                 return true;
             }
         }
@@ -40,8 +46,8 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public boolean isSeaIce() {
-        // no algorithm available for AATSR only
-        return false;
+        // new approach for GA CCN
+        return !isInvalid() && isWater() && isBright() && refl[3] < 2.0;
     }
 
     @Override
@@ -189,24 +195,12 @@ public class GlobAlbedoAatsrAlgorithm extends GlobAlbedoAlgorithm {
 
     // setters for AATSR specific quantities
 
-    public void setRefl(float[] refl) {
-        if (useFwardViewForCloudMask) {
-            this.refl = new float[]{refl[4], refl[5], refl[6], refl[7]};
-        } else {
-            this.refl = new float[]{refl[0], refl[1], refl[2], refl[3]};
-        }
-    }
-
     public void setBtemp1200(float btemp1200) {
         this.btemp1200 = btemp1200;
     }
 
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
-    }
-
-    public void setUseFwardViewForCloudMask(boolean useFwardViewForCloudMask) {
-        this.useFwardViewForCloudMask = useFwardViewForCloudMask;
     }
 
 }
