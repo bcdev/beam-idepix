@@ -54,6 +54,13 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaLcCloudBuffer = false;
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     boolean gaUseWaterMaskFraction = true;
+    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
+    boolean gaCopyAnnotations;
+    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
+    boolean gaComputeSchillerClouds = false;
+    @Parameter(defaultValue = "false", label = " Use forward view for cloud flag determination (AATSR)")
+    boolean gaUseAatsrFwardForClouds;
+
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
             description = "Resolution in m/pixel")
     int wmResolution;

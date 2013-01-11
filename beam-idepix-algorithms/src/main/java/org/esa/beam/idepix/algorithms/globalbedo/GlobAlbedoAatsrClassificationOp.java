@@ -7,6 +7,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -148,7 +149,14 @@ public class GlobAlbedoAatsrClassificationOp extends GlobAlbedoClassificationOp 
             aatsrReflectance[i] = aatsrReflectanceTiles[i].getSampleFloat(x, y);
         }
 
-        gaAlgorithm.setRefl(aatsrReflectance);
+        final int length = aatsrReflectance.length / 2;
+        float[] refl = new float[length];
+        if (gaUseAatsrFwardForClouds) {
+            System.arraycopy(aatsrReflectance, length, refl, 0, length);
+        } else {
+            System.arraycopy(aatsrReflectance, 0, refl, 0, length);
+        }
+        gaAlgorithm.setRefl(refl);
         gaAlgorithm.setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
 
         if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {

@@ -31,9 +31,6 @@ import java.util.Map;
                   description = "This operator provides cloud screening from SPOT VGT data.")
 public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
-    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
-    private boolean gaCopyAnnotations;
-
     // VGT bands:
     private Band[] vgtReflectanceBands;
 

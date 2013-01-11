@@ -86,6 +86,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaComputeSchillerClouds = false;
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean gaUseWaterMaskFraction = true;
+    @Parameter(defaultValue = "false", label = " Use forward view for cloud flag determination (AATSR)")
+    private boolean gaUseAatsrFwardForClouds;
 
     @Parameter(defaultValue = "_M", label = "MERIS/AATSR collocation master product band names extension")
     private String bandExtensionMaster;
@@ -132,6 +134,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaLcCloudBuffer", gaLcCloudBuffer);
         gaCloudClassificationParameters.put("gaComputeSchillerClouds", gaComputeSchillerClouds);
         gaCloudClassificationParameters.put("gaUseWaterMaskFraction", gaUseWaterMaskFraction);
+        gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
 
         return gaCloudClassificationParameters;
     }

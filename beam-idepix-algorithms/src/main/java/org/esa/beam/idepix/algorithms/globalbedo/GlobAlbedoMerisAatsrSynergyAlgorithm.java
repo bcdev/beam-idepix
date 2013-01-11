@@ -35,7 +35,8 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float[] reflAatsr;
     private float[] btempAatsr;
     private boolean l1FlagLandAatsr;
-    private boolean useFwardViewForCloudMaskAatsr;
+
+    // todo: raise flags only if we have MERIS/AATSR overlap, and/or add flags such as 'NO_MERIS' or 'NO_AATSR'
 
     @Override
     public boolean isCloud() {
@@ -221,10 +222,6 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setL1FlagLandAatsr(boolean l1FlagLandAatsr) {
         this.l1FlagLandAatsr = l1FlagLandAatsr;
-    }
-
-    public void setUseFwardViewForCloudMaskAatsr(boolean useFwardViewForCloudMaskAatsr) {
-        this.useFwardViewForCloudMaskAatsr = useFwardViewForCloudMaskAatsr;
     }
 
     public void setReflMeris(float[] reflMeris) {

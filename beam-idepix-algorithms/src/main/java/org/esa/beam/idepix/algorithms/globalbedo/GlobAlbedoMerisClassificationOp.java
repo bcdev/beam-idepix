@@ -45,12 +45,6 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
-    private boolean gaCopyAnnotations;
-    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
-    private boolean gaComputeSchillerClouds = false;
-
-
     private Band[] merisReflBands;
     private Band[] merisBrrBands;
     private Band brr442Band;

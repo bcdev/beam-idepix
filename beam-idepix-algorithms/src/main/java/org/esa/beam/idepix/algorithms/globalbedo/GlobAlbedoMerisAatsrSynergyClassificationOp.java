@@ -44,9 +44,6 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "true", label = "Use forward view for cloud flag determination (AATSR)")
-    private boolean gaUseAatsrFwardForClouds;
-
     private Band[] merisReflBands;
     private Band[] merisBrrBands;
     private Band merisBrr442Band;
@@ -257,8 +254,14 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
             aatsrBtemp[i] = aatsrBtempTiles[i].getSampleFloat(x, y);
         }
 
-        gaAlgorithm.setUseFwardViewForCloudMaskAatsr(gaUseAatsrFwardForClouds);
-        gaAlgorithm.setReflAatsr(aatsrReflectance);
+        final int length = aatsrReflectance.length / 2;
+        float[] refl = new float[length];
+        if (gaUseAatsrFwardForClouds) {
+            System.arraycopy(aatsrReflectance, length, refl, 0, length);
+        } else {
+            System.arraycopy(aatsrReflectance, 0, refl, 0, length);
+        }
+        gaAlgorithm.setReflAatsr(refl);
         gaAlgorithm.setBtempAatsr(aatsrBtemp);
 
         float[] merisAatsrReflectance = concatMerisAatsrReflectanceArrays(merisReflectance, aatsrReflectance);
