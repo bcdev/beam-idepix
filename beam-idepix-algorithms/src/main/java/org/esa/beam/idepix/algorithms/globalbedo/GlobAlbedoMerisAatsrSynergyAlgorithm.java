@@ -43,9 +43,9 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
         boolean threshTest = whiteValue() + 5.0*brightValue() + 0.5*pressureValue() + temperatureValue() > CLOUD_THRESH;
         boolean bbtest = isBlueDenseCloud();
         if (isLand()) {
-            return ((threshTest || bbtest) && !isClearSnow());
+            return (!isInvalid() && (threshTest || bbtest) && !isClearSnow());
         } else {
-            return threshTest && !isSeaIce();
+            return !isInvalid() && threshTest && !isSeaIce();
         }
     }
 

@@ -28,10 +28,10 @@ import java.io.IOException;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-        version = "1.0",
-        authors = "Olaf Danne",
-        copyright = "(c) 2008, 2012 by Brockmann Consult",
-        description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
+                  version = "1.0",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008, 2012 by Brockmann Consult",
+                  description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
 public abstract class GlobAlbedoClassificationOp extends Operator {
 
     @SourceProduct(alias = "gal1b", description = "The source product.")
@@ -62,7 +62,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaUseAatsrFwardForClouds;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
-            description = "Resolution in m/pixel")
+               description = "Resolution in m/pixel")
     int wmResolution;
 
     WatermaskClassifier classifier;
@@ -137,12 +137,12 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             IdepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
             brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             true);
             temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", IdepixConstants.NO_DATA_VALUE, true);
             spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl",
-                    IdepixConstants.NO_DATA_VALUE, true);
+                                             IdepixConstants.NO_DATA_VALUE, true);
             ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", IdepixConstants.NO_DATA_VALUE, true);
             ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
@@ -151,10 +151,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             IdepixUtils.setNewBandProperties(glintRiskBand, "GLINT_RISK", "dl", IdepixConstants.NO_DATA_VALUE, true);
             radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             true);
             radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "",
-                    IdepixConstants.NO_DATA_VALUE, true);
+                                             IdepixConstants.NO_DATA_VALUE, true);
         }
         // new bit masks:
         IdepixUtils.setupIdepixCloudscreeningBitmasks(targetProduct);
@@ -224,7 +224,9 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
                         int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - 1);
                         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
+                                if (!targetTile.getSampleBit(i, j, IdepixConstants.F_INVALID)) {
+                                    targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
+                                }
                             }
                         }
                     }

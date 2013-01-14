@@ -69,12 +69,20 @@ public class IdepixUtilsTest extends TestCase {
         assertEquals(9.2f, reflCorr[0]);
     }
 
-    public void testAreReflectancesValid() {
+    public void testAreAllReflectancesValid() {
+        float[] reflOrig = new float[]{12.3f, 12.3f, 12.3f, 12.3f};
+        assertTrue(IdepixUtils.areAllReflectancesValid(reflOrig));
+
+        reflOrig = new float[]{Float.NaN, 12.3f, Float.NaN, 12.3f};
+        assertFalse(IdepixUtils.areAllReflectancesValid(reflOrig));
+    }
+
+    public void testIsNoReflectanceValid() {
         float[] reflOrig = new float[]{Float.NaN, Float.NaN, Float.NaN, 12.3f};
-        assertTrue(IdepixUtils.areReflectancesValid(reflOrig));
+        assertFalse(IdepixUtils.isNoReflectanceValid(reflOrig));
 
         reflOrig = new float[]{Float.NaN, Float.NaN, Float.NaN, Float.NaN};
-        assertFalse(IdepixUtils.areReflectancesValid(reflOrig));
+        assertTrue(IdepixUtils.isNoReflectanceValid(reflOrig));
     }
 
     public void testSpectralSlope() {

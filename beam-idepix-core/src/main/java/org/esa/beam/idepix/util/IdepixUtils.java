@@ -112,7 +112,7 @@ public class IdepixUtils {
     public static float[] correctSaturatedReflectances(float[] reflectance) {
 
         // if all reflectances are NaN, do not correct
-        if (!areReflectancesValid(reflectance)) {
+        if (isNoReflectanceValid(reflectance)) {
             return reflectance;
         }
 
@@ -139,13 +139,13 @@ public class IdepixUtils {
     }
 
 
-    public static boolean areReflectancesValid(float[] reflectance) {
+    public static boolean areAllReflectancesValid(float[] reflectance) {
         for (float aReflectance : reflectance) {
-            if (!Float.isNaN(aReflectance) && aReflectance > 0.0f) {
-                return true;
+            if (Float.isNaN(aReflectance) || aReflectance <= 0.0f) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     public static void setNewBandProperties(Band band, String description, String unit, double noDataValue,
@@ -272,24 +272,6 @@ public class IdepixUtils {
         return endmembers;
     }
 
-    public static double convertGeophysicalToMathematicalAngle(double inAngle) {
-        if (0.0 <= inAngle && inAngle < 90.0) {
-            return (90.0 - inAngle);
-        } else if (90.0 <= inAngle && inAngle < 360.0) {
-            return (90.0 - inAngle + 360.0);
-        } else {
-            // invalid
-            return Double.NaN;
-        }
-    }
-
-    private static Color getRandomColour(Random random) {
-        int rColor = random.nextInt(256);
-        int gColor = random.nextInt(256);
-        int bColor = random.nextInt(256);
-        return new Color(rColor, gColor, bColor);
-    }
-
     public static void setCloudBufferLC(String bandName, Tile targetTile, Rectangle rectangle) {
         //  set alternative cloud buffer flag as used in LC-CCI project:
         // 1. use 2x2 square with reference pixel in upper left
@@ -373,6 +355,33 @@ public class IdepixUtils {
                 }
             }
         }
+    }
+
+    public static double convertGeophysicalToMathematicalAngle(double inAngle) {
+        if (0.0 <= inAngle && inAngle < 90.0) {
+            return (90.0 - inAngle);
+        } else if (90.0 <= inAngle && inAngle < 360.0) {
+            return (90.0 - inAngle + 360.0);
+        } else {
+            // invalid
+            return Double.NaN;
+        }
+    }
+
+    public static boolean isNoReflectanceValid(float[] reflectance) {
+        for (float aReflectance : reflectance) {
+            if (!Float.isNaN(aReflectance) && aReflectance > 0.0f) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Color getRandomColour(Random random) {
+        int rColor = random.nextInt(256);
+        int gColor = random.nextInt(256);
+        int bColor = random.nextInt(256);
+        return new Color(rColor, gColor, bColor);
     }
 
 }

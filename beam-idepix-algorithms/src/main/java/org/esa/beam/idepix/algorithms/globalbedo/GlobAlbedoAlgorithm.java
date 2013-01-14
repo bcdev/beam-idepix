@@ -103,7 +103,7 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
 
     @Override
     public boolean isInvalid() {
-        return !IdepixUtils.areReflectancesValid(refl);
+        return !IdepixUtils.areAllReflectancesValid(refl);
     }
 
     public abstract float brightValue();
