@@ -9,7 +9,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -35,6 +34,10 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
     private Band[] vgtReflectanceBands;
 
     private static final int SM_F_LAND = 3;
+    private static final int SM_F_MIR_GOOD = 4;
+    private static final int SM_F_B3_GOOD = 5;
+    private static final int SM_F_B2_GOOD = 6;
+    private static final int SM_F_B0_GOOD = 7;
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
@@ -139,22 +142,53 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
             vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
         }
+
+        if (x == 1915 && y == 2035) {
+            System.out.println("x = " + x);
+        }
+        if (x == 1890 && y == 2020) {
+            System.out.println("x = " + x);
+        }
+        if (x == 1992 && y == 2053) {
+            System.out.println("x = " + x);
+        }
+        checkVgtReflectanceQuality(vgtReflectance, smFlagTile, x, y);
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);
 
-        if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
-            final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
-                    watermaskFraction < WATERMASK_FRACTION_THRESH;
-            gaAlgorithm.setSmLand(isLand);
-            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
-        } else {
-            final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
-                    !(watermask == WatermaskClassifier.WATER_VALUE);
+
+        if (gaUseL1bLandWaterFlag) {
+            final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND);
             gaAlgorithm.setSmLand(isLand);
             setIsWater(watermask, gaAlgorithm);
+        } else {
+            if (gaUseWaterMaskFraction) {
+                final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
+                        watermaskFraction < WATERMASK_FRACTION_THRESH;
+                gaAlgorithm.setSmLand(isLand);
+                setIsWaterByFraction(watermaskFraction, gaAlgorithm);
+            } else {
+                final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
+                        !(watermask == WatermaskClassifier.WATER_VALUE);
+                gaAlgorithm.setSmLand(isLand);
+                setIsWater(watermask, gaAlgorithm);
+            }
         }
 
+
         return gaAlgorithm;
+    }
+
+    private void checkVgtReflectanceQuality(float[] vgtReflectance, Tile smFlagTile, int x, int y) {
+        final boolean isB0Good = smFlagTile.getSampleBit(x, y, SM_F_B0_GOOD);
+        final boolean isB2Good = smFlagTile.getSampleBit(x, y, SM_F_B2_GOOD);
+        final boolean isB3Good = smFlagTile.getSampleBit(x, y, SM_F_B3_GOOD);
+        final boolean isMirGood = smFlagTile.getSampleBit(x, y, SM_F_MIR_GOOD);
+        if (!isB0Good || !isB2Good || !isB3Good || !isMirGood) {
+            for (int i = 0; i < vgtReflectance.length; i++) {
+                vgtReflectance[i] = Float.NaN;
+            }
+        }
     }
 
     /**

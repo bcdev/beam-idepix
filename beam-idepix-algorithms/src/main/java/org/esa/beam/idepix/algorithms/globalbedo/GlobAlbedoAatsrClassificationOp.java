@@ -159,17 +159,24 @@ public class GlobAlbedoAatsrClassificationOp extends GlobAlbedoClassificationOp 
         gaAlgorithm.setRefl(refl);
         gaAlgorithm.setBtemp1200(aatsrBtempTiles[2].getSampleFloat(x, y));
 
-        if (!gaUseL1bLandWaterFlag && gaUseWaterMaskFraction) {
-            final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND) &&
-                    watermaskFraction < WATERMASK_FRACTION_THRESH;
-            gaAlgorithm.setL1FlagLand(isLand);
-            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
-        } else {
-            final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND) &&
-                    !(watermask == WatermaskClassifier.WATER_VALUE);
+        if (gaUseL1bLandWaterFlag) {
+            final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND);
             gaAlgorithm.setL1FlagLand(isLand);
             setIsWater(watermask, gaAlgorithm);
+        } else {
+            if (gaUseWaterMaskFraction) {
+                final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND) &&
+                        watermaskFraction < WATERMASK_FRACTION_THRESH;
+                gaAlgorithm.setL1FlagLand(isLand);
+                setIsWaterByFraction(watermaskFraction, gaAlgorithm);
+            } else {
+                final boolean isLand = aatsrL1bFlagTile.getSampleBit(x, y, AATSR_L1B_F_LAND) &&
+                        !(watermask == WatermaskClassifier.WATER_VALUE);
+                gaAlgorithm.setL1FlagLand(isLand);
+                setIsWater(watermask, gaAlgorithm);
+            }
         }
+
 
         return gaAlgorithm;
     }
