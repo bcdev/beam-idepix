@@ -668,6 +668,7 @@ public class GACloudScreeningOp extends Operator {
         for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
             vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
         }
+        checkVgtReflectanceQuality(vgtReflectance, smFlagTile, x, y);
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         pixelProperties.setRefl(vgtReflectanceSaturationCorrected);
 
@@ -690,6 +691,18 @@ public class GACloudScreeningOp extends Operator {
         }
 
         return pixelProperties;
+    }
+
+    private void checkVgtReflectanceQuality(float[] vgtReflectance, Tile smFlagTile, int x, int y) {
+        final boolean isB0Good = smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_B0_GOOD);
+        final boolean isB2Good = smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_B2_GOOD);
+        final boolean isB3Good = smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_B3_GOOD);
+        final boolean isMirGood = smFlagTile.getSampleBit(x, y, VgtPixelProperties.SM_F_MIR_GOOD);
+        if (!isB0Good || !isB2Good || !isB3Good || !isMirGood) {
+            for (int i = 0; i < vgtReflectance.length; i++) {
+                vgtReflectance[i] = Float.NaN;
+            }
+        }
     }
 
     private AatsrPixelProperties createAatsrPixelProperties(Band band, Tile targetTile, Tile aatsrL1bFlagTile,

@@ -29,6 +29,10 @@ class VgtPixelProperties extends AbstractPixelProperties {
     private static final float TEMPERATURE_THRESH = 0.9f;
 
     public static final int SM_F_LAND = 3;
+    public static final int SM_F_MIR_GOOD = 4;
+    public static final int SM_F_B3_GOOD = 5;
+    public static final int SM_F_B2_GOOD = 6;
+    public static final int SM_F_B0_GOOD = 7;
 
     private float[] refl;
     private boolean smLand;
