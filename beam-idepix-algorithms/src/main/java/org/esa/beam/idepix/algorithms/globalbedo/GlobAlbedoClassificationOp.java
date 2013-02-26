@@ -196,9 +196,6 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     void setCloudFlag(Tile targetTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute boolean pixel properties and write to cloud flag band
-        if (x == 1992 && y == 2053) {
-            System.out.println("x = " + x);
-        }
         targetTile.setSample(x, y, IdepixConstants.F_INVALID, globAlbedoAlgorithm.isInvalid());
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD, globAlbedoAlgorithm.isCloud());
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false); // not computed here

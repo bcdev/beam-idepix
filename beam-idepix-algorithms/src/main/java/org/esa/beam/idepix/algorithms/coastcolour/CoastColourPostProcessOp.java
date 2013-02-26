@@ -129,18 +129,12 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         Tile sourceFlagTile = getSourceTile(origCloudFlagBand, extendedRectangle);
         Tile szaTile = getSourceTile(szaTPG, extendedRectangle);
-//        Tile vzaTile = getSourceTile(vzaTPG, extendedRectangle);
         Tile saaTile = getSourceTile(saaTPG, extendedRectangle);
-//        Tile vaaTile = getSourceTile(vaaTPG, extendedRectangle);
-//        Tile altitudeTile = getSourceTile(altitudeRDN, extendedRectangle);
         Tile ctpTile = getSourceTile(ctpBand, extendedRectangle);
 
         for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
             checkForCancellation();
             for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
-                // old cloud shadow derival - currently not used (2012/08/02)
-//                computeCloudShadow(x, y, szaTile, vzaTile, saaTile, vaaTile, altitudeTile, ctpTile,
-//                                   sourceFlagTile, targetTile);
 
                 if (targetRectangle.contains(x, y)) {
                     boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);

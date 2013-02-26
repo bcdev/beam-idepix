@@ -59,6 +59,8 @@ public class MerisClassificationOp extends MerisBasisOp {
     public static final String SCATT_ANGLE = "scattering_angle";
     public static final String RHO_THRESH_TERM = "rho442_thresh_term";
     public static final String MDSI = "mdsi";
+    public static final String RHO_GLINT = "rho_glint";
+    public static final String SCHILLER = "schiller_cloud_value";
 
     public static final int BAND_BRIGHT_N = 0;
     public static final int BAND_SLOPE_N_1 = 1;

@@ -143,15 +143,6 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
             vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
         }
 
-        if (x == 1915 && y == 2035) {
-            System.out.println("x = " + x);
-        }
-        if (x == 1890 && y == 2020) {
-            System.out.println("x = " + x);
-        }
-        if (x == 1992 && y == 2053) {
-            System.out.println("x = " + x);
-        }
         checkVgtReflectanceQuality(vgtReflectance, smFlagTile, x, y);
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);

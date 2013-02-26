@@ -188,14 +188,51 @@ public class IdepixProducts {
     public static void addRadiance2ReflectanceBands(Product rad2reflProduct, Product targetProduct) {
         for (String bandname : rad2reflProduct.getBandNames()) {
             if (!targetProduct.containsBand(bandname)) {
+                System.out.println("adding band: " + bandname);
                 targetProduct.addBand(rad2reflProduct.getBand(bandname));
             }
         }
     }
 
-    public static void addMerisCloudProductBands(Product merisCloudProduct, Product targetProduct) {
+    public static void addL2PressureBands(Product merisCloudProduct, Product targetProduct) {
         for (String bandname : merisCloudProduct.getBandNames()) {
-            if (!bandname.equals(MerisClassificationOp.CLOUD_FLAGS)) {
+            if (bandname.equalsIgnoreCase(MerisClassificationOp.PRESSURE_CTP) ||
+                    bandname.equalsIgnoreCase(MerisClassificationOp.PRESSURE_SURFACE)) {
+                moveBand(targetProduct, merisCloudProduct, bandname);
+            }
+        }
+    }
+
+    // currently not needed
+//    public static void addMdsiBand(Product merisCloudProduct, Product targetProduct) {
+//        for (String bandname : merisCloudProduct.getBandNames()) {
+//            if (bandname.equalsIgnoreCase(MerisClassificationOp.MDSI)) {
+//                moveBand(targetProduct, merisCloudProduct, bandname);
+//            }
+//        }
+//    }
+
+    // currently not needed
+//    public static void addRhoThreshBand(Product merisCloudProduct, Product targetProduct) {
+//        for (String bandname : merisCloudProduct.getBandNames()) {
+//            if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_THRESH_TERM)) {
+//                moveBand(targetProduct, merisCloudProduct, bandname);
+//            }
+//        }
+//    }
+
+    // currently not needed
+//    public static void addScattAngleBand(Product merisCloudProduct, Product targetProduct) {
+//        for (String bandname : merisCloudProduct.getBandNames()) {
+//            if (bandname.equalsIgnoreCase(MerisClassificationOp.SCATT_ANGLE)) {
+//                moveBand(targetProduct, merisCloudProduct, bandname);
+//            }
+//        }
+//    }
+
+    public static void addCCSchillerCloudValueBand(Product merisCloudProduct, Product targetProduct) {
+        for (String bandname : merisCloudProduct.getBandNames()) {
+            if (bandname.equalsIgnoreCase(MerisClassificationOp.SCHILLER)) {
                 moveBand(targetProduct, merisCloudProduct, bandname);
             }
         }
@@ -211,6 +248,7 @@ public class IdepixProducts {
                 if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                 }
+                System.out.println("adding band: " + band.getName());
                 targetProduct.addBand(band);
                 targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
             }
@@ -222,6 +260,7 @@ public class IdepixProducts {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         Band band = gasProduct.getBand(GaseousCorrectionOp.GAS_FLAGS);
         band.setSampleCoding(flagCoding);
+        System.out.println("adding band: " + band.getName());
         targetProduct.addBand(band);
     }
 
@@ -319,6 +358,7 @@ public class IdepixProducts {
 
     private static void moveBand(Product targetProduct, Product product, String bandname) {
         if (!targetProduct.containsBand(bandname)) {
+            System.out.println("adding band: " + bandname);
             targetProduct.addBand(product.getBand(bandname));
         }
     }

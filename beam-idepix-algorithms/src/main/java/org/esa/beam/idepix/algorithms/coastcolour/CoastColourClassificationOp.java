@@ -69,6 +69,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String SCATT_ANGLE = MerisClassificationOp.SCATT_ANGLE;
     public static final String RHO_THRESH_TERM = MerisClassificationOp.RHO_THRESH_TERM;
     public static final String MDSI = MerisClassificationOp.MDSI;
+    public static final String RHO_GLINT = MerisClassificationOp.RHO_GLINT;
+    public static final String SCHILLER = MerisClassificationOp.SCHILLER;
 
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
@@ -86,8 +88,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final int F_LAND = 13;
     public static final int F_COASTLINE = 14;
     public static final int F_MIXED_PIXEL = 15;
-
-    private static final String RHO_GLINT = "rho_glint";
 
     private static final int BAND_BRIGHT_N = MerisClassificationOp.BAND_BRIGHT_N;
     private static final int BAND_SLOPE_N_1 = MerisClassificationOp.BAND_SLOPE_N_1;
@@ -164,7 +164,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private double schillerAmbiguous;
     @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
     private double schillerSure;
-
+    @Parameter(label = " Schiller Cloud Value", defaultValue = "true")
+    private boolean ccOutputSchillerCloudValue;
 
 
     private Band cloudFlagBand;
@@ -173,6 +174,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private Band scattAngleOutputBand;
     private Band rhoThreshOutputBand;
     private Band rhoGlintOutputBand;
+    private Band schillerValueOutputBand;
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
     private SeaIceClassifier seaIceClassifier;
@@ -230,6 +232,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         rhoThreshOutputBand = targetProduct.addBand(RHO_THRESH_TERM, ProductData.TYPE_FLOAT32);
         rhoGlintOutputBand = targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
         mdsiOutputBand = targetProduct.addBand(MDSI, ProductData.TYPE_FLOAT32);
+        if (ccOutputSchillerCloudValue) {
+            schillerValueOutputBand = targetProduct.addBand(SCHILLER, ProductData.TYPE_FLOAT32);
+        }
     }
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {
@@ -288,9 +293,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                                                 w, h, CLOUD_FLAGS + ".F_LOW_PSCATT", Color.YELLOW.brighter(), 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_interm_prel_bright", "IDEPIX CC result of preliminary bright test",
                                                 w, h, CLOUD_FLAGS + ".F_BRIGHT_RC", Color.YELLOW.darker().darker(),
-                                                0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC result of spectral unmixing",
-                                                w, h, CLOUD_FLAGS + ".F_MIXED_PIXEL", Color.GREEN.darker(),
                                                 0.5f));
 
         // not used as masks but still available as flag
@@ -433,6 +435,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                             final double rhoGlint = computeRhoGlint(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, rhoGlint);
                         }
+                        if (ccOutputSchillerCloudValue && band == schillerValueOutputBand) {
+                            float schillerCloudValue = computeSchillerCloudValue(sd, pixelInfo);
+                            targetTile.setSample(pixelInfo.x, pixelInfo.y, schillerCloudValue);
+                        }
                     }
                 }
             }
@@ -510,18 +516,12 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         boolean bright = bright_rc || bright_toa_f;
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright);
 
-        double p1Scaled = 1.0 - pixelInfo.p1Pressure / 1000.0;
-        boolean is_glint = p1Scaled < 0.15;
-
-        final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
-        final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
-
         double pscattPressure = pixelInfo.pscattPressure;
         boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                 (sd.rhoToa[Constants.bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
         boolean is_snow_ice = false;
         boolean land_coast = land_f || coast_f;
-        boolean is_glint_risk = is_glint && is_glint_2;
+        final boolean is_glint_risk = isGlintRisk(sd, pixelInfo);
         if (!(land_coast)) {
             // over water
             targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
@@ -539,8 +539,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             is_snow_ice = (high_mdsi && bright_f);
         }
 
-        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
-
         double ambiguousThresh = schillerAmbiguous;
         double sureThresh = schillerSure;
         // this seems to avoid false cloud flagging in glint regions:
@@ -548,6 +546,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             ambiguousThresh += 0.1;
             sureThresh += 0.1;
         }
+
+        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
+
         boolean isCloud = schillerValue > ambiguousThresh;
         boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
@@ -556,8 +557,37 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice);
-
     }
+
+    public float computeSchillerCloudValue(SourceData sd, PixelInfo pixelInfo) {
+        final boolean glintRisk = isGlintRisk(sd, pixelInfo);
+        double ambiguousThresh = schillerAmbiguous;
+        double sureThresh = schillerSure;
+        // this seems to avoid false cloud flagging in glint regions:
+        if (glintRisk) {
+            ambiguousThresh += 0.1;
+            sureThresh += 0.1;
+        }
+
+        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
+        boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
+        if (glintRisk && isCloudAmbiguous) {
+            schillerValue = Float.NaN;
+        }
+
+        return schillerValue;
+    }
+
+    private boolean isGlintRisk(SourceData sd, PixelInfo pixelInfo) {
+        double p1Scaled = 1.0 - pixelInfo.p1Pressure / 1000.0;
+        boolean is_glint = p1Scaled < 0.15;
+
+        final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
+        final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
+
+        return is_glint && is_glint_2;
+    }
+
 
     private float computeSchillerCloud(SchillerAlgorithm schillerAlgorithm, final SourceData sd, final PixelInfo pixelInfo) {
         return schillerAlgorithm.compute(new SchillerAlgorithm.Accessor() {

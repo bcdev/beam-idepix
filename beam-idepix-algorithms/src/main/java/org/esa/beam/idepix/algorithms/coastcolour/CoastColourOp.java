@@ -52,20 +52,23 @@ public class CoastColourOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " TOA Reflectances")
     private boolean ccOutputRad2Refl = true;
 
-    @Parameter(defaultValue = "false", label = " Gas Absorption Corrected Reflectances")
+    @Parameter(defaultValue = "false", label = " Gas Absorption Correction Flag")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(defaultValue = "true", label = " Rayleigh Corrected Reflectances")
-    private boolean ccOutputRayleigh = true;
+    @Parameter(defaultValue = "false", label = " Rayleigh Corrected Reflectances")
+    private boolean ccOutputRayleigh = false;
 
-    @Parameter(defaultValue = "true", label = " Mixed Pixel Flag")
-    private boolean ccMixedPixel= true;
+    @Parameter(defaultValue = "false", label = " Mixed Pixel Flag (requires Rayleigh corrected reflectances!)")
+    private boolean ccMixedPixel= false;
 
     @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
     private boolean ccOutputL2Pressures = true;
 
     @Parameter(defaultValue = "true", label = " L2 Cloud Detection Flags")
     private boolean ccOutputL2CloudDetection = true;
+
+    @Parameter(defaultValue = "true", label = " Schiller Cloud Value")
+    private boolean ccOutputSchillerCloudValue = true;
 
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
@@ -116,6 +119,9 @@ public class CoastColourOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
+
+        System.out.println("Running IDEPIX renovation, v2.0-SNAPSHOT...");
+
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.CoastColour);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
@@ -186,6 +192,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
         cloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
         cloudClassificationParameters.put("schillerSure", ccSchillerSure);
+        cloudClassificationParameters.put("ccOutputSchillerCloudValue", ccOutputSchillerCloudValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                                               cloudClassificationParameters, cloudInputProducts);
     }
@@ -208,10 +215,7 @@ public class CoastColourOp extends BasisOp {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }
         if (ccOutputL2Pressures) {
-            IdepixProducts.addMerisCloudProductBands(merisCloudProduct, targetProduct);
-        }
-        if (ccOutputL2CloudDetection) {
-            addCloudClassificationFlagBandCoastColour();
+            IdepixProducts.addL2PressureBands(merisCloudProduct, targetProduct);
         }
         if (ccOutputGaseous) {
             IdepixProducts.addGaseousCorrectionBands(gasProduct, targetProduct);
@@ -219,8 +223,12 @@ public class CoastColourOp extends BasisOp {
         if (ccOutputRayleigh) {
             IdepixProducts.addRayleighCorrectionBands(rayleighProduct, targetProduct);
         }
+        if (ccOutputSchillerCloudValue) {
+            IdepixProducts.addCCSchillerCloudValueBand(merisCloudProduct, targetProduct);
+        }
 
         if (ccOutputL2CloudDetection) {
+            addCloudClassificationFlagBandCoastColour();
             Band cloudFlagBand = targetProduct.getBand(CoastColourClassificationOp.CLOUD_FLAGS);
             cloudFlagBand.setSourceImage(ccPostProcessingProduct.getBand(CoastColourClassificationOp.CLOUD_FLAGS).getSourceImage());
         }
@@ -232,6 +240,7 @@ public class CoastColourOp extends BasisOp {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         for (Band band : merisCloudProduct.getBands()) {
             if (band.getName().equals(CoastColourClassificationOp.CLOUD_FLAGS)) {
+                System.out.println("adding band: " + band.getName());
                 Band targetBand = ProductUtils.copyBand(band.getName(), merisCloudProduct, targetProduct, true);
                 targetBand.setSampleCoding(flagCoding);
             }

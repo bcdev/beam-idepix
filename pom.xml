@@ -83,6 +83,44 @@
         <module>beam-idepix-operators</module>
     </modules>
 
+    <dependencies>
+
+        <!-- JUnit Libraries ############################################# -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+        <!-- define the following here to have them accessible in the assembly -->
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-unmix</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-meris-brr</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-meris-sdr</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-watermask-operator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-meris-radiometry</artifactId>
+        </dependency>
+
+    </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <!-- IDEPIX Libraries ############################################# -->
@@ -156,26 +194,31 @@
                 <artifactId>beam-bootstrap</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-ui</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-visat</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
@@ -187,6 +230,7 @@
                 <artifactId>beam-unmix</artifactId>
                 <version>1.2.1</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
@@ -195,19 +239,22 @@
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
-                <artifactId>beam-meris-glint</artifactId>
-                <version>1.2.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-brr</artifactId>
                 <version>2.3.2</version>
             </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-sdr</artifactId>
                 <version>2.3.2</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-meris-radiometry</artifactId>
+                <version>1.1</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-watermask-operator</artifactId>
@@ -226,14 +273,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <dependencies>
-        <!-- JUnit Libraries ############################################# -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 
     <build>
         <plugins>
@@ -251,11 +290,8 @@
                 <version>2.2-beta-5</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/beam-bin.xml</descriptor>
-                        <descriptor>src/main/assembly/stitcher-bin.xml</descriptor>
-                        <!--<descriptor>src/main/assembly/project.xml</descriptor>-->
+                        <descriptor>src/main/assembly/modules.xml</descriptor>
                     </descriptors>
-                    <!--<finalName>coastcolour</finalName>-->
                 </configuration>
             </plugin>
             <plugin>

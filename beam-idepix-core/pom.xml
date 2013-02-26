@@ -55,10 +55,6 @@
 
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-glint</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-brr</artifactId>
         </dependency>
         <dependency>
