@@ -46,13 +46,19 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public float brightValue() {
         double value;
-        if (isLand()) {
-            value = (refl[0] + refl[1]) / 2.0f;
-        } else if (isWater()) {
-            value = (refl[1] + refl[2]);
-        } else {
-            value = (refl[0] + refl[1]) / 2.0f;
-        }
+
+//        if (isLand()) {
+//            value = (refl[0] + refl[1]) / 2.0f;
+//        } else if (isWater()) {
+//            value = (refl[1] + refl[2]);
+//        } else {
+//            value = (refl[0] + refl[1]) / 2.0f;
+//        }
+
+        // do not make a difference any more
+        // (changed for LC VGT processing because of clouds in rivers with new water mask, 20130227)
+        value = (refl[0] + refl[1]) / 2.0f;
+
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
         return (float) value;
