@@ -33,7 +33,7 @@
      <ccSchillerAmbiguous>1.4</ccSchillerAmbiguous>
 
      <!-- Schiller cloud threshold for sure clouds -->
-     <ccSchillerAmbiguous>1.8</ccSchillerAmbiguous>
+     <ccSchillerSure>1.8</ccSchillerSure>
 
      <!-- The cloud buffer width -->
      <ccCloudBufferWidth>2</ccCloudBufferWidth>
