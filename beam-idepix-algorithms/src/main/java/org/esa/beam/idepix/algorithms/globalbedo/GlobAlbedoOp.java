@@ -215,12 +215,16 @@ public class GlobAlbedoOp extends BasisOp {
         removeCollocatedMasterSlaveExtensions();
 
         // new approach for GA CCN...
+
         Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
+        // MERIS master
         computeMerisAlgorithmInputProducts(gaCloudInput);
-
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisAatsrSynergyClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
+
+        // AATSR master
+        // todo!
 
         targetProduct = gaCloudProduct;
     }
