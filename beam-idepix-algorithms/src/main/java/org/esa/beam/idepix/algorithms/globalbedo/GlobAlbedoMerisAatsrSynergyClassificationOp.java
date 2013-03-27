@@ -266,6 +266,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
         float[] merisAatsrReflectance = concatMerisAatsrReflectanceArrays(merisReflectance, aatsrReflectance);
         gaAlgorithm.setRefl(merisAatsrReflectance);
+        gaAlgorithm.setIstomena(gaUseIstomenaSeaIceAlgorithm);
 
         // water mask part
         if (gaUseL1bLandWaterFlag) {

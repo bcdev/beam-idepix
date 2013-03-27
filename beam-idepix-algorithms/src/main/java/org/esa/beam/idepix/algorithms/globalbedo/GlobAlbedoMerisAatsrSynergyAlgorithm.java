@@ -32,15 +32,16 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float brr442ThreshMeris;
     // AATSR
     private float btemp1200Aatsr;
-    private float[] reflAatsr;
-    private float[] btempAatsr;
+    private float[] reflAatsr;              // 550, 670, 870, 1600
+    private float[] btempAatsr;             // 370, 1100, 1200
     private boolean l1FlagLandAatsr;
+    private boolean isIstomena;
 
     // todo: raise flags only if we have MERIS/AATSR overlap, and/or add flags such as 'NO_MERIS' or 'NO_AATSR'
 
     @Override
     public boolean isCloud() {
-        boolean threshTest = whiteValue() + 5.0*brightValue() + 0.5*pressureValue() + temperatureValue() > CLOUD_THRESH;
+        boolean threshTest = whiteValue() + 5.0 * brightValue() + 0.5 * pressureValue() + temperatureValue() > CLOUD_THRESH;
         boolean bbtest = isBlueDenseCloud();
         if (isLand()) {
             return (!isInvalid() && (threshTest || bbtest) && !isClearSnow());
@@ -51,7 +52,18 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public boolean isSeaIce() {
-        return isWater() && isBright() && reflAatsr[3] < 2.0;
+        if (isIstomena) {
+            // use Istomena et al algorithm
+            final boolean mask1 = Math.abs((btempAatsr[0] - btempAatsr[1]) / btempAatsr[0]) < 0.03;
+            final boolean mask2 = Math.abs((btempAatsr[0] - btempAatsr[2]) / btempAatsr[0]) < 0.03;
+            final boolean mask3 = Math.abs((reflAatsr[2] - reflAatsr[3]) / reflAatsr[2]) > 0.8;
+            final boolean mask4 = Math.abs((reflAatsr[2] - reflAatsr[1]) / reflAatsr[2]) < 0.1;
+            final boolean mask5 = Math.abs((reflAatsr[1] - reflAatsr[0]) / reflAatsr[1]) < 0.4;
+
+            return isWater() && mask1 && mask2 && mask3 && mask4 && mask5;
+        } else {
+            return isWater() && isBright() && reflAatsr[3] < 2.0;
+        }
     }
 
     @Override
@@ -238,6 +250,10 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setBtempAatsr(float[] btempAatsr) {
         this.btempAatsr = btempAatsr;
+    }
+
+    public void setIstomena(boolean istomena) {
+        isIstomena = istomena;
     }
 
     // THRESHOLD GETTERS

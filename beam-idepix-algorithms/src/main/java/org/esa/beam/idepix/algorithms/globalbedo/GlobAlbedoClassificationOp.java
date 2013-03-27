@@ -60,6 +60,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaComputeSchillerClouds = false;
     @Parameter(defaultValue = "false", label = " Use forward view for cloud flag determination (AATSR)")
     boolean gaUseAatsrFwardForClouds;
+    @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
+    boolean gaUseIstomenaSeaIceAlgorithm;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
