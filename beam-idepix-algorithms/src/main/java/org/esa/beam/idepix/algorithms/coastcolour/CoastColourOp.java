@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.coastcolour",
-                  version = "1.4-SNAPSHOT",
+                  version = "2.0-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with CoastColour algorithm.")

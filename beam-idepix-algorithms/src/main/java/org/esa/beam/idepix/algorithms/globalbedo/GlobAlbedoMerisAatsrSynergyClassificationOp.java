@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
-                  version = "1.4-SNAPSHOT",
+                  version = "2.0-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2013 by Brockmann Consult",
                   description = "Pixel identification and classification with GlobAlbedo algorithm.")

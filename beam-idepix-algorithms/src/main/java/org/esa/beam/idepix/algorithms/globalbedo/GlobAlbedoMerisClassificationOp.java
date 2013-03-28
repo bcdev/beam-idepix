@@ -236,6 +236,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         gaAlgorithm.setP1(p1Tile.getSampleFloat(x, y));
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscatt(pscattTile.getSampleFloat(x, y));
+        gaAlgorithm.setApplyBlueDenseCloudAlgorithm(gaApplyBlueDenseCloudAlgorithm);
 
         if (gaUseL1bLandWaterFlag) {
             final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND);

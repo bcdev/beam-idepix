@@ -10,7 +10,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 
 @OperatorMetadata(alias = "idepix.operators.Basis",
-                  version = "1.4-SNAPSHOT",
+                  version = "2.0-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Idepix operator for basic product generation.")

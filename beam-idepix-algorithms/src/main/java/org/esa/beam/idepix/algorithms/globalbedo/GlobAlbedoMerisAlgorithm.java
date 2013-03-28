@@ -28,12 +28,12 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     private float pbaro;
     private float brr442;
     private float brr442Thresh;
+    private boolean applyBlueDenseCloudAlgorithm;
 
     @Override
     public boolean isCloud() {
         boolean threshTest = whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH;
-//        boolean bbtest = isBlueDenseCloud();
-        boolean bbtest = false;
+        boolean bbtest =  applyBlueDenseCloudAlgorithm ? isBlueDenseCloud() : false;
         return !isInvalid() && ((threshTest || bbtest) && !isClearSnow());
     }
 
@@ -169,6 +169,10 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
+    }
+
+    public void setApplyBlueDenseCloudAlgorithm(boolean applyBlueDenseCloudAlgorithm) {
+        this.applyBlueDenseCloudAlgorithm = applyBlueDenseCloudAlgorithm;
     }
 
     public void setP1(float p1) {

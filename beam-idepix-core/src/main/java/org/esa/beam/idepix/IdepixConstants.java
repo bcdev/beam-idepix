@@ -10,7 +10,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
  */
 public class IdepixConstants {
 
-    public static final String IDEPIX_VERSION = "v1.4-SNAPSHOT";
+    public static final String IDEPIX_VERSION = "v2.0-SNAPSHOT";
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;

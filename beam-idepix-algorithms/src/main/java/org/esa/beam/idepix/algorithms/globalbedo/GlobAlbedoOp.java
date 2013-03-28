@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo",
-                  version = "1.4-SNAPSHOT",
+                  version = "2.0-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with GlobAlbedo algorithm.")
@@ -82,6 +82,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "false", label = " Apply 'Blue dense' cloud algorithm  (MERIS)")
+    boolean gaApplyBlueDenseCloudAlgorithm = false;
     @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm (MERIS)")
     private boolean gaComputeSchillerClouds = false;
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
@@ -134,6 +136,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
         gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
         gaCloudClassificationParameters.put("gaLcCloudBuffer", gaLcCloudBuffer);
+        gaCloudClassificationParameters.put("gaApplyBlueDenseCloudAlgorithm", gaApplyBlueDenseCloudAlgorithm);
         gaCloudClassificationParameters.put("gaComputeSchillerClouds", gaComputeSchillerClouds);
         gaCloudClassificationParameters.put("gaUseWaterMaskFraction", gaUseWaterMaskFraction);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);

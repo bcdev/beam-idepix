@@ -52,6 +52,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaUseL1bLandWaterFlag;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "false", label = " Apply 'Blue dense' cloud algorithm  (MERIS)")
+    boolean gaApplyBlueDenseCloudAlgorithm;
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     boolean gaUseWaterMaskFraction = true;
     @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
