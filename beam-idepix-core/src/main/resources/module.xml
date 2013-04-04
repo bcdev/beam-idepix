@@ -42,7 +42,7 @@
         <module>beam-meris-sdr</module>
     </dependency>
     <dependency>
-        <module>beam-watermask</module>
+        <module>beam-watermask-operator</module>
     </dependency>
     <dependency>
         <module>beam-meris-radiometry</module>
