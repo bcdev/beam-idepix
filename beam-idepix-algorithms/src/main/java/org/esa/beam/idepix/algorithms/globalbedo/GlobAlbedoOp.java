@@ -51,6 +51,8 @@ public class GlobAlbedoOp extends BasisOp {
     // Globalbedo parameters
     @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
     private boolean gaCopyRadiances = true;
+    @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
+    boolean gaCopySubsetOfRadiances;
     @Parameter(defaultValue = "false", label = " Compute only the flag band")
     private boolean gaComputeFlagsOnly;
     @Parameter(defaultValue = "false", label = " Copy pressure bands (MERIS)")
@@ -129,6 +131,7 @@ public class GlobAlbedoOp extends BasisOp {
     private Map<String, Object> createGaCloudClassificationParameters() {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
+        gaCloudClassificationParameters.put("gaCopySubsetOfRadiances", gaCopySubsetOfRadiances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaCopyPressure", gaCopyPressure);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
@@ -221,16 +224,12 @@ public class GlobAlbedoOp extends BasisOp {
         removeCollocatedMasterSlaveExtensions();
 
         // new approach for GA CCN...
-
         Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
-        // MERIS master
+        // MERIS is master!!
         computeMerisAlgorithmInputProducts(gaCloudInput);
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisAatsrSynergyClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
-
-        // AATSR master
-        // todo!
 
         targetProduct = gaCloudProduct;
     }

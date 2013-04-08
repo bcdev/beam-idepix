@@ -44,6 +44,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaComputeFlagsOnly;
     @Parameter(defaultValue = "true", label = "Copy input radiance bands")
     boolean gaCopyRadiances;
+    @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
+    boolean gaCopySubsetOfRadiances;
     @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")
     boolean gaCopyPressure;
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")

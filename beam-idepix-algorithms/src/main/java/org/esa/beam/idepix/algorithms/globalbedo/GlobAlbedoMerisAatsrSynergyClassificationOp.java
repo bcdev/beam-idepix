@@ -199,6 +199,9 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         if (gaCopyRadiances) {
             copyRadiances();
         }
+        if (!gaCopyRadiances && gaCopySubsetOfRadiances) {
+            copySubsetOfRadiances();
+        }
     }
 
     private void copyRadiances() {
@@ -213,6 +216,24 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
             ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
                                   targetProduct, true);
+        }
+    }
+
+    private void copySubsetOfRadiances() {
+        // for performance, copy just a subset of radiances/reflectances to allow RGB image creation
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            if (EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_13") ||
+                    EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_5") ||
+                    EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_1")) {
+                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
+                                      targetProduct, true);
+            }
+        }
+        for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
+            if (IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i].startsWith("reflec_nadir")) {
+                ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
+                                      targetProduct, true);
+            }
         }
     }
 
