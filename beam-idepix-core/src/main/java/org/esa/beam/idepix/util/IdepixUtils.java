@@ -71,7 +71,7 @@ public class IdepixUtils {
 
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
         // todo: needs to be more strict, but for the moment we assume this is enough...
-        return product.getProductType().contains("COLLOCATED");
+        return product.getName().contains("COLLOC") || product.getProductType().contains("COLLOC");
     }
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
