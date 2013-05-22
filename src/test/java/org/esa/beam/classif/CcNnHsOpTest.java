@@ -1,12 +1,12 @@
 package org.esa.beam.classif;
 
 
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.SampleOperator;
 import org.junit.Before;
@@ -17,7 +17,9 @@ import java.text.ParseException;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class CcNnHsOpTest {
@@ -75,9 +77,15 @@ public class CcNnHsOpTest {
         ccNnHsOp.configureTargetSamples(sampleConfigurer);
 
         final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
-        assertEquals(2, sampleMap.size());
+        assertEquals(8, sampleMap.size());
         assertEquals("cl_all_1", sampleMap.get(0));
         assertEquals("cl_all_2", sampleMap.get(1));
+        assertEquals("cl_ter_1", sampleMap.get(2));
+        assertEquals("cl_ter_2", sampleMap.get(3));
+        assertEquals("cl_wat_1", sampleMap.get(4));
+        assertEquals("cl_wat_2", sampleMap.get(5));
+        assertEquals("cl_simple_wat_1", sampleMap.get(6));
+        assertEquals("cl_simple_wat_2", sampleMap.get(7));
     }
 
     @Test
@@ -154,8 +162,99 @@ public class CcNnHsOpTest {
     }
 
     @Test
+    public void testConfigureTargetProduct() {
+        final Product sourceProduct = new Product("overwrites the old", "don'tcare", 2, 2);
+        final TestProductConfigurer configurer = new TestProductConfigurer();
+        ccNnHsOp.injectProduct(sourceProduct);
+
+        ccNnHsOp.configureTargetProduct(configurer);
+
+        final Product targetProduct = configurer.getTargetProduct();
+        assertEquals("overwrites the old", targetProduct.getName());
+
+        final ProductNodeFilter<Band> copyBandsFilter = configurer.getCopyBandsFilter();
+        assertNotNull(copyBandsFilter);
+
+        assertBandPresent(targetProduct, "cl_all_1");
+        assertBandPresent(targetProduct, "cl_all_2");
+        assertBandPresent(targetProduct, "cl_ter_1");
+        assertBandPresent(targetProduct, "cl_ter_2");
+        assertBandPresent(targetProduct, "cl_wat_1");
+        assertBandPresent(targetProduct, "cl_wat_2");
+        assertBandPresent(targetProduct, "cl_simple_wat_1");
+        assertBandPresent(targetProduct, "cl_simple_wat_2");
+
+        final ProductNodeGroup<FlagCoding> flagCodingGroup = targetProduct.getFlagCodingGroup();
+        assertNotNull(flagCodingGroup.get("cl_all_1"));
+        assertNotNull(flagCodingGroup.get("cl_all_2"));
+        assertNotNull(flagCodingGroup.get("cl_ter_1"));
+        assertNotNull(flagCodingGroup.get("cl_ter_2"));
+        assertNotNull(flagCodingGroup.get("cl_wat_1"));
+        assertNotNull(flagCodingGroup.get("cl_wat_2"));
+        assertNotNull(flagCodingGroup.get("cl_simple_wat_1"));
+        assertNotNull(flagCodingGroup.get("cl_simple_wat_2"));
+    }
+
+    private void assertBandPresent(Product targetProduct, String bandName) {
+        final Band band = targetProduct.getBand(bandName);
+        assertNotNull(band);
+        assertEquals(ProductData.TYPE_INT8, band.getDataType());
+        assertNotNull(band.getFlagCoding());
+    }
+
+    @Test
     public void testAssembleInput() {
         // @todo 1 tb/tb continue here - tb 2013-05-22
+    }
+
+    @Test
+    public void testCreateFullFlagCoding() {
+        final FlagCoding flagCoding = CcNnHsOp.createFullFlagCoding("band_name");
+        assertNotNull(flagCoding);
+        assertEquals("band_name", flagCoding.getName());
+
+        final MetadataAttribute clear = flagCoding.getFlag("clear");
+        assertNotNull(clear);
+        assertEquals(1, clear.getData().getElemInt());
+
+        final MetadataAttribute spamx = flagCoding.getFlag("spamx");
+        assertNotNull(spamx);
+        assertEquals(2, spamx.getData().getElemInt());
+
+        final MetadataAttribute noncl = flagCoding.getFlag("noncl");
+        assertNotNull(noncl);
+        assertEquals(4, noncl.getData().getElemInt());
+
+        final MetadataAttribute cloud = flagCoding.getFlag("cloud");
+        assertNotNull(cloud);
+        assertEquals(8, cloud.getData().getElemInt());
+
+        final MetadataAttribute unproc = flagCoding.getFlag("unproc");
+        assertNotNull(unproc);
+        assertEquals(16, unproc.getData().getElemInt());
+    }
+
+    @Test
+    public void testCreateSimpleFlagCoding() {
+        final FlagCoding flagCoding = CcNnHsOp.createSimpleFlagCoding("band_name");
+        assertNotNull(flagCoding);
+        assertEquals("band_name", flagCoding.getName());
+
+        final MetadataAttribute clear = flagCoding.getFlag("clear");
+        assertNotNull(clear);
+        assertEquals(1, clear.getData().getElemInt());
+
+        final MetadataAttribute spamx = flagCoding.getFlag("spamx_or_noncl");
+        assertNotNull(spamx);
+        assertEquals(2, spamx.getData().getElemInt());
+
+        final MetadataAttribute cloud = flagCoding.getFlag("cloud");
+        assertNotNull(cloud);
+        assertEquals(8, cloud.getData().getElemInt());
+
+        final MetadataAttribute unproc = flagCoding.getFlag("unproc");
+        assertNotNull(unproc);
+        assertEquals(16, unproc.getData().getElemInt());
     }
 
     @Test
@@ -179,6 +278,87 @@ public class CcNnHsOpTest {
 
         @Override
         public void defineSample(int index, String name, Product product) {
+        }
+    }
+
+    private class TestProductConfigurer implements ProductConfigurer {
+
+        private Product targetProduct;
+        private ProductNodeFilter<Band> copyBandsFilter;
+
+        private TestProductConfigurer() {
+            targetProduct = new Product("ZAPP", "schnuffi", 2, 2);
+        }
+
+        @Override
+        public Product getSourceProduct() {
+            return null;
+        }
+
+        @Override
+        public void setSourceProduct(Product sourceProduct) {
+        }
+
+        @Override
+        public Product getTargetProduct() {
+            return targetProduct;
+        }
+
+        @Override
+        public void copyMetadata() {
+        }
+
+        @Override
+        public void copyTimeCoding() {
+        }
+
+        @Override
+        public void copyGeoCoding() {
+        }
+
+        @Override
+        public void copyMasks() {
+        }
+
+        @Override
+        public void copyTiePointGrids(String... gridName) {
+        }
+
+        @Override
+        public void copyBands(String... bandName) {
+        }
+
+        @Override
+        public void copyBands(ProductNodeFilter<Band> filter) {
+            copyBandsFilter = filter;
+        }
+
+        private ProductNodeFilter<Band> getCopyBandsFilter() {
+            return copyBandsFilter;
+        }
+
+        @Override
+        public void copyVectorData() {
+        }
+
+        @Override
+        public Band addBand(String name, int dataType) {
+            return targetProduct.addBand(name, dataType);
+        }
+
+        @Override
+        public Band addBand(String name, int dataType, double noDataValue) {
+            return null;
+        }
+
+        @Override
+        public Band addBand(String name, String expression) {
+            return null;
+        }
+
+        @Override
+        public Band addBand(String name, String expression, double noDataValue) {
+            return null;
         }
     }
 }

@@ -53,12 +53,11 @@ public class CcNnHsOpAcceptanceTest {
             assertNotNull(product);
             final String targetFilePath = targetDirectory.getPath() + File.separator + "cloud_classified.dim";
 
-            // @todo 1 tb/tb enable again when product is configured tb 2013-05-22
-//            final Product ccProduct = GPF.createProduct("Meris.CCNNHS",
-//                    createDefaultParameterMap(),
-//                    new Product[]{product});
+            final Product ccProduct = GPF.createProduct("Meris.CCNNHS",
+                    createDefaultParameterMap(),
+                    new Product[]{product});
 
-//            ProductIO.writeProduct(ccProduct, targetFilePath, "BEAM-DIMAP");
+            ProductIO.writeProduct(ccProduct, targetFilePath, "BEAM-DIMAP");
         } finally {
             if (product != null) {
                 product.dispose();
@@ -76,7 +75,6 @@ public class CcNnHsOpAcceptanceTest {
 
     private HashMap<String, Object> createDefaultParameterMap() {
         final HashMap<String, Object> parameterMap = new HashMap<String, Object>();
-        //parameterMap.put("targetDirectory", targetDirectory);
         return parameterMap;
     }
 }
