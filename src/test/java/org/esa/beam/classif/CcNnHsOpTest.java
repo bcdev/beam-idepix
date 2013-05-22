@@ -1,0 +1,184 @@
+package org.esa.beam.classif;
+
+
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.SampleOperator;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+
+import static junit.framework.Assert.*;
+import static org.junit.Assert.assertTrue;
+
+public class CcNnHsOpTest {
+
+    private CcNnHsOp ccNnHsOp;
+
+    @Before
+    public void setUp() {
+        ccNnHsOp = new CcNnHsOp();
+    }
+
+    @Test
+    public void testOperatorMetadata() {
+        final OperatorMetadata operatorMetadata = CcNnHsOp.class.getAnnotation(OperatorMetadata.class);
+        assertNotNull(operatorMetadata);
+        assertEquals("Meris.CCNNHS", operatorMetadata.alias());
+        assertEquals("1.0", operatorMetadata.version());
+        assertEquals("Tom Block", operatorMetadata.authors());
+        assertEquals("(c) 2013 by Brockmann Consult", operatorMetadata.copyright());
+        assertEquals("Computing cloud masks using neural networks by H.Schiller", operatorMetadata.description());
+    }
+
+    @Test
+    public void testSourceProductAnnotation() throws NoSuchFieldException {
+        final Field productField = CcNnHsOp.class.getDeclaredField("sourceProduct");
+        assertNotNull(productField);
+
+        final SourceProduct productFieldAnnotation = productField.getAnnotation(SourceProduct.class);
+        assertNotNull(productFieldAnnotation);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void testInheritance() {
+        assertTrue(ccNnHsOp instanceof SampleOperator);
+    }
+
+    @Test
+    public void testConfigureSourceSamples() {
+        final TestSampleConfigurer sampleConfigurer = new TestSampleConfigurer();
+
+        ccNnHsOp.configureSourceSamples(sampleConfigurer);
+
+        final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
+        assertEquals(17, sampleMap.size());
+        for (int i = 0; i < 15; i++) {
+            assertEquals("radiance_" + (i + 1), sampleMap.get(i));
+        }
+    }
+
+    @Test
+    public void testConfigureTargetSamples() {
+        final TestSampleConfigurer sampleConfigurer = new TestSampleConfigurer();
+
+        ccNnHsOp.configureTargetSamples(sampleConfigurer);
+
+        final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
+        assertEquals(2, sampleMap.size());
+        assertEquals("cl_all_1", sampleMap.get(0));
+        assertEquals("cl_all_2", sampleMap.get(1));
+    }
+
+    @Test
+    public void testGetDayOfYearFraction() throws ParseException {
+        final Product product = new Product("bla", "test", 3, 3);
+        product.setStartTime(ProductData.UTC.parse("14-JAN-2007 09:23:11"));
+        product.setEndTime(ProductData.UTC.parse("14-JAN-2007 11:23:11"));
+
+        double fraction = CcNnHsOp.getDayOfYearFraction(product);
+        assertEquals(0.038356164383561646, fraction, 1e-8);
+
+        product.setStartTime(ProductData.UTC.parse("18-MAR-2009 09:23:11"));
+        product.setEndTime(ProductData.UTC.parse("18-MAR-2009 11:23:11"));
+
+        fraction = CcNnHsOp.getDayOfYearFraction(product);
+        assertEquals(0.21095890410958903, fraction, 1e-8);
+
+        product.setStartTime(ProductData.UTC.parse("01-JAN-2009 09:23:11"));
+        product.setEndTime(ProductData.UTC.parse("01-JAN-2009 11:23:11"));
+
+        fraction = CcNnHsOp.getDayOfYearFraction(product);
+        assertEquals(0.0027397260273972603, fraction, 1e-8);
+
+        product.setStartTime(ProductData.UTC.parse("31-DEC-2009 09:23:11"));
+        product.setEndTime(ProductData.UTC.parse("31-DEC-2009 11:23:11"));
+
+        fraction = CcNnHsOp.getDayOfYearFraction(product);
+        assertEquals(1.0, fraction, 1e-8);
+    }
+
+    @Test
+    public void testGetDayOfYearFraction_leapYear() throws ParseException {
+        final Product product = new Product("bla", "test", 3, 3);
+        product.setStartTime(ProductData.UTC.parse("14-JAN-2004 09:23:11"));
+        product.setEndTime(ProductData.UTC.parse("14-JAN-2004 11:23:11"));
+
+        final GregorianCalendar cal = (GregorianCalendar) GregorianCalendar.getInstance();
+        assertTrue(cal.isLeapYear(2004));
+
+        double fraction = CcNnHsOp.getDayOfYearFraction(product);
+        assertEquals(0.03825136612021858, fraction, 1e-8);
+    }
+
+    @Test
+    public void testGetDayOfYearFraction_coveringTwoDays() throws ParseException {
+        final Product product = new Product("bla", "test", 3, 3);
+        product.setStartTime(ProductData.UTC.parse("14-JAN-2011 23:56:14"));
+        product.setEndTime(ProductData.UTC.parse("15-JAN-2011 00:15:11"));
+
+        double fraction = CcNnHsOp.getDayOfYearFraction(product);
+        assertEquals(0.03972602739726028, fraction, 1e-8);
+    }
+
+    @Test
+    public void testGetDayOfYearFraction_missingTimes() throws ParseException {
+        final Product product = new Product("bla", "test", 3, 3);
+        product.setStartTime(null);
+        product.setEndTime(ProductData.UTC.parse("14-JAN-2007 11:23:11"));
+
+        try {
+            CcNnHsOp.getDayOfYearFraction(product);
+            fail("OperatorException expected");
+        } catch (OperatorException expected) {
+        }
+
+        product.setStartTime(ProductData.UTC.parse("14-JAN-2007 11:23:11"));
+        product.setEndTime(null);
+
+        try {
+            CcNnHsOp.getDayOfYearFraction(product);
+            fail("OperatorException expected");
+        } catch (OperatorException expected) {
+        }
+    }
+
+    @Test
+    public void testAssembleInput() {
+        // @todo 1 tb/tb continue here - tb 2013-05-22
+    }
+
+    @Test
+    public void testSpi() {
+        final CcNnHsOp.Spi spi = new CcNnHsOp.Spi();
+        final Class<? extends Operator> operatorClass = spi.getOperatorClass();
+        assertTrue(operatorClass.isAssignableFrom(CcNnHsOp.class));
+    }
+
+    private class TestSampleConfigurer implements SampleConfigurer {
+        private HashMap<Integer, String> sampleMap = new HashMap<Integer, String>();
+
+        @Override
+        public void defineSample(int index, String name) {
+            sampleMap.put(index, name);
+        }
+
+        private HashMap<Integer, String> getSampleMap() {
+            return sampleMap;
+        }
+
+        @Override
+        public void defineSample(int index, String name, Product product) {
+        }
+    }
+}
