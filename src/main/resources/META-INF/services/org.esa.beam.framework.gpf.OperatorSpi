@@ -10,3 +10,4 @@ org.esa.beam.idepix.operators.BarometricPressureOp$Spi
 org.esa.beam.idepix.operators.MerisBrrCorrectionOp$Spi
 org.esa.beam.idepix.operators.IdepixCloudShadowOp$Spi
 org.esa.beam.idepix.operators.SchillerOp$Spi
+org.esa.beam.classif.CcNnHsOp$Spi

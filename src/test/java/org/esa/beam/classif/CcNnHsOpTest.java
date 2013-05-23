@@ -5,10 +5,12 @@ import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.SampleOperator;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,10 +53,20 @@ public class CcNnHsOpTest {
         assertNotNull(productFieldAnnotation);
     }
 
+    @Test
+    public void testValidPixelExpressionAnnotation() throws NoSuchFieldException {
+        final Field validPixelField = CcNnHsOp.class.getDeclaredField("validPixelExpression");
+
+        final Parameter annotation = validPixelField.getAnnotation(Parameter.class);
+        assertNotNull(annotation);
+        assertEquals("NOT (l1_flags.INVALID OR l1_flags.COSMETIC)", annotation.defaultValue());
+        assertEquals("A flag expression that defines pixels to be processed.", annotation.description());
+    }
+
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testInheritance() {
-        assertTrue(ccNnHsOp instanceof SampleOperator);
+        assertTrue(ccNnHsOp instanceof PixelOperator);
     }
 
     @Test
@@ -195,16 +207,33 @@ public class CcNnHsOpTest {
         assertNotNull(flagCodingGroup.get("cl_simple_wat_2"));
     }
 
-    private void assertBandPresent(Product targetProduct, String bandName) {
-        final Band band = targetProduct.getBand(bandName);
-        assertNotNull(band);
-        assertEquals(ProductData.TYPE_INT8, band.getDataType());
-        assertNotNull(band.getFlagCoding());
-    }
-
     @Test
     public void testAssembleInput() {
-        // @todo 1 tb/tb continue here - tb 2013-05-22
+        final double[] inverseSolarFluxes = new double[] {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+        double[] inputVector = new double[20];
+        final WritableSample[] inputSamples = new WritableSample[17];
+        for (int i = 0; i < inputSamples.length; i++) {
+            inputSamples[i] = new TestSample();
+            inputSamples[i].set((double) i + 1);
+        }
+
+        final double sinTime = 0.5;
+        final double cosTime = 0.6;
+        ccNnHsOp.injectTimeSines(sinTime, cosTime);
+        ccNnHsOp.injectInverseSolarFluxes(inverseSolarFluxes);
+
+        inputVector = ccNnHsOp.assembleInput(inputSamples, inputVector);
+
+        // check radiances
+        for (int i = 0; i < 15; i++) {
+            assertEquals(Math.sqrt((i + 1) * Math.PI * inverseSolarFluxes[i]), inputVector[i], 1e-8);
+        }
+        assertEquals(sinTime, inputVector[15], 1e-8);
+        assertEquals(cosTime, inputVector[16], 1e-8);
+
+        assertEquals(Math.cos(16), inputVector[17], 1e-8);
+        assertEquals(Math.sin(17), inputVector[18], 1e-8);
+        assertEquals(Math.cos(17), inputVector[19], 1e-8);
     }
 
     @Test
@@ -258,10 +287,32 @@ public class CcNnHsOpTest {
     }
 
     @Test
+    public void testSetToUnprocessed() {
+        final TestSample testSamples[] = new TestSample[8];
+        for (int i = 0; i < testSamples.length; i++) {
+            testSamples[i] = new TestSample();
+            testSamples[i].set(7878);
+        }
+
+        CcNnHsOp.setToUnprocessed(testSamples);
+
+        for (TestSample testSample : testSamples) {
+            assertEquals(0x10, testSample.getInt());
+        }
+    }
+
+    @Test
     public void testSpi() {
         final CcNnHsOp.Spi spi = new CcNnHsOp.Spi();
         final Class<? extends Operator> operatorClass = spi.getOperatorClass();
         assertTrue(operatorClass.isAssignableFrom(CcNnHsOp.class));
+    }
+
+    private void assertBandPresent(Product targetProduct, String bandName) {
+        final Band band = targetProduct.getBand(bandName);
+        assertNotNull(band);
+        assertEquals(ProductData.TYPE_INT8, band.getDataType());
+        assertNotNull(band.getFlagCoding());
     }
 
     private class TestSampleConfigurer implements SampleConfigurer {
