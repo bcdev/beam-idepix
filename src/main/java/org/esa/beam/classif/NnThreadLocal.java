@@ -18,7 +18,7 @@ class NnThreadLocal extends ThreadLocal<NNffbpAlphaTabFast> {
     @Override
     protected NNffbpAlphaTabFast initialValue() {
         try {
-            final InputStream inputStream = this.getClass().getResourceAsStream("NN4all/clind/varin1/11x8x5x3_2440.4.net");
+            final InputStream inputStream = this.getClass().getResourceAsStream(nnPath);
             final NNffbpAlphaTabFast nn = new NNffbpAlphaTabFast(inputStream);
             inputStream.close();
             return nn;

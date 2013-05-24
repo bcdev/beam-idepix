@@ -25,8 +25,10 @@ public class CcNnHsOp extends PixelOperator {
 
     private static final int NUM_RADIANCE_BANDS = 15;
     private static final int NUM_NN_INPUTS = 20;
-    public static final int LAT_INDEX = 15;
-    public static final int LON_INDEX = 16;
+    private static final int LAT_INDEX = 15;
+    private static final int LON_INDEX = 16;
+
+    private static final double DEG_TO_RAD = Math.PI / 180.0;
 
     //private static final double[] unprocessed = new double[]{-1.0};
 
@@ -318,9 +320,9 @@ public class CcNnHsOp extends PixelOperator {
         }
         inputVector[15] = sinTime;
         inputVector[16] = cosTime;
-        inputVector[17] = Math.cos(inputSamples[LAT_INDEX].getDouble());
-        inputVector[18] = Math.sin(inputSamples[LON_INDEX].getDouble());
-        inputVector[19] = Math.cos(inputSamples[LON_INDEX].getDouble());
+        inputVector[17] = Math.cos(inputSamples[LAT_INDEX].getDouble() * DEG_TO_RAD);
+        inputVector[18] = Math.sin(inputSamples[LON_INDEX].getDouble() * DEG_TO_RAD);
+        inputVector[19] = Math.cos(inputSamples[LON_INDEX].getDouble() * DEG_TO_RAD);
         return inputVector;
     }
 
