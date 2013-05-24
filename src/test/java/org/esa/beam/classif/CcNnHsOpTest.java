@@ -59,7 +59,7 @@ public class CcNnHsOpTest {
 
         final Parameter annotation = validPixelField.getAnnotation(Parameter.class);
         assertNotNull(annotation);
-        assertEquals("NOT (l1_flags.INVALID OR l1_flags.COSMETIC)", annotation.defaultValue());
+        assertEquals("NOT l1_flags.INVALID", annotation.defaultValue());
         assertEquals("A flag expression that defines pixels to be processed.", annotation.description());
     }
 

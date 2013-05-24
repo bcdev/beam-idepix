@@ -35,7 +35,7 @@ public class CcNnHsOp extends PixelOperator {
     @SourceProduct
     private Product sourceProduct;
 
-    @Parameter(defaultValue = "NOT (l1_flags.INVALID OR l1_flags.COSMETIC)",
+    @Parameter(defaultValue = "NOT l1_flags.INVALID",
             description = "A flag expression that defines pixels to be processed.")
     private String validPixelExpression;
 
