@@ -89,7 +89,7 @@ public class CcNnHsOpTest {
         ccNnHsOp.configureTargetSamples(sampleConfigurer);
 
         final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
-        assertEquals(8, sampleMap.size());
+        assertEquals(16, sampleMap.size());
         assertEquals("cl_all_1", sampleMap.get(0));
         assertEquals("cl_all_2", sampleMap.get(1));
         assertEquals("cl_ter_1", sampleMap.get(2));
@@ -98,6 +98,15 @@ public class CcNnHsOpTest {
         assertEquals("cl_wat_2", sampleMap.get(5));
         assertEquals("cl_simple_wat_1", sampleMap.get(6));
         assertEquals("cl_simple_wat_2", sampleMap.get(7));
+
+        assertEquals("cl_all_1_val", sampleMap.get(8));
+        assertEquals("cl_all_2_val", sampleMap.get(9));
+        assertEquals("cl_ter_1_val", sampleMap.get(10));
+        assertEquals("cl_ter_2_val", sampleMap.get(11));
+        assertEquals("cl_wat_1_val", sampleMap.get(12));
+        assertEquals("cl_wat_2_val", sampleMap.get(13));
+        assertEquals("cl_simple_wat_1_val", sampleMap.get(14));
+        assertEquals("cl_simple_wat_2_val", sampleMap.get(15));
     }
 
     @Test
@@ -209,7 +218,7 @@ public class CcNnHsOpTest {
 
     @Test
     public void testAssembleInput() {
-        final double[] inverseSolarFluxes = new double[] {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+        final double[] inverseSolarFluxes = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         double[] inputVector = new double[20];
         final WritableSample[] inputSamples = new WritableSample[17];
         for (int i = 0; i < inputSamples.length; i++) {
@@ -288,7 +297,7 @@ public class CcNnHsOpTest {
 
     @Test
     public void testSetToUnprocessed() {
-        final TestSample testSamples[] = new TestSample[8];
+        final TestSample testSamples[] = new TestSample[16];
         for (int i = 0; i < testSamples.length; i++) {
             testSamples[i] = new TestSample();
             testSamples[i].set(7878);

@@ -28,7 +28,7 @@ public class CcNnHsOp extends PixelOperator {
     public static final int LAT_INDEX = 15;
     public static final int LON_INDEX = 16;
 
-    private static final double[] unprocessed = new double[]{-1.0};
+    //private static final double[] unprocessed = new double[]{-1.0};
 
     @SourceProduct
     private Product sourceProduct;
@@ -71,48 +71,58 @@ public class CcNnHsOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         if (isSampleValid(x, y)) {
-            try {
-                final double[] inputLocal = inputVector.get();
-                assembleInput(sourceSamples, inputLocal);
+            // try {
+            final double[] inputLocal = inputVector.get();
+            assembleInput(sourceSamples, inputLocal);
 
-                final boolean sampleOverLand = isSampleOverLand(sourceSamples[LAT_INDEX].getFloat(), sourceSamples[LON_INDEX].getFloat());
+            //final boolean sampleOverLand = isSampleOverLand(sourceSamples[LAT_INDEX].getFloat(), sourceSamples[LON_INDEX].getFloat());
 
-                final double[] all_1_out = nn_all_1.get().calc(inputLocal);
-                final double[] all_2_out = nn_all_2.get().calc(inputLocal);
+            final double[] all_1_out = nn_all_1.get().calc(inputLocal);
+            final double[] all_2_out = nn_all_2.get().calc(inputLocal);
 
-                double[] ter_1_out;
-                double[] ter_2_out;
-                double[] wat_1_out;
-                double[] wat_2_out;
-                double[] simple_wat_1_out;
-                double[] simple_wat_2_out;
-                if (sampleOverLand) {
-                    wat_1_out = unprocessed;
-                    wat_2_out = unprocessed;
-                    simple_wat_1_out = unprocessed;
-                    simple_wat_2_out = unprocessed;
-                    ter_1_out = nn_ter_1.get().calc(inputLocal);
-                    ter_2_out = nn_ter_2.get().calc(inputLocal);
-                } else {
-                    wat_1_out = nn_wat_1.get().calc(inputLocal);
-                    wat_2_out = nn_wat_2.get().calc(inputLocal);
-                    simple_wat_1_out = nn_simple_wat_1.get().calc(inputLocal);
-                    simple_wat_2_out = nn_simple_wat_2.get().calc(inputLocal);
-                    ter_1_out = unprocessed;
-                    ter_2_out = unprocessed;
-                }
+            double[] ter_1_out;
+            double[] ter_2_out;
+            double[] wat_1_out;
+            double[] wat_2_out;
+            double[] simple_wat_1_out;
+            double[] simple_wat_2_out;
+            //if (sampleOverLand) {
+//                    wat_1_out = unprocessed;
+//                    wat_2_out = unprocessed;
+//                    simple_wat_1_out = unprocessed;
+//                    simple_wat_2_out = unprocessed;
+            ter_1_out = nn_ter_1.get().calc(inputLocal);
+            ter_2_out = nn_ter_2.get().calc(inputLocal);
+            // } else {
+            wat_1_out = nn_wat_1.get().calc(inputLocal);
+            wat_2_out = nn_wat_2.get().calc(inputLocal);
+            simple_wat_1_out = nn_simple_wat_1.get().calc(inputLocal);
+            simple_wat_2_out = nn_simple_wat_2.get().calc(inputLocal);
+//                    ter_1_out = unprocessed;
+//                    ter_2_out = unprocessed;
+            //}
 
-                targetSamples[0].set(CloudClassifier.toFlag_all_var1(all_1_out[0]));
-                targetSamples[1].set(CloudClassifier.toFlag_all_var2(all_2_out[0]));
-                targetSamples[2].set(CloudClassifier.toFlag_ter_var1(ter_1_out[0]));
-                targetSamples[3].set(CloudClassifier.toFlag_ter_var2(ter_2_out[0]));
-                targetSamples[4].set(CloudClassifier.toFlag_wat_var1(wat_1_out[0]));
-                targetSamples[5].set(CloudClassifier.toFlag_wat_var2(wat_2_out[0]));
-                targetSamples[6].set(CloudClassifier.toFlag_wat_simple_var1(simple_wat_1_out[0]));
-                targetSamples[7].set(CloudClassifier.toFlag_wat_simple_var2(simple_wat_2_out[0]));
-            } catch (IOException e) {
-                throw new OperatorException(e.getMessage());
-            }
+            targetSamples[0].set(CloudClassifier.toFlag_all_var1(all_1_out[0]));
+            targetSamples[1].set(CloudClassifier.toFlag_all_var2(all_2_out[0]));
+            targetSamples[2].set(CloudClassifier.toFlag_ter_var1(ter_1_out[0]));
+            targetSamples[3].set(CloudClassifier.toFlag_ter_var2(ter_2_out[0]));
+            targetSamples[4].set(CloudClassifier.toFlag_wat_var1(wat_1_out[0]));
+            targetSamples[5].set(CloudClassifier.toFlag_wat_var2(wat_2_out[0]));
+            targetSamples[6].set(CloudClassifier.toFlag_wat_simple_var1(simple_wat_1_out[0]));
+            targetSamples[7].set(CloudClassifier.toFlag_wat_simple_var2(simple_wat_2_out[0]));
+
+            targetSamples[8].set(all_1_out[0]);
+            targetSamples[9].set(all_2_out[0]);
+            targetSamples[10].set(ter_1_out[0]);
+            targetSamples[11].set(ter_2_out[0]);
+            targetSamples[12].set(wat_1_out[0]);
+            targetSamples[13].set(wat_2_out[0]);
+            targetSamples[14].set(simple_wat_1_out[0]);
+            targetSamples[15].set(simple_wat_2_out[0]);
+
+//            } catch (IOException e) {
+//                throw new OperatorException(e.getMessage());
+//            }
         } else {
             setToUnprocessed(targetSamples);
         }
@@ -173,6 +183,15 @@ public class CcNnHsOp extends PixelOperator {
         sampleConfigurer.defineSample(5, "cl_wat_2");
         sampleConfigurer.defineSample(6, "cl_simple_wat_1");
         sampleConfigurer.defineSample(7, "cl_simple_wat_2");
+
+        sampleConfigurer.defineSample(8, "cl_all_1_val");
+        sampleConfigurer.defineSample(9, "cl_all_2_val");
+        sampleConfigurer.defineSample(10, "cl_ter_1_val");
+        sampleConfigurer.defineSample(11, "cl_ter_2_val");
+        sampleConfigurer.defineSample(12, "cl_wat_1_val");
+        sampleConfigurer.defineSample(13, "cl_wat_2_val");
+        sampleConfigurer.defineSample(14, "cl_simple_wat_1_val");
+        sampleConfigurer.defineSample(15, "cl_simple_wat_2_val");
     }
 
     @Override
@@ -198,6 +217,19 @@ public class CcNnHsOp extends PixelOperator {
 
         addBandWithSimpleFlagCoding(productConfigurer, targetProduct, "cl_simple_wat_1");
         addBandWithSimpleFlagCoding(productConfigurer, targetProduct, "cl_simple_wat_2");
+
+        addFloatBand(productConfigurer, "cl_all_1_val");
+        addFloatBand(productConfigurer, "cl_all_2_val");
+        addFloatBand(productConfigurer, "cl_ter_1_val");
+        addFloatBand(productConfigurer, "cl_ter_2_val");
+        addFloatBand(productConfigurer, "cl_wat_1_val");
+        addFloatBand(productConfigurer, "cl_wat_2_val");
+        addFloatBand(productConfigurer, "cl_simple_wat_1_val");
+        addFloatBand(productConfigurer, "cl_simple_wat_2_val");
+    }
+
+    private void addFloatBand(ProductConfigurer productConfigurer, String bandName) {
+        productConfigurer.addBand(bandName, ProductData.TYPE_FLOAT32);
     }
 
     private void addBandWithFullFlagCoding(ProductConfigurer productConfigurer, Product targetProduct, String bandname) {

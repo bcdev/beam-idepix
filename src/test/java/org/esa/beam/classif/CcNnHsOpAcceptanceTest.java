@@ -76,6 +76,7 @@ public class CcNnHsOpAcceptanceTest {
             assertBandValue("cl_all_2", 9, 28, CloudClassifier.UNPROCESSD_MASK, product);
             assertBandValue("cl_ter_1", 288, 252, CloudClassifier.CLEAR_MASK, product);
             assertBandValue("cl_ter_2", 472, 176, CloudClassifier.CLEAR_MASK, product);
+            assertBandValue("cl_wat_1", 144, 295, CloudClassifier.NONCL_MASK, product);
         } finally {
             product.dispose();
         }
