@@ -7,7 +7,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.operators.BarometricPressureOp;
@@ -27,10 +26,10 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
-                  version = "2.0-SNAPSHOT",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2013 by Brockmann Consult",
-                  description = "Pixel identification and classification with GlobAlbedo algorithm.")
+        version = "2.0-SNAPSHOT",
+        authors = "Olaf Danne",
+        copyright = "(c) 2013 by Brockmann Consult",
+        description = "Pixel identification and classification with GlobAlbedo algorithm.")
 public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClassificationOp {
 
     @SourceProduct(alias = "cloud", optional = true)
@@ -115,17 +114,17 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAatsrSynergyAlgorithm(merisL1bFlagTile,
-                                                                                               merisBrr442Tile, merisP1Tile,
-                                                                                               merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
-                                                                                               merisReflectanceTiles,
-                                                                                               merisReflectance,
-                                                                                               merisBrrTiles, merisBrr,
-                                                                                               aatsrReflectanceTiles, aatsrReflectance,
-                                                                                               aatsrBtempTiles, aatsrBtemp,
-                                                                                               waterMaskSample,
-                                                                                               waterMaskFraction,
-                                                                                               y,
-                                                                                               x);
+                            merisBrr442Tile, merisP1Tile,
+                            merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
+                            merisReflectanceTiles,
+                            merisReflectance,
+                            merisBrrTiles, merisBrr,
+                            aatsrReflectanceTiles, aatsrReflectance,
+                            aatsrBtempTiles, aatsrBtemp,
+                            waterMaskSample,
+                            waterMaskFraction,
+                            y,
+                            x);
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
                     for (Band band : targetProduct.getBands()) {
@@ -182,15 +181,15 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
             IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
             pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-                                             IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    IdepixConstants.NO_DATA_VALUE,
+                    true);
             p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    true);
             pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-                                             IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    IdepixConstants.NO_DATA_VALUE,
+                    true);
         }
 
         // L1 flags (MERIS), confid flags, cloud flags (AATSR)
@@ -202,20 +201,25 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         if (!gaCopyRadiances && gaCopySubsetOfRadiances) {
             copySubsetOfRadiances();
         }
+        if (gaCopyMerisToaReflectances) {
+            copyMerisToaReflectances();
+        }
     }
 
     private void copyRadiances() {
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                                  targetProduct, true);
+        if (!gaCopyMerisToaReflectances) {
+            for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+                ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
+                        targetProduct, true);
+            }
         }
         for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
             ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
-                                  targetProduct, true);
+                    targetProduct, true);
         }
         for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
             ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
-                                  targetProduct, true);
+                    targetProduct, true);
         }
     }
 
@@ -226,14 +230,21 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                     EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_5") ||
                     EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_1")) {
                 ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                                      targetProduct, true);
+                        targetProduct, true);
             }
         }
         for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
             if (IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i].startsWith("reflec_nadir")) {
                 ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
-                                      targetProduct, true);
+                        targetProduct, true);
             }
+        }
+    }
+
+    private void copyMerisToaReflectances() {
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            final Band merisToaReflBand = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1));
+            ProductUtils.copyBand(merisToaReflBand.getName(), rad2reflProduct, targetProduct, true);
         }
     }
 

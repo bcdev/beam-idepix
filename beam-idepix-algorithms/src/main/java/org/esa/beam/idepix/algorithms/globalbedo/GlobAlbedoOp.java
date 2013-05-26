@@ -29,10 +29,10 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo",
-                  version = "2.0-SNAPSHOT",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2012 by Brockmann Consult",
-                  description = "Pixel identification and classification with GlobAlbedo algorithm.")
+        version = "2.0-SNAPSHOT",
+        authors = "Olaf Danne",
+        copyright = "(c) 2012 by Brockmann Consult",
+        description = "Pixel identification and classification with GlobAlbedo algorithm.")
 public class GlobAlbedoOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
@@ -53,6 +53,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaCopyRadiances = true;
     @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
     boolean gaCopySubsetOfRadiances;
+    @Parameter(defaultValue = "false", label = "Copy MERIS TOA reflectance bands (MERIS/AATSR synergy)")
+    boolean gaCopyMerisToaReflectances;
     @Parameter(defaultValue = "false", label = " Compute only the flag band")
     private boolean gaComputeFlagsOnly;
     @Parameter(defaultValue = "false", label = " Copy pressure bands (MERIS)")
@@ -62,14 +64,14 @@ public class GlobAlbedoOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Compute cloud shadow (MERIS)")
     private boolean gaComputeMerisCloudShadow;
     @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
-               valueSet = {
-                       IdepixConstants.ctpModeDefault,
-                       "850 hPa",
-                       "700 hPa",
-                       "500 hPa",
-                       "400 hPa",
-                       "300 hPa"
-               })
+            valueSet = {
+                    IdepixConstants.ctpModeDefault,
+                    "850 hPa",
+                    "700 hPa",
+                    "500 hPa",
+                    "400 hPa",
+                    "300 hPa"
+            })
     private String ctpMode;
     @Parameter(defaultValue = "false", label = " Use GETASSE30 DEM for Barometric Pressure Computation")
     private boolean gaUseGetasse = false;
@@ -78,7 +80,7 @@ public class GlobAlbedoOp extends BasisOp {
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+            description = "Resolution in m/pixel")
     private int wmResolution;
     @Parameter(defaultValue = "false", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
@@ -132,6 +134,7 @@ public class GlobAlbedoOp extends BasisOp {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopySubsetOfRadiances", gaCopySubsetOfRadiances);
+        gaCloudClassificationParameters.put("gaCopyMerisToaReflectances", gaCopyMerisToaReflectances);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaCopyPressure", gaCopyPressure);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
@@ -154,7 +157,7 @@ public class GlobAlbedoOp extends BasisOp {
         computeMerisAlgorithmInputProducts(gaCloudInput);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
-                                           gaCloudClassificationParameters, gaCloudInput);
+                gaCloudClassificationParameters, gaCloudInput);
 
         Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
         gaFinalCloudInput.put("l1b", sourceProduct);
@@ -164,7 +167,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
         gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", true);
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-                                           gaFinalCloudClassificationParameters, gaFinalCloudInput);
+                gaFinalCloudClassificationParameters, gaFinalCloudInput);
 
         targetProduct = gaCloudProduct;
         if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
@@ -180,17 +183,17 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudInput.put("pbaro", pbaroProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                                                                        true, false, true, false, false, true);
+                true, false, true, false, false, true);
         gaCloudInput.put("pressure", pressureLiseProduct);
         merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
-                                                                    pressureLiseProduct, pbaroProduct, true);
+                pressureLiseProduct, pbaroProduct, true);
         gaCloudInput.put("cloud", merisCloudProduct);
         final Product gasProduct = IdepixProducts.
                 computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
         final Product landProduct = IdepixProducts.computeLandClassificationProduct(sourceProduct, gasProduct);
         rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct, landProduct,
-                                                                          merisCloudProduct, false,
-                                                                          LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
+                merisCloudProduct, false,
+                LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         gaCloudInput.put("rayleigh", rayleighProduct);
 
     }
@@ -202,7 +205,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudInput.put("gal1b", sourceProduct);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoAatsrClassificationOp.class),
-                                           gaCloudClassificationParameters, gaCloudInput);
+                gaCloudClassificationParameters, gaCloudInput);
 
         targetProduct = gaCloudProduct;
     }
@@ -214,7 +217,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudInput.put("gal1b", sourceProduct);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoVgtClassificationOp.class),
-                                           gaCloudClassificationParameters, gaCloudInput);
+                gaCloudClassificationParameters, gaCloudInput);
 
         targetProduct = gaCloudProduct;
     }
@@ -229,7 +232,7 @@ public class GlobAlbedoOp extends BasisOp {
         // MERIS is master!!
         computeMerisAlgorithmInputProducts(gaCloudInput);
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisAatsrSynergyClassificationOp.class),
-                                           gaCloudClassificationParameters, gaCloudInput);
+                gaCloudClassificationParameters, gaCloudInput);
 
         targetProduct = gaCloudProduct;
     }
