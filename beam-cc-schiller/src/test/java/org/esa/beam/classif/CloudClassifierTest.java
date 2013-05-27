@@ -1,9 +1,9 @@
-package org.esa.beam.idepix.algorithms.classif;
+package org.esa.beam.classif;
 
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
 
 public class CloudClassifierTest {
 

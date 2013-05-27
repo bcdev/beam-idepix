@@ -82,17 +82,10 @@
         <module>beam-idepix-core</module>
         <module>beam-idepix-algorithms</module>
         <module>beam-idepix-operators</module>
+        <module>beam-cc-schiller</module>
     </modules>
 
     <dependencies>
-
-        <!-- JUnit Libraries ############################################# -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-
 
         <!-- define the following here to have them accessible in the assembly -->
         <dependency>
@@ -146,6 +139,12 @@
             <dependency>
                 <groupId>org.esa.beam.idepix</groupId>
                 <artifactId>beam-idepix-operators</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam.idepix</groupId>
+                <artifactId>beam-cc-schiller</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

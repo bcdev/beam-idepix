@@ -1,4 +1,4 @@
-package org.esa.beam.idepix.algorithms.classif;
+package org.esa.beam.classif;
 
 class CloudClassifier {
 

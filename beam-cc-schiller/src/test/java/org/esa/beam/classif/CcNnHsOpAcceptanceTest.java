@@ -1,4 +1,4 @@
-package org.esa.beam.idepix.algorithms.classif;
+package org.esa.beam.classif;
 
 
 import org.esa.beam.framework.dataio.ProductIO;
@@ -134,7 +134,7 @@ public class CcNnHsOpAcceptanceTest {
     }
 
     private String getTestProductPath() {
-        final URL resource = CcNnHsOpAcceptanceTest.class.getResource("../../../../../../subset_0_of_MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.dim");
+        final URL resource = CcNnHsOpAcceptanceTest.class.getResource("../../../../subset_0_of_MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.dim");
         final String resourcePath = resource.getPath();
         assertTrue(new File(resourcePath).isFile());
         return resourcePath;

@@ -1,10 +1,10 @@
-package org.esa.beam.idepix.algorithms.classif;
+package org.esa.beam.classif;
 
 
 import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
