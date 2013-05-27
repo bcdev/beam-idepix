@@ -72,25 +72,65 @@ public class CcNnHsOpAcceptanceTest {
         assertNotNull(product);
 
         try {
+            assertBandValue("reflec_1", 445, 471, 0.15434381, product);
+            assertBandValue("reflec_2", 252, 453, 0.16002783, product);
+            assertBandValue("reflec_3", 105, 462, 0.11247465, product);
+            assertBandValue("reflec_4", 58, 340, 0.10575512, product);
+            assertBandValue("reflec_5", 293, 268, 0.111449786, product);
+            assertBandValue("reflec_6", 469, 245, 0.059470117, product);
+            assertBandValue("reflec_7", 413, 190, 0.5032309, product);
+            assertBandValue("reflec_8", 180, 197, 0.253931, product);
+            assertBandValue("reflec_9", 35, 216, 0.2979992, product);
+            assertBandValue("reflec_10", 128, 107, 0.3431538, product);
+            assertBandValue("reflec_11", 292, 100, 0.13401371, product);
+            assertBandValue("reflec_12", 479, 91, 0.21171556, product);
+            assertBandValue("reflec_13", 461, 30, 0.30378696, product);
+            assertBandValue("reflec_14", 218, 58, 0.40996724, product);
+            assertBandValue("reflec_15", 10, 18, Float.NaN, product);
+
+            assertBandValue("L1_flags", 461, 412, 0, product);
+            assertBandValue("detector_index", 114, 342, 866, product);
+
             assertBandValue("cl_all_1", 0, 1, CloudClassifier.UNPROCESSD_MASK, product);
             assertBandValue("cl_all_2", 9, 28, CloudClassifier.UNPROCESSD_MASK, product);
             assertBandValue("cl_ter_1", 288, 252, CloudClassifier.CLEAR_MASK, product);
             assertBandValue("cl_ter_2", 472, 176, CloudClassifier.CLEAR_MASK, product);
             assertBandValue("cl_wat_1", 144, 295, CloudClassifier.CLOUD_MASK, product);
-            assertBandValue("cl_wat_2", 409, 37, CloudClassifier.SPAMX_MASK, product);
+            assertBandValue("cl_wat_2", 409, 37, CloudClassifier.NONCL_MASK, product);
             assertBandValue("cl_simple_wat_1", 106, 445, CloudClassifier.SPAMX_MASK, product);
+            assertBandValue("cl_simple_wat_2", 256, 17, CloudClassifier.SPAMX_MASK, product);
+
+            assertBandValue("cl_all_1_val", 113, 417, 1.0484172, product);
+            assertBandValue("cl_all_2_val", 445, 192, 2.0837066, product);
+            assertBandValue("cl_ter_1_val", 55, 24, 1.0523382, product);
+            assertBandValue("cl_ter_2_val", 45, 438, 1.088688, product);
+            assertBandValue("cl_wat_1_val", 394, 242, 2.9738734, product);
+            assertBandValue("cl_wat_2_val", 352, 446, 2.1872509, product);
+            assertBandValue("cl_simple_wat_1_val", 257, 213, 2.9915278, product);
+            assertBandValue("cl_simple_wat_2_val", 261, 102, 1.7358145, product);
         } finally {
             product.dispose();
         }
     }
 
     private void assertBandValue(String bandname, int x, int y, int expected, Product product) throws IOException {
+        final Band band = getBand(bandname, product);
+        final int pixelInt = band.getPixelInt(x, y);
+        assertEquals(expected, pixelInt);
+    }
+
+    private void assertBandValue(String bandname, int x, int y, double expected, Product product) throws IOException {
+        final Band band = getBand(bandname, product);
+        final double pixelDouble = band.getPixelDouble(x, y);
+        assertEquals(expected, pixelDouble, 1e-7);
+    }
+
+    private Band getBand(String bandname, Product product) throws IOException {
         final Band band = product.getBand(bandname);
         assertNotNull(band);
 
         band.loadRasterData();
-        final int pixelInt = band.getPixelInt(x, y);
-        assertEquals(expected, pixelInt);
+        return band;
     }
 
     private String getTestProductPath() {

@@ -27,6 +27,7 @@ public class CcNnHsOp extends PixelOperator {
     private static final int NUM_NN_INPUTS = 20;
     private static final int LAT_INDEX = 15;
     private static final int LON_INDEX = 16;
+    private static final int SUN_ZENITH_INDEX = 17;
 
     private static final double DEG_TO_RAD = Math.PI / 180.0;
 
@@ -122,6 +123,10 @@ public class CcNnHsOp extends PixelOperator {
             targetSamples[14].set(simple_wat_1_out[0]);
             targetSamples[15].set(simple_wat_2_out[0]);
 
+            for (int i = 0; i < NUM_RADIANCE_BANDS; i++) {
+                targetSamples[16 + i].set(inputLocal[i] * inputLocal[i]);
+            }
+
 //            } catch (IOException e) {
 //                throw new OperatorException(e.getMessage());
 //            }
@@ -173,6 +178,7 @@ public class CcNnHsOp extends PixelOperator {
         }
         sampleConfigurer.defineSample(15, "latitude");
         sampleConfigurer.defineSample(16, "longitude");
+        sampleConfigurer.defineSample(17, "sun_zenith");
     }
 
     @Override
@@ -194,6 +200,10 @@ public class CcNnHsOp extends PixelOperator {
         sampleConfigurer.defineSample(13, "cl_wat_2_val");
         sampleConfigurer.defineSample(14, "cl_simple_wat_1_val");
         sampleConfigurer.defineSample(15, "cl_simple_wat_2_val");
+
+        for (int i = 0; i < 15; i++) {
+            sampleConfigurer.defineSample(16 + i, "reflec_" + (i + 1));
+        }
     }
 
     @Override
@@ -203,10 +213,15 @@ public class CcNnHsOp extends PixelOperator {
         final Product targetProduct = productConfigurer.getTargetProduct();
         targetProduct.setName(sourceProduct.getName());
 
+        for (int i = 0; i < 15; i++) {
+            addFloatBand(productConfigurer, "reflec_" + (i + 1));
+        }
+
         productConfigurer.copyBands(new ProductNodeFilter<Band>() {
             @Override
             public boolean accept(Band productNode) {
-                return !targetProduct.containsBand(productNode.getName());
+                final String name = productNode.getName();
+                return !(targetProduct.containsBand(name) || name.contains("radiance"));
             }
         });
 
@@ -314,9 +329,11 @@ public class CcNnHsOp extends PixelOperator {
 
     // package access for testing only tb 2013-05-23
     double[] assembleInput(Sample[] inputSamples, double[] inputVector) {
+        final double sza = inputSamples[SUN_ZENITH_INDEX].getDouble();
+        final double inverse_cos_sza = 1.0 / Math.cos(sza * DEG_TO_RAD);
         for (int i = 0; i < NUM_RADIANCE_BANDS; i++) {
             final double toa_rad = inputSamples[i].getDouble();
-            inputVector[i] = Math.sqrt(toa_rad * Math.PI * inverse_solar_fluxes[i]);
+            inputVector[i] = Math.sqrt(toa_rad * Math.PI * inverse_solar_fluxes[i] * inverse_cos_sza);
         }
         inputVector[15] = sinTime;
         inputVector[16] = cosTime;
@@ -328,8 +345,11 @@ public class CcNnHsOp extends PixelOperator {
 
     // package access for testing only tb 2013-05-23
     static void setToUnprocessed(WritableSample[] samples) {
-        for (WritableSample sample : samples) {
-            sample.set(0x10);
+        for (int i = 0; i < 16; i++) {
+            samples[i].set(0x10);
+        }
+        for (int i = 16; i < 31; i++) {
+            samples[i].set(Float.NaN);
         }
     }
 

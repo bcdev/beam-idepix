@@ -8,6 +8,7 @@ class TestSample implements WritableSample{
 
     private double dVal;
     private int iVal;
+    private float fVal;
 
     @Override
     public void set(int bitIndex, boolean v) {
@@ -24,6 +25,7 @@ class TestSample implements WritableSample{
 
     @Override
     public void set(float v) {
+        this.fVal = v;
     }
 
     @Override
@@ -63,7 +65,7 @@ class TestSample implements WritableSample{
 
     @Override
     public float getFloat() {
-        return 0;
+        return fVal;
     }
 
     @Override

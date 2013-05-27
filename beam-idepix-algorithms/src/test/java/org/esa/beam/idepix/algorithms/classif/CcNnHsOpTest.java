@@ -76,10 +76,14 @@ public class CcNnHsOpTest {
         ccNnHsOp.configureSourceSamples(sampleConfigurer);
 
         final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
-        assertEquals(17, sampleMap.size());
+        assertEquals(18, sampleMap.size());
         for (int i = 0; i < 15; i++) {
             assertEquals("radiance_" + (i + 1), sampleMap.get(i));
         }
+
+        assertEquals("latitude", sampleMap.get(15));
+        assertEquals("longitude", sampleMap.get(16));
+        assertEquals("sun_zenith", sampleMap.get(17));
     }
 
     @Test
@@ -89,7 +93,7 @@ public class CcNnHsOpTest {
         ccNnHsOp.configureTargetSamples(sampleConfigurer);
 
         final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
-        assertEquals(16, sampleMap.size());
+        assertEquals(31, sampleMap.size());
         assertEquals("cl_all_1", sampleMap.get(0));
         assertEquals("cl_all_2", sampleMap.get(1));
         assertEquals("cl_ter_1", sampleMap.get(2));
@@ -107,6 +111,10 @@ public class CcNnHsOpTest {
         assertEquals("cl_wat_2_val", sampleMap.get(13));
         assertEquals("cl_simple_wat_1_val", sampleMap.get(14));
         assertEquals("cl_simple_wat_2_val", sampleMap.get(15));
+
+        for (int i = 0; i < 15; i++) {
+            assertEquals("reflec_" + (i + 1), sampleMap.get(16 + i));
+        }
     }
 
     @Test
@@ -218,9 +226,9 @@ public class CcNnHsOpTest {
 
     @Test
     public void testAssembleInput() {
-        final double[] inverseSolarFluxes = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        final double[] inverseSolarFluxes = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         double[] inputVector = new double[20];
-        final WritableSample[] inputSamples = new WritableSample[17];
+        final WritableSample[] inputSamples = new WritableSample[18];
         for (int i = 0; i < inputSamples.length; i++) {
             inputSamples[i] = new TestSample();
             inputSamples[i].set((double) i + 1);
@@ -235,7 +243,7 @@ public class CcNnHsOpTest {
 
         // check radiances
         for (int i = 0; i < 15; i++) {
-            assertEquals(Math.sqrt((i + 1) * Math.PI * inverseSolarFluxes[i]), inputVector[i], 1e-8);
+            assertEquals(Math.sqrt((i + 1) * Math.PI * inverseSolarFluxes[i] / Math.cos(Math.PI / 180.0 * 18)), inputVector[i], 1e-8);
         }
         assertEquals(sinTime, inputVector[15], 1e-8);
         assertEquals(cosTime, inputVector[16], 1e-8);
@@ -297,7 +305,7 @@ public class CcNnHsOpTest {
 
     @Test
     public void testSetToUnprocessed() {
-        final TestSample testSamples[] = new TestSample[16];
+        final TestSample testSamples[] = new TestSample[31];
         for (int i = 0; i < testSamples.length; i++) {
             testSamples[i] = new TestSample();
             testSamples[i].set(7878);
@@ -305,8 +313,11 @@ public class CcNnHsOpTest {
 
         CcNnHsOp.setToUnprocessed(testSamples);
 
-        for (TestSample testSample : testSamples) {
-            assertEquals(0x10, testSample.getInt());
+        for (int i = 0; i < 16; i++) {
+            assertEquals(0x10, testSamples[i].getInt());
+        }
+        for (int i = 16; i < 31; i++) {
+            assertEquals(Float.NaN, testSamples[i].getFloat());
         }
     }
 
