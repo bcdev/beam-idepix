@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+        "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
+        [
+                <!ENTITY ch01     SYSTEM "ch01-introduction.xml">
+                <!ENTITY ch02     SYSTEM "ch02-installation.xml">
+                <!ENTITY ch03     SYSTEM "ch03-products.xml">
+				<!ENTITY ch04     SYSTEM "ch04-processor.xml">
+                ]>
+
+<book id="sum">
+    <title>IDEPIX Software User Manual</title>
+
+    <bookinfo>
+        <issuenum revision="1">1.2</issuenum>
+        <date>02 September 2010</date>
+
+        <pubsnumber>1.2</pubsnumber>
+
+        <author>
+            <firstname>Olaf</firstname>
+            <surname>Danne</surname>
+
+            <affiliation>
+                <orgname>Brockmann Consult GmbH</orgname>
+                <address>
+                    <street>Max-Planck-Str 2</street>
+                    <postcode>D-21502</postcode>
+                    <city>Geesthacht</city>
+                    <country>Germany</country>
+                </address>
+            </affiliation>
+            <email>olaf.danne@brockmann-consult.de</email>
+        </author>
+
+        <pubdate>02 September 2010</pubdate>
+
+        <copyright>
+            <year>2010</year>
+            <holder>Brockmann Consult GmbH</holder>
+        </copyright>
+
+        <legalnotice>
+            <para>ESA and the ESA logo are trademarks of the European Space Agency. The Brockmann Consult
+                logo is a trademark of Brockmann Consult GmbH. Java is a trademark of Sun Microsystems, Inc. 
+				All other trademarks are acknowledged as the property of their respective owners.
+            </para>
+            <para>
+                Copyright 2007 - 2009 by the European Space Agency. All Rights Reserved. This document is subject to
+                copyright protection. No portion may be copied without prior written consent from the European Space
+                Agency.
+            </para>
+        </legalnotice>
+
+        <revhistory>
+            <revision>
+                <revnumber>1.2</revnumber>
+                <date>02/09/10</date>
+                <authorinitials>O. Danne</authorinitials>
+                <revdescription>
+                    <para>
+                        Adjustments after separation of the processor from former MEPIX.
+                    </para>
+                </revdescription>
+            </revision>
+			<revision>
+                <revnumber>1.1</revnumber>
+                <date>15/12/09</date>
+                <authorinitials>O. Danne</authorinitials>
+                <revdescription>
+                    <para>
+                        Chapter 'Software Installation' added.
+                    </para>
+                </revdescription>
+            </revision>
+            <revision>
+                <revnumber>1.0</revnumber>
+                <date>05/10/09</date>
+                <authorinitials>O. Danne</authorinitials>
+                <revdescription>
+                    <para>
+                        Initial release.
+                    </para>
+                </revdescription>
+            </revision>
+        </revhistory>
+    </bookinfo>
+
+    <!-- External entity refs -->
+	
+    &ch01;
+    &ch02;
+	&ch03;
+	&ch04;
+
+
+</book>
+
