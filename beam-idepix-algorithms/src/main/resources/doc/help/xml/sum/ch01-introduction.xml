@@ -1,0 +1,102 @@
+<chapter id="sum.introduction">
+    <title>Introduction</title>
+
+    <sect1 id="sum.introduction.scope">
+        <title>Scope</title>
+        <para>This document is the software user manual (SUM) for the IDEPIX processor.</para>
+    </sect1>
+
+    <sect1 id="sum.introduction.objectives">
+        <title>Objectives</title>
+        <para>
+            IDEPIX is a BEAM scientific processor for multiple use. In the short term, it is serving as an experimental
+            platform to evaluate the new products which are derived from the exploitation of the oxygen
+            band. This work is done in the context and funded by the ESA O2 project. In parallel that part of the
+            MERIS L2 processing which is relevant for the pixel classification is also implemented in IDEPIX.
+            The objective is to test the standard MERIS pixel classification with the new pressure products.
+            Furthermore, the pixel classification as developed in the GlobCover and AlbedoMap projects has been integrated
+            in the IDEPIX processor. The objective is to compare the standard L2 pixel classification
+            with the GlobCover one. This work is done for the MERIS Data Quality Working Group, and is
+            funded through the “Pixel Classification Processor” workpackage of the BEAM maintenance contract.
+            IDEPIX has grown from the former MEPIX processor and is currently being extended for the data
+            processing of other instruments (such as AATSR and SPOT VGT) in the frame of various new
+            projects (e.g. GlobAlbedo)
+        </para>
+    </sect1>
+
+    <sect1 id="sum.introduction.readerLevel">
+        <title>Reader Level</title>
+		
+		<para>
+			This specification is mainly written for the following audiences:
+			<itemizedlist mark='bullet'>
+				<listitem>
+					IDEPIX Application users
+				</listitem>
+			</itemizedlist>	
+		</para>
+		<para>
+			The IDEPIX user manual specifications assumes that the reader is familiar with basic concepts in
+			using the BEAM software and its integrated processors.
+		</para>
+        <para>
+            NOTE: Since the processor is still under continuous development, this help manual may not always reflect
+            the latest state.
+		</para>
+    </sect1>
+
+    <sect1 id="sum.introduction.acronymsAndNomenclature">
+        <title>Acronyms and Nomenclature</title>
+        <sect2 id="sum.introduction.acronyms">
+            <title>Acronyms</title>
+			
+			<para>
+				<itemizedlist mark='bullet'>
+					<listitem>
+						BC - Brockmann Consult
+					</listitem>
+					<listitem>
+						ESA - European Space Agency
+					</listitem>
+					<listitem>
+						ESTEC -	European Space Technology and Research Centre
+					</listitem>
+					<listitem>
+						SUM - Software User Manual
+					</listitem>
+				</itemizedlist>	
+			</para>
+        </sect2>
+        <sect2 id="sum.introduction.nomenclature">
+            <title>Nomenclature</title>
+        </sect2>
+    </sect1>
+
+    <sect1 id="sum.introduction.referenceDocuments">
+        <title>Reference Documents</title>
+		
+		<para>
+			<itemizedlist mark='bullet'>
+				<listitem>
+					[1] MERIS Level 2 Detailed Processing Model, PO-TN-MEL-GS-0006, 15 July 2009, Issue i8r0.
+				</listitem>
+                <listitem>
+					[2] MERIS Level 2 Detailed Processing Model, PO-TN-MEL-GS-0006, 30 June 2005, Issue i7r3a.
+				</listitem>
+                <listitem>
+					[3] Lindstrot, R., Preusker, R. and J. Fischer, 2008: The retrieval of land surface pressure from
+                    MERIS measurements in the oxygen A-band. In preparation.
+				</listitem>
+                <listitem>
+					[4] Lindstrot, R., Preusker, R. and J. Fischer, 2008: Empirical correction of stray light within
+                    MERIS and the retrieval of surface and cloud-top pressure. Free University of Berlin,
+                    Internal TechnicalNote.
+				</listitem>
+                <listitem>
+					[5] R. Santer and O. Aznay, 2008: Direct to direct O2 transmittances: Determine the
+                    surface pressure. LISE, Internal Technical Note.
+				</listitem>
+			</itemizedlist>	
+		</para>
+    </sect1>
+</chapter>

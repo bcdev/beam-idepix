@@ -1,0 +1,143 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-idepix-algorithms</symbolicName>
+    <version>2.0-SNAPSHOT</version>
+    <name>Generic classification of pixels</name>
+    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>
+        Max Planck Str.2, 21502 Geesthacht (Germany)
+    </contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog/>
+
+    <dependency>
+        <module>beam-idepix-operators</module>
+    </dependency>
+    <dependency>
+        <module>beam-idepix-core</module>
+    </dependency>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-gpf</module>
+    </dependency>
+    <dependency>
+        <module>beam-unmix</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+    <dependency>
+        <module>beam-envisat-reader</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-brr</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-l2auxdata</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-sdr</module>
+    </dependency>
+    <dependency>
+        <module>beam-watermask</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-radiometry</module>
+    </dependency>
+
+    <categories>Application,Processor,MERIS,AATSR</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <id>idepix</id>
+            <class>org.esa.beam.visat.actions.ActionGroup</class>
+            <text>IDEPIX Generic classification of pixels...</text>
+            <shortDescr>
+                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
+                sensors.
+            </shortDescr>
+            <mnemonic/>
+            <parent>tool</parent>
+            <helpID>idepixChain</helpID>
+            <placeAfter/>
+        </action>
+        <action>
+            <id>ipfAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixIpfAction</class>
+            <text>IPF (MERIS)...</text>
+            <shortDescr>Pixel classification with IPF (former MEPIX) algorithm.</shortDescr>
+            <mnemonic>I</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+        </action>
+        <action>
+            <id>coastcolourAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
+            <text>CoastColour (MERIS)...</text>
+            <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
+            <mnemonic>C</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+            <placeAfter>ipfAlgo</placeAfter>
+        </action>
+        <action>
+            <id>globalbedoAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
+            <text>GlobAlbedo (MERIS, AATSR, VGT)...</text>
+            <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
+            <mnemonic>G</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+            <placeAfter>coastcolourAlgo</placeAfter>
+        </action>
+        <action>
+            <id>globcoverAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixGlobCoverAction</class>
+            <text>GlobCover (MERIS)...</text>
+            <shortDescr>Pixel classification with GlobCover algorithm.</shortDescr>
+            <mnemonic>G</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+            <placeAfter>globalbedoAlgo</placeAfter>
+        </action>
+        <action>
+            <id>magicstickAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixMagicStickAction</class>
+            <text>Magic Stick (MERIS)...</text>
+            <shortDescr>Pixel classification with MagicStick algorithm.</shortDescr>
+            <mnemonic>G</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+            <placeAfter>globcoverAlgo</placeAfter>
+        </action>
+
+        <action>
+            <id>schillerAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixSchillerAction</class>
+            <text>Schiller (MERIS)...</text>
+            <shortDescr>Pixel classification with Schiller algorithm.</shortDescr>
+            <mnemonic>G</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+            <placeAfter>magicstickAlgo</placeAfter>
+        </action>
+    </extension>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/idepix.hs</path>
+        </helpSet>
+    </extension>
+
+</module>

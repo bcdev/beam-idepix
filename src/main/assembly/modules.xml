@@ -1,0 +1,51 @@
+<assembly
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>modules</id>
+    <formats>
+        <format>dir</format>
+    </formats>
+    <baseDirectory>${pom.artifactId}-${pom.version}</baseDirectory>
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <files>
+        <file>
+            <filtered>true</filtered>
+            <source>src/main/assembly/bundle-descriptor.xml</source>
+        </file>
+    </files>
+
+    <fileSets>
+        <fileSet>
+            <directory>src/main/assembly/</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+            </includes>
+        </fileSet>
+    </fileSets>
+
+    <moduleSets>
+        <moduleSet>
+            <includes>
+                <include>org.esa.beam.idepix:beam-idepix-core</include>
+            </includes>
+        </moduleSet>
+    </moduleSets>
+
+    <dependencySets>
+        <dependencySet>
+            <unpack>false</unpack>
+            <scope>runtime</scope>
+            <includes>
+                <include>*:beam-meris-brr*</include>
+                <include>*:beam-meris-glint*</include>
+                <include>*:beam-meris-l2auxdata*</include>
+                <include>*:beam-meris-radiometry*</include>
+                <include>*:beam-meris-sdr*</include>
+                <include>*:beam-unmix*</include>
+                <include>*:beam-watermask*</include>
+                <include>*:flint-processor*</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

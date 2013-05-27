@@ -1,21 +1,42 @@
 <bundleDescriptor>
-    <bundleName>beam-idepix</bundleName>
-    <bundleVersion>1.3.5-SNAPSHOT</bundleVersion>
+    <bundleName>beam-idepix-cc</bundleName>
+    <bundleVersion>2.0-SNAPSHOT</bundleVersion>
 
     <processorDescriptors>
 
         <processorDescriptor>
-            <executableName>idepix.ComputeChain</executableName>
+            <executableName>idepix.coastcolour</executableName>
             <processorName>Idepix (CC Algorithm)</processorName>
-            <processorVersion>1.3.5-SNAPSHOT</processorVersion>
+            <processorVersion>2.0-SNAPSHOT</processorVersion>
             <defaultParameters><![CDATA[<parameters>
     <!-- ***********Idepix CC Parameters start here*********** -->
+
+     <!-- Whether to additionally write TOA Reflectances -->
+     <ccOutputRad2Refl>false</ccOutputRad2Refl>
+
+     <!-- Whether to additionally write Gas Absorption Corrected Reflectances -->
+     <ccOutputGaseous>false</ccOutputGaseous>
 
      <!-- Whether to additionally write Rayleigh Corrected Reflectances -->
      <ccOutputRayleigh>false</ccOutputRayleigh>
 
+     <!-- Whether to pre-compute mixed pixel flag from spectral unmixing-->
+     <ccMixedPixel>false</ccMixedPixel>
+
      <!-- Whether to additionally write L2 Cloud Top Pressure and Surface Pressure -->
      <ccOutputL2Pressures>false</ccOutputL2Pressures>
+
+     <!-- Whether to additionally write the Schiller cloud value -->
+     <ccOutputSchillerCloudValue>true</ccOutputSchillerCloudValue>
+
+     <!-- Schiller cloud threshold for ambiguous clouds -->
+     <ccSchillerAmbiguous>1.4</ccSchillerAmbiguous>
+
+     <!-- Schiller cloud threshold for sure clouds -->
+     <ccSchillerSure>1.8</ccSchillerSure>
+
+     <!-- The cloud buffer width -->
+     <ccCloudBufferWidth>2</ccCloudBufferWidth>
 
 </parameters>]]></defaultParameters>
             <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
@@ -120,6 +141,12 @@
                 </outputVariable>
 				<outputVariable>
                     <name>rho_toa_15</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+
+                <outputVariable>
+                    <name>schiller_cloud_value</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
