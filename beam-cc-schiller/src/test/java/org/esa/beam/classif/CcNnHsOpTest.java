@@ -63,6 +63,16 @@ public class CcNnHsOpTest {
         assertEquals("A flag expression that defines pixels to be processed.", annotation.description());
     }
 
+    @Test
+    public void testAlgorithmNameAnnotation() throws NoSuchFieldException {
+        final Field algorithmNameFiled = CcNnHsOp.class.getDeclaredField("algorithmName");
+
+        final Parameter annotation = algorithmNameFiled.getAnnotation(Parameter.class);
+        assertNotNull(annotation);
+//        assertEquals("NOT l1_flags.INVALID", annotation.defaultValue());
+//        assertEquals("A flag expression that defines pixels to be processed.", annotation.description());
+    }
+
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testInheritance() {

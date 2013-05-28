@@ -40,6 +40,9 @@ public class CcNnHsOp extends PixelOperator {
             description = "A flag expression that defines pixels to be processed.")
     private String validPixelExpression;
 
+    @Parameter
+    private String algorithmName;
+
     private double sinTime;
     private double cosTime;
 
@@ -161,14 +164,14 @@ public class CcNnHsOp extends PixelOperator {
             throw new OperatorException("Failed to init water mask", e);
         }
 
-        nn_all_1 = new NnThreadLocal("NN4all/clind/varin1/11x8x5x3_2440.4.net");
-        nn_all_2 = new NnThreadLocal("NN4all/clind/varin2/11x8x5x3_2247.9.net");
-        nn_ter_1 = new NnThreadLocal("NN4ter/clind/varin1/11x8x5x3_1114.6.net");
-        nn_ter_2 = new NnThreadLocal("NN4ter/clind/varin2/11x8x5x3_1015.2.net");
-        nn_wat_1 = new NnThreadLocal("NN4wat/clind/varin1/11x8x5x3_956.1.net");
-        nn_wat_2 = new NnThreadLocal("NN4wat/clind/varin2/11x8x5x3_890.6.net");
-        nn_simple_wat_1 = new NnThreadLocal("NN4wat/simpclind/varin1/11x8x5x3_728.2.net");
-        nn_simple_wat_2 = new NnThreadLocal("NN4wat/simpclind/varin2/11x8x5x3_639.5.net");
+        nn_all_1 = new NnThreadLocal("ver2013_03_01/NN4all/clind/varin1/11x8x5x3_2440.4.net");
+        nn_all_2 = new NnThreadLocal("ver2013_03_01/NN4all/clind/varin2/11x8x5x3_2247.9.net");
+        nn_ter_1 = new NnThreadLocal("ver2013_03_01/NN4ter/clind/varin1/11x8x5x3_1114.6.net");
+        nn_ter_2 = new NnThreadLocal("ver2013_03_01/NN4ter/clind/varin2/11x8x5x3_1015.2.net");
+        nn_wat_1 = new NnThreadLocal("ver2013_03_01/NN4wat/clind/varin1/11x8x5x3_956.1.net");
+        nn_wat_2 = new NnThreadLocal("ver2013_03_01/NN4wat/clind/varin2/11x8x5x3_890.6.net");
+        nn_simple_wat_1 = new NnThreadLocal("ver2013_03_01/NN4wat/simpclind/varin1/11x8x5x3_728.2.net");
+        nn_simple_wat_2 = new NnThreadLocal("ver2013_03_01/NN4wat/simpclind/varin2/11x8x5x3_639.5.net");
     }
 
     @Override
