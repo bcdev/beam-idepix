@@ -1,0 +1,63 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-cc-schiller</symbolicName>
+    <version>2.0-SNAPSHOT</version>
+    <name>Cloud Classification Schiller</name>
+    <description>Cloud Classification of H.Schiller using neural networks.
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>
+        Max Planck Str.2, 21502 Geesthacht (Germany)
+    </contactAddress>
+    <copyright>(C) 2013 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog/>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-gpf</module>
+    </dependency>
+    <dependency>
+        <module>beam-watermask</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+    <dependency>
+        <module>beam-envisat-reader</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-glint</module>
+    </dependency>
+
+    <categories>Application,Processor,MERIS,Cloud</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <id>beam-cc-schiller</id>
+            <class>org.esa.beam.classif.visat.CcNnHsAction</class>
+            <text>Cloud Classification H.Schiller MERIS ...</text>
+            <shortDescr>
+                Cloud Classification of H.Schiller using neural networks.
+            </shortDescr>
+            <mnemonic/>
+            <parent>tool</parent>
+            <placeAfter/>
+        </action>
+
+    </extension>
+
+    <!--<extension point="beam-ui:helpSets">-->
+    <!--<helpSet>-->
+    <!--<parent>beam-help</parent>-->
+    <!--<path>doc/help/idepix.hs</path>-->
+    <!--</helpSet>-->
+    <!--</extension>-->
+
+</module>
