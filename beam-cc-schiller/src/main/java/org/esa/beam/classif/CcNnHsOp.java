@@ -1,5 +1,6 @@
 package org.esa.beam.classif;
 
+import org.esa.beam.classif.algorithm.AlgorithmFactory;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -40,7 +41,10 @@ public class CcNnHsOp extends PixelOperator {
             description = "A flag expression that defines pixels to be processed.")
     private String validPixelExpression;
 
-    @Parameter
+    @Parameter(defaultValue = AlgorithmFactory.ALGORITHM_2013_03_01,
+            valueSet = {AlgorithmFactory.ALGORITHM_2013_03_01,
+                    AlgorithmFactory.ALGORITHM_2013_05_09},
+            description = "Select algorithm for processing.")
     private String algorithmName;
 
     private double sinTime;

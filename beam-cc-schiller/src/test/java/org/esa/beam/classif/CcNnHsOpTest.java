@@ -69,8 +69,13 @@ public class CcNnHsOpTest {
 
         final Parameter annotation = algorithmNameFiled.getAnnotation(Parameter.class);
         assertNotNull(annotation);
-//        assertEquals("NOT l1_flags.INVALID", annotation.defaultValue());
-//        assertEquals("A flag expression that defines pixels to be processed.", annotation.description());
+        assertEquals("Algo_2013-03-01", annotation.defaultValue());
+        assertEquals("Select algorithm for processing.", annotation.description());
+
+        final String[] valueSet = annotation.valueSet();
+        assertEquals(2, valueSet.length);
+        assertEquals("Algo_2013-03-01", valueSet[0]);
+        assertEquals("Algo_2013-05-09", valueSet[1]);
     }
 
     @SuppressWarnings("ConstantConditions")
