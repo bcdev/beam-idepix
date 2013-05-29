@@ -195,7 +195,7 @@ class CC_2013_03_01 implements CCAlgorithm {
         }
         inputVector[15] = sinTime;
         inputVector[16] = cosTime;
-        inputVector[17] = Math.cos(inputSamples[LAT_INDEX].getDouble() * DEG_TO_RAD);
+        inputVector[17] = Math.sin(inputSamples[LAT_INDEX].getDouble() * DEG_TO_RAD);
         inputVector[18] = Math.sin(inputSamples[LON_INDEX].getDouble() * DEG_TO_RAD);
         inputVector[19] = Math.cos(inputSamples[LON_INDEX].getDouble() * DEG_TO_RAD);
         return inputVector;
@@ -211,5 +211,4 @@ class CC_2013_03_01 implements CCAlgorithm {
     void injectInverseSolarFluxes(double[] inverse_solar_fluxes) {
         this.inverse_solar_fluxes = inverse_solar_fluxes;
     }
-
 }

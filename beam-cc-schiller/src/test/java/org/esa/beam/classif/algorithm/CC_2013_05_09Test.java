@@ -1,8 +1,10 @@
 package org.esa.beam.classif.algorithm;
 
 import org.esa.beam.classif.TestProductConfigurer;
+import org.esa.beam.classif.TestSample;
 import org.esa.beam.classif.TestSampleConfigurer;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -86,5 +88,47 @@ public class CC_2013_05_09Test extends AlgorithmTest {
         assertNotNull(flagCodingGroup.get("cl_ter_3"));
         assertNotNull(flagCodingGroup.get("cl_wat_3"));
         assertNotNull(flagCodingGroup.get("cl_simple_wat_3"));
+    }
+
+    @Test
+    public void testAssembleInput() {
+        final double[] inverseSolarFluxes = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+        double[] inputVector = new double[16];
+        final WritableSample[] inputSamples = new WritableSample[16];
+        for (int i = 0; i < inputSamples.length; i++) {
+            inputSamples[i] = new TestSample();
+            inputSamples[i].set((double) i + 1);
+        }
+
+        algorithm.injectInverseSolarFluxes(inverseSolarFluxes);
+
+        inputVector = algorithm.assembleInput(inputSamples, inputVector);
+
+        // check radiances
+        for (int i = 0; i < 10; i++) {
+            assertEquals("" + i, Math.sqrt((i + 1) * Math.PI * inverseSolarFluxes[i] / Math.cos(Math.PI / 180.0 * 16)), inputVector[i], 1e-8);
+        }
+        for (int i = 11; i < 15; i++) {
+            assertEquals("" + i, Math.sqrt((i + 1) * Math.PI * inverseSolarFluxes[i] / Math.cos(Math.PI / 180.0 * 16)), inputVector[i - 1], 1e-8);
+        }
+    }
+
+    @Test
+    public void testSetToUnprocessed() {
+        final TestSample testSamples[] = new TestSample[23];
+        for (int i = 0; i < testSamples.length; i++) {
+            testSamples[i] = new TestSample();
+            testSamples[i].set(7878);
+        }
+
+        algorithm.setToUnprocessed(testSamples);
+
+        for (int i = 0; i < 4; i++) {
+            assertEquals(Constants.UNPROCESSD_MASK, testSamples[i].getInt());
+        }
+        for (int i = 4; i < 23; i++) {
+            assertEquals(Float.NaN, testSamples[i].getFloat());
+        }
     }
 }

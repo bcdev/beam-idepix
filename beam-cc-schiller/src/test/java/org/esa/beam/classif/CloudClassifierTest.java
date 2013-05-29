@@ -47,6 +47,25 @@ public class CloudClassifierTest {
     }
 
     @Test
+    public void testToFlag_all_var3() {
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_all_var3(0.0));
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_all_var3(1.64));
+
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_all_var3(1.65));
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_all_var3(1.69));
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_all_var3(2.34));
+
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_all_var3(2.35));
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_all_var3(2.76));
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_all_var3(3.24));
+
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_all_var3(3.25));
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_all_var3(3.92));
+
+        assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_all_var3(-1.1));
+    }
+
+    @Test
     public void testToFlag_ter_var1() {
         assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_ter_var1(0.4));
         assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_ter_var1(1.74));
@@ -82,6 +101,25 @@ public class CloudClassifierTest {
         assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_ter_var2(3.92));
 
         assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_ter_var2(-0.6));
+    }
+
+    @Test
+    public void testToFlag_ter_var3() {
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_ter_var3(0.6));
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_ter_var3(1.69));
+
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_ter_var3(1.7));
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_ter_var3(1.93));
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_ter_var3(2.49));
+
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_ter_var3(2.5));
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_ter_var3(2.72));
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_ter_var3(3.29));
+
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_ter_var3(3.3));
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_ter_var3(3.96));
+
+        assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_ter_var3(-0.3));
     }
 
     @Test
@@ -123,6 +161,25 @@ public class CloudClassifierTest {
     }
 
     @Test
+    public void testToFlag_wat_var3() {
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_wat_var3(0.3));
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_wat_var3(1.59));
+
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_wat_var3(1.6));
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_wat_var3(1.93));
+        assertEquals(Constants.SPAMX_MASK, CloudClassifier.toFlag_wat_var3(2.39));
+
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_wat_var3(2.4));
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_wat_var3(2.82));
+        assertEquals(Constants.NONCL_MASK, CloudClassifier.toFlag_wat_var3(3.39));
+
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_wat_var3(3.4));
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_wat_var3(3.93));
+
+        assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_wat_var3(-0.1));
+    }
+
+    @Test
     public void testToFlag_wat_simple_var1() {
         assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_wat_simple_var1(0.4));
         assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_wat_simple_var1(1.54));
@@ -149,6 +206,21 @@ public class CloudClassifierTest {
         assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_wat_simple_var2(2.5));
         assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_wat_simple_var2(3.44));
 
-        assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_wat_simple_var1(-0.2));
+        assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_wat_simple_var2(-0.2));
+    }
+
+    @Test
+    public void testToFlag_wat_simple_var3() {
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_wat_simple_var3(0.87));
+        assertEquals(Constants.CLEAR_MASK, CloudClassifier.toFlag_wat_simple_var3(1.49));
+
+        assertEquals(Constants.SPAMX_OR_NONCL_MASK, CloudClassifier.toFlag_wat_simple_var3(1.5));
+        assertEquals(Constants.SPAMX_OR_NONCL_MASK, CloudClassifier.toFlag_wat_simple_var3(1.93));
+        assertEquals(Constants.SPAMX_OR_NONCL_MASK, CloudClassifier.toFlag_wat_simple_var3(2.44));
+
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_wat_simple_var3(2.45));
+        assertEquals(Constants.CLOUD_MASK, CloudClassifier.toFlag_wat_simple_var3(3.18));
+
+        assertEquals(Constants.UNPROCESSD_MASK, CloudClassifier.toFlag_wat_simple_var3(-0.887));
     }
 }

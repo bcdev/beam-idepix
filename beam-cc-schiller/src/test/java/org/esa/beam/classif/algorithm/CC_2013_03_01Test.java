@@ -136,7 +136,7 @@ public class CC_2013_03_01Test extends AlgorithmTest {
         assertEquals(sinTime, inputVector[15], 1e-8);
         assertEquals(cosTime, inputVector[16], 1e-8);
 
-        assertEquals(Math.cos(16 * Math.PI / 180.0), inputVector[17], 1e-8);
+        assertEquals(Math.sin(16 * Math.PI / 180.0), inputVector[17], 1e-8);
         assertEquals(Math.sin(17 * Math.PI / 180.0), inputVector[18], 1e-8);
         assertEquals(Math.cos(17 * Math.PI / 180.0), inputVector[19], 1e-8);
     }
