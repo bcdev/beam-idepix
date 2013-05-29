@@ -1,6 +1,8 @@
 package org.esa.beam.classif;
 
 
+import org.esa.beam.classif.algorithm.AlgorithmFactory;
+import org.esa.beam.classif.algorithm.Constants;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -10,6 +12,7 @@ import org.esa.beam.util.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +21,7 @@ import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
+@RunWith(AcceptanceTestRunner.class)
 public class CcNnHsOpAcceptanceTest {
 
     private File targetDirectory;
@@ -43,7 +47,7 @@ public class CcNnHsOpAcceptanceTest {
     }
 
     @Test
-    public void testProcessTestProduct() throws IOException {
+    public void testProcessTestProduct_CC_2013_03_01() throws IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ccNnHsSpi);
         Product product = null;
         try {
@@ -52,8 +56,10 @@ public class CcNnHsOpAcceptanceTest {
             assertNotNull(product);
             final String targetFilePath = targetDirectory.getPath() + File.separator + "cloud_classified.dim";
 
+            final HashMap<String, Object> parameterMap = createDefaultParameterMap();
+            parameterMap.put("algorithmName", AlgorithmFactory.ALGORITHM_2013_03_01);
             final Product ccProduct = GPF.createProduct("Meris.CCNNHS",
-                    createDefaultParameterMap(),
+                    parameterMap,
                     new Product[]{product});
 
             ProductIO.writeProduct(ccProduct, targetFilePath, "BEAM-DIMAP");
@@ -91,14 +97,14 @@ public class CcNnHsOpAcceptanceTest {
             assertBandValue("L1_flags", 461, 412, 0, product);
             assertBandValue("detector_index", 114, 342, 866, product);
 
-            assertBandValue("cl_all_1", 0, 1, CloudClassifier.UNPROCESSD_MASK, product);
-            assertBandValue("cl_all_2", 9, 28, CloudClassifier.UNPROCESSD_MASK, product);
-            assertBandValue("cl_ter_1", 288, 252, CloudClassifier.CLEAR_MASK, product);
-            assertBandValue("cl_ter_2", 472, 176, CloudClassifier.CLEAR_MASK, product);
-            assertBandValue("cl_wat_1", 144, 295, CloudClassifier.CLOUD_MASK, product);
-            assertBandValue("cl_wat_2", 409, 37, CloudClassifier.NONCL_MASK, product);
-            assertBandValue("cl_simple_wat_1", 106, 445, CloudClassifier.SPAMX_MASK, product);
-            assertBandValue("cl_simple_wat_2", 256, 17, CloudClassifier.SPAMX_MASK, product);
+            assertBandValue("cl_all_1", 0, 1, Constants.UNPROCESSD_MASK, product);
+            assertBandValue("cl_all_2", 9, 28, Constants.UNPROCESSD_MASK, product);
+            assertBandValue("cl_ter_1", 288, 252, Constants.CLEAR_MASK, product);
+            assertBandValue("cl_ter_2", 472, 176, Constants.CLEAR_MASK, product);
+            assertBandValue("cl_wat_1", 144, 295, Constants.CLOUD_MASK, product);
+            assertBandValue("cl_wat_2", 409, 37, Constants.NONCL_MASK, product);
+            assertBandValue("cl_simple_wat_1", 106, 445, Constants.SPAMX_MASK, product);
+            assertBandValue("cl_simple_wat_2", 256, 17, Constants.SPAMX_MASK, product);
 
             assertBandValue("cl_all_1_val", 113, 417, 1.0484172, product);
             assertBandValue("cl_all_2_val", 445, 192, 2.0837066, product);

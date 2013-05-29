@@ -23,9 +23,6 @@
         <module>beam-gpf</module>
     </dependency>
     <dependency>
-        <module>beam-watermask</module>
-    </dependency>
-    <dependency>
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>

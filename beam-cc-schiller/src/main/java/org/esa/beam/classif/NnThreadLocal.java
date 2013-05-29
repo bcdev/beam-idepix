@@ -7,11 +7,11 @@ import org.esa.beam.nn.NNffbpAlphaTabFast;
 import java.io.IOException;
 import java.io.InputStream;
 
-class NnThreadLocal extends ThreadLocal<NNffbpAlphaTabFast> {
+public class NnThreadLocal extends ThreadLocal<NNffbpAlphaTabFast> {
 
     private final String nnPath;
 
-    NnThreadLocal(String nnPath) {
+    public NnThreadLocal(String nnPath) {
         this.nnPath = nnPath;
     }
 

@@ -4,7 +4,7 @@ package org.esa.beam.classif;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
-class TestSample implements WritableSample{
+public class TestSample implements WritableSample{
 
     private double dVal;
     private int iVal;
