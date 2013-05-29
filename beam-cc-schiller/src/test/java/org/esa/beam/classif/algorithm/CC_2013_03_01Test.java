@@ -151,10 +151,10 @@ public class CC_2013_03_01Test extends AlgorithmTest {
 
         algorithm.setToUnprocessed(testSamples);
 
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < 8; i++) {
             assertEquals(Constants.UNPROCESSD_MASK, testSamples[i].getInt());
         }
-        for (int i = 16; i < 31; i++) {
+        for (int i = 8; i < 31; i++) {
             assertEquals(Float.NaN, testSamples[i].getFloat());
         }
     }

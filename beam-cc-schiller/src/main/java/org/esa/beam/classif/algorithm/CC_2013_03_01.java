@@ -82,10 +82,10 @@ class CC_2013_03_01 implements CCAlgorithm {
 
     @Override
     public void setToUnprocessed(WritableSample[] samples) {
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < 8; i++) {
             samples[i].set(Constants.UNPROCESSD_MASK);
         }
-        for (int i = 16; i < 31; i++) {
+        for (int i = 8; i < 31; i++) {
             samples[i].set(Float.NaN);
         }
     }
