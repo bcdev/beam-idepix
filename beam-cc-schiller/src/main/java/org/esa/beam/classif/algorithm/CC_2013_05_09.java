@@ -111,6 +111,8 @@ class CC_2013_05_09 implements CCAlgorithm {
             }
         });
 
+        productConfigurer.copyTiePointGrids(Constants.TIE_POINT_GRID_NAMES);
+
         Utils.addBandWithFullFlagCoding(productConfigurer, targetProduct, "cl_all_3");
         Utils.addBandWithFullFlagCoding(productConfigurer, targetProduct, "cl_ter_3");
         Utils.addBandWithFullFlagCoding(productConfigurer, targetProduct, "cl_wat_3");

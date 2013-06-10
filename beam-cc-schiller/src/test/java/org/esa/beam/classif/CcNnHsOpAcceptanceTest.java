@@ -6,6 +6,7 @@ import org.esa.beam.classif.algorithm.Constants;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.util.io.FileUtils;
@@ -141,6 +142,22 @@ public class CcNnHsOpAcceptanceTest {
             assertBandValue("cl_wat_2_val", 352, 446, 2.1792252, product);
             assertBandValue("cl_simple_wat_1_val", 257, 213, 2.9915278, product);
             assertBandValue("cl_simple_wat_2_val", 261, 102, 1.6574280, product);
+
+            assertTiePointValue("latitude", 78, 451, 43.80181121826172, product);
+            assertTiePointValue("longitude", 88, 11, 3.566375732421875, product);
+            assertTiePointValue("dem_alt", 389, 168, 1634.1015625, product);
+            assertTiePointValue("dem_rough", 108, 200, 18.125, product);
+            assertTiePointValue("lat_corr", 41, 417, -3.474804398138076E-4, product);
+            assertTiePointValue("lon_corr", 356, 39, -0.0018366562435403466, product);
+            assertTiePointValue("sun_zenith", 276, 256, 34.10325241088867, product);
+            assertTiePointValue("sun_azimuth", 74, 392, 130.77969360351562, product);
+            assertTiePointValue("view_zenith", 119, 22, 33.68973922729492, product);
+            assertTiePointValue("view_azimuth", 186, 163, 101.44153594970703, product);
+            assertTiePointValue("zonal_wind", 358, 72, -2.1015625, product);
+            assertTiePointValue("merid_wind", 475, 405, 0.3558593690395355, product);
+            assertTiePointValue("atm_press", 88, 346, 1014.9000244140625, product);
+            assertTiePointValue("ozone", 66, 378, 354.1706237792969, product);
+            assertTiePointValue("rel_hum", 343, 16, 46.464847564697266, product);
         } finally {
             product.dispose();
         }
@@ -179,6 +196,22 @@ public class CcNnHsOpAcceptanceTest {
             assertBandValue("cl_ter_3_val", 390, 113, 2.8934863, product);
             assertBandValue("cl_wat_3_val", 128, 302, 2.8276384, product);
             assertBandValue("cl_simple_wat_3_val", 167, 468, 1.6830046, product);
+
+            assertTiePointValue("latitude", 358, 343, 44.39118576049805, product);
+            assertTiePointValue("longitude", 86, 19, 3.515789747238159, product);
+            assertTiePointValue("dem_alt", 157, 295, 938.74609375, product);
+            assertTiePointValue("dem_rough", 362, 394, 63.625, product);
+            assertTiePointValue("lat_corr", 336, 19, -4.3556251330301166E-4, product);
+            assertTiePointValue("lon_corr", 346, 29, -0.0016613437328487635, product);
+            assertTiePointValue("sun_zenith", 286, 266, 33.96331787109375, product);
+            assertTiePointValue("sun_azimuth", 84, 382, 131.07623291015625, product);
+            assertTiePointValue("view_zenith", 109, 52, 34.316463470458984, product);
+            assertTiePointValue("view_azimuth", 176, 173, 101.34014129638672, product);
+            assertTiePointValue("zonal_wind", 103, 188, -2.891406297683716, product);
+            assertTiePointValue("merid_wind", 284, 335, 0.10781249403953552, product);
+            assertTiePointValue("atm_press", 371, 169, 1016.34375, product);
+            assertTiePointValue("ozone", 76, 478, 346.4862365722656, product);
+            assertTiePointValue("rel_hum", 313, 102, 47.131248474121094, product);
         } finally {
             product.dispose();
         }
@@ -196,12 +229,26 @@ public class CcNnHsOpAcceptanceTest {
         assertEquals(expected, pixelDouble, 1e-7);
     }
 
+    private void assertTiePointValue(String tpGridname, int x, int y, double expected, Product product) throws IOException {
+        final TiePointGrid tiePointGrid = getTiePointGrid(tpGridname, product);
+        final double pixelDouble = tiePointGrid.getPixelDouble(x, y);
+        assertEquals(expected, pixelDouble, 1e-7);
+    }
+
     private Band getBand(String bandname, Product product) throws IOException {
         final Band band = product.getBand(bandname);
         assertNotNull(band);
 
         band.loadRasterData();
         return band;
+    }
+
+    private TiePointGrid getTiePointGrid(String tpGridname, Product product) throws IOException {
+        final TiePointGrid tiePointGrid = product.getTiePointGrid(tpGridname);
+        assertNotNull(tiePointGrid);
+
+        tiePointGrid.loadRasterData();
+        return tiePointGrid;
     }
 
     private String getTestProductPath() {
