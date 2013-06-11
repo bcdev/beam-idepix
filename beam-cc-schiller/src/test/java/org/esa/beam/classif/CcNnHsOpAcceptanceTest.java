@@ -25,6 +25,8 @@ import static org.junit.Assert.*;
 @RunWith(AcceptanceTestRunner.class)
 public class CcNnHsOpAcceptanceTest {
 
+    private static final float[] MERIS_WAVELENGTHS = {412.691f, 442.55902f, 489.88202f, 509.81903f, 559.69403f, 619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f, 761.50806f, 778.40906f, 864.87604f, 884.94403f, 900.00006f};
+    private static final float[] MERIS_BANDWIDTHS = {9.937f, 9.946f, 9.957001f, 9.961f, 9.97f, 9.979f, 9.985001f, 7.4880004f, 9.992001f, 7.4950004f, 3.7440002f, 15.010001f, 20.047f, 10.018001f, 10.02f};
     private File targetDirectory;
     private OperatorSpi ccNnHsSpi;
 
@@ -158,6 +160,8 @@ public class CcNnHsOpAcceptanceTest {
             assertTiePointValue("atm_press", 88, 346, 1014.9000244140625, product);
             assertTiePointValue("ozone", 66, 378, 354.1706237792969, product);
             assertTiePointValue("rel_hum", 343, 16, 46.464847564697266, product);
+
+            assertReflectanceBandWavelengths(product);
         } finally {
             product.dispose();
         }
@@ -212,6 +216,8 @@ public class CcNnHsOpAcceptanceTest {
             assertTiePointValue("atm_press", 371, 169, 1016.34375, product);
             assertTiePointValue("ozone", 76, 478, 346.4862365722656, product);
             assertTiePointValue("rel_hum", 313, 102, 47.131248474121094, product);
+
+            assertReflectanceBandWavelengths(product);
         } finally {
             product.dispose();
         }
@@ -235,16 +241,25 @@ public class CcNnHsOpAcceptanceTest {
         assertEquals(expected, pixelDouble, 1e-7);
     }
 
-    private Band getBand(String bandname, Product product) throws IOException {
-        final Band band = product.getBand(bandname);
+    private void assertReflectanceBandWavelengths(Product product) {
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
+            final Band band = product.getBand("reflec_" + (i + 1));
+            assertNotNull(band);
+            assertEquals(MERIS_WAVELENGTHS[i], band.getSpectralWavelength(), 1e-8);
+            assertEquals(MERIS_BANDWIDTHS[i], band.getSpectralBandwidth(), 1e-8);
+        }
+    }
+
+    private Band getBand(String bandName, Product product) throws IOException {
+        final Band band = product.getBand(bandName);
         assertNotNull(band);
 
         band.loadRasterData();
         return band;
     }
 
-    private TiePointGrid getTiePointGrid(String tpGridname, Product product) throws IOException {
-        final TiePointGrid tiePointGrid = product.getTiePointGrid(tpGridname);
+    private TiePointGrid getTiePointGrid(String tpGridName, Product product) throws IOException {
+        final TiePointGrid tiePointGrid = product.getTiePointGrid(tpGridName);
         assertNotNull(tiePointGrid);
 
         tiePointGrid.loadRasterData();

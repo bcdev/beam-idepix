@@ -30,7 +30,7 @@ public class CC_2013_03_01Test extends AlgorithmTest {
 
         final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
         assertEquals(18, sampleMap.size());
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
             assertEquals("radiance_" + (i + 1), sampleMap.get(i));
         }
 
@@ -65,14 +65,14 @@ public class CC_2013_03_01Test extends AlgorithmTest {
         assertEquals("cl_simple_wat_1_val", sampleMap.get(14));
         assertEquals("cl_simple_wat_2_val", sampleMap.get(15));
 
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
             assertEquals("reflec_" + (i + 1), sampleMap.get(16 + i));
         }
     }
 
     @Test
     public void testConfigureTargetProduct() {
-        final Product sourceProduct = new Product("overwrites the old", "don'tcare", 2, 2);
+        final Product sourceProduct = createProduct();
         final TestProductConfigurer configurer = new TestProductConfigurer();
 
         algorithm.configureTargetProduct(sourceProduct, configurer);
@@ -82,6 +82,10 @@ public class CC_2013_03_01Test extends AlgorithmTest {
 
         final ProductNodeFilter<Band> copyBandsFilter = configurer.getCopyBandsFilter();
         assertNotNull(copyBandsFilter);
+
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
+            assertFloatBandPresent(targetProduct, "reflec_" + (i + 1), 2 * i, 3 * i);
+        }
 
         assertIntBandPresent(targetProduct, "cl_all_1");
         assertIntBandPresent(targetProduct, "cl_all_2");
@@ -130,7 +134,7 @@ public class CC_2013_03_01Test extends AlgorithmTest {
         inputVector = algorithm.assembleInput(inputSamples, inputVector);
 
         // check radiances
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
             assertEquals(Math.sqrt((i + 1) * Math.PI * inverseSolarFluxes[i] / Math.cos(Math.PI / 180.0 * 18)), inputVector[i], 1e-8);
         }
         assertEquals(sinTime, inputVector[15], 1e-8);

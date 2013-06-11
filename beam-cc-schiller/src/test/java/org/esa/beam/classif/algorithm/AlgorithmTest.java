@@ -21,4 +21,23 @@ public abstract class AlgorithmTest {
         assertNotNull(band);
         assertEquals(ProductData.TYPE_FLOAT32, band.getDataType());
     }
+
+    protected void assertFloatBandPresent(Product targetProduct, String bandName, float wavelength, float bandwidth) {
+        final Band band = targetProduct.getBand(bandName);
+        assertNotNull(band);
+        assertEquals(ProductData.TYPE_FLOAT32, band.getDataType());
+        assertEquals(wavelength, band.getSpectralWavelength(), 1e-8);
+        assertEquals(bandwidth, band.getSpectralBandwidth(), 1e-8);
+    }
+
+    protected Product createProduct() {
+        final Product product = new Product("overwrites the old", "don'tcare", 2, 2);
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
+            final Band band = new Band("radiance_" + (i + 1), ProductData.TYPE_FLOAT32, 2, 2);
+            band.setSpectralWavelength(2 * i);
+            band.setSpectralBandwidth(3 * i);
+            product.addBand(band);
+        }
+        return product;
+    }
 }

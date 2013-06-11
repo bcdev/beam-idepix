@@ -100,7 +100,11 @@ class CC_2013_05_09 implements CCAlgorithm {
         targetProduct.setName(sourceProduct.getName());
 
         for (int i = 0; i < 15; i++) {
-            Utils.addFloatBand(productConfigurer, "reflec_" + (i + 1));
+            final Band band = sourceProduct.getBand("radiance_" + (i + 1));
+            Utils.addFloatBand(productConfigurer,
+                    "reflec_" + (i + 1),
+                    band.getSpectralWavelength(),
+                    band.getSpectralBandwidth());
         }
 
         productConfigurer.copyBands(new ProductNodeFilter<Band>() {

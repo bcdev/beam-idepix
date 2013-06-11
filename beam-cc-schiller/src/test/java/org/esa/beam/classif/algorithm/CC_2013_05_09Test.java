@@ -30,7 +30,7 @@ public class CC_2013_05_09Test extends AlgorithmTest {
 
         final HashMap<Integer, String> sampleMap = sampleConfigurer.getSampleMap();
         assertEquals(16, sampleMap.size());
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
             assertEquals("radiance_" + (i + 1), sampleMap.get(i));
         }
 
@@ -55,14 +55,14 @@ public class CC_2013_05_09Test extends AlgorithmTest {
         assertEquals("cl_wat_3_val", sampleMap.get(6));
         assertEquals("cl_simple_wat_3_val", sampleMap.get(7));
 
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
             assertEquals("reflec_" + (i + 1), sampleMap.get(8 + i));
         }
     }
 
     @Test
     public void testConfigureTargetProduct() {
-        final Product sourceProduct = new Product("overwrites the old", "don'tcare", 2, 2);
+        final Product sourceProduct = createProduct();
         final TestProductConfigurer configurer = new TestProductConfigurer();
 
         algorithm.configureTargetProduct(sourceProduct, configurer);
@@ -72,6 +72,10 @@ public class CC_2013_05_09Test extends AlgorithmTest {
 
         final ProductNodeFilter<Band> copyBandsFilter = configurer.getCopyBandsFilter();
         assertNotNull(copyBandsFilter);
+
+        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
+            assertFloatBandPresent(targetProduct, "reflec_" + (i + 1), 2 * i, 3 * i);
+        }
 
         assertIntBandPresent(targetProduct, "cl_all_3");
         assertIntBandPresent(targetProduct, "cl_ter_3");
