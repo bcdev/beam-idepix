@@ -4,7 +4,6 @@ package org.esa.beam.classif;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.nn.NNffbpAlphaTabFast;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 public class NnThreadLocal extends ThreadLocal<NNffbpAlphaTabFast> {
@@ -22,7 +21,7 @@ public class NnThreadLocal extends ThreadLocal<NNffbpAlphaTabFast> {
             final NNffbpAlphaTabFast nn = new NNffbpAlphaTabFast(inputStream);
             inputStream.close();
             return nn;
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new OperatorException("Unable to load neural net: " + nnPath);
         }
     }

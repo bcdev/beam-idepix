@@ -12,13 +12,11 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
-class CC_2013_05_09 implements CCAlgorithm {
+class CC_2013_05_09 extends AbstractCCAlgorithm {
 
     private static final int SUN_ZENITH_INDEX = 15;
     private static final int NUM_NN_INPUTS = 14;
     private static final double DEG_TO_RAD = Math.PI / 180.0;
-
-    private double[] inverse_solar_fluxes;
 
     private NnThreadLocal nn_all_3;
     private NnThreadLocal nn_ter_3;
@@ -131,18 +129,14 @@ class CC_2013_05_09 implements CCAlgorithm {
 
     @Override
     public void prepareInputs(Product sourceProduct) throws OperatorException {
-        // @todo 2 tb/tb move to base class tb 2013-05-29
-        inverse_solar_fluxes = new double[Constants.NUM_RADIANCE_BANDS];
-        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
-            final float solarFlux = sourceProduct.getBandAt(i).getSolarFlux();
-            inverse_solar_fluxes[i] = 1.0 / solarFlux;
-        }
+        calculateInverseSolarFluxes(sourceProduct);
 
         nn_all_3 = new NnThreadLocal("ver2013_05_09/NN4all/clind/varin3/11x8x5x3_2628.7.net");
         nn_ter_3 = new NnThreadLocal("ver2013_05_09/NN4ter/clind/varin3/11x8x5x3_1258.8.net");
         nn_wat_3 = new NnThreadLocal("ver2013_05_09/NN4wat/clind/varin3/11x8x5x3_1057.8.net");
         nn_simple_wat_3 = new NnThreadLocal("ver2013_05_09/NN4wat/simpclind/varin3/11x8x5x3_737.7.net");
     }
+
 
     // package access for testing only tb 2013-05-23
     double[] assembleInput(Sample[] inputSamples, double[] inputVector) {
@@ -158,10 +152,6 @@ class CC_2013_05_09 implements CCAlgorithm {
         }
 
         return inputVector;
-    }
-
-    private double getToaRef(double inverse_cos_sza, int i, double toa_rad) {
-        return toa_rad * Math.PI * inverse_solar_fluxes[i] * inverse_cos_sza;
     }
 
     // for testing only tb 2013-05-29

@@ -1,12 +1,14 @@
 package org.esa.beam.classif;
 
 
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 public class NnThreadLocalTest {
 
@@ -38,5 +40,15 @@ public class NnThreadLocalTest {
         assertEquals(20, nn.getInmax().length);
         assertEquals(1.331025, nn.getInmax()[0], 1e-8);
         assertEquals(1.000000, nn.getInmax()[19], 1e-8);
+    }
+
+    @Test
+    public void testCreateThrowsOperatorExceptionOnIncorrectResource() {
+        try {
+            final NnThreadLocal nnThreadLocal = new NnThreadLocal("schnick.net");
+            nnThreadLocal.get();
+            fail("OperatorException expected");
+        } catch (OperatorException expected) {
+        }
     }
 }

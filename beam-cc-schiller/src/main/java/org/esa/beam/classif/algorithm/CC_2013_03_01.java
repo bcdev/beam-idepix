@@ -12,7 +12,7 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
-class CC_2013_03_01 implements CCAlgorithm {
+class CC_2013_03_01 extends AbstractCCAlgorithm{
 
     private static final int NUM_NN_INPUTS = 20;
 
@@ -24,7 +24,6 @@ class CC_2013_03_01 implements CCAlgorithm {
 
     private double sinTime;
     private double cosTime;
-    private double[] inverse_solar_fluxes;
 
     private NnThreadLocal nn_all_1;
     private NnThreadLocal nn_all_2;
@@ -175,11 +174,7 @@ class CC_2013_03_01 implements CCAlgorithm {
         sinTime = Math.sin(daysFractionArgument);
         cosTime = Math.cos(daysFractionArgument);
 
-        inverse_solar_fluxes = new double[Constants.NUM_RADIANCE_BANDS];
-        for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
-            final float solarFlux = sourceProduct.getBandAt(i).getSolarFlux();
-            inverse_solar_fluxes[i] = 1.0 / solarFlux;
-        }
+        calculateInverseSolarFluxes(sourceProduct);
 
         nn_all_1 = new NnThreadLocal("ver2013_03_01/NN4all/clind/varin1/11x8x5x3_2440.4.net");
         nn_all_2 = new NnThreadLocal("ver2013_03_01/NN4all/clind/varin2/11x8x5x3_2247.9.net");
@@ -195,10 +190,12 @@ class CC_2013_03_01 implements CCAlgorithm {
     double[] assembleInput(Sample[] inputSamples, double[] inputVector) {
         final double sza = inputSamples[SUN_ZENITH_INDEX].getDouble();
         final double inverse_cos_sza = 1.0 / Math.cos(sza * DEG_TO_RAD);
+
         for (int i = 0; i < Constants.NUM_RADIANCE_BANDS; i++) {
             final double toa_rad = inputSamples[i].getDouble();
-            inputVector[i] = Math.sqrt(toa_rad * Math.PI * inverse_solar_fluxes[i] * inverse_cos_sza);
+            inputVector[i] = Math.sqrt(getToaRef(inverse_cos_sza, i, toa_rad));
         }
+
         inputVector[15] = sinTime;
         inputVector[16] = cosTime;
         inputVector[17] = Math.sin(inputSamples[LAT_INDEX].getDouble() * DEG_TO_RAD);
