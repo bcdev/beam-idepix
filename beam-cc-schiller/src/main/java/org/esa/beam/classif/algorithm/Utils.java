@@ -9,12 +9,10 @@ import java.util.GregorianCalendar;
 
 public class Utils {
 
-    // @todo 3 tb/tb add test tb 2013-05-29
     static void addFloatBand(ProductConfigurer productConfigurer, String bandName) {
         productConfigurer.addBand(bandName, ProductData.TYPE_FLOAT32);
     }
 
-    // @todo 3 tb/tb add test tb 2013-06-11
     static void addFloatBand(ProductConfigurer productConfigurer, String bandName, float wavelength, float bandwidth) {
         final Band band = productConfigurer.addBand(bandName, ProductData.TYPE_FLOAT32);
         band.setSpectralWavelength(wavelength);
@@ -60,7 +58,6 @@ public class Utils {
         band.setSampleCoding(flagCoding);
     }
 
-    // package access for testing only tb 2013-05-22
     public static double getDayOfYearFraction(Product product) {
         final ProductData.UTC startTime = product.getStartTime();
         final ProductData.UTC endTime = product.getEndTime();

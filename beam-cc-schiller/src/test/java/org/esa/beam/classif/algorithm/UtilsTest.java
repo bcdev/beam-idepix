@@ -1,9 +1,7 @@
 package org.esa.beam.classif.algorithm;
 
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.classif.TestProductConfigurer;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.junit.Test;
 
@@ -11,6 +9,7 @@ import java.text.ParseException;
 import java.util.GregorianCalendar;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -138,5 +137,35 @@ public class UtilsTest {
         final MetadataAttribute unproc = flagCoding.getFlag("unproc");
         assertNotNull(unproc);
         assertEquals(16, unproc.getData().getElemInt());
+    }
+
+    @Test
+    public void testAddFloatBand() {
+        final TestProductConfigurer productConfigurer = new TestProductConfigurer();
+        final Product targetProduct = productConfigurer.getTargetProduct();
+
+        Band floatBand = targetProduct.getBand("floatBand");
+        assertNull(floatBand);
+
+        Utils.addFloatBand(productConfigurer, "floatBand");
+        floatBand = targetProduct.getBand("floatBand");
+        assertNotNull(floatBand);
+        assertEquals(ProductData.TYPE_FLOAT32, floatBand.getDataType());
+    }
+
+    @Test
+    public void testAddFloatBand_waveLengthAndBandwidth() {
+        final TestProductConfigurer productConfigurer = new TestProductConfigurer();
+        final Product targetProduct = productConfigurer.getTargetProduct();
+
+        Band floatBand = targetProduct.getBand("wlbwBand");
+        assertNull(floatBand);
+
+        Utils.addFloatBand(productConfigurer, "wlbwBand", 25.f, 36.f);
+        floatBand = targetProduct.getBand("wlbwBand");
+        assertNotNull(floatBand);
+        assertEquals(ProductData.TYPE_FLOAT32, floatBand.getDataType());
+        assertEquals(25.f, floatBand.getSpectralWavelength(), 1e-8);
+        assertEquals(36.f, floatBand.getSpectralBandwidth(), 1e-8);
     }
 }
