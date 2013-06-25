@@ -96,6 +96,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
     boolean gaUseIstomenaSeaIceAlgorithm;
+    @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
+    float gaRefl1600SeaIceThresh;
 
     @Parameter(defaultValue = "_M", label = "MERIS/AATSR collocation master product band names extension")
     private String bandExtensionMaster;
@@ -147,6 +149,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaUseWaterMaskFraction", gaUseWaterMaskFraction);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaUseIstomenaSeaIceAlgorithm", gaUseIstomenaSeaIceAlgorithm);
+        gaCloudClassificationParameters.put("gaRefl1600SeaIceThresh", gaRefl1600SeaIceThresh);
 
         return gaCloudClassificationParameters;
     }

@@ -68,6 +68,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
     boolean gaUseIstomenaSeaIceAlgorithm;
+    @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
+    float gaRefl1600SeaIceThresh;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")

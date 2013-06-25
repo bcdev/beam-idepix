@@ -36,6 +36,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float[] btempAatsr;             // 370, 1100, 1200
     private boolean l1FlagLandAatsr;
     private boolean isIstomena;
+    private float refl1600ThreshAatsr;
 
     // todo: raise flags only if we have MERIS/AATSR overlap, and/or add flags such as 'NO_MERIS' or 'NO_AATSR'
 
@@ -62,7 +63,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
             return isWater() && mask1 && mask2 && mask3 && mask4 && mask5;
         } else {
-            return isWater() && isBright() && reflAatsr[3] < 2.0;
+            return isWater() && isBright() && reflAatsr[3] < refl1600ThreshAatsr;
         }
     }
 
@@ -254,6 +255,10 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setIstomena(boolean istomena) {
         isIstomena = istomena;
+    }
+
+    public void setRefl1600ThreshAatsr(float refl1600ThreshAatsr) {
+        this.refl1600ThreshAatsr = refl1600ThreshAatsr;
     }
 
     // THRESHOLD GETTERS

@@ -277,6 +277,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         gaAlgorithm.setP1Meris(p1Tile.getSampleFloat(x, y));
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscattMeris(pscattTile.getSampleFloat(x, y));
+        gaAlgorithm.setRefl1600ThreshAatsr(gaRefl1600SeaIceThresh);
 
         // AATSR part:
         for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {
