@@ -33,7 +33,7 @@ public class IdepixProducts {
     }
 
     // Cloud Top Pressure with FUB Straylight Correction
-    public static  Product computeCloudTopPressureStraylightProduct(Product sourceProduct, boolean straylightCorr) {
+    public static Product computeCloudTopPressureStraylightProduct(Product sourceProduct, boolean straylightCorr) {
         Map<String, Object> params = new HashMap<String, Object>(1);
         params.put("straylightCorr", straylightCorr);
         return GPF.createProduct("Meris.CloudTopPressureOp", params, sourceProduct);
@@ -95,7 +95,7 @@ public class IdepixProducts {
         params.put("landExpression", landExpression);
         params.put("exportBrrNormalized", ccOutputRayleigh);
         return GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixRayleighCorrectionOp.class), params,
-                                 input);
+                input);
     }
 
     public static Product computeSpectralUnmixingProduct(Product rayleighProduct, boolean computeErrorBands) {
@@ -127,7 +127,7 @@ public class IdepixProducts {
         Map<String, Object> params = new HashMap<String, Object>(11);
         params.put("l2Pressures", computeL2Pressure);
         return GPF.createProduct(OperatorSpi.getOperatorAlias(MerisClassificationOp.class),
-                                              params, input);
+                params, input);
     }
 
     public static Product computeLandClassificationProduct(Product sourceProduct, Product gasProduct) {
@@ -230,6 +230,14 @@ public class IdepixProducts {
 //        }
 //    }
 
+    public static void addCCSeaiceClimatologyValueBand(Product merisCloudProduct, Product targetProduct) {
+        for (String bandname : merisCloudProduct.getBandNames()) {
+            if (bandname.equalsIgnoreCase("sea_ice_climatology_value")) {
+                moveBand(targetProduct, merisCloudProduct, bandname);
+            }
+        }
+    }
+
     public static void addCCSchillerCloudValueBand(Product merisCloudProduct, Product targetProduct) {
         for (String bandname : merisCloudProduct.getBandNames()) {
             if (bandname.equalsIgnoreCase(MerisClassificationOp.SCHILLER)) {
@@ -306,15 +314,15 @@ public class IdepixProducts {
     }
 
     public static void addPressureLiseProductBands(Product pressureLiseProduct, Product targetProduct,
-                                             boolean pressureOutputPSurfLise, boolean pressureOutputP2Lise) {
-        addPressureLiseProductBand(pressureLiseProduct, targetProduct,LisePressureOp.PRESSURE_LISE_P1);
+                                                   boolean pressureOutputPSurfLise, boolean pressureOutputP2Lise) {
+        addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_P1);
         if (pressureOutputPSurfLise) {
-            addPressureLiseProductBand(pressureLiseProduct, targetProduct,LisePressureOp.PRESSURE_LISE_PSURF);
+            addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_PSURF);
         }
         if (pressureOutputP2Lise) {
-            addPressureLiseProductBand(pressureLiseProduct, targetProduct,LisePressureOp.PRESSURE_LISE_P2);
+            addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_P2);
         }
-        addPressureLiseProductBand(pressureLiseProduct, targetProduct,LisePressureOp.PRESSURE_LISE_PSCATT);
+        addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_PSCATT);
     }
 
 

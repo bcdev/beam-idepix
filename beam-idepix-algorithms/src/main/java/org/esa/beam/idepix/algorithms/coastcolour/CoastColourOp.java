@@ -27,10 +27,10 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.coastcolour",
-                  version = "2.0-SNAPSHOT",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2012 by Brockmann Consult",
-                  description = "Pixel identification and classification with CoastColour algorithm.")
+        version = "2.0-SNAPSHOT",
+        authors = "Olaf Danne",
+        copyright = "(c) 2012 by Brockmann Consult",
+        description = "Pixel identification and classification with CoastColour algorithm.")
 public class CoastColourOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
@@ -59,7 +59,7 @@ public class CoastColourOp extends BasisOp {
     private boolean ccOutputRayleigh = false;
 
     @Parameter(defaultValue = "false", label = " Mixed Pixel Flag (requires Rayleigh corrected reflectances!)")
-    private boolean ccMixedPixel= false;
+    private boolean ccMixedPixel = false;
 
     @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
     private boolean ccOutputL2Pressures = true;
@@ -70,8 +70,14 @@ public class CoastColourOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Schiller Cloud Value")
     private boolean ccOutputSchillerCloudValue = true;
 
+    @Parameter(label = " Sea Ice Climatology Max Value", defaultValue = "false")
+    private boolean ccOutputSeaIceClimatologyValue;
+
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
+
+    @Parameter(label = " P1 Scaled Pressure Threshold ", defaultValue = "0.15")
+    private double ccUserDefinedP1ScaledThreshold = 0.15;
 
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ccUserDefinedPScattPressureThreshold = 700.0;
@@ -92,20 +98,20 @@ public class CoastColourOp extends BasisOp {
     private double ccUserDefinedRhoToa442Threshold = 0.03;
 
     @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
-               valueSet = {
-                       "412", "442", "490", "510", "560", "620", "665",
-                       "681", "705", "753", "760", "775", "865", "890", "900"
-               })
+            valueSet = {
+                    "412", "442", "490", "510", "560", "620", "665",
+                    "681", "705", "753", "760", "775", "865", "890", "900"
+            })
     private int ccRhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
 
     @Parameter(label = "Resolution of land mask", defaultValue = "50",
-               description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
+            description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
     private int ccLandMaskResolution;
     @Parameter(label = "Source pixel over-sampling (X)", defaultValue = "3",
-               description = "The factor used to over-sample the source pixels in X-direction.")
+            description = "The factor used to over-sample the source pixels in X-direction.")
     private int ccOversamplingFactorX;
     @Parameter(label = "Source pixel over-sampling (Y)", defaultValue = "3",
-               description = "The factor used to over-sample the source pixels in Y-direction.")
+            description = "The factor used to over-sample the source pixels in Y-direction.")
     private int ccOversamplingFactorY;
 
     @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
@@ -133,9 +139,9 @@ public class CoastColourOp extends BasisOp {
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                                                                        ccOutputL2CloudDetection,
-                                                                        false,
-                                                                        true, false, false, true);
+                ccOutputL2CloudDetection,
+                false,
+                true, false, false, true);
 
         computeCoastColourMerisCloudProduct();
 
@@ -143,9 +149,9 @@ public class CoastColourOp extends BasisOp {
 
         // todo: check if it is ok to use merisCloudProduct as 'land product' (as implemented in old Idepix)
         rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct,
-                                                                          merisCloudProduct, merisCloudProduct,
-                                                                          ccOutputRayleigh,
-                                                                          CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
+                merisCloudProduct, merisCloudProduct,
+                ccOutputRayleigh,
+                CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
 
         Product smaProduct = null;
         if (ccMixedPixel) {
@@ -181,6 +187,7 @@ public class CoastColourOp extends BasisOp {
         Map<String, Object> cloudClassificationParameters = new HashMap<String, Object>(11);
         cloudClassificationParameters.put("l2Pressures", ccOutputL2Pressures);
         cloudClassificationParameters.put("l2CloudDetection", ccOutputL2CloudDetection);
+        cloudClassificationParameters.put("ccUserDefinedP1ScaledThreshold", ccUserDefinedP1ScaledThreshold);
         cloudClassificationParameters.put("userDefinedPScattPressureThreshold", ccUserDefinedPScattPressureThreshold);
         cloudClassificationParameters.put("userDefinedGlintThreshold", ccUserDefinedGlintThreshold);
         cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ccUserDefinedRhoToa442Threshold);
@@ -192,9 +199,10 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
         cloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
         cloudClassificationParameters.put("schillerSure", ccSchillerSure);
+        cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
         cloudClassificationParameters.put("ccOutputSchillerCloudValue", ccOutputSchillerCloudValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
-                                              cloudClassificationParameters, cloudInputProducts);
+                cloudClassificationParameters, cloudInputProducts);
     }
 
     private void computeCoastColourPostProcessProduct(Product smaProduct1) {
@@ -222,6 +230,9 @@ public class CoastColourOp extends BasisOp {
         }
         if (ccOutputRayleigh) {
             IdepixProducts.addRayleighCorrectionBands(rayleighProduct, targetProduct);
+        }
+        if (ccOutputSeaIceClimatologyValue) {
+            IdepixProducts.addCCSeaiceClimatologyValueBand(merisCloudProduct, targetProduct);
         }
         if (ccOutputSchillerCloudValue) {
             IdepixProducts.addCCSchillerCloudValueBand(merisCloudProduct, targetProduct);
