@@ -117,18 +117,23 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     @Parameter(description = "If 'true' the algorithm will compute L2 Pressures.", defaultValue = "true")
     private boolean l2Pressures;
+
     @Parameter(label = "L2 Cloud Detection Flags with LISE 'PScatt'", defaultValue = "false")
     private boolean pressureOutputL2CloudDetectionLisePScatt;
-    @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "0.15")
-    private double ccUserDefinedP1ScaledThreshold = 0.15;
-    @Parameter(description = "User Defined PScatt Pressure Threshold.", defaultValue = "700.0")
+
+    @Parameter(description = " P1 Scaled Pressure Threshold ", defaultValue = "1000.0")
+    private double ccUserDefinedP1ScaledThreshold = 1000.0;
+
+    @Parameter(description = "PScatt Pressure Threshold.", defaultValue = "700.0")
     private double userDefinedPScattPressureThreshold;
+
     @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.185")
     private double userDefinedRhoToa442Threshold;
 
     @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold;   // default changed from 0.185, 2011/03/25
-    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
+//    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
+    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.2") // 20130702
     public double userDefinedGlintThreshold;
 
 
@@ -540,7 +545,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                 is_snow_ice = bright_rc && high_mdsi;
             }
             // glint makes sense only if we have no sea ice
-            is_glint_risk = is_glint_risk && !is_snow_ice;
+            is_glint_risk = is_glint_risk && !isPixelClassifiedAsSeaice(geoPos);
 
         } else {
             // over land
@@ -560,7 +565,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         boolean isCloud = schillerValue > ambiguousThresh;
         boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
 
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk && !isCloud);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
 
@@ -626,7 +631,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         boolean is_glint = p1Scaled < ccUserDefinedP1ScaledThreshold;
 
         final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
-        final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
+//        final boolean is_glint_2 = (rhoGlint >= userDefinedGlintThreshold);
+        final boolean is_glint_2 =
+                (rhoGlint >= userDefinedGlintThreshold*sd.rhoToa[Constants.bb865][pixelInfo.index]);
 
         return is_glint && is_glint_2;
     }

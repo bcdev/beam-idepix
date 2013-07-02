@@ -76,13 +76,14 @@ public class CoastColourOp extends BasisOp {
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
-    @Parameter(label = " P1 Scaled Pressure Threshold ", defaultValue = "0.15")
-    private double ccUserDefinedP1ScaledThreshold = 0.15;
+    @Parameter(label = " P1 Scaled Pressure Threshold ", defaultValue = "1000.0")
+    private double ccUserDefinedP1ScaledThreshold = 1000.0;
 
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ccUserDefinedPScattPressureThreshold = 700.0;
 
-    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
+//    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
+    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.2")  // 20130702
     private double ccUserDefinedGlintThreshold;
 
     @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
