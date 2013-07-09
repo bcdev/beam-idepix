@@ -246,6 +246,18 @@ public class IdepixProducts {
         }
     }
 
+    public static void addCCRhoGlintDebugValueBands(Product merisCloudProduct, Product targetProduct) {
+        for (String bandname : merisCloudProduct.getBandNames()) {
+            if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_GLINT)) {
+                moveBand(targetProduct, merisCloudProduct, bandname);
+            }
+            if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_GLINT + "_chiw_term")) {
+                moveBand(targetProduct, merisCloudProduct, bandname);
+            }
+        }
+    }
+
+
     public static void addRayleighCorrectionBands(Product rayleighProduct, Product targetProduct) {
         int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
         FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);

@@ -73,6 +73,9 @@ public class CoastColourOp extends BasisOp {
     @Parameter(label = " Sea Ice Climatology Max Value", defaultValue = "false")
     private boolean ccOutputSeaIceClimatologyValue;
 
+    @Parameter(label = " RhoGlint Debug Values", defaultValue = "false")
+    private boolean ccOutputRhoglintDebugValues;
+
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
@@ -82,7 +85,7 @@ public class CoastColourOp extends BasisOp {
     @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
     private double ccUserDefinedPScattPressureThreshold = 700.0;
 
-//    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
+    //    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
     @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.2")  // 20130702
     private double ccUserDefinedGlintThreshold;
 
@@ -201,6 +204,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
         cloudClassificationParameters.put("schillerSure", ccSchillerSure);
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
+        cloudClassificationParameters.put("ccOutputRhoglintDebugValues", ccOutputRhoglintDebugValues);
         cloudClassificationParameters.put("ccOutputSchillerCloudValue", ccOutputSchillerCloudValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                 cloudClassificationParameters, cloudInputProducts);
@@ -234,6 +238,9 @@ public class CoastColourOp extends BasisOp {
         }
         if (ccOutputSeaIceClimatologyValue) {
             IdepixProducts.addCCSeaiceClimatologyValueBand(merisCloudProduct, targetProduct);
+        }
+        if (ccOutputRhoglintDebugValues) {
+            IdepixProducts.addCCRhoGlintDebugValueBands(merisCloudProduct, targetProduct);
         }
         if (ccOutputSchillerCloudValue) {
             IdepixProducts.addCCSchillerCloudValueBand(merisCloudProduct, targetProduct);
