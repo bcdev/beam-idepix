@@ -16,6 +16,9 @@
 
     <moduleSets>
         <moduleSet>
+            <excludes>
+                <exclude>org.esa.beam.idepix:beam-idepix-bootstrap</exclude>
+            </excludes>
             <binaries>
                 <unpack>false</unpack>
             </binaries>
