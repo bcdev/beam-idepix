@@ -1,13 +1,13 @@
 <bundleDescriptor>
     <bundleName>beam-idepix-cc</bundleName>
-    <bundleVersion>2.0-SNAPSHOT</bundleVersion>
+    <bundleVersion>${pom.version}</bundleVersion>
 
     <processorDescriptors>
 
         <processorDescriptor>
             <executableName>idepix.coastcolour</executableName>
             <processorName>Idepix (CC Algorithm)</processorName>
-            <processorVersion>2.0-SNAPSHOT</processorVersion>
+            <processorVersion>${pom.version}</processorVersion>
             <defaultParameters><![CDATA[<parameters>
     <!-- ***********Idepix CC Parameters start here*********** -->
 
@@ -74,72 +74,72 @@
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_2</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_3</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_4</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_5</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_6</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_7</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_8</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_9</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_10</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_11</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_12</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_13</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_14</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				<outputVariable>
+                <outputVariable>
                     <name>rho_toa_15</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
@@ -150,7 +150,7 @@
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
-				
+
                 <outputVariable>
                     <name>l1_flags</name>
                 </outputVariable>
