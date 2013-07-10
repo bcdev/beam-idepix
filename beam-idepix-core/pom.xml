@@ -13,7 +13,6 @@
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.idepix</groupId>
     <artifactId>beam-idepix-core</artifactId>
     <name>Idepix core module</name>
 
@@ -44,34 +43,7 @@
 
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-unmix</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
-        </dependency>
-
-        <!-- Other BEAM operator Modules ############################################# -->
-
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-brr</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-sdr</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-watermask-operator</artifactId>
-        </dependency>
-
-        <!-- JUnit Libraries ############################################# -->
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

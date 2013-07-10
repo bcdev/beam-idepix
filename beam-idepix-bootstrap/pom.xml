@@ -12,7 +12,6 @@
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.idepix</groupId>
     <artifactId>beam-idepix-bootstrap</artifactId>
     <name>Idepix Bootstrap</name>
     <description>Provides the bootstrap classpath for all Idepix modules</description>

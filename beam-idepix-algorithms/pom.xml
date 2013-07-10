@@ -25,21 +25,6 @@
             <artifactId>beam-idepix-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-radiometry</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-watermask-operator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-glint</artifactId>
-        </dependency>
-
     </dependencies>
 
 </project>
