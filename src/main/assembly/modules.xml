@@ -6,8 +6,7 @@
     <formats>
         <format>zip</format>
     </formats>
-    <baseDirectory>${pom.artifactId}-${pom.version}</baseDirectory>
-    <includeBaseDirectory>true</includeBaseDirectory>
+    <includeBaseDirectory>false</includeBaseDirectory>
     <files>
         <file>
             <filtered>true</filtered>
