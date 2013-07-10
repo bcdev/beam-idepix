@@ -4,7 +4,7 @@
         xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
     <id>modules</id>
     <formats>
-        <format>dir</format>
+        <format>zip</format>
     </formats>
     <baseDirectory>${pom.artifactId}-${pom.version}</baseDirectory>
     <includeBaseDirectory>true</includeBaseDirectory>
@@ -15,20 +15,11 @@
         </file>
     </files>
 
-    <fileSets>
-        <fileSet>
-            <directory>src/main/assembly/</directory>
-            <outputDirectory>.</outputDirectory>
-            <includes>
-            </includes>
-        </fileSet>
-    </fileSets>
-
     <moduleSets>
         <moduleSet>
-            <includes>
-                <include>org.esa.beam.idepix:beam-idepix-core</include>
-            </includes>
+            <binaries>
+                <unpack>false</unpack>
+            </binaries>
         </moduleSet>
     </moduleSets>
 
