@@ -1,6 +1,5 @@
-/.idea/
-/*.ipr
-/*.iml
-/*.iws
-/config/
+.idea/
+*.ipr
+*.iml
+*.iws
 target/
