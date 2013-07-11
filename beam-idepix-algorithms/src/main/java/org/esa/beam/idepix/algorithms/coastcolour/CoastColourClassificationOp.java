@@ -637,12 +637,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     }
 
     private boolean isGlintRisk(SourceData sd, PixelInfo pixelInfo) {
-        if (pixelInfo.x == 251 && pixelInfo.y == 207) {
-            System.out.println("pixelInfo = " + pixelInfo);
-        }
-        if (pixelInfo.x == 252 && pixelInfo.y == 207) {
-            System.out.println("pixelInfo = " + pixelInfo);
-        }
         double p1Scaled = 1.0 - pixelInfo.p1Pressure / 1000.0;
         boolean is_glint = p1Scaled < ccUserDefinedP1ScaledThreshold;
 
@@ -683,7 +677,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         final double chiw = computeChiW(sd, pixelInfo);
         final double deltaAzimuth = sd.deltaAzimuth[pixelInfo.index];
         final double windm = Math.sqrt(sd.windu[pixelInfo.index] * sd.windu[pixelInfo.index] +
-                sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
+                                               sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
             /* allows to retrieve Glint reflectance for wurrent geometry and wind */
         return glintRef(sd.sza[pixelInfo.index], sd.vza[pixelInfo.index], deltaAzimuth, windm, chiw);
     }
@@ -737,7 +731,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         final double thetaScatt = calcScatteringAngle(dc, pixelInfo) * MathUtils.DTOR;
         double cosThetaScatt = Math.cos(thetaScatt);
         return userDefinedRhoToa442Threshold + userDefinedDeltaRhoToa442Threshold *
-//                                             userDefinedDeltaRhoToa442ThresholdFactor *
                 cosThetaScatt * cosThetaScatt;
     }
 
