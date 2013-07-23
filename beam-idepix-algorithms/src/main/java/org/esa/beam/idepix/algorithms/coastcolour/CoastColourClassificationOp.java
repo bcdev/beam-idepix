@@ -401,7 +401,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             final Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
             final Tile liseP1Tile = getSourceTile(liseP1Band, sourceRectangle);
             final Tile lisePScattTile = getSourceTile(lisePScattBand, sourceRectangle);
-            final Tile waterTile = getSourceTile(landWaterBand, sourceRectangle);
+            final Tile waterFractionTile = getSourceTile(landWaterBand, sourceRectangle);
 
             final PixelInfo pixelInfo = new PixelInfo();
 
@@ -413,7 +413,24 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                     pixelInfo.x = x;
                     pixelInfo.index = i;
                     if (!sd.l1Flags.getSampleBit(x, y, Constants.L1_F_INVALID)) {
-                        final boolean isLand = waterTile.getSampleInt(pixelInfo.x, pixelInfo.y) == 0;
+                        final boolean isLand;
+                        final boolean isCoastline;
+                        // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
+                        if (getGeoPos(pixelInfo).lat > -58f) {
+                            final int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
+                            // values bigger than 100 indicate no data
+                            if (waterFraction <= 100) {
+                                isCoastline = waterFraction < 100 && waterFraction > 0;
+                                isLand = waterFraction == 0;
+                            } else {
+                                isCoastline = false;
+                                isLand = sd.l1Flags.getSampleBit(x, y, Constants.L1_F_LAND);
+                            }
+                        } else {
+                            isCoastline = false;
+                            isLand = sd.l1Flags.getSampleBit(x, y, Constants.L1_F_LAND);
+                        }
+
                         pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[i], sd.sza[i]);
                         if (isLand) {
                             // ECMWF pressure is only corrected for positive
@@ -429,7 +446,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                         pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
 
                         if (band == cloudFlagBand) {
-                            classifyCloud(sd, pixelInfo, waterTile, targetTile, isLand);
+                            classifyCloud(sd, pixelInfo, targetTile, isLand, isCoastline);
                         }
                         if (band == psurfOutputBand && l2Pressures) {
                             setCloudPressureSurface(sd, pixelInfo, targetTile);
@@ -510,7 +527,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, pixelInfo.ctp);
     }
 
-    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile waterFractionTile, Tile targetTile, boolean isLand) {
+    public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile, boolean isLand, boolean isCoastline) {
         final boolean[] resultFlags = new boolean[6];
 
         // Compute slopes- step 2.1.7
@@ -524,11 +541,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
-        final int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
-        final boolean coast_f = waterFraction < 100 && waterFraction > 0;
-        final boolean land_f = waterFraction == 0;
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, land_f || coast_f);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_COASTLINE, coast_f);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LAND, isLand || isCoastline);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_COASTLINE, isCoastline);
 
 
         final boolean bright_toa_f = resultFlags[3];  // bright_2
@@ -544,7 +558,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         final double pscattPressure = pixelInfo.pscattPressure;
         final boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
                 (sd.rhoToa[Constants.bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
-        final boolean land_coast = land_f || coast_f;
+        final boolean land_coast = isLand || isCoastline;
 
         boolean is_snow_ice = false;
         boolean is_glint_risk = !land_coast && isGlintRisk(sd, pixelInfo);
