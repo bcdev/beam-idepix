@@ -66,6 +66,9 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         final Band merisL1bFlagBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
         final Tile merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
 
+        final Tile merisVzaTile = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
+                                 rectangle);
+
         Tile[] merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
         float[] merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
@@ -114,6 +117,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAatsrSynergyAlgorithm(merisL1bFlagTile,
+                            merisVzaTile,
                             merisBrr442Tile, merisP1Tile,
                             merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
                             merisReflectanceTiles,
@@ -250,6 +254,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
     private GlobAlbedoAlgorithm createMerisAatsrSynergyAlgorithm(Tile merisL1bFlagTile,
                                                                  Tile brr442Tile, Tile p1Tile,
+                                                                 Tile vzaTile,
                                                                  Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
                                                                  Tile[] merisReflectanceTiles,
                                                                  float[] merisReflectance,
@@ -263,9 +268,18 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         GlobAlbedoMerisAatsrSynergyAlgorithm gaAlgorithm = new GlobAlbedoMerisAatsrSynergyAlgorithm();
 
         // MERIS part:
+        double[] seaiceNeuralNetInput = new double[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             merisReflectance[i] = merisReflectanceTiles[i].getSampleFloat(x, y);
+            seaiceNeuralNetInput[i] = merisReflectance[i];
         }
+
+        double[] seaiceNeuralNetOutput;
+//        if (vzaTile.getSampleFloat(x, y) < 7.0) {
+//            seaiceNeuralNetOutput = seaiceInnerNeuralNet.calc(seaiceNeuralNetInput);
+//        } else {
+            seaiceNeuralNetOutput = seaiceOuterNeuralNet.calc(seaiceNeuralNetInput);
+//        }
 
         gaAlgorithm.setReflMeris(merisReflectance);
         for (int i = 0; i < IdepixConstants.MERIS_BRR_BAND_NAMES.length; i++) {
@@ -278,6 +292,8 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscattMeris(pscattTile.getSampleFloat(x, y));
         gaAlgorithm.setRefl1600ThreshAatsr(gaRefl1600SeaIceThresh);
+        gaAlgorithm.setSchillerRefl1600Meris(seaiceNeuralNetOutput[0]);
+        gaAlgorithm.setSchillerSeaiceCloudProb(seaiceNeuralNetOutput[1]);
 
         // AATSR part:
         for (int i = 0; i < IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES.length; i++) {

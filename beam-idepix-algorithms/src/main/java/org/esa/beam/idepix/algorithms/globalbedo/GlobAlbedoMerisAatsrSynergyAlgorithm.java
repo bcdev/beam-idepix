@@ -30,6 +30,9 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float pbaroMeris;
     private float brr442Meris;
     private float brr442ThreshMeris;
+    private double schillerRefl1600Meris;
+    private double schillerSeaiceCloudProb;
+
     // AATSR
     private float btemp1200Aatsr;
     private float[] reflAatsr;              // 550, 670, 870, 1600
@@ -39,6 +42,11 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float refl1600ThreshAatsr;
 
     // todo: raise flags only if we have MERIS/AATSR overlap, and/or add flags such as 'NO_MERIS' or 'NO_AATSR'
+
+    @Override
+    public boolean isInvalid() {
+        return !IdepixUtils.areAllReflectancesValid(reflMeris);
+    }
 
     @Override
     public boolean isCloud() {
@@ -63,7 +71,14 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
             return isWater() && mask1 && mask2 && mask3 && mask4 && mask5;
         } else {
-            return isWater() && isBright() && reflAatsr[3] < refl1600ThreshAatsr;
+            if (reflAatsr[3] > 0.0) {
+                return isWater() && isBright() && reflAatsr[3] < refl1600ThreshAatsr;
+            } else {
+                // outside AATSR swath
+                return isWater() && isBright() &&
+                        schillerSeaiceCloudProb < 0.5 &&
+                        schillerRefl1600Meris < refl1600ThreshAatsr;
+            }
         }
     }
 
@@ -259,6 +274,22 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setRefl1600ThreshAatsr(float refl1600ThreshAatsr) {
         this.refl1600ThreshAatsr = refl1600ThreshAatsr;
+    }
+
+    public void setSchillerSeaiceCloudProb(double schillerSeaiceCloudProb) {
+        this.schillerSeaiceCloudProb = schillerSeaiceCloudProb;
+    }
+
+    public void setSchillerRefl1600Meris(double schillerRefl1600Meris) {
+        this.schillerRefl1600Meris = schillerRefl1600Meris;
+    }
+
+    public double getSchillerRefl1600Meris() {
+        return schillerRefl1600Meris;
+    }
+
+    public double getSchillerSeaiceCloudProb() {
+        return schillerSeaiceCloudProb;
     }
 
     // THRESHOLD GETTERS
