@@ -48,6 +48,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaComputeFlagsOnly;
     @Parameter(defaultValue = "true", label = "Copy input radiance bands")
     boolean gaCopyRadiances;
+    @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances (MERIS)")
+    boolean gaCopyRayleigh = false;
     @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
     boolean gaCopySubsetOfRadiances;
     @Parameter(defaultValue = "false", label = "Copy MERIS TOA reflectance bands (MERIS/AATSR synergy)")
@@ -72,6 +74,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
     boolean gaUseIstomenaSeaIceAlgorithm;
+    @Parameter(defaultValue = "true", label = " Use Schiller algorithm for sea ice determination outside AATSR")
+    boolean gaUseSchillerSeaIceAlgorithm;
     @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
     float gaRefl1600SeaIceThresh;
     @Parameter(defaultValue = "false", label = "Write Schiller Seaice Output bands (MERIS 1600 and Cloud/Seaice prob)")
@@ -237,7 +241,14 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     void setPixelSamples(Band band, Tile targetTile, Tile p1Tile, Tile pbaroTile, Tile pscattTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute more pixel properties and write to distinct band
         if (band == brightBand) {
+            if (x == 500 && y == 1200) {
+                System.out.println("x = " + x);
+            }
+            if (x == 560 && y == 1200) {
+                System.out.println("x = " + x);
+            }
             targetTile.setSample(x, y, globAlbedoAlgorithm.brightValue());
+//            targetTile.setSample(x, y, ((GlobAlbedoMerisAatsrSynergyAlgorithm) globAlbedoAlgorithm).getBrr442ThreshMeris()); // test!
         } else if (band == whiteBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.whiteValue());
         } else if (band == brightWhiteBand) {

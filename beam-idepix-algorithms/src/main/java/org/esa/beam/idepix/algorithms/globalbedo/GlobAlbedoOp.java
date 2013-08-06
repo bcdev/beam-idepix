@@ -96,6 +96,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseAatsrFwardForClouds;
     @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
     boolean gaUseIstomenaSeaIceAlgorithm;
+    @Parameter(defaultValue = "true", label = " Use Schiller algorithm for sea ice determination outside AATSR")
+    boolean gaUseSchillerSeaIceAlgorithm;
     @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
     float gaRefl1600SeaIceThresh;
     @Parameter(defaultValue = "false", label = "Write Schiller Seaice Output bands (MERIS 1600 and Cloud/Seaice prob)")
@@ -139,6 +141,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopySubsetOfRadiances", gaCopySubsetOfRadiances);
         gaCloudClassificationParameters.put("gaCopyMerisToaReflectances", gaCopyMerisToaReflectances);
+        gaCloudClassificationParameters.put("gaCopyRayleigh", gaCopyRayleigh);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaCopyPressure", gaCopyPressure);
         gaCloudClassificationParameters.put("gaComputeFlagsOnly", gaComputeFlagsOnly);
@@ -151,6 +154,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaUseWaterMaskFraction", gaUseWaterMaskFraction);
         gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaUseIstomenaSeaIceAlgorithm", gaUseIstomenaSeaIceAlgorithm);
+        gaCloudClassificationParameters.put("gaUseSchillerSeaIceAlgorithm", gaUseSchillerSeaIceAlgorithm);
         gaCloudClassificationParameters.put("gaRefl1600SeaIceThresh", gaRefl1600SeaIceThresh);
         gaCloudClassificationParameters.put("gaWriteSchillerSeaiceNetBands", gaWriteSchillerSeaiceNetBands);
 
