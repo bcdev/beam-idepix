@@ -48,7 +48,7 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
 @OperatorMetadata(alias = "idepix.operators.MerisClassification",
         version = "1.0",
         internal = true,
-        authors = "Marco Zühlke, Olaf Danne",
+        authors = "Marco Zuehlke, Olaf Danne",
         copyright = "(c) 2007 by Brockmann Consult",
         description = "MERIS L2 cloud classification (version from MEPIX processor).")
 public class MerisClassificationOp extends MerisBasisOp {
