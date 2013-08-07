@@ -13,6 +13,7 @@ import org.esa.beam.idepix.operators.BarometricPressureOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.Rad2ReflOp;
+import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
@@ -26,10 +27,10 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
-        version = "2.0-SNAPSHOT",
-        authors = "Olaf Danne",
-        copyright = "(c) 2013 by Brockmann Consult",
-        description = "Pixel identification and classification with GlobAlbedo algorithm.")
+                  version = "2.0-SNAPSHOT",
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2013 by Brockmann Consult",
+                  description = "Pixel identification and classification with GlobAlbedo algorithm.")
 public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClassificationOp {
 
     @SourceProduct(alias = "cloud", optional = true)
@@ -67,7 +68,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         final Tile merisL1bFlagTile = getSourceTile(merisL1bFlagBand, rectangle);
 
         final Tile merisVzaTile = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
-                                 rectangle);
+                                                rectangle);
 
         Tile[] merisBrrTiles = new Tile[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
         float[] merisBrr = new float[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
@@ -117,18 +118,18 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAatsrSynergyAlgorithm(merisL1bFlagTile,
-                            merisVzaTile,
-                            merisBrr442Tile, merisP1Tile,
-                            merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
-                            merisReflectanceTiles,
-                            merisReflectance,
-                            merisBrrTiles, merisBrr,
-                            aatsrReflectanceTiles, aatsrReflectance,
-                            aatsrBtempTiles, aatsrBtemp,
-                            waterMaskSample,
-                            waterMaskFraction,
-                            y,
-                            x);
+                                                                                               merisVzaTile,
+                                                                                               merisBrr442Tile, merisP1Tile,
+                                                                                               merisPbaroTile, merisPscattTile, merisBrr442ThreshTile,
+                                                                                               merisReflectanceTiles,
+                                                                                               merisReflectance,
+                                                                                               merisBrrTiles, merisBrr,
+                                                                                               aatsrReflectanceTiles, aatsrReflectance,
+                                                                                               aatsrBtempTiles, aatsrBtemp,
+                                                                                               waterMaskSample,
+                                                                                               waterMaskFraction,
+                                                                                               y,
+                                                                                               x);
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
                     for (Band band : targetProduct.getBands()) {
@@ -185,15 +186,15 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
             IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
             pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-                    IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             IdepixConstants.NO_DATA_VALUE,
+                                             true);
             p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             true);
             pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-                    IdepixConstants.NO_DATA_VALUE,
-                    true);
+                                             IdepixConstants.NO_DATA_VALUE,
+                                             true);
         }
 
         // L1 flags (MERIS), confid flags, cloud flags (AATSR)
@@ -201,6 +202,9 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 
         if (gaCopyRadiances) {
             copyRadiances();
+        }
+        if (gaCopyRayleigh) {
+            copyRayleighReflectances();
         }
         if (!gaCopyRadiances && gaCopySubsetOfRadiances) {
             copySubsetOfRadiances();
@@ -214,18 +218,28 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         if (!gaCopyMerisToaReflectances) {
             for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                 ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                        targetProduct, true);
+                                      targetProduct, true);
             }
         }
         for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
             ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
-                    targetProduct, true);
+                                  targetProduct, true);
         }
         for (int i = 0; i < IdepixConstants.AATSR_TEMP_WAVELENGTHS.length; i++) {
             ProductUtils.copyBand(IdepixConstants.AATSR_BTEMP_BAND_NAMES[i], sourceProduct,
-                    targetProduct, true);
+                                  targetProduct, true);
         }
     }
+
+    private void copyRayleighReflectances() {
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            if (i != 10 && i != 14) {
+                ProductUtils.copyBand(RayleighCorrectionOp.BRR_BAND_PREFIX + "_" + (i+1), rayleighProduct,
+                                      targetProduct, true);
+            }
+        }
+    }
+
 
     private void copySubsetOfRadiances() {
         // for performance, copy just a subset of radiances/reflectances to allow RGB image creation
@@ -234,13 +248,13 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
                     EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_5") ||
                     EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_1")) {
                 ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                        targetProduct, true);
+                                      targetProduct, true);
             }
         }
         for (int i = 0; i < IdepixConstants.AATSR_REFL_WAVELENGTHS.length; i++) {
             if (IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i].startsWith("reflec_nadir")) {
                 ProductUtils.copyBand(IdepixConstants.AATSR_REFLECTANCE_BAND_NAMES[i], sourceProduct,
-                        targetProduct, true);
+                                      targetProduct, true);
             }
         }
     }
@@ -253,8 +267,8 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     }
 
     private GlobAlbedoAlgorithm createMerisAatsrSynergyAlgorithm(Tile merisL1bFlagTile,
-                                                                 Tile brr442Tile, Tile p1Tile,
                                                                  Tile vzaTile,
+                                                                 Tile brr442Tile, Tile p1Tile,
                                                                  Tile pbaroTile, Tile pscattTile, Tile brr442ThreshTile,
                                                                  Tile[] merisReflectanceTiles,
                                                                  float[] merisReflectance,
@@ -278,7 +292,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
 //        if (vzaTile.getSampleFloat(x, y) < 7.0) {
 //            seaiceNeuralNetOutput = seaiceInnerNeuralNet.calc(seaiceNeuralNetInput);
 //        } else {
-            seaiceNeuralNetOutput = seaiceOuterNeuralNet.calc(seaiceNeuralNetInput);
+        seaiceNeuralNetOutput = seaiceOuterNeuralNet.calc(seaiceNeuralNetInput);
 //        }
 
         gaAlgorithm.setReflMeris(merisReflectance);
@@ -316,6 +330,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         float[] merisAatsrReflectance = concatMerisAatsrReflectanceArrays(merisReflectance, aatsrReflectance);
         gaAlgorithm.setRefl(merisAatsrReflectance);
         gaAlgorithm.setIstomena(gaUseIstomenaSeaIceAlgorithm);
+        gaAlgorithm.setSchillerSeaice(gaUseSchillerSeaIceAlgorithm);
 
         // water mask part
         if (gaUseL1bLandWaterFlag) {

@@ -39,6 +39,7 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
     private float[] btempAatsr;             // 370, 1100, 1200
     private boolean l1FlagLandAatsr;
     private boolean isIstomena;
+    private boolean isSchillerSeaice;
     private float refl1600ThreshAatsr;
 
     // todo: raise flags only if we have MERIS/AATSR overlap, and/or add flags such as 'NO_MERIS' or 'NO_AATSR'
@@ -75,9 +76,12 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
                 return isWater() && isBright() && reflAatsr[3] < refl1600ThreshAatsr;
             } else {
                 // outside AATSR swath
-                return isWater() && isBright() &&
-                        schillerSeaiceCloudProb < 0.5 &&
-                        schillerRefl1600Meris < refl1600ThreshAatsr;
+                if (isSchillerSeaice) {
+                    return isWater() && isBright() &&
+                            schillerSeaiceCloudProb < 0.5;
+                } else {
+                    return false;
+                }
             }
         }
     }
@@ -272,6 +276,10 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
         isIstomena = istomena;
     }
 
+    public void setSchillerSeaice(boolean schillerSeaice) {
+        isSchillerSeaice = schillerSeaice;
+    }
+
     public void setRefl1600ThreshAatsr(float refl1600ThreshAatsr) {
         this.refl1600ThreshAatsr = refl1600ThreshAatsr;
     }
@@ -290,6 +298,10 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     public double getSchillerSeaiceCloudProb() {
         return schillerSeaiceCloudProb;
+    }
+
+    public float getBrr442ThreshMeris() {
+        return brr442ThreshMeris;
     }
 
     // THRESHOLD GETTERS
