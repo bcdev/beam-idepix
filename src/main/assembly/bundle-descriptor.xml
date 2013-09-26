@@ -20,8 +20,11 @@
      <!-- Whether to additionally write Rayleigh Corrected Reflectances -->
      <ccOutputRayleigh>false</ccOutputRayleigh>
 
-     <!-- Whether to pre-compute mixed pixel flag from spectral unmixing-->
+     <!-- Whether to pre-compute mixed pixel flag from spectral unmixing (requires Rayleigh corrected reflectances!) -->
      <ccMixedPixel>false</ccMixedPixel>
+
+     <!-- Whether to additionally write Spectral Unmixing Abundance Bands (requires Rayleigh corrected reflectances!) -->
+     <ccOutputSma>false</ccOutputSma>
 
      <!-- Whether to additionally write L2 Cloud Top Pressure and Surface Pressure -->
      <ccOutputL2Pressures>false</ccOutputL2Pressures>

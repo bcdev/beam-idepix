@@ -61,6 +61,9 @@ public class CoastColourOp extends BasisOp {
     @Parameter(defaultValue = "false", label = " Mixed Pixel Flag (requires Rayleigh corrected reflectances!)")
     private boolean ccMixedPixel = false;
 
+    @Parameter(defaultValue = "false", label = " Spectral Unmixing Abundance Bands (requires Rayleigh corrected reflectances!)")
+    private boolean ccOutputSma = false;
+
     @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
     private boolean ccOutputL2Pressures = true;
 
@@ -125,6 +128,7 @@ public class CoastColourOp extends BasisOp {
     private double ccSchillerAmbiguous;
     @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
     private double ccSchillerSure;
+    private Product smaProduct;
 
 
     @Override
@@ -157,8 +161,8 @@ public class CoastColourOp extends BasisOp {
                 ccOutputRayleigh,
                 CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
 
-        Product smaProduct = null;
-        if (ccMixedPixel) {
+        smaProduct = null;
+        if (ccMixedPixel || ccOutputSma) {
             smaProduct = IdepixProducts.computeSpectralUnmixingProduct(rayleighProduct, true);
         }
 
@@ -235,6 +239,9 @@ public class CoastColourOp extends BasisOp {
         }
         if (ccOutputRayleigh) {
             IdepixProducts.addRayleighCorrectionBands(rayleighProduct, targetProduct);
+        }
+        if (ccOutputSma) {
+            IdepixProducts.addSpectralUnmixingBands(smaProduct, targetProduct);
         }
         if (ccOutputSeaIceClimatologyValue) {
             IdepixProducts.addCCSeaiceClimatologyValueBand(merisCloudProduct, targetProduct);

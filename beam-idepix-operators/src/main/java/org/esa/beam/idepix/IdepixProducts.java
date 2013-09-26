@@ -275,6 +275,20 @@ public class IdepixProducts {
         }
     }
 
+    public static void addSpectralUnmixingBands(Product smaProduct, Product targetProduct) {
+        for (Band band : smaProduct.getBands()) {
+            // do not add the normalized bands
+            if (!targetProduct.containsBand(band.getName()) &&
+                    (band.getName().startsWith("summary") || band.getName().endsWith("_abundance"))) {
+                System.out.println("adding band: " + band.getName());
+                targetProduct.addBand(band);
+                targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
+                final String origBandName = band.getName();
+                targetProduct.getBand(origBandName).setName("spec_unmix_" + origBandName);
+            }
+        }
+    }
+
     public static void addGaseousCorrectionBands(Product gasProduct, Product targetProduct) {
         FlagCoding flagCoding = GaseousCorrectionOp.createFlagCoding();
         targetProduct.getFlagCodingGroup().add(flagCoding);
