@@ -15,8 +15,8 @@ import org.esa.beam.jai.VirtualBandOpImage;
 import java.awt.*;
 
 @OperatorMetadata(alias = "Meris.CCNNHS",
-        version = "1.0",
-        authors = "Tom Block",
+        version = "2.0.2",
+        authors = "Helmut Schiller (Algorithm), Tom Block (Implementation)",
         copyright = "(c) 2013 by Brockmann Consult",
         description = "Computing cloud masks using neural networks by H.Schiller")
 public class CcNnHsOp extends PixelOperator {
