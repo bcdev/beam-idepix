@@ -34,11 +34,12 @@
 
     <extension point="beam-ui:actions">
         <action>
-            <id>beam-cc-schiller</id>
-            <class>org.esa.beam.classif.visat.CcNnHsAction</class>
-            <text>Cloud Classification H.Schiller MERIS ...</text>
+            <id>Meris.CCNNHS</id>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <operatorName>Meris.CCNNHS</operatorName>
+            <text>CCNNHS Cloud Classification (MERIS)</text>
             <shortDescr>
-                Cloud Classification of H.Schiller using neural networks.
+                MERIS cloud classification processor using neural networks (CCNNHS algorithm).
             </shortDescr>
             <mnemonic/>
             <parent>tool</parent>
