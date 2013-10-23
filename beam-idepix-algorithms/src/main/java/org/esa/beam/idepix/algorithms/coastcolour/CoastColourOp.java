@@ -49,13 +49,13 @@ public class CoastColourOp extends BasisOp {
 
 
     // Coastcolour parameters
-    @Parameter(defaultValue = "true", label = " TOA Reflectances")
-    private boolean ccOutputRad2Refl = true;
+    @Parameter(defaultValue = "false", label = " TOA Reflectances")
+    private boolean ccOutputRad2Refl = false;
 
     @Parameter(defaultValue = "false", label = " Gas Absorption Correction Flag")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(defaultValue = "false", label = " Rayleigh Corrected Reflectances")
+    @Parameter(defaultValue = "false", label = " Rayleigh Corrected Reflectances (requires L2 Pressures for computation of cloudy pixels!)")
     private boolean ccOutputRayleigh = false;
 
     @Parameter(defaultValue = "false", label = " Mixed Pixel Flag (requires Rayleigh corrected reflectances!)")
@@ -64,11 +64,11 @@ public class CoastColourOp extends BasisOp {
     @Parameter(defaultValue = "false", label = " Spectral Unmixing Abundance Bands (requires Rayleigh corrected reflectances!)")
     private boolean ccOutputSma = false;
 
-    @Parameter(defaultValue = "true", label = " L2 Cloud Top Pressure and Surface Pressure")
-    private boolean ccOutputL2Pressures = true;
+    @Parameter(defaultValue = "false", label = " L2 Cloud Top Pressure and Surface Pressure")
+    private boolean ccOutputL2Pressures = false;
 
-    @Parameter(defaultValue = "true", label = " L2 Cloud Detection Flags")
-    private boolean ccOutputL2CloudDetection = true;
+    @Parameter(defaultValue = "false", label = " L2 Cloud Detection Flags")
+    private boolean ccOutputL2CloudDetection = false;
 
     @Parameter(defaultValue = "true", label = " Schiller Cloud Value")
     private boolean ccOutputSchillerCloudValue = true;
