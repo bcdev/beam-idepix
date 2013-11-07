@@ -33,6 +33,7 @@ import java.awt.Rectangle;
  */
 @OperatorMetadata(alias = "idepix.operators.CloudShadow",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
                   description = "This operator provides a sensor-dependent cloud shadow algorithm.")

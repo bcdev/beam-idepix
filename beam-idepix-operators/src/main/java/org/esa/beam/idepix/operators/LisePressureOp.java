@@ -54,6 +54,7 @@ import java.util.StringTokenizer;
  */
 @OperatorMetadata(alias = "idepix.operators.LisePressure",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
                   description = "This operator computes aerosol apparent pressure with LISE algorithm.")

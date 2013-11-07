@@ -51,6 +51,7 @@ import java.io.InputStreamReader;
  */
 @OperatorMetadata(alias = "idepix.operators.SurfacePressureFub",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
                   description = "This operator computes surface pressure with FUB NN algorithm.")

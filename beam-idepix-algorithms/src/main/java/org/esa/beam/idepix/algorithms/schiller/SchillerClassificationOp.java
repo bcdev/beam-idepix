@@ -40,6 +40,7 @@ import java.io.IOException;
  */
 @OperatorMetadata(alias = "idepix.schiller.classification",
                   version = "1.0",
+                  internal = true,
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Computed a cloud mask using neural nets from Schiller.")

@@ -29,6 +29,7 @@ import java.util.Map;
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.meris",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
                   description = "This operator provides cloud screening from MERIS data.")

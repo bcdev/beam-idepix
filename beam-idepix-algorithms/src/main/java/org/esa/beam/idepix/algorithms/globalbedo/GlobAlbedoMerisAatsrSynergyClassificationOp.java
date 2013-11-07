@@ -27,6 +27,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
+                  internal = true,
                   version = "2.0-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2013 by Brockmann Consult",

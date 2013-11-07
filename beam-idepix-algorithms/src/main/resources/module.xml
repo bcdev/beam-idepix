@@ -54,6 +54,9 @@
     <dependency>
         <module>beam-meris-radiometry</module>
     </dependency>
+    <dependency>
+        <module>beam-meris-glint</module>
+    </dependency>
 
     <categories>Application,Processor,MERIS,AATSR</categories>
 

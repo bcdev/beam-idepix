@@ -39,6 +39,7 @@ import org.esa.beam.util.BitSetter;
  */
 @OperatorMetadata(alias = "idepix.globcover.classification",
         version = "1.0",
+        internal = true,
         authors = "Marco Zuehlke",
         copyright = "(c) 2012 by Brockmann Consult",
         description = "Adapts the output of the globcover chain to idepix.")

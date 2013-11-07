@@ -38,6 +38,7 @@ import java.util.StringTokenizer;
  */
 @OperatorMetadata(alias = "idepix.operators.BarometricPressure",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
                   description = "This operator computes barometric pressure assuming US standard atmosphere.")

@@ -23,6 +23,7 @@ import java.awt.Rectangle;
  */
 @OperatorMetadata(alias = "idepix.operators.MerisBrrCorrection",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
                   description = "BRR correction over clouds using CTP.")

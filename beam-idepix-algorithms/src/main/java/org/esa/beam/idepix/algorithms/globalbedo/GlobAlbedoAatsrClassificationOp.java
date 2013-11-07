@@ -24,6 +24,7 @@ import java.util.Map;
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.aatsr",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
                   description = "This operator provides cloud screening from AATSR data.")

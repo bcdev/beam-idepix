@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
                   version = "1.0",
+                  internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
                   description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
