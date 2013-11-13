@@ -2,7 +2,12 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -17,7 +22,7 @@ import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.Map;
 
 /**
@@ -27,8 +32,8 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
+                  version = "2.0.1",
                   internal = true,
-                  version = "2.0-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2013 by Brockmann Consult",
                   description = "Pixel identification and classification with GlobAlbedo algorithm.")
@@ -235,7 +240,7 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
     private void copyRayleighReflectances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             if (i != 10 && i != 14) {
-                ProductUtils.copyBand(RayleighCorrectionOp.BRR_BAND_PREFIX + "_" + (i+1), rayleighProduct,
+                ProductUtils.copyBand(RayleighCorrectionOp.BRR_BAND_PREFIX + "_" + (i + 1), rayleighProduct,
                                       targetProduct, true);
             }
         }
@@ -246,8 +251,8 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         // for performance, copy just a subset of radiances/reflectances to allow RGB image creation
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             if (EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_13") ||
-                    EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_5") ||
-                    EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_1")) {
+                EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_5") ||
+                EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i].equals("radiance_1")) {
                 ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
                                       targetProduct, true);
             }
@@ -341,12 +346,12 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         } else {
             if (gaUseWaterMaskFraction) {
                 final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
-                        watermaskFraction < WATERMASK_FRACTION_THRESH;
+                                       watermaskFraction < WATERMASK_FRACTION_THRESH;
                 gaAlgorithm.setL1FlagLandMeris(isLand);
                 setIsWaterByFraction(watermaskFraction, gaAlgorithm);
             } else {
                 final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
-                        !(watermask == WatermaskClassifier.WATER_VALUE);
+                                       !(watermask == WatermaskClassifier.WATER_VALUE);
                 gaAlgorithm.setL1FlagLandMeris(isLand);
                 setIsWater(watermask, gaAlgorithm);
             }

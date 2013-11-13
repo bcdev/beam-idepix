@@ -2,7 +2,13 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -19,7 +25,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.List;
 
 /**
@@ -33,7 +39,7 @@ import java.util.List;
  * @since Idepix 1.3.1
  */
 @OperatorMetadata(alias = "idepix.coastcolour.postprocess",
-                  version = "1.1",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Marco Peters",
                   copyright = "(c) 2011 by Brockmann Consult",
@@ -180,7 +186,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
     }
 
-    private void computeCloudShadowMichael(Tile targetTile, Rectangle extendedRectangle, Tile sourceFlagTile, Tile szaTile, Tile saaTile, Tile ctpTile) {
+    private void computeCloudShadowMichael(Tile targetTile, Rectangle extendedRectangle, Tile sourceFlagTile, Tile szaTile, Tile saaTile,
+                                           Tile ctpTile) {
         Rectangle targetRectangle = targetTile.getRectangle();
 
         final int h = targetRectangle.height;
@@ -194,7 +201,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             for (int x = x0; x < x0 + w; x++) {
                 final boolean isCloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                 if (!isCloud) {
-                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile, targetRectangle, extendedRectangle);
+                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile, targetRectangle,
+                                                                   extendedRectangle);
                     targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
                 }
             }
@@ -361,7 +369,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         final boolean b11 = !isCloud;
 
         final boolean isMixedPixel = isAlreadyMixedPixel ||
-                (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
+                                     (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
         targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, isMixedPixel);
 
         // former expression used by AR - currently not used any more
@@ -424,7 +432,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
     // used by Michael's aproach
     // todo: clarify this algorithm with GK, MP and add comments !!!
-    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle targetRectangle, Rectangle sourceRectangle) {
+    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle targetRectangle,
+                                   Rectangle sourceRectangle) {
         final double sza = szaTile.getSampleDouble(x, y);
         final double saa = saaTile.getSampleDouble(x, y);
 

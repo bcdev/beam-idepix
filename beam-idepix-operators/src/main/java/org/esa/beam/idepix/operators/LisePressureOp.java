@@ -53,7 +53,7 @@ import java.util.StringTokenizer;
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  */
 @OperatorMetadata(alias = "idepix.operators.LisePressure",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -202,27 +202,25 @@ public class LisePressureOp extends BasisOp {
     /**
      * This method computes the different Lise pressures for a given pixel
      *
-     *
-     *
-     *
      * @param rayleighCorrection
      * @param auxData
-     * @param pressureIndex:      - 0: press_toa
- *                            - 1: press_surface
- *                            - 2: press_bottom_rayleigh
- *                            - 3: press_bottom_fresnel
-     * @param szaDeg              - sun zenith angle (degrees)
-     * @param vzaDeg              - view zenith angle (degrees)
-     * @param csza                - cosine of sza
-     * @param cvza                - cosine of vza
-     * @param ssza                - sine of sza
-     * @param svza                - sine of vza
-     * @param azimDiff            - difference sun-view azimuth
-     * @param rhoToa10            - reflectance band 10
-     * @param rhoToa11            - reflectance band 11
-     * @param rhoToa12            - reflectance band 12
+     * @param pressureIndex:     - 0: press_toa
+     *                           - 1: press_surface
+     *                           - 2: press_bottom_rayleigh
+     *                           - 3: press_bottom_fresnel
+     * @param szaDeg             - sun zenith angle (degrees)
+     * @param vzaDeg             - view zenith angle (degrees)
+     * @param csza               - cosine of sza
+     * @param cvza               - cosine of vza
+     * @param ssza               - sine of sza
+     * @param svza               - sine of vza
+     * @param azimDiff           - difference sun-view azimuth
+     * @param rhoToa10           - reflectance band 10
+     * @param rhoToa11           - reflectance band 11
+     * @param rhoToa12           - reflectance band 12
      * @param w0
      * @param airMass
+     *
      * @return
      */
     public double computeLisePressures(RayleighCorrection rayleighCorrection,
@@ -850,13 +848,13 @@ public class LisePressureOp extends BasisOp {
         * interp coordinates for thetav in LUT scale
         */
         FractIndex tvi = ref_rayleigh_i[1];
-         //used for all bands, compute once
+        //used for all bands, compute once
         double mud = Math.cos(Math.PI / 180.0 * delta_azimuth);
         double mu2d = 2.0 * mud * mud - 1.0;
 
         /* angle interpolation coordinates */
         Interp.interpCoord(sun_zenith, auxData.Rayscatt_coeff_s.getTab(2), tsi); /*
-																					 * fm
+                                                                                     * fm
 																					 * 15/5/97
 																					 */
         Interp.interpCoord(view_zenith, auxData.Rayscatt_coeff_s.getTab(3), tvi);
@@ -1077,9 +1075,9 @@ public class LisePressureOp extends BasisOp {
             Tile vaa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
                                      rectangle);
 
-            Tile rhoToa10 = getSourceTile(rhoToaProduct.getBand("rho_toa_10"),rectangle);
-            Tile rhoToa11 = getSourceTile(rhoToaProduct.getBand("rho_toa_11"),rectangle);
-            Tile rhoToa12 = getSourceTile(rhoToaProduct.getBand("rho_toa_12"),rectangle);
+            Tile rhoToa10 = getSourceTile(rhoToaProduct.getBand("rho_toa_10"), rectangle);
+            Tile rhoToa11 = getSourceTile(rhoToaProduct.getBand("rho_toa_11"), rectangle);
+            Tile rhoToa12 = getSourceTile(rhoToaProduct.getBand("rho_toa_12"), rectangle);
 
             Raster isInvalid = null;
 

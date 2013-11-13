@@ -36,7 +36,7 @@ import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,7 +50,7 @@ import java.io.InputStreamReader;
  * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
  */
 @OperatorMetadata(alias = "idepix.operators.SurfacePressureFub",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -179,7 +179,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                    if (isInvalid.getSample(x, y,0 ) != 0) {
+                    if (isInvalid.getSample(x, y, 0) != 0) {
                         targetTile.setSample(x, y, 0);
                     } else {
                         final int detectorXY = detector.getSampleInt(x, y);

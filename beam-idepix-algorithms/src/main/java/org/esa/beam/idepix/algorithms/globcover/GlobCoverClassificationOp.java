@@ -24,7 +24,11 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.SampleOperator;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
@@ -38,11 +42,11 @@ import org.esa.beam.util.BitSetter;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.globcover.classification",
-        version = "1.0",
-        internal = true,
-        authors = "Marco Zuehlke",
-        copyright = "(c) 2012 by Brockmann Consult",
-        description = "Adapts the output of the globcover chain to idepix.")
+                  version = "2.0.1",
+                  internal = true,
+                  authors = "Marco Zuehlke",
+                  copyright = "(c) 2012 by Brockmann Consult",
+                  description = "Adapts the output of the globcover chain to idepix.")
 public class GlobCoverClassificationOp extends SampleOperator {
 
     @SourceProduct

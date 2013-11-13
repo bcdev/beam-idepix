@@ -17,7 +17,13 @@
 package org.esa.beam.idepix.algorithms.magicstick;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -31,7 +37,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.IOException;
 
 /**
@@ -40,7 +46,7 @@ import java.io.IOException;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.magicstick.classification",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
@@ -49,7 +55,8 @@ public class MagicStickClassificationOp extends Operator {
 
     @SourceProduct
     private Product sourceProduct;
-    @Parameter(defaultValue = "(inrange(radiance_1,radiance_2,radiance_3,radiance_4,radiance_5,radiance_6,radiance_7,radiance_8,radiance_9,radiance_10,radiance_12,radiance_13,radiance_14,110.95469861477613,110.69702932052314,101.59082958102226,94.62313067913055,79.51220783032477,68.6891217874363,65.62491676956415,63.876969987526536,58.34850308345631,55.207481268793344,51.78550277114846,41.99686771351844,40.45033756317571,489.89222188759595,544.0888976398855,573.7061238512397,569.9747566282749,520.7842015372589,480.1853818874806,449.7885620817542,455.67995167709887,414.458504260052,401.41873468086123,239.06330769439228,233.93376255314797,295.2540603126399)) && !(inrange(radiance_1,radiance_2,radiance_3,radiance_4,radiance_5,radiance_6,radiance_7,radiance_8,radiance_9,radiance_10,radiance_12,radiance_13,radiance_14,109.0123566025868,111.7785839997232,105.85386314988136,99.39786380529404,85.87481799721718,76.61522564012557,73.87684653699398,72.18865965120494,66.22840957343578,63.43021900951862,59.61015165760182,48.66481214854866,47.01183261256665,120.68616730719805,126.78905058186501,126.28453273698688,121.63159835338593,109.90139073040336,100.73953618761152,99.39998243004084,97.87489380128682,90.23410519957542,87.59435298293829,83.00624355231412,68.54670364782214,66.31586839398369))")
+    @Parameter(
+            defaultValue = "(inrange(radiance_1,radiance_2,radiance_3,radiance_4,radiance_5,radiance_6,radiance_7,radiance_8,radiance_9,radiance_10,radiance_12,radiance_13,radiance_14,110.95469861477613,110.69702932052314,101.59082958102226,94.62313067913055,79.51220783032477,68.6891217874363,65.62491676956415,63.876969987526536,58.34850308345631,55.207481268793344,51.78550277114846,41.99686771351844,40.45033756317571,489.89222188759595,544.0888976398855,573.7061238512397,569.9747566282749,520.7842015372589,480.1853818874806,449.7885620817542,455.67995167709887,414.458504260052,401.41873468086123,239.06330769439228,233.93376255314797,295.2540603126399)) && !(inrange(radiance_1,radiance_2,radiance_3,radiance_4,radiance_5,radiance_6,radiance_7,radiance_8,radiance_9,radiance_10,radiance_12,radiance_13,radiance_14,109.0123566025868,111.7785839997232,105.85386314988136,99.39786380529404,85.87481799721718,76.61522564012557,73.87684653699398,72.18865965120494,66.22840957343578,63.43021900951862,59.61015165760182,48.66481214854866,47.01183261256665,120.68616730719805,126.78905058186501,126.28453273698688,121.63159835338593,109.90139073040336,100.73953618761152,99.39998243004084,97.87489380128682,90.23410519957542,87.59435298293829,83.00624355231412,68.54670364782214,66.31586839398369))")
     private String cloudExpression;
 
     private WatermaskClassifier watermaskClassifier;

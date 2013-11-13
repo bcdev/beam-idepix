@@ -24,7 +24,7 @@ import org.esa.beam.util.ProductUtils;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ipf",
-                  version = "2.0-SNAPSHOT",
+                  version = "2.0.1",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with IPF (former MEPIX) algorithm.")
@@ -172,7 +172,7 @@ public class IpfOp extends BasisOp {
                                            true);
 
         if (ipfOutputRayleigh || ipfOutputLandWater || ipfOutputGaseous ||
-                pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection) {
+            pressureOutputPsurfFub || ipfOutputL2Pressures || ipfOutputL2CloudDetection) {
             merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
                                                                         pressureLiseProduct, pbaroProduct, ipfOutputL2Pressures);
         }
@@ -234,7 +234,8 @@ public class IpfOp extends BasisOp {
         renameL1bMaskNames(targetProduct);
     }
 
-    private void addBandsToTargetProduct(Product ctpStraylightProduct, Product gasProduct, Product landProduct, Product blueBandProduct, Product cloudProbabilityProduct, Product psurfNNProduct, Product combinedCloudProduct) {
+    private void addBandsToTargetProduct(Product ctpStraylightProduct, Product gasProduct, Product landProduct, Product blueBandProduct,
+                                         Product cloudProbabilityProduct, Product psurfNNProduct, Product combinedCloudProduct) {
         if (ipfOutputRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }

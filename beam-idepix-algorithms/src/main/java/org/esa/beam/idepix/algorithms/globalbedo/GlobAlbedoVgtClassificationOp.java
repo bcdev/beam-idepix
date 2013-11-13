@@ -14,7 +14,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.Map;
 
 /**
@@ -24,7 +24,7 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.vgt",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
@@ -156,12 +156,12 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         } else {
             if (gaUseWaterMaskFraction) {
                 final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
-                        watermaskFraction < WATERMASK_FRACTION_THRESH;
+                                       watermaskFraction < WATERMASK_FRACTION_THRESH;
                 gaAlgorithm.setSmLand(isLand);
                 setIsWaterByFraction(watermaskFraction, gaAlgorithm);
             } else {
                 final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
-                        !(watermask == WatermaskClassifier.WATER_VALUE);
+                                       !(watermask == WatermaskClassifier.WATER_VALUE);
                 gaAlgorithm.setSmLand(isLand);
                 setIsWater(watermask, gaAlgorithm);
             }

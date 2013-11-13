@@ -2,12 +2,16 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
@@ -18,7 +22,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.Map;
 
 /**
@@ -28,7 +32,7 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.meris",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
@@ -246,12 +250,12 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         } else {
             if (gaUseWaterMaskFraction) {
                 final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
-                        watermaskFraction < WATERMASK_FRACTION_THRESH;
+                                       watermaskFraction < WATERMASK_FRACTION_THRESH;
                 gaAlgorithm.setL1FlagLand(isLand);
                 setIsWaterByFraction(watermaskFraction, gaAlgorithm);
             } else {
                 final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
-                        !(watermask == WatermaskClassifier.WATER_VALUE);
+                                       !(watermask == WatermaskClassifier.WATER_VALUE);
                 gaAlgorithm.setL1FlagLand(isLand);
                 setIsWater(watermask, gaAlgorithm);
             }

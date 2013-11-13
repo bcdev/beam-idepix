@@ -32,7 +32,7 @@ import java.awt.Rectangle;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.operators.CloudShadow",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",
@@ -69,7 +69,7 @@ public class IdepixCloudShadowOp extends Operator {
     private String ctpMode;
 
     @Parameter(description = "If 'true', cloud shadow is computed for cloud buffer as well",
-                   defaultValue = "false")
+               defaultValue = "false")
     private boolean shadowForCloudBuffer;
 
     private int sourceProductTypeId;
@@ -184,7 +184,7 @@ public class IdepixCloudShadowOp extends Operator {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
                     int cloudFlag = inputCloudTile.getSampleInt(x, y);
                     if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) ||
-                            (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
+                        (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;

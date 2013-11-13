@@ -17,7 +17,13 @@
 package org.esa.beam.idepix.algorithms.schiller;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -30,7 +36,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.IOException;
 
 /**
@@ -39,7 +45,7 @@ import java.io.IOException;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.schiller.classification",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
@@ -91,7 +97,7 @@ public class SchillerClassificationOp extends Operator {
         Rectangle rectangle = targetTile.getRectangle();
         final Tile[] srcTiles = new Tile[16];
         for (int i = 0; i < 15; i++) {
-            srcTiles[i] = getSourceTile(sourceProduct.getBand("reflec_" + (i+1)), rectangle);
+            srcTiles[i] = getSourceTile(sourceProduct.getBand("reflec_" + (i + 1)), rectangle);
         }
         srcTiles[15] = getSourceTile(sourceProduct.getBand("l1_flags"), rectangle);
         for (final Tile.Pos pos : targetTile) {
@@ -101,7 +107,7 @@ public class SchillerClassificationOp extends Operator {
                 isWater = watermaskClassifier.isWater(geoPos.lat, geoPos.lon);
             } catch (IOException ignore) {
             }
-    
+
             boolean isCloud;
             SchillerAlgorithm.Accessor accessor = new SchillerAlgorithm.Accessor() {
                 @Override
@@ -114,7 +120,7 @@ public class SchillerClassificationOp extends Operator {
             } else {
                 isCloud = (double) landNN.compute(accessor) > 1.25;
             }
-    
+
             // snow
             double rhoToa13 = srcTiles[12].getSampleDouble(pos.x, pos.y);
             double rhoToa14 = srcTiles[13].getSampleDouble(pos.x, pos.y);
@@ -130,7 +136,7 @@ public class SchillerClassificationOp extends Operator {
             resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_CLEAR_SNOW, !isWater && !isCloud && isSnow);
             resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_LAND, !isWater);
             resultFlag = BitSetter.setFlag(resultFlag, IdepixConstants.F_WATER, isWater);
-    
+
             targetTile.setSample(pos.x, pos.y, resultFlag);
         }
         IdepixUtils.setCloudBufferLC(targetBand.getName(), targetTile, rectangle);

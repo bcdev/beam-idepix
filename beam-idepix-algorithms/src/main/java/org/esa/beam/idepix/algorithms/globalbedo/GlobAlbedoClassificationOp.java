@@ -19,7 +19,7 @@ import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import java.io.InputStreamReader;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
@@ -229,7 +229,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             schillerSeaiceCloudProbBand = targetProduct.addBand("schiller_seaice_cloud_prob", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(schillerSeaiceCloudProbBand, "Schiller Seaice Cloud Prob Value", "", IdepixConstants.NO_DATA_VALUE,
                                              true);
-            schillerSeaiceMeris1600Band= targetProduct.addBand("schiller_seaice_meris1600", ProductData.TYPE_FLOAT32);
+            schillerSeaiceMeris1600Band = targetProduct.addBand("schiller_seaice_meris1600", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(schillerSeaiceMeris1600Band, "Schiller Seaice MERIS1600 Value", "", IdepixConstants.NO_DATA_VALUE,
                                              true);
         }
@@ -239,7 +239,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     }
 
-    void setPixelSamples(Band band, Tile targetTile, Tile p1Tile, Tile pbaroTile, Tile pscattTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
+    void setPixelSamples(Band band, Tile targetTile, Tile p1Tile, Tile pbaroTile, Tile pscattTile, int y, int x,
+                         GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute more pixel properties and write to distinct band
         if (band == brightBand) {
             if (x == 500 && y == 1200) {

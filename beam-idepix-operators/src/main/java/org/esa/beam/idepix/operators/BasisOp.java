@@ -2,15 +2,13 @@ package org.esa.beam.idepix.operators;
 
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 
 @OperatorMetadata(alias = "idepix.operators.Basis",
-                  version = "2.0-SNAPSHOT",
+                  version = "2.0.1",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Idepix operator for basic product generation.")
@@ -22,6 +20,7 @@ public abstract class BasisOp extends Operator {
      * @param sourceProduct
      * @param name
      * @param type
+     *
      * @return targetProduct
      */
     public Product createCompatibleProduct(Product sourceProduct, String name, String type) {

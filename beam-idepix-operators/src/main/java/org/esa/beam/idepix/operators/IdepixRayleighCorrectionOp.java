@@ -33,7 +33,7 @@ import java.util.Map;
 
 
 @OperatorMetadata(alias = "idepix.operators.IdepixRayleighCorrection",
-                  version = "1.0",
+                  version = "2.0.1",
                   internal = true,
                   authors = "Marco Zuehlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
@@ -154,7 +154,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws
-            OperatorException {
+                                                                                                       OperatorException {
         try {
             Tile sza = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME), rectangle);
             Tile vza = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME), rectangle);
@@ -235,7 +235,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
                     for (int iy = y; iy <= yWinEnd; iy++) {
                         for (int ix = x; ix <= xWinEnd; ix++) {
                             if (rhoNg[0].getSampleFloat(ix, iy) != BAD_VALUE &&
-                                    (correctWater || isLandCons.getSampleBoolean(ix, iy))) {
+                                (correctWater || isLandCons.getSampleBoolean(ix, iy))) {
                                 correctPixel = true;
                                 do_corr[iy - y][ix - x] = true;
                             } else {
