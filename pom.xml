@@ -15,8 +15,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beamVersion>4.11</beamVersion>
-        <ceresVersion>0.13.2</ceresVersion>
+        <beamVersion>4.11.1-SNAPSHOT</beamVersion>
+        <ceresVersion>0.13.3-SNAPSHOT</ceresVersion>
     </properties>
 
     <distributionManagement>
@@ -240,13 +240,13 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-brr</artifactId>
-                <version>2.3.3</version>
+                <version>2.3.4</version>
             </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-sdr</artifactId>
-                <version>2.3.3</version>
+                <version>2.3.4</version>
             </dependency>
 
             <dependency>
