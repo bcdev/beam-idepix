@@ -183,6 +183,11 @@ public class GlobAlbedoMerisAatsrSynergyAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public float temperatureValue() {
+        if (!IdepixUtils.areAllReflectancesValid(reflAatsr)) {
+           // i.e., the region outside AATSR swath
+           return UNCERTAINTY_VALUE;
+        }
+
         float temperature;
 
         if (btempAatsr[2] < 225f) {
