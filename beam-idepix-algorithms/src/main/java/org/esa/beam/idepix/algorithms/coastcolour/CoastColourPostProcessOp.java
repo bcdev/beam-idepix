@@ -39,7 +39,7 @@ import java.util.List;
  * @since Idepix 1.3.1
  */
 @OperatorMetadata(alias = "idepix.coastcolour.postprocess",
-                  version = "2.0.1",
+                  version = "2.0.2-SNAPSHOT",
                   internal = true,
                   authors = "Marco Peters",
                   copyright = "(c) 2011 by Brockmann Consult",

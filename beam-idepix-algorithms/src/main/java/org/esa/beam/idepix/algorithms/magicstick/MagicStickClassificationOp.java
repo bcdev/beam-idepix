@@ -46,7 +46,7 @@ import java.io.IOException;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.magicstick.classification",
-                  version = "2.0.1",
+                  version = "2.0.2-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
