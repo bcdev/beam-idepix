@@ -14,4 +14,6 @@ org.esa.beam.idepix.algorithms.magicstick.MagicStickOp$Spi
 org.esa.beam.idepix.algorithms.magicstick.MagicStickClassificationOp$Spi
 org.esa.beam.idepix.algorithms.schiller.SchillerOp$Spi
 org.esa.beam.idepix.algorithms.schiller.SchillerClassificationOp$Spi
+org.esa.beam.idepix.algorithms.scapem.FubScapeMOp$Spi
+org.esa.beam.idepix.algorithms.scapem.FubScapeMClassificationOp$Spi
 
