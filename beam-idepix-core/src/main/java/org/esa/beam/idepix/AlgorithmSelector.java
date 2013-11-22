@@ -12,5 +12,6 @@ public enum AlgorithmSelector {
     GlobCover,
     CoastColour,
     MagicStick,
-    Schiller
+    Schiller,
+    FubScapeM
 }

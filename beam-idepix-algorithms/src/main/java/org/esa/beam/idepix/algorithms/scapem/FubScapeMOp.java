@@ -20,7 +20,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem",
                   version = "2.0.2-SNAPSHOT",
-                  authors = "Olaf Danne",
+                  authors = "Olaf Danne, Tonio Fincke",
                   copyright = "(c) 2013 by Brockmann Consult",
                   description = "Pixel identification and classification with Scape-M cloud mask from L. Guanter, FUB.")
 public class FubScapeMOp extends BasisOp {
@@ -34,15 +34,15 @@ public class FubScapeMOp extends BasisOp {
 
     @Override
     public void initialize() throws OperatorException {
-        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.MagicStick);
+        final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.FubScapeM);
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
-        processMagicStick();
+        processFubScapeM();
         renameL1bMaskNames(targetProduct);
     }
 
-    private void processMagicStick() {
+    private void processFubScapeM() {
         Operator operator = new FubScapeMClassificationOp();
         operator.setSourceProduct(sourceProduct);
         targetProduct = operator.getTargetProduct();

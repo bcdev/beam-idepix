@@ -79,7 +79,8 @@ public class IdepixUtils {
                 AlgorithmSelector.CoastColour == algorithm ||
                 AlgorithmSelector.GlobCover == algorithm ||
                 AlgorithmSelector.MagicStick == algorithm ||
-                AlgorithmSelector.Schiller == algorithm) {
+                AlgorithmSelector.Schiller == algorithm ||
+                AlgorithmSelector.FubScapeM == algorithm) {
             return (isValidMerisProduct(sourceProduct));
         }
         return AlgorithmSelector.GlobAlbedo == algorithm &&

@@ -70,7 +70,7 @@
                 sensors.
             </shortDescr>
             <mnemonic/>
-            <parent>tool</parent>
+            <parent>tools</parent>
             <helpID>idepixChain</helpID>
             <placeAfter/>
         </action>
@@ -123,7 +123,6 @@
             <helpId>idepixChain</helpId>
             <placeAfter>globcoverAlgo</placeAfter>
         </action>
-
         <action>
             <id>schillerAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixSchillerAction</class>
@@ -133,6 +132,16 @@
             <parent>idepix</parent>
             <helpId>idepixChain</helpId>
             <placeAfter>magicstickAlgo</placeAfter>
+        </action>
+        <action>
+            <id>fubscapemAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixFubScapeMAction</class>
+            <text>ScapeM (MERIS)...</text>
+            <shortDescr>Pixel classification with ScapeM algorithm.</shortDescr>
+            <mnemonic>A</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+            <placeAfter>schillerAlgo</placeAfter>
         </action>
     </extension>
 
