@@ -21,9 +21,7 @@ import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.TiePointGrid;
@@ -37,11 +35,10 @@ import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.util.BitSetter;
-import org.esa.beam.watermask.operator.WatermaskClassifier;
+import org.esa.beam.util.math.MathUtils;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.io.IOException;
 
 /**
  * Operator for calculating cloud using Scape-M scheme from L. Guanter, FUB
@@ -61,10 +58,10 @@ public class FubScapeMClassificationOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
-    private WatermaskClassifier watermaskClassifier;
     private GeoCoding geoCoding;
     private Product rad2reflProduct;
     private static final int num_of_visible_bands = 8;
+    private Product waterProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -86,11 +83,10 @@ public class FubScapeMClassificationOp extends Operator {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         setupCloudScreeningBitmasks(targetProduct);
 
-        try {
-            watermaskClassifier = new WatermaskClassifier(50);
-        } catch (IOException e) {
-            throw new OperatorException("Failed to init water mask", e);
-        }
+        Operator operator = new FubScapeMLakesOp();
+        operator.setSourceProduct(sourceProduct);
+        waterProduct = operator.getTargetProduct();
+
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
 //        rad2reflProduct.addBand(new VirtualBand(RHO_TOA_BAND_PREFIX + "_AVG_VIS", ProductData.TYPE_FLOAT32,
 //                                                rad2reflProduct.getSceneRasterWidth(),
@@ -252,7 +248,6 @@ public class FubScapeMClassificationOp extends Operator {
 //        END
 
 
-
         Rectangle rectangle = targetTile.getRectangle();
 //        Tile cloudMaskTile = getSourceTile(cloudMaskBand, rectangle);
 //        final Band radiance1Band = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME);
@@ -260,7 +255,7 @@ public class FubScapeMClassificationOp extends Operator {
 //        final Band radiance1Band = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME);
 //        getSourceTile(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME, rectangle);
         Tile[] reflectanceTiles = new Tile[num_of_visible_bands + 2];
-        for(int i = 1; i <= num_of_visible_bands + 1; i++) {
+        for (int i = 1; i <= num_of_visible_bands + 1; i++) {
             final Band reflBand = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + i);
             reflectanceTiles[i - 1] = getSourceTile(reflBand, rectangle);
 //            pAvTOA += reflBand.getSampleFloat(pos.x, pos.y);
@@ -272,6 +267,10 @@ public class FubScapeMClassificationOp extends Operator {
         Tile altitudeTile = getSourceTile(altitudeGrid, rectangle);
         final Band l1FlagsBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
         final Tile l1FlagsTile = getSourceTile(l1FlagsBand, rectangle);
+        TiePointGrid sunAzimuthGrid = sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
+        final Tile sunAzimuthTile = getSourceTile(sunAzimuthGrid, rectangle);
+
+        final Tile waterTile = getSourceTile(waterProduct.getRasterDataNode("water_flags"), rectangle);
 
 //        final Band reflec1Band = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + 1);
 //        final Tile reflec1Tile = getSourceTile(reflec1Band, rectangle);
@@ -282,7 +281,7 @@ public class FubScapeMClassificationOp extends Operator {
         for (Tile.Pos pos : targetTile) {
 //            boolean isCloud = cloudMaskTile.getSampleBoolean(pos.x, pos.y);
             float pAvTOA = 0;
-            for(int i = 0; i < num_of_visible_bands; i++) {
+            for (int i = 0; i < num_of_visible_bands; i++) {
                 pAvTOA += reflectanceTiles[i].getSampleFloat(pos.x, pos.y);
 //                final Band reflBand = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + i);
 //                pAvTOA += reflBand.getSampleFloat(pos.x, pos.y);
@@ -293,28 +292,33 @@ public class FubScapeMClassificationOp extends Operator {
             float p9TOA = reflectanceTiles[8].getSampleFloat(pos.x, pos.y);
             float p13TOA = reflectanceTiles[9].getSampleFloat(pos.x, pos.y);
             final float altitude = altitudeTile.getSampleFloat(pos.x, pos.y);
-            boolean isLand = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_LAND);
+//            boolean isLand = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_LAND);
             boolean isInvalid = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_INVALID);
-            boolean isCoast = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_COAST);
+//            boolean isCoast = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_COAST);
+            final boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 2);
 
-            GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(pos.x + 0.5f, pos.y + 0.5f), null);
-            boolean isWater = true;
-            try {
-                isWater = watermaskClassifier.isWater(geoPos.lat, geoPos.lon);
-            } catch (IOException ignore) {
-            }
+            final float sunAzimuth = sunAzimuthTile.getSampleFloat(pos.x, pos.y);
+            final double musil = Math.cos(sunAzimuth * MathUtils.DTOR);
+
+//            GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(pos.x + 0.5f, pos.y + 0.5f), null);
+//            boolean isWater = true;
+//            try {
+//                isWater = watermaskClassifier.isWater(geoPos.lat, geoPos.lon);
+//            } catch (IOException ignore) {
+//            }
 
 //            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || isInvalid || p1TOA > 0.2 && p1TOA > p8TOA;
-            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || isInvalid || (p1TOA > 0.2 && p1TOA > p8TOA);
+            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || isInvalid ||
+                    (p1TOA > 0.2 && p1TOA > p8TOA || musil < 0);
 //            boolean isCertainlyCloud = pAvTOA > 0.3 && p1TOA > 0.23 && p1TOA > p9TOA;
-            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || isInvalid || (p1TOA > 0.23 && p1TOA > p9TOA);
-
+            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || isInvalid ||
+                    (p1TOA > 0.23 && p1TOA > p9TOA || musil < 0);
 //            boolean isLake = isWater && p13TOA < refl_water_threshold;
 
             int cloudFlag = 0;
             cloudFlag = BitSetter.setFlag(cloudFlag, 0, isPresumablyCloud);
             cloudFlag = BitSetter.setFlag(cloudFlag, 1, isCertainlyCloud);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 2, true);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 2, isOcean);
 //            cloudFlag = BitSetter.setFlag(cloudFlag, IdepixConstants.F_LAND, !isWater);
 //            cloudFlag = BitSetter.setFlag(cloudFlag, IdepixConstants.F_WATER, isWater);
             targetTile.setSample(pos.x, pos.y, cloudFlag);

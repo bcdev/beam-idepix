@@ -14,6 +14,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
@@ -24,7 +25,11 @@ import org.esa.beam.util.BitSetter;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem.lakes",
@@ -38,17 +43,28 @@ public class FubScapeMLakesOp extends Operator {
 
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
+
+    @Parameter(description = "The thickness of the coastline in kilometers.", defaultValue = "20")
+    private float thicknessOfCoast;
+
+    @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².",
+               defaultValue = "1600")
+    private float minimumOceanSize;
+
+    @Parameter(description = "Reflectance Threshold for reflectance 12", defaultValue = "0.08")
+    private float refl_water_threshold;
+
     private final static String water_flags = "water_flags";
-    public static final double refl_water_threshold = 0.08;
-    private float thicknessOfCoast = 20;
-    private float minimumOceanSize = 160;
     private GeoCoding geoCoding;
     private Product landWaterMaskProduct;
-    private BufferedImage lakeRegionImage;
+    private int[][] lakeRegionMatrix;
     private float kmxpix;
     private int minimumOceanSizeInPixels;
     private BufferedImage coastRegionImage;
     private int thicknessOfCoastInPixels;
+    private int regionCounter;
+    private Map<Integer, Integer> regionSizes;
+    private List<Region> regions;
 
     @Override
     public void initialize() throws OperatorException {
@@ -75,16 +91,14 @@ public class FubScapeMLakesOp extends Operator {
         setupCloudScreeningBitmasks(targetProduct);
 
         landWaterMaskProduct = GPF.createProduct("LandWaterMask", GPF.NO_PARAMS, sourceProduct);
-        lakeRegionImage = new BufferedImage(sourceProduct.getSceneRasterWidth(),
-                                        sourceProduct.getSceneRasterHeight(), BufferedImage.TYPE_INT_RGB);
         coastRegionImage = new BufferedImage(sourceProduct.getSceneRasterWidth(),
-                                                           sourceProduct.getSceneRasterHeight(), BufferedImage.TYPE_INT_RGB);
+                                             sourceProduct.getSceneRasterHeight(), BufferedImage.TYPE_INT_RGB);
         kmxpix = 0.3f;
         if (sourceProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME)) {
             kmxpix = 1.2f;
         }
-        minimumOceanSizeInPixels = (int)(minimumOceanSize / kmxpix);
-        thicknessOfCoastInPixels = (int)(thicknessOfCoast / kmxpix)/2;
+        minimumOceanSizeInPixels = (int) (minimumOceanSize / kmxpix);
+        thicknessOfCoastInPixels = (int) (thicknessOfCoast / kmxpix) / 2;
         identifyLakeRegions();
         identifyCoastRegions();
         setTargetProduct(targetProduct);
@@ -95,18 +109,22 @@ public class FubScapeMLakesOp extends Operator {
         int w = lakesProduct.getSceneRasterWidth();
         int h = lakesProduct.getSceneRasterHeight();
         Mask mask;
-        mask = Mask.BandMathsType.create("F_LAKES", "pixels over lakes", w, h,
-                                         "cloud_classif_flags.F_LAKES", Color.blue.brighter(), 0.5f);
+        mask = Mask.BandMathsType.create("LAKES", "Pixels over lakes", w, h,
+                                         water_flags + ".LAKES", Color.blue.brighter(), 0.5f);
         lakesProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_COASTLINE_BUFFER", "pixels around the coastline", w, h,
-                                         "cloud_classif_flags.F_COASTLINE_BUFFER", Color.blue.darker(), 0.5f);
+        mask = Mask.BandMathsType.create("COASTLINE_BUFFER", "Pixels along the coastline", w, h,
+                                         water_flags + ".COASTLINE_BUFFER", Color.gray, 0.5f);
+        lakesProduct.getMaskGroup().add(index, mask);
+        mask = Mask.BandMathsType.create("OCEAN", "Water pixels which are neither in lakes nor close to the coast", w, h,
+                                         water_flags + ".OCEAN", Color.blue.darker(), 0.5f);
         lakesProduct.getMaskGroup().add(index, mask);
     }
 
     private static FlagCoding createScapeMLakesFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
-        flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 0), null);
-        flagCoding.addFlag("F_COASTLINE_BUFFER", BitSetter.setFlag(0, 1), null);
+        flagCoding.addFlag("LAKES", BitSetter.setFlag(0, 0), null);
+        flagCoding.addFlag("COASTLINE_BUFFER", BitSetter.setFlag(0, 1), null);
+        flagCoding.addFlag("OCEAN", BitSetter.setFlag(0, 2), null);
         return flagCoding;
     }
 
@@ -116,11 +134,11 @@ public class FubScapeMLakesOp extends Operator {
         for (int y = 0; y < l1FlagsBand.getSceneRasterHeight(); y++) {
             for (int x = 0; x < l1FlagsBand.getSceneRasterWidth(); x++) {
                 final int isCoastline = coastlineMask.getSampleInt(x, y);
-                if(isCoastline != 0) {
-                    for(int i = -thicknessOfCoastInPixels; i < thicknessOfCoastInPixels; i++) {
+                if (isCoastline != 0) {
+                    for (int i = -thicknessOfCoastInPixels; i < thicknessOfCoastInPixels; i++) {
                         int offset = -Math.abs(i) + thicknessOfCoastInPixels;
-                        for(int j = -offset; j < offset; j++) {
-                            if(isInBounds(x + j, y + i)) {
+                        for (int j = -offset; j < offset; j++) {
+                            if (isInBounds(x + j, y + i)) {
                                 coastRegionImage.getRaster().setSample(x + j, y + i, 0, 1);
                             }
                         }
@@ -131,47 +149,62 @@ public class FubScapeMLakesOp extends Operator {
     }
 
     private void identifyLakeRegions() {
+        regionCounter = 0;
+        regionSizes = new HashMap<Integer, Integer>();
+        regions = new ArrayList<Region>();
+        lakeRegionMatrix = new int[sourceProduct.getSceneRasterWidth()][sourceProduct.getSceneRasterHeight()];
+        for (int i = 0; i < sourceProduct.getSceneRasterWidth(); i++) {
+            Arrays.fill(lakeRegionMatrix[i], 0);
+        }
         final Band landWaterFractionBand = landWaterMaskProduct.getBand("land_water_fraction");
-        final WritableRaster raster = lakeRegionImage.getRaster();
         for (int y = 0; y < landWaterFractionBand.getSceneRasterHeight(); y++) {
             for (int x = 0; x < landWaterFractionBand.getSceneRasterWidth(); x++) {
                 if (landWaterFractionBand.getSampleFloat(x, y) >= 50.0) {
-                    checkPixel(raster, y, x, y, x - 1);
-                    checkPixel(raster, y, x, y - 1, x);
-                } else {
-                    raster.setSample(x, y, 0, 0);
+                    checkPixel(x, y);
                 }
             }
         }
     }
 
-    private void checkPixel(WritableRaster raster, int origY, int origX, int y, int x) {
-        if (isInBounds(x, y)) {
-            final int pixelValue = raster.getSample(x, y, 0);
-            if (pixelValue > 0) {
-                if (pixelValue == minimumOceanSizeInPixels) {
-                    raster.setSample(origX, origY, 0, minimumOceanSizeInPixels);
-                } else if (pixelValue == minimumOceanSizeInPixels - 1) {
-                    setPixelsAsOceans(raster, origX, origY);
-//                    raster.setSample(origX, origY, 0, minimumOceanSizeInPixels);
-                } else {
-                    raster.setSample(origX, origY, 0, pixelValue + 1);
-                }
+    private void checkPixel(int x, int y) {
+        int leftPixelRegionID = (isInBounds(x - 1, y)) ? lakeRegionMatrix[x - 1][y] : 0;
+        int upperPixelRegionID = (isInBounds(x, y - 1)) ? lakeRegionMatrix[x][y - 1] : 0;
+        if (leftPixelRegionID == 0 && upperPixelRegionID == 0) {
+            int regionID = ++regionCounter;
+            lakeRegionMatrix[x][y] = regionID;
+            regionSizes.put(regionID, 1);
+            regions.add(new Region(regionID));
+        } else {
+            if (leftPixelRegionID == 0) {
+                lakeRegionMatrix[x][y] = upperPixelRegionID;
+                regionSizes.put(upperPixelRegionID, regionSizes.get(upperPixelRegionID) + 1);
+            } else if (upperPixelRegionID == 0) {
+                lakeRegionMatrix[x][y] = leftPixelRegionID;
+                regionSizes.put(leftPixelRegionID, regionSizes.get(leftPixelRegionID) + 1);
             } else {
-                raster.setSample(origX, origY, 0, 1);
-            }
-        }
-    }
-
-    private void setPixelsAsOceans(WritableRaster raster, int x, int y) {
-        final int pixelValue = raster.getSample(x, y, 0);
-        if (pixelValue > 0 && pixelValue < minimumOceanSizeInPixels) {
-            raster.setSample(x, y, 0, minimumOceanSizeInPixels);
-            if (isInBounds(x - 1, y)) {
-                setPixelsAsOceans(raster, x - 1, y);
-            }
-            if (isInBounds(x, y - 1)) {
-                setPixelsAsOceans(raster, x, y - 1);
+                if (leftPixelRegionID == upperPixelRegionID) {
+                    lakeRegionMatrix[x][y] = leftPixelRegionID;
+                    regionSizes.put(leftPixelRegionID, regionSizes.get(leftPixelRegionID) + 1);
+                } else {
+                    lakeRegionMatrix[x][y] = upperPixelRegionID;
+                    Region firstRegion = null;
+                    Region secondRegion = null;
+                    for (Region region : regions) {
+                        if (region.isResponsibleRegionFor(upperPixelRegionID)) {
+                            firstRegion = region;
+                        }
+                        if (region.isResponsibleRegionFor(leftPixelRegionID)) {
+                            secondRegion = region;
+                        }
+                        if (firstRegion != null && secondRegion != null) {
+                            break;
+                        }
+                    }
+                    if (firstRegion != null && secondRegion != null && firstRegion != secondRegion) {
+                        firstRegion.merge(secondRegion);
+                        regions.remove(secondRegion);
+                    }
+                }
             }
         }
     }
@@ -182,17 +215,69 @@ public class FubScapeMLakesOp extends Operator {
 
     @Override
     public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        Raster lakeRegionData = lakeRegionImage.getData(targetTile.getRectangle());
         Raster coastRegionData = coastRegionImage.getData(targetTile.getRectangle());
         for (Tile.Pos pos : targetTile) {
+            boolean isLake = false;
+            int regionID = lakeRegionMatrix[pos.x][pos.y];
+            if (regionID != 0) {
+                for (Region region : regions) {
+                    if (region.isResponsibleRegionFor(regionID)) {
+                        isLake = !region.isOfMinimalSize();
+                        break;
+                    }
+                }
+            }
+            final boolean isAlongCoastline = coastRegionData.getSample(pos.x, pos.y, 0) == 1;
+            final boolean isOcean = regionID != 0 && !isLake && !isAlongCoastline;
+
             int waterRegionFlag = 0;
-            waterRegionFlag = BitSetter.setFlag(waterRegionFlag, 0,
-                    lakeRegionData.getSample(pos.x, pos.y, 0) == minimumOceanSizeInPixels);
-            waterRegionFlag = BitSetter.setFlag(waterRegionFlag, 1,
-                    coastRegionData.getSample(pos.x, pos.y, 0) == 1);
+            waterRegionFlag = BitSetter.setFlag(waterRegionFlag, 0, isLake);
+            waterRegionFlag = BitSetter.setFlag(waterRegionFlag, 1, isAlongCoastline);
+            waterRegionFlag = BitSetter.setFlag(waterRegionFlag, 2, isOcean);
             targetTile.setSample(pos.x, pos.y, waterRegionFlag);
         }
+    }
 
+    private class Region {
+        private List<Integer> subRegions;
+        private int size;
+
+        Region(int regionID) {
+            subRegions = new ArrayList<Integer>();
+            subRegions.add(regionID);
+            size = -1;
+        }
+
+        void merge(Region region) {
+            subRegions.addAll(region.getSubRegions());
+        }
+
+        List<Integer> getSubRegions() {
+            return subRegions;
+        }
+
+        public boolean isResponsibleRegionFor(int pixelID) {
+            for (Integer subRegion : subRegions) {
+                if (subRegion == pixelID) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        boolean isOfMinimalSize() {
+            if (size == -1) {
+                evaluateSize();
+            }
+            return size >= minimumOceanSizeInPixels;
+        }
+
+        private void evaluateSize() {
+            size = 0;
+            for (int i = 0; i < subRegions.size(); i++) {
+                size += regionSizes.get(subRegions.get(i));
+            }
+        }
     }
 
     /**
