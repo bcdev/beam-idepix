@@ -68,7 +68,7 @@ public class FubScapeMClassificationOp extends Operator {
     @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².")
     private float minimumOceanSize;
 
-    @Parameter(description = "Whether or not to calculate a lake mask")
+    @Parameter(description = "Whether or not to calculate a lake mask", defaultValue = "true")
     private boolean calculateLakes;
 
     private Product rad2reflProduct;
@@ -196,7 +196,7 @@ public class FubScapeMClassificationOp extends Operator {
             boolean isLakeOrCoastline = false;
             if (calculateLakes) {
                 isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
-                        waterTile.getSampleBit(pos.x, pos.y, 1)) && p13TOA < reflectance_water_threshold;
+                        waterTile.getSampleBit(pos.x, pos.y, 2)) && p13TOA < reflectance_water_threshold;
             } else {
                 isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
             }
