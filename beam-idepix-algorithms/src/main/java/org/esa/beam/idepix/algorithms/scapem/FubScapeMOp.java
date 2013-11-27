@@ -41,7 +41,7 @@ public class FubScapeMOp extends BasisOp {
     @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².")
     private float minimumOceanSize;
 
-    @Parameter(description = "Whether or not to calculate a lake mask", notEmpty = false)
+    @Parameter(description = "Whether or not to calculate a lake mask", defaultValue = "true")
     private boolean calculateLakes;
 
     @Override
