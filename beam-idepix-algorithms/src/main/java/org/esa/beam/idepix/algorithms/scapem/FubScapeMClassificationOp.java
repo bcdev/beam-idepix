@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.util.IdepixUtils;
@@ -58,14 +59,25 @@ public class FubScapeMClassificationOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
-    private GeoCoding geoCoding;
+    @Parameter(description = "Reflectance Threshold for reflectance 12", defaultValue = "0.08")
+    private float reflectance_water_threshold;
+
+    @Parameter(description = "The thickness of the coastline in kilometers.")
+    private float thicknessOfCoast;
+
+    @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².")
+    private float minimumOceanSize;
+
+    @Parameter(description = "Whether or not to calculate a lake mask")
+    private boolean calculateLakes;
+
     private Product rad2reflProduct;
     private static final int num_of_visible_bands = 8;
     private Product waterProduct;
 
     @Override
     public void initialize() throws OperatorException {
-        geoCoding = sourceProduct.getGeoCoding();
+        GeoCoding geoCoding = sourceProduct.getGeoCoding();
         if (geoCoding == null) {
             throw new OperatorException("Source product has no geocoding");
         }
@@ -85,46 +97,64 @@ public class FubScapeMClassificationOp extends Operator {
 
         Operator operator = new FubScapeMLakesOp();
         operator.setSourceProduct(sourceProduct);
+        if (thicknessOfCoast > 0) {
+            operator.setParameter("thicknessOfCoast", thicknessOfCoast);
+        }
+        if (minimumOceanSize > 0) {
+            operator.setParameter("minimumOceanSize", minimumOceanSize);
+        }
+        if (!calculateLakes) {
+            operator.setParameter("calculateLakes", calculateLakes);
+        }
         waterProduct = operator.getTargetProduct();
 
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
-//        rad2reflProduct.addBand(new VirtualBand(RHO_TOA_BAND_PREFIX + "_AVG_VIS", ProductData.TYPE_FLOAT32,
-//                                                rad2reflProduct.getSceneRasterWidth(),
-//                                                rad2reflProduct.getSceneRasterHeight(),
-//                                                ));
-//        for(int i=0; i< rad2reflProduct.getNumBands(); i++) {
-//            final Band reflecBand = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + (i + 1));
-//
-//        }
-//        BandMathsOp cloudOp = BandMathsOp.createBooleanExpressionBand(cloudExpression, sourceProduct);
-//        Product cloudMaskProduct = cloudOp.getTargetProduct();
-//        cloudMaskBand = cloudMaskProduct.getBandAt(0);
 
         setTargetProduct(targetProduct);
     }
 
-    private static void setupCloudScreeningBitmasks(Product gaCloudProduct) {
+    private void setupCloudScreeningBitmasks(Product gaCloudProduct) {
         int index = 0;
         int w = gaCloudProduct.getSceneRasterWidth();
         int h = gaCloudProduct.getSceneRasterHeight();
         Mask mask;
 
+        mask = Mask.BandMathsType.create("F_INVALID", "invalid pixels", w, h,
+                                         "cloud_classif_flags.F_INVALID", Color.gray, 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_1", "Presumably cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_1",
                                          Color.red.darker(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_2", "Certainly cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_2",
                                          Color.red.brighter(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_LAKES", "pixels over lakes", w, h,
-                                         "cloud_classif_flags.F_LAKES", Color.blue, 0.5f);
+        mask = Mask.BandMathsType.create("F_CLOUD_MASK_1", "Pixels not over ocean which are presumably cloud free", w, h,
+                                         "cloud_classif_flags.F_CLOUD_MASK_1", Color.green.darker(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_CLOUD_MASK_2", "Pixels not over ocean which are certainly cloud free", w, h,
+                                         "cloud_classif_flags.F_CLOUD_MASK_2", Color.green.brighter(), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("F_OCEAN", "pixels over ocean", w, h,
+                                         "cloud_classif_flags.F_OCEAN", Color.blue.darker(), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
+        if (calculateLakes) {
+            mask = Mask.BandMathsType.create("F_LAKES", "pixels over lakes or along coastlines", w, h,
+                                             "cloud_classif_flags.F_LAKES", Color.blue.brighter(), 0.5f);
+            gaCloudProduct.getMaskGroup().add(index, mask);
+        }
     }
 
-    private static FlagCoding createScapeMFlagCoding(String flagIdentifier) {
+    private FlagCoding createScapeMFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
-        flagCoding.addFlag("F_CLOUD_1", BitSetter.setFlag(0, 0), null);
-        flagCoding.addFlag("F_CLOUD_2", BitSetter.setFlag(0, 1), null);
-        flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 2), null);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, 0), null);
+        flagCoding.addFlag("F_CLOUD_1", BitSetter.setFlag(0, 1), null);
+        flagCoding.addFlag("F_CLOUD_2", BitSetter.setFlag(0, 2), null);
+        flagCoding.addFlag("F_CLOUD_MASK_1", BitSetter.setFlag(0, 3), null);
+        flagCoding.addFlag("F_CLOUD_MASK_2", BitSetter.setFlag(0, 4), null);
+        flagCoding.addFlag("F_OCEAN", BitSetter.setFlag(0, 5), null);
+        if (calculateLakes) {
+            flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 6), null);
+        }
         return flagCoding;
     }
 
@@ -249,42 +279,26 @@ public class FubScapeMClassificationOp extends Operator {
 
 
         Rectangle rectangle = targetTile.getRectangle();
-//        Tile cloudMaskTile = getSourceTile(cloudMaskBand, rectangle);
-//        final Band radiance1Band = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME);
-//        final Band radiance1Band = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME);
-//        final Band radiance1Band = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME);
-//        getSourceTile(EnvisatConstants.MERIS_L1B_RADIANCE_1_BAND_NAME, rectangle);
+
         Tile[] reflectanceTiles = new Tile[num_of_visible_bands + 2];
         for (int i = 1; i <= num_of_visible_bands + 1; i++) {
             final Band reflBand = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + i);
             reflectanceTiles[i - 1] = getSourceTile(reflBand, rectangle);
-//            pAvTOA += reflBand.getSampleFloat(pos.x, pos.y);
         }
         final Band refl13Band = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + 13);
         reflectanceTiles[num_of_visible_bands + 1] = getSourceTile(refl13Band, rectangle);
-
         final TiePointGrid altitudeGrid = sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
         Tile altitudeTile = getSourceTile(altitudeGrid, rectangle);
         final Band l1FlagsBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
         final Tile l1FlagsTile = getSourceTile(l1FlagsBand, rectangle);
         TiePointGrid sunAzimuthGrid = sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
         final Tile sunAzimuthTile = getSourceTile(sunAzimuthGrid, rectangle);
-
         final Tile waterTile = getSourceTile(waterProduct.getRasterDataNode("water_flags"), rectangle);
 
-//        final Band reflec1Band = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + 1);
-//        final Tile reflec1Tile = getSourceTile(reflec1Band, rectangle);
-//        final Band reflec8Band = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + 8);
-//        final Tile reflec8Tile = getSourceTile(reflec8Band, rectangle);
-//        final Band reflec9Band = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + 9);
-//        final Tile reflec9Tile = getSourceTile(reflec9Band, rectangle);
         for (Tile.Pos pos : targetTile) {
-//            boolean isCloud = cloudMaskTile.getSampleBoolean(pos.x, pos.y);
             float pAvTOA = 0;
             for (int i = 0; i < num_of_visible_bands; i++) {
                 pAvTOA += reflectanceTiles[i].getSampleFloat(pos.x, pos.y);
-//                final Band reflBand = rad2reflProduct.getBand(RHO_TOA_BAND_PREFIX + "_" + i);
-//                pAvTOA += reflBand.getSampleFloat(pos.x, pos.y);
             }
             pAvTOA /= num_of_visible_bands;
             float p1TOA = reflectanceTiles[0].getSampleFloat(pos.x, pos.y);
@@ -292,35 +306,31 @@ public class FubScapeMClassificationOp extends Operator {
             float p9TOA = reflectanceTiles[8].getSampleFloat(pos.x, pos.y);
             float p13TOA = reflectanceTiles[9].getSampleFloat(pos.x, pos.y);
             final float altitude = altitudeTile.getSampleFloat(pos.x, pos.y);
-//            boolean isLand = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_LAND);
-            boolean isInvalid = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_INVALID);
-//            boolean isCoast = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_COAST);
-            final boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 2);
-
             final float sunAzimuth = sunAzimuthTile.getSampleFloat(pos.x, pos.y);
             final double musil = Math.cos(sunAzimuth * MathUtils.DTOR);
 
-//            GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(pos.x + 0.5f, pos.y + 0.5f), null);
-//            boolean isWater = true;
-//            try {
-//                isWater = watermaskClassifier.isWater(geoPos.lat, geoPos.lon);
-//            } catch (IOException ignore) {
-//            }
-
-//            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || isInvalid || p1TOA > 0.2 && p1TOA > p8TOA;
-            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || isInvalid ||
-                    (p1TOA > 0.2 && p1TOA > p8TOA || musil < 0);
-//            boolean isCertainlyCloud = pAvTOA > 0.3 && p1TOA > 0.23 && p1TOA > p9TOA;
-            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || isInvalid ||
-                    (p1TOA > 0.23 && p1TOA > p9TOA || musil < 0);
-//            boolean isLake = isWater && p13TOA < refl_water_threshold;
+            boolean isInvalid = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_INVALID);
+            boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
+            boolean isLakeOrCoastline = false;
+            if (calculateLakes) {
+                isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
+                        waterTile.getSampleBit(pos.x, pos.y, 1)) && p13TOA < reflectance_water_threshold;
+            } else {
+                isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
+            }
+            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil > 0;
+            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil > 0;
+            boolean cloudMask1 = !isOcean && !isCertainlyCloud;
+            boolean cloudMask2 = !isOcean && !isPresumablyCloud;
 
             int cloudFlag = 0;
-            cloudFlag = BitSetter.setFlag(cloudFlag, 0, isPresumablyCloud);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 1, isCertainlyCloud);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 2, isOcean);
-//            cloudFlag = BitSetter.setFlag(cloudFlag, IdepixConstants.F_LAND, !isWater);
-//            cloudFlag = BitSetter.setFlag(cloudFlag, IdepixConstants.F_WATER, isWater);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 0, isInvalid);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 1, isPresumablyCloud);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 2, isCertainlyCloud);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 3, cloudMask1);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 4, cloudMask2);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 5, isOcean);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 6, isLakeOrCoastline);
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
         IdepixUtils.setCloudBufferLC(targetBand.getName(), targetTile, rectangle);
