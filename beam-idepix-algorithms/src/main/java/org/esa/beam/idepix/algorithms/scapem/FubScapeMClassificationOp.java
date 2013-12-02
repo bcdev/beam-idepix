@@ -62,10 +62,10 @@ public class FubScapeMClassificationOp extends Operator {
     @Parameter(description = "Reflectance Threshold for reflectance 12", defaultValue = "0.08")
     private float reflectance_water_threshold;
 
-    @Parameter(description = "The thickness of the coastline in kilometers.")
+    @Parameter(description = "The thickness of the coastline in kilometers.", defaultValue = "20.0")
     private float thicknessOfCoast;
 
-    @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².")
+    @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².", defaultValue = "1600")
     private float minimumOceanSize;
 
     @Parameter(description = "Whether or not to calculate a lake mask", defaultValue = "true")
@@ -173,8 +173,8 @@ public class FubScapeMClassificationOp extends Operator {
         Tile altitudeTile = getSourceTile(altitudeGrid, rectangle);
         final Band l1FlagsBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
         final Tile l1FlagsTile = getSourceTile(l1FlagsBand, rectangle);
-        TiePointGrid sunAzimuthGrid = sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        final Tile sunAzimuthTile = getSourceTile(sunAzimuthGrid, rectangle);
+        TiePointGrid sunZenithGrid = sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
+        final Tile sunZenithTile = getSourceTile(sunZenithGrid, rectangle);
         final Tile waterTile = getSourceTile(waterProduct.getRasterDataNode("water_flags"), rectangle);
 
         for (Tile.Pos pos : targetTile) {
@@ -188,8 +188,8 @@ public class FubScapeMClassificationOp extends Operator {
             float p9TOA = reflectanceTiles[8].getSampleFloat(pos.x, pos.y);
             float p13TOA = reflectanceTiles[9].getSampleFloat(pos.x, pos.y);
             final float altitude = altitudeTile.getSampleFloat(pos.x, pos.y);
-            final float sunAzimuth = sunAzimuthTile.getSampleFloat(pos.x, pos.y);
-            final double musil = Math.cos(sunAzimuth * MathUtils.DTOR);
+            final float sunZenith = sunZenithTile.getSampleFloat(pos.x, pos.y);
+            final double musil = Math.cos(sunZenith * MathUtils.DTOR);
 
             boolean isInvalid = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_INVALID);
             boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
@@ -200,8 +200,9 @@ public class FubScapeMClassificationOp extends Operator {
             } else {
                 isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
             }
-            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil > 0;
-            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil > 0;
+
+            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil < 0;
+            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
             boolean cloudMask1 = !isOcean && !isCertainlyCloud;
             boolean cloudMask2 = !isOcean && !isPresumablyCloud;
 
@@ -215,7 +216,6 @@ public class FubScapeMClassificationOp extends Operator {
             cloudFlag = BitSetter.setFlag(cloudFlag, 6, isLakeOrCoastline);
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
-        IdepixUtils.setCloudBufferLC(targetBand.getName(), targetTile, rectangle);
     }
 
     /**

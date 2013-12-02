@@ -32,13 +32,13 @@ public class FubScapeMOp extends BasisOp {
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
 
-    @Parameter(description = "Reflectance Threshold for reflectance 12")
+    @Parameter(description = "Reflectance Threshold for reflectance 12", defaultValue = "0.08")
     private float reflectance_water_threshold;
 
-    @Parameter(description = "The thickness of the coastline in kilometers.")
+    @Parameter(description = "The thickness of the coastline in kilometers.", defaultValue = "20")
     private float thicknessOfCoast;
 
-    @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².")
+    @Parameter(description = "The minimal size for a water region to be acknowledged as an ocean in km².", defaultValue = "1600")
     private float minimumOceanSize;
 
     @Parameter(description = "Whether or not to calculate a lake mask", defaultValue = "true")
