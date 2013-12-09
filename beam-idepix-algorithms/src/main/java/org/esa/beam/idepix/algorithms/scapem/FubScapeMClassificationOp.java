@@ -122,17 +122,11 @@ public class FubScapeMClassificationOp extends Operator {
         mask = Mask.BandMathsType.create("F_INVALID", "invalid pixels", w, h,
                                          "cloud_classif_flags.F_INVALID", Color.yellow, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_1", "Presumably cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_1",
+        mask = Mask.BandMathsType.create("F_CLOUD_CERTAIN", "Certainly cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_CERTAIN",
                                          Color.red.darker(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_2", "Certainly cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_2",
+        mask = Mask.BandMathsType.create("F_CLOUD_PRESUMABLY", "Presumably cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_PRESUMABLY",
                                          Color.red.brighter(), 0.5f);
-        gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_PRESUMABLY_CLOUD_FREE", "Valid pixels not over ocean which are presumably cloud free", w, h,
-                                         "cloud_classif_flags.F_PRESUMABLY_CLOUD_FREE", Color.green.brighter(), 0.5f);
-        gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CERTAINLY_CLOUD_FREE", "Valid pixels not over ocean which are certainly cloud free", w, h,
-                                         "cloud_classif_flags.F_CERTAINLY_CLOUD_FREE", Color.green.darker(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_OCEAN", "pixels over ocean", w, h,
                                          "cloud_classif_flags.F_OCEAN", Color.blue.darker(), 0.5f);
@@ -147,13 +141,11 @@ public class FubScapeMClassificationOp extends Operator {
     private FlagCoding createScapeMFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, 0), null);
-        flagCoding.addFlag("F_CLOUD_1", BitSetter.setFlag(0, 1), null);
-        flagCoding.addFlag("F_CLOUD_2", BitSetter.setFlag(0, 2), null);
-        flagCoding.addFlag("F_PRESUMABLY_CLOUD_FREE", BitSetter.setFlag(0, 3), null);
-        flagCoding.addFlag("F_CERTAINLY_CLOUD_FREE", BitSetter.setFlag(0, 4), null);
-        flagCoding.addFlag("F_OCEAN", BitSetter.setFlag(0, 5), null);
+        flagCoding.addFlag("F_CLOUD_CERTAIN", BitSetter.setFlag(0, 1), null);
+        flagCoding.addFlag("F_CLOUD_PRESUMABLY", BitSetter.setFlag(0, 2), null);
+        flagCoding.addFlag("F_OCEAN", BitSetter.setFlag(0, 3), null);
         if (calculateLakes) {
-            flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 6), null);
+            flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 4), null);
         }
         return flagCoding;
     }
@@ -201,19 +193,15 @@ public class FubScapeMClassificationOp extends Operator {
                 isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
             }
 
-            boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil < 0;
-            boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
-            boolean cloudMask1 = !isOcean && !isCertainlyCloud && !isInvalid;
-            boolean cloudMask2 = !isOcean && !isPresumablyCloud && !isInvalid;
+            boolean certainlyCloud =  pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
+            boolean presumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil < 0;
 
             int cloudFlag = 0;
             cloudFlag = BitSetter.setFlag(cloudFlag, 0, isInvalid);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 1, isPresumablyCloud);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 2, isCertainlyCloud);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 3, cloudMask1);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 4, cloudMask2);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 5, isOcean);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 6, isLakeOrCoastline);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 1, certainlyCloud);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 2, presumablyCloud);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 3, isOcean);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 4, isLakeOrCoastline);
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
     }
