@@ -120,7 +120,7 @@ public class FubScapeMClassificationOp extends Operator {
         Mask mask;
 
         mask = Mask.BandMathsType.create("F_INVALID", "invalid pixels", w, h,
-                                         "cloud_classif_flags.F_INVALID", Color.gray, 0.5f);
+                                         "cloud_classif_flags.F_INVALID", Color.yellow, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_1", "Presumably cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_1",
                                          Color.red.darker(), 0.5f);
@@ -128,11 +128,11 @@ public class FubScapeMClassificationOp extends Operator {
         mask = Mask.BandMathsType.create("F_CLOUD_2", "Certainly cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_2",
                                          Color.red.brighter(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_MASK_1", "Pixels not over ocean which are presumably cloud free", w, h,
-                                         "cloud_classif_flags.F_CLOUD_MASK_1", Color.green.darker(), 0.5f);
+        mask = Mask.BandMathsType.create("F_PRESUMABLY_CLOUD_FREE", "Valid pixels not over ocean which are presumably cloud free", w, h,
+                                         "cloud_classif_flags.F_PRESUMABLY_CLOUD_FREE", Color.green.brighter(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_CLOUD_MASK_2", "Pixels not over ocean which are certainly cloud free", w, h,
-                                         "cloud_classif_flags.F_CLOUD_MASK_2", Color.green.brighter(), 0.5f);
+        mask = Mask.BandMathsType.create("F_CERTAINLY_CLOUD_FREE", "Valid pixels not over ocean which are certainly cloud free", w, h,
+                                         "cloud_classif_flags.F_CERTAINLY_CLOUD_FREE", Color.green.darker(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_OCEAN", "pixels over ocean", w, h,
                                          "cloud_classif_flags.F_OCEAN", Color.blue.darker(), 0.5f);
@@ -149,8 +149,8 @@ public class FubScapeMClassificationOp extends Operator {
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, 0), null);
         flagCoding.addFlag("F_CLOUD_1", BitSetter.setFlag(0, 1), null);
         flagCoding.addFlag("F_CLOUD_2", BitSetter.setFlag(0, 2), null);
-        flagCoding.addFlag("F_CLOUD_MASK_1", BitSetter.setFlag(0, 3), null);
-        flagCoding.addFlag("F_CLOUD_MASK_2", BitSetter.setFlag(0, 4), null);
+        flagCoding.addFlag("F_PRESUMABLY_CLOUD_FREE", BitSetter.setFlag(0, 3), null);
+        flagCoding.addFlag("F_CERTAINLY_CLOUD_FREE", BitSetter.setFlag(0, 4), null);
         flagCoding.addFlag("F_OCEAN", BitSetter.setFlag(0, 5), null);
         if (calculateLakes) {
             flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 6), null);
@@ -203,8 +203,8 @@ public class FubScapeMClassificationOp extends Operator {
 
             boolean isPresumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil < 0;
             boolean isCertainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
-            boolean cloudMask1 = !isOcean && !isCertainlyCloud;
-            boolean cloudMask2 = !isOcean && !isPresumablyCloud;
+            boolean cloudMask1 = !isOcean && !isCertainlyCloud && !isInvalid;
+            boolean cloudMask2 = !isOcean && !isPresumablyCloud && !isInvalid;
 
             int cloudFlag = 0;
             cloudFlag = BitSetter.setFlag(cloudFlag, 0, isInvalid);
