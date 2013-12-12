@@ -143,16 +143,21 @@ public class FubScapeMLakesOp extends Operator {
         final Band l1FlagsBand = sourceProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
         for (int y = 0; y < l1FlagsBand.getSceneRasterHeight(); y++) {
             for (int x = 0; x < l1FlagsBand.getSceneRasterWidth(); x++) {
-                final int isCoastline = coastlineMask.getSampleInt(x, y);
-                if (isCoastline != 0) {
-                    for (int i = -thicknessOfCoastInPixels; i < thicknessOfCoastInPixels; i++) {
-                        int offset = -Math.abs(i) + thicknessOfCoastInPixels;
-                        for (int j = -offset; j < offset; j++) {
-                            if (isInBounds(x + j, y + i)) {
-                                coastRegionImage.getRaster().setSample(x + j, y + i, 0, 1);
+                if (coastlineMask != null) {   // todo: how to handle products without coastlines, or if this mask
+                    // is not available, e.g. in CC products it is named 'l1p_coastline'!
+                    final int isCoastline = coastlineMask.getSampleInt(x, y);
+                    if (isCoastline != 0) {
+                        for (int i = -thicknessOfCoastInPixels; i < thicknessOfCoastInPixels; i++) {
+                            int offset = -Math.abs(i) + thicknessOfCoastInPixels;
+                            for (int j = -offset; j < offset; j++) {
+                                if (isInBounds(x + j, y + i)) {
+                                    coastRegionImage.getRaster().setSample(x + j, y + i, 0, 1);
+                                }
                             }
                         }
                     }
+                } else {
+                    coastRegionImage.getRaster().setSample(x, y, 0, 0);
                 }
             }
         }

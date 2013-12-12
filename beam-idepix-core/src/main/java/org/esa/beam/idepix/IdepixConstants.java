@@ -2,6 +2,8 @@ package org.esa.beam.idepix;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 
+import java.util.regex.Pattern;
+
 /**
  * IDEPIX constants
  *
@@ -144,4 +146,12 @@ public class IdepixConstants {
             {0.4057965, 0.41043115, 0.43384373, 0.47499827, 0.48148763, 0.49312785}};
     public static final String[] SMA_ABUNDANCE_BAND_NAMES = {"Land_abundance", "Water_abundance", "Cloud_abundance"};
     public static final String SMA_SUMMARY_BAND_NAME = "summary_error";
+
+    /**
+     * A pattern which matches MERIS CC L1P product types
+     *
+     * @see java.util.regex.Matcher
+     */
+    public static Pattern MERIS_CCL1P_TYPE_PATTERN = Pattern.compile("MER_..._CCL1P");
+
 }

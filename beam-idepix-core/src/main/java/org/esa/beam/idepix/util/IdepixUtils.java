@@ -47,7 +47,8 @@ public class IdepixUtils {
         final boolean merisL1TypePatternMatches = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(product.getProductType()).matches();
         // accept also ICOL L1N products...
         final boolean merisIcolTypePatternMatches = isValidMerisIcolL1NProduct(product);
-        return merisL1TypePatternMatches || merisIcolTypePatternMatches;
+        final boolean merisCCL1PTypePatternMatches = isValidMerisCCL1PProduct(product);
+        return merisL1TypePatternMatches || merisIcolTypePatternMatches || merisCCL1PTypePatternMatches;
     }
 
     private static boolean isValidMerisIcolL1NProduct(Product product) {
@@ -59,6 +60,10 @@ public class IdepixUtils {
         } else {
             return false;
         }
+    }
+
+    private static boolean isValidMerisCCL1PProduct(Product product) {
+        return IdepixConstants.MERIS_CCL1P_TYPE_PATTERN.matcher(product.getProductType()).matches();
     }
 
     public static boolean isValidAatsrProduct(Product product) {
