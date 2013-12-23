@@ -35,6 +35,7 @@ import java.util.Map;
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem.lakes",
                   version = "2.0.2-SNAPSHOT",
+                  internal = true,
                   authors = "Tonio Fincke",
                   copyright = "(c) 2013 by Brockmann Consult",
                   description = "Lake identification with Scape-M from L. Guanter, FUB.")
