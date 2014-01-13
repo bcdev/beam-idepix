@@ -177,7 +177,6 @@ public class FubScapeMClassificationOp extends Operator {
             final double musil = Math.cos(sunZenith * MathUtils.DTOR);
 
             boolean isInvalid = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_INVALID);
-
             boolean certainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
             boolean presumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil < 0;
 
@@ -185,14 +184,18 @@ public class FubScapeMClassificationOp extends Operator {
             cloudFlag = BitSetter.setFlag(cloudFlag, 0, isInvalid);
             cloudFlag = BitSetter.setFlag(cloudFlag, 1, certainlyCloud);
             cloudFlag = BitSetter.setFlag(cloudFlag, 2, presumablyCloud);
+
+            boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
+            boolean isLakeOrCoastline = false;
             if (calculateLakes) {
-                boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
-                isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
-                boolean isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
+                isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
                         waterTile.getSampleBit(pos.x, pos.y, 2)) && p13TOA < reflectance_water_threshold;
-                cloudFlag = BitSetter.setFlag(cloudFlag, 3, isOcean);
-                cloudFlag = BitSetter.setFlag(cloudFlag, 4, isLakeOrCoastline);
+            } else {
+                isOcean = isOcean || p13TOA < reflectance_water_threshold;
             }
+            cloudFlag = BitSetter.setFlag(cloudFlag, 3, isOcean && !isInvalid);
+            cloudFlag = BitSetter.setFlag(cloudFlag, 4, isLakeOrCoastline && !isInvalid);
+
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
     }
