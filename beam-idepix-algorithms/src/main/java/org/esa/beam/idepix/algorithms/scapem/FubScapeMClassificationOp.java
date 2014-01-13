@@ -185,13 +185,14 @@ public class FubScapeMClassificationOp extends Operator {
             cloudFlag = BitSetter.setFlag(cloudFlag, 1, certainlyCloud);
             cloudFlag = BitSetter.setFlag(cloudFlag, 2, presumablyCloud);
 
-            boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
+            boolean isOcean = false;
             boolean isLakeOrCoastline = false;
             if (calculateLakes) {
+                isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
                 isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
                         waterTile.getSampleBit(pos.x, pos.y, 2)) && p13TOA < reflectance_water_threshold;
             } else {
-                isOcean = isOcean || p13TOA < reflectance_water_threshold;
+//                isOcean = isOcean || p13TOA < reflectance_water_threshold;
             }
             cloudFlag = BitSetter.setFlag(cloudFlag, 3, isOcean && !isInvalid);
             cloudFlag = BitSetter.setFlag(cloudFlag, 4, isLakeOrCoastline && !isInvalid);

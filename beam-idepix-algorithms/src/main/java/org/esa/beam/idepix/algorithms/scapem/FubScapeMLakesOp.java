@@ -232,6 +232,7 @@ public class FubScapeMLakesOp extends Operator {
     @Override
     public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         final Rectangle rectangle = targetTile.getRectangle();
+
         Raster coastRegionData = coastRegionImage.getData(rectangle);
         Tile waterFractionTile = getSourceTile(landWaterMaskProduct.getRasterDataNode("land_water_fraction"), rectangle);
         for (Tile.Pos pos : targetTile) {
