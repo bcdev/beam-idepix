@@ -18,13 +18,7 @@ package org.esa.beam.idepix.algorithms.scapem;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -38,8 +32,7 @@ import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 
 /**
  * Operator for calculating cloud using Scape-M scheme from L. Guanter, FUB
@@ -47,11 +40,11 @@ import java.awt.Rectangle;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.scapem.classification",
-                  version = "2.0.2-SNAPSHOT",
-                  internal = true,
-                  authors = "Olaf Danne, Tonio Fincke",
-                  copyright = "(c) 2013 by Brockmann Consult",
-                  description = "Calculates cloud using Scape-M scheme from L. Guanter, FUB.")
+        version = "2.0.2-SNAPSHOT",
+        internal = true,
+        authors = "Olaf Danne, Tonio Fincke",
+        copyright = "(c) 2013 by Brockmann Consult",
+        description = "Calculates cloud using Scape-M scheme from L. Guanter, FUB.")
 public class FubScapeMClassificationOp extends Operator {
 
     public static final String RHO_TOA_BAND_PREFIX = "rho_toa";
@@ -85,9 +78,9 @@ public class FubScapeMClassificationOp extends Operator {
             throw new OperatorException("Source product has no usable geocoding");
         }
         Product targetProduct = new Product(sourceProduct.getName(),
-                                            sourceProduct.getProductType(),
-                                            sourceProduct.getSceneRasterWidth(),
-                                            sourceProduct.getSceneRasterHeight());
+                sourceProduct.getProductType(),
+                sourceProduct.getSceneRasterWidth(),
+                sourceProduct.getSceneRasterHeight());
 
         Band flagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = createScapeMFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
@@ -95,18 +88,14 @@ public class FubScapeMClassificationOp extends Operator {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         setupCloudScreeningBitmasks(targetProduct);
 
-        Operator operator = new FubScapeMLakesOp();
-        operator.setSourceProduct(sourceProduct);
-        if (thicknessOfCoast > 0) {
+        if (calculateLakes) {
+            Operator operator = new FubScapeMLakesOp();
+            operator.setSourceProduct(sourceProduct);
             operator.setParameter("thicknessOfCoast", thicknessOfCoast);
-        }
-        if (minimumOceanSize > 0) {
             operator.setParameter("minimumOceanSize", minimumOceanSize);
-        }
-        if (!calculateLakes) {
             operator.setParameter("calculateLakes", calculateLakes);
+            waterProduct = operator.getTargetProduct();
         }
-        waterProduct = operator.getTargetProduct();
 
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
 
@@ -119,21 +108,21 @@ public class FubScapeMClassificationOp extends Operator {
         int h = gaCloudProduct.getSceneRasterHeight();
         Mask mask;
 
-        mask = Mask.BandMathsType.create("F_INVALID", "invalid pixels", w, h,
-                                         "cloud_classif_flags.F_INVALID", Color.yellow, 0.5f);
+        mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixels", w, h,
+                "cloud_classif_flags.F_INVALID", Color.yellow, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_CERTAIN", "Certainly cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_CERTAIN",
-                                         Color.red.darker(), 0.5f);
+                Color.red.darker(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_CLOUD_PRESUMABLY", "Presumably cloudy pixels", w, h, "cloud_classif_flags.F_CLOUD_PRESUMABLY",
-                                         Color.red.brighter(), 0.5f);
-        gaCloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("F_OCEAN", "pixels over ocean", w, h,
-                                         "cloud_classif_flags.F_OCEAN", Color.blue.darker(), 0.5f);
+                Color.red.brighter(), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         if (calculateLakes) {
-            mask = Mask.BandMathsType.create("F_LAKES", "pixels over lakes or along coastlines", w, h,
-                                             "cloud_classif_flags.F_LAKES", Color.blue.brighter(), 0.5f);
+            mask = Mask.BandMathsType.create("F_OCEAN", "Pixels over ocean (derived from SRTM land/sea mask)", w, h,
+                    "cloud_classif_flags.F_OCEAN", Color.blue.darker(), 0.5f);
+            gaCloudProduct.getMaskGroup().add(index++, mask);
+            mask = Mask.BandMathsType.create("F_LAKES", "Pixels over lakes or along coastlines (SCAPE-M mask)", w, h,
+                    "cloud_classif_flags.F_LAKES", Color.blue.brighter(), 0.5f);
             gaCloudProduct.getMaskGroup().add(index, mask);
         }
     }
@@ -143,8 +132,8 @@ public class FubScapeMClassificationOp extends Operator {
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, 0), null);
         flagCoding.addFlag("F_CLOUD_CERTAIN", BitSetter.setFlag(0, 1), null);
         flagCoding.addFlag("F_CLOUD_PRESUMABLY", BitSetter.setFlag(0, 2), null);
-        flagCoding.addFlag("F_OCEAN", BitSetter.setFlag(0, 3), null);
         if (calculateLakes) {
+            flagCoding.addFlag("F_OCEAN", BitSetter.setFlag(0, 3), null);
             flagCoding.addFlag("F_LAKES", BitSetter.setFlag(0, 4), null);
         }
         return flagCoding;
@@ -167,7 +156,11 @@ public class FubScapeMClassificationOp extends Operator {
         final Tile l1FlagsTile = getSourceTile(l1FlagsBand, rectangle);
         TiePointGrid sunZenithGrid = sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
         final Tile sunZenithTile = getSourceTile(sunZenithGrid, rectangle);
-        final Tile waterTile = getSourceTile(waterProduct.getRasterDataNode("water_flags"), rectangle);
+
+        Tile waterTile = null;
+        if (calculateLakes) {
+            waterTile = getSourceTile(waterProduct.getRasterDataNode("water_flags"), rectangle);
+        }
 
         for (Tile.Pos pos : targetTile) {
             float pAvTOA = 0;
@@ -184,24 +177,22 @@ public class FubScapeMClassificationOp extends Operator {
             final double musil = Math.cos(sunZenith * MathUtils.DTOR);
 
             boolean isInvalid = l1FlagsTile.getSampleBit(pos.x, pos.y, Constants.L1_F_INVALID);
-            boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
-            boolean isLakeOrCoastline = false;
-            if (calculateLakes) {
-                isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
-                        waterTile.getSampleBit(pos.x, pos.y, 2)) && p13TOA < reflectance_water_threshold;
-            } else {
-                isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
-            }
 
-            boolean certainlyCloud =  pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
+            boolean certainlyCloud = pAvTOA > 0.3 || altitude > 2500 || (p1TOA > 0.23 && p1TOA > p9TOA) || musil < 0;
             boolean presumablyCloud = pAvTOA > 0.27 || altitude > 2500 || (p1TOA > 0.2 && p1TOA > p8TOA) || musil < 0;
 
             int cloudFlag = 0;
             cloudFlag = BitSetter.setFlag(cloudFlag, 0, isInvalid);
             cloudFlag = BitSetter.setFlag(cloudFlag, 1, certainlyCloud);
             cloudFlag = BitSetter.setFlag(cloudFlag, 2, presumablyCloud);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 3, isOcean);
-            cloudFlag = BitSetter.setFlag(cloudFlag, 4, isLakeOrCoastline);
+            if (calculateLakes) {
+                boolean isOcean = waterTile.getSampleBit(pos.x, pos.y, 1);
+                isOcean = isOcean || p13TOA < reflectance_water_threshold && !isInvalid;
+                boolean isLakeOrCoastline = (waterTile.getSampleBit(pos.x, pos.y, 0) ||
+                        waterTile.getSampleBit(pos.x, pos.y, 2)) && p13TOA < reflectance_water_threshold;
+                cloudFlag = BitSetter.setFlag(cloudFlag, 3, isOcean);
+                cloudFlag = BitSetter.setFlag(cloudFlag, 4, isLakeOrCoastline);
+            }
             targetTile.setSample(pos.x, pos.y, cloudFlag);
         }
     }

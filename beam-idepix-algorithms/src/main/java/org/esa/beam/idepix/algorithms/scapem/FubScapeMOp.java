@@ -20,10 +20,10 @@ import org.esa.beam.idepix.util.IdepixUtils;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem",
-                  version = "2.0.2-SNAPSHOT",
-                  authors = "Olaf Danne, Tonio Fincke",
-                  copyright = "(c) 2013 by Brockmann Consult",
-                  description = "Pixel identification and classification with Scape-M cloud mask from L. Guanter, FUB.")
+        version = "2.0.2-SNAPSHOT",
+        authors = "Olaf Danne, Tonio Fincke",
+        copyright = "(c) 2013 by Brockmann Consult",
+        description = "Pixel identification and classification with Scape-M cloud mask from L. Guanter, FUB.")
 public class FubScapeMOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
@@ -57,18 +57,10 @@ public class FubScapeMOp extends BasisOp {
     private void processFubScapeM() {
         Operator operator = new FubScapeMClassificationOp();
         operator.setSourceProduct(sourceProduct);
-        if(reflectance_water_threshold > 0) {
-            operator.setParameter("reflectance_water_threshold", reflectance_water_threshold);
-        }
-        if(thicknessOfCoast > 0) {
-            operator.setParameter("thicknessOfCoast", thicknessOfCoast);
-        }
-        if(minimumOceanSize > 0) {
-            operator.setParameter("minimumOceanSize", minimumOceanSize);
-        }
-        if(!calculateLakes) {
-            operator.setParameter("calculatelakes", calculateLakes);
-        }
+        operator.setParameter("reflectance_water_threshold", reflectance_water_threshold);
+        operator.setParameter("thicknessOfCoast", thicknessOfCoast);
+        operator.setParameter("minimumOceanSize", minimumOceanSize);
+        operator.setParameter("calculateLakes", calculateLakes);
         targetProduct = operator.getTargetProduct();
     }
 

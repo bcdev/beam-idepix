@@ -105,9 +105,9 @@ public class FubScapeMLakesOp extends Operator {
         if (calculateLakes) {
             minimumOceanSizeInPixels = (int) (minimumOceanSize / kmxpix);
             identifyLakeRegions();
+            thicknessOfCoastInPixels = (int) (thicknessOfCoast / kmxpix) / 2;
+            identifyCoastRegions();
         }
-        thicknessOfCoastInPixels = (int) (thicknessOfCoast / kmxpix) / 2;
-        identifyCoastRegions();
         setTargetProduct(targetProduct);
     }
 
