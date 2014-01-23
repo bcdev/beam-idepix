@@ -246,6 +246,14 @@ public class IdepixProducts {
         }
     }
 
+    public static void addCCFLHValueBand(Product merisCloudProduct, Product targetProduct) {
+        for (String bandname : merisCloudProduct.getBandNames()) {
+            if (bandname.equalsIgnoreCase(MerisClassificationOp.FLH)) {
+                moveBand(targetProduct, merisCloudProduct, bandname);
+            }
+        }
+    }
+
     public static void addCCRhoGlintDebugValueBands(Product merisCloudProduct, Product targetProduct) {
         for (String bandname : merisCloudProduct.getBandNames()) {
             if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_GLINT)) {

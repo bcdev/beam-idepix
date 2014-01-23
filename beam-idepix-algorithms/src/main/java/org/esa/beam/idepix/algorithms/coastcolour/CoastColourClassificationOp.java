@@ -66,7 +66,7 @@ import java.util.Map;
  * This class provides the Mepix QWG cloud classification.
  */
 @OperatorMetadata(alias = "idepix.coastcolour.classification",
-                  version = "2.0.2-SNAPSHOT",
+                  version = "2.0.3-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
@@ -81,6 +81,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String MDSI = MerisClassificationOp.MDSI;
     public static final String RHO_GLINT = MerisClassificationOp.RHO_GLINT;
     public static final String SCHILLER = MerisClassificationOp.SCHILLER;
+    public static final String FLH =  MerisClassificationOp.FLH;
 
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
@@ -102,6 +103,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private static final int BAND_BRIGHT_N = MerisClassificationOp.BAND_BRIGHT_N;
     private static final int BAND_SLOPE_N_1 = MerisClassificationOp.BAND_SLOPE_N_1;
     private static final int BAND_SLOPE_N_2 = MerisClassificationOp.BAND_SLOPE_N_2;
+
+    private static final int BAND_FLH_7 = MerisClassificationOp.BAND_FLH_7;
+    private static final int BAND_FLH_8 = MerisClassificationOp.BAND_FLH_8;
+    private static final int BAND_FLH_9 = MerisClassificationOp.BAND_FLH_9;
 
     private SchillerAlgorithm landWaterNN;
     private L2AuxData auxData;
@@ -185,6 +190,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private double schillerSure;
     @Parameter(label = " Schiller Cloud Value", defaultValue = "true")
     private boolean ccOutputSchillerCloudValue;
+    @Parameter(label = " FLH Value computed from radiances", defaultValue = "false")
+    private boolean ccOutputFLHValue;
 
 
     private Band cloudFlagBand;
@@ -196,6 +203,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private Band rhoGlintChiwTermOutputBand;
     private Band seaIceClimatologyOutputBand;
     private Band schillerValueOutputBand;
+    private Band flhValueOutputBand;
     private Band mdsiOutputBand;
     private Integer wavelengthIndex;
     private SeaIceClassifier seaIceClassifier;
@@ -257,6 +265,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         }
         if (ccOutputSchillerCloudValue) {
             schillerValueOutputBand = targetProduct.addBand(SCHILLER, ProductData.TYPE_FLOAT32);
+        }
+        if (ccOutputFLHValue) {
+            flhValueOutputBand = targetProduct.addBand(FLH, ProductData.TYPE_FLOAT32);
         }
         if (ccOutputRhoglintDebugValues) {
             rhoGlintOutputBand = targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
@@ -339,7 +350,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         SourceData sd = new SourceData();
         sd.rhoToa = new float[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS][0];
-        sd.radiance = new Tile[3];
+        sd.radiance = new Tile[6];
 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             sd.rhoToa[i] = (float[]) getSourceTile(
@@ -355,6 +366,14 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         sd.radiance[BAND_SLOPE_N_2] = getSourceTile(
                 l1bProduct.getBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[auxData.band_slope_n_2]),
                 rectangle);
+
+        sd.radiance[BAND_FLH_7] = getSourceTile(
+                l1bProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_7_BAND_NAME), rectangle);
+        sd.radiance[BAND_FLH_8] = getSourceTile(
+                l1bProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_8_BAND_NAME), rectangle);
+        sd.radiance[BAND_FLH_9] = getSourceTile(
+                l1bProduct.getBand(EnvisatConstants.MERIS_L1B_RADIANCE_9_BAND_NAME), rectangle);
+
         sd.detectorIndex = (short[]) getSourceTile(
                 l1bProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME),
                 rectangle).getRawSamples().getElems();
@@ -486,6 +505,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                         if (ccOutputSchillerCloudValue && band == schillerValueOutputBand) {
                             float schillerValue = computeSchillerCloudValue(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, schillerValue);
+                        }
+                        if (ccOutputFLHValue && band == flhValueOutputBand) {
+                            float flhValue = computeFLHValue(sd, pixelInfo);
+                            targetTile.setSample(pixelInfo.x, pixelInfo.y, flhValue);
                         }
                         if (ccOutputSeaIceClimatologyValue && band == seaIceClimatologyOutputBand) {
                             float seaIceMaxValue = computeSeaiceClimatologyValue(sd, pixelInfo);
@@ -651,6 +674,22 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         return schillerValue;
     }
+
+    private float computeFLHValue(SourceData sd, PixelInfo pixelInfo) {
+
+//        band8 - 1.005 *(band7 + (band9 - band7) * (681-665)/(705-665)), following DO, 20140122
+
+        final float rad7 = sd.radiance[BAND_FLH_7].getSampleFloat(pixelInfo.x, pixelInfo.y);
+        final float rad8 = sd.radiance[BAND_FLH_8].getSampleFloat(pixelInfo.x, pixelInfo.y);
+        final float rad9 = sd.radiance[BAND_FLH_9].getSampleFloat(pixelInfo.x, pixelInfo.y);
+
+        final float diff1 = 681.0f - 665.0f;
+        final float diff2 = 705.0f - 665.0f;
+        final float flhValue = rad8 - 1.005f * (rad7 + (rad9 - rad7)* diff1 / diff2);
+
+        return flhValue;
+    }
+
 
     private float computeSeaiceClimatologyValue(SourceData sd, PixelInfo pixelInfo) {
         final GeoPos geoPos = getGeoPos(pixelInfo);

@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.schiller",
-                  version = "2.0.2-SNAPSHOT",
+                  version = "2.0.3-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with IPF (former MEPIX) algorithm.")

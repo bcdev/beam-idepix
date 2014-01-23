@@ -32,6 +32,9 @@
      <!-- Whether to additionally write the Schiller cloud value -->
      <ccOutputSchillerCloudValue>true</ccOutputSchillerCloudValue>
 
+     <!-- Whether to additionally write the FLH Value computed from radiances -->
+     <ccOutputFLHValue>false</ccOutputFLHValue>
+
      <!-- Schiller cloud threshold for ambiguous clouds -->
      <ccSchillerAmbiguous>1.4</ccSchillerAmbiguous>
 

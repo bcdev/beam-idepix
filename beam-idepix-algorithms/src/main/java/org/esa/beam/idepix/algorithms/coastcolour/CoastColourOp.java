@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.coastcolour",
-                  version = "2.0.2-SNAPSHOT",
+                  version = "2.0.3-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with CoastColour algorithm.")
@@ -78,6 +78,9 @@ public class CoastColourOp extends BasisOp {
 
     @Parameter(label = " RhoGlint Debug Values", defaultValue = "false")
     private boolean ccOutputRhoglintDebugValues;
+
+    @Parameter(defaultValue = "false", label = " FLH Value computed from radiances")
+    private boolean ccOutputFLHValue = false;
 
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
@@ -210,6 +213,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
         cloudClassificationParameters.put("ccOutputRhoglintDebugValues", ccOutputRhoglintDebugValues);
         cloudClassificationParameters.put("ccOutputSchillerCloudValue", ccOutputSchillerCloudValue);
+        cloudClassificationParameters.put("ccOutputFLHValue", ccOutputFLHValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                                               cloudClassificationParameters, cloudInputProducts);
     }
@@ -252,6 +256,11 @@ public class CoastColourOp extends BasisOp {
         if (ccOutputSchillerCloudValue) {
             IdepixProducts.addCCSchillerCloudValueBand(merisCloudProduct, targetProduct);
         }
+
+        if (ccOutputFLHValue) {
+            IdepixProducts.addCCFLHValueBand(merisCloudProduct, targetProduct);
+        }
+
 
         if (ccOutputL2CloudDetection) {
             addCloudClassificationFlagBandCoastColour();

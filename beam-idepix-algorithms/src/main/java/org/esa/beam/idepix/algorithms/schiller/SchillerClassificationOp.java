@@ -45,7 +45,7 @@ import java.io.IOException;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.schiller.classification",
-                  version = "2.0.2-SNAPSHOT",
+                  version = "2.0.3-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",

@@ -8,7 +8,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.util.ProductUtils;
 
 @OperatorMetadata(alias = "idepix.operators.Basis",
-                  version = "2.0.2-SNAPSHOT",
+                  version = "2.0.3-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",

@@ -51,7 +51,7 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
  * This class provides the pixel classification for MERIS (mainly based on IPF approach).
  */
 @OperatorMetadata(alias = "idepix.operators.MerisClassification",
-                  version = "2.0.2-SNAPSHOT",
+                  version = "2.0.3-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zuehlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
@@ -66,10 +66,15 @@ public class MerisClassificationOp extends MerisBasisOp {
     public static final String MDSI = "mdsi";
     public static final String RHO_GLINT = "rho_glint";
     public static final String SCHILLER = "schiller_cloud_value";
+    public static final String FLH = "flh";
 
     public static final int BAND_BRIGHT_N = 0;
     public static final int BAND_SLOPE_N_1 = 1;
     public static final int BAND_SLOPE_N_2 = 2;
+
+    public static final int BAND_FLH_7 = 3;
+    public static final int BAND_FLH_8 = 4;
+    public static final int BAND_FLH_9 = 5;
 
     public static final int F_CLOUD = 0;
     public static final int F_BRIGHT = 1;
