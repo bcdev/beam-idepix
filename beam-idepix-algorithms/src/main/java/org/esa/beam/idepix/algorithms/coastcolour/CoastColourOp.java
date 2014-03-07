@@ -137,7 +137,7 @@ public class CoastColourOp extends BasisOp {
     @Override
     public void initialize() throws OperatorException {
 
-        System.out.println("Running IDEPIX renovation, v2.0-SNAPSHOT...");
+        System.out.println("Running IDEPIX - source product: " + sourceProduct.getName());
 
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.CoastColour);
         if (!inputProductIsValid) {

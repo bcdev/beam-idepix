@@ -135,6 +135,9 @@ public class IdepixDefaultDialog extends SingleTargetProductDialog {
                                                                                        null);
         OperatorMenu menuSupport = new OperatorMenu(this.getJDialog(), operatorSpi.getOperatorClass(),
                                                     parameterSupport, helpID);
+        // todo: activate this when switching to BEAM 5
+//        OperatorMenu menuSupport = new OperatorMenu(this.getJDialog(),
+//                                                    operatorSpi.getOperatorClass(), parameterSupport, appContext, helpID);
         getJDialog().setJMenuBar(menuSupport.createDefaultMenu());
     }
 
