@@ -66,7 +66,7 @@ import java.util.Map;
  * This class provides the Mepix QWG cloud classification.
  */
 @OperatorMetadata(alias = "idepix.coastcolour.classification",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.2-EVOLUTION-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",

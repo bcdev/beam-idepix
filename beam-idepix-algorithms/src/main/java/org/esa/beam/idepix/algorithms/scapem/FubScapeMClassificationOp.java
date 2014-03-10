@@ -40,7 +40,7 @@ import java.awt.*;
  * @author MarcoZ
  */
 @OperatorMetadata(alias = "idepix.scapem.classification",
-        version = "2.0.3-SNAPSHOT",
+        version = "2.2-EVOLUTION-SNAPSHOT",
         internal = true,
         authors = "Olaf Danne, Tonio Fincke",
         copyright = "(c) 2013 by Brockmann Consult",

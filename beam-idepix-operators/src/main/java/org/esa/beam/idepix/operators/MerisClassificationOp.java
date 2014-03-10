@@ -51,7 +51,7 @@ import static org.esa.beam.meris.l2auxdata.Constants.*;
  * This class provides the pixel classification for MERIS (mainly based on IPF approach).
  */
 @OperatorMetadata(alias = "idepix.operators.MerisClassification",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.2-EVOLUTION-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zuehlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",

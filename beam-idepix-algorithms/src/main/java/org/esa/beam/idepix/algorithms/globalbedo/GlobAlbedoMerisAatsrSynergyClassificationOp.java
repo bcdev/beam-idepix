@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.2-EVOLUTION-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2013 by Brockmann Consult",

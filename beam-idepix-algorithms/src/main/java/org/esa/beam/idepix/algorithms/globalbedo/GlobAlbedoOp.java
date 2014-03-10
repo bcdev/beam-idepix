@@ -29,8 +29,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo",
-                  version = "2.0.3-SNAPSHOT",
-                  authors = "Olaf Danne",
+                  version = "2.2-EVOLUTION-SNAPSHOT",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with GlobAlbedo algorithm.")
 public class GlobAlbedoOp extends BasisOp {

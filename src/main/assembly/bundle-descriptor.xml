@@ -11,7 +11,9 @@
             <defaultParameters><![CDATA[
 
      <!-- CHANGES to previous Idepix version: -->
-     <!--     - CC user option added to write FLH value to output product -->
+     <!--     - Created new branch EVOLUTION, to be used for BC internal development. -->
+     <!--       (MASTER branch will from now on be used for public releases) -->
+     <!--       Set initial version to 2.2-EVOLUTION-SNAPSHOT -->
      <!-- This version was provided by O.Danne -->
      <!-- **************************** -->
 

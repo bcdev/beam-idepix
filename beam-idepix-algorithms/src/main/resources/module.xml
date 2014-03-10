@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.0.3-SNAPSHOT</version>
+    <version>2.2-EVOLUTION-SNAPSHOT</version>
     <name>Generic classification of pixels</name>
     <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
     </description>
@@ -14,7 +14,11 @@
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
-    <changelog/>
+    <changelog>
+        - Created new branch EVOLUTION, to be used for BC internal development.
+        (MASTER branch will from now on be used for public releases)
+        - Set initial version to 2.2-EVOLUTION-SNAPSHOT.
+    </changelog>
 
     <dependency>
         <module>beam-idepix-operators</module>

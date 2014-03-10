@@ -32,7 +32,7 @@ import java.awt.Rectangle;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.operators.CloudShadow",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.2-EVOLUTION-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",

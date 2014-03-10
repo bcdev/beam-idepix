@@ -22,7 +22,7 @@ import java.awt.Rectangle;
 // todo nf - discuss unit-level testing of metadata values
 
 @OperatorMetadata(alias = "Meris.CCNNHS",
-                  version = "2.0.3",
+                  version = "2.2-EVOLUTION-SNAPSHOT",
                   authors = "H. Schiller (Algorithm), T. Block, N. Fomferra (Implementation)",
                   copyright = "(c) 2013 by Brockmann Consult",
                   description = "Computing cloud masks using neural networks by H.Schiller")
