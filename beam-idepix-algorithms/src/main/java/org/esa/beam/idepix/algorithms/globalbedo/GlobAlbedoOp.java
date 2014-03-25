@@ -193,7 +193,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudInput.put("pbaro", pbaroProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                                                                        true, false, true, false, false, true);
+                                                                        false, true, false, false, true);
         gaCloudInput.put("pressure", pressureLiseProduct);
         merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
                                                                     pressureLiseProduct, pbaroProduct, true);

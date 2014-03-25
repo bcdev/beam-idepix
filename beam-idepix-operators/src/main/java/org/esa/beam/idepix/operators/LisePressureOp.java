@@ -77,8 +77,6 @@ public class LisePressureOp extends BasisOp {
     public boolean outputP2 = true;
     @Parameter(description = "If 'true' the algorithm will compute LISE PScatt.", defaultValue = "true")
     public boolean outputPScatt = true;
-    @Parameter(description = "If 'true' the algorithm will compute LISE PScatt.", defaultValue = "true")
-    public boolean l2CloudDetection = true;
 
     private static final String P_1_LISE = "p1_lise";
     public static final String PRESSURE_LISE_P1 = P_1_LISE;
@@ -1040,7 +1038,7 @@ public class LisePressureOp extends BasisOp {
             p2LiseBand = targetProduct.addBand(P_2_LISE, ProductData.TYPE_FLOAT32);
         }
         // Bottom pressure, ocean, Rayleigh multiple scattering at 761nm and Fresnel transmittance considered:
-        if (outputPScatt || l2CloudDetection) {
+        if (outputPScatt) {
             pscattLiseBand = targetProduct.addBand(PSCATT_LISE, ProductData.TYPE_FLOAT32);
         }
 
@@ -1094,7 +1092,7 @@ public class LisePressureOp extends BasisOp {
                 pressureResultIndex = 2;
                 isInvalid = invalidImage.getData(rectangle);
             }
-            if (band == pscattLiseBand && (outputPScatt || l2CloudDetection)) {
+            if (band == pscattLiseBand && outputPScatt) {
                 pressureResultIndex = 3;
                 // invalidOceanImage.getData(rectangle)
                 isInvalid = invalidImage.getData(rectangle);

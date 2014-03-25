@@ -15,8 +15,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beamVersion>4.11.1-SNAPSHOT</beamVersion>
-        <ceresVersion>0.13.3-SNAPSHOT</ceresVersion>
+        <beamVersion>5.0-SNAPSHOT</beamVersion>
+        <ceresVersion>0.14-SNAPSHOT</ceresVersion>
     </properties>
 
     <distributionManagement>

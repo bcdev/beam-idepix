@@ -7,14 +7,4 @@ org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoAatsrClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoVgtClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisAatsrSynergyClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp$Spi
-org.esa.beam.idepix.algorithms.ipf.IpfOp$Spi
-org.esa.beam.idepix.algorithms.globcover.GlobCoverOp$Spi
-org.esa.beam.idepix.algorithms.globcover.GlobCoverClassificationOp$Spi
-org.esa.beam.idepix.algorithms.magicstick.MagicStickOp$Spi
-org.esa.beam.idepix.algorithms.magicstick.MagicStickClassificationOp$Spi
-org.esa.beam.idepix.algorithms.schiller.SchillerOp$Spi
-org.esa.beam.idepix.algorithms.schiller.SchillerClassificationOp$Spi
-org.esa.beam.idepix.algorithms.scapem.FubScapeMOp$Spi
-org.esa.beam.idepix.algorithms.scapem.FubScapeMClassificationOp$Spi
-org.esa.beam.idepix.algorithms.scapem.FubScapeMLakesOp$Spi
 

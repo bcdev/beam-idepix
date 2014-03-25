@@ -47,7 +47,6 @@ public class IdepixProducts {
     }
 
     public static Product computePressureLiseProduct(Product sourceProduct, Product rad2reflProduct,
-                                                     boolean ipfOutputL2CloudDetection,
                                                      boolean straylightCorr,
                                                      boolean outputP1,
                                                      boolean outputPressureSurface,
@@ -62,7 +61,6 @@ public class IdepixProducts {
         params.put("outputPressureSurface", outputPressureSurface);
         params.put("outputP2", outputP2);
         params.put("outputPScatt", outputPScatt);
-        params.put("l2CloudDetection", ipfOutputL2CloudDetection);
         return GPF.createProduct(OperatorSpi.getOperatorAlias(LisePressureOp.class), params, input);
     }
 

@@ -75,15 +75,6 @@
             <placeAfter/>
         </action>
         <action>
-            <id>ipfAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixIpfAction</class>
-            <text>IPF (MERIS)...</text>
-            <shortDescr>Pixel classification with IPF (former MEPIX) algorithm.</shortDescr>
-            <mnemonic>I</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-        </action>
-        <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
             <text>CoastColour (MERIS)...</text>
@@ -102,46 +93,6 @@
             <parent>idepix</parent>
             <helpId>idepixChain</helpId>
             <placeAfter>coastcolourAlgo</placeAfter>
-        </action>
-        <action>
-            <id>globcoverAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixGlobCoverAction</class>
-            <text>GlobCover (MERIS)...</text>
-            <shortDescr>Pixel classification with GlobCover algorithm.</shortDescr>
-            <mnemonic>G</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-            <placeAfter>globalbedoAlgo</placeAfter>
-        </action>
-        <action>
-            <id>magicstickAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixMagicStickAction</class>
-            <text>Magic Stick (MERIS)...</text>
-            <shortDescr>Pixel classification with MagicStick algorithm.</shortDescr>
-            <mnemonic>G</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-            <placeAfter>globcoverAlgo</placeAfter>
-        </action>
-        <action>
-            <id>schillerAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixSchillerAction</class>
-            <text>Schiller (MERIS)...</text>
-            <shortDescr>Pixel classification with Schiller algorithm.</shortDescr>
-            <mnemonic>G</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-            <placeAfter>magicstickAlgo</placeAfter>
-        </action>
-        <action>
-            <id>fubscapemAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixFubScapeMAction</class>
-            <text>ScapeM (MERIS)...</text>
-            <shortDescr>Pixel classification with ScapeM algorithm.</shortDescr>
-            <mnemonic>A</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-            <placeAfter>schillerAlgo</placeAfter>
         </action>
     </extension>
 
