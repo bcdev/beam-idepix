@@ -134,7 +134,7 @@ public class IdepixDefaultDialog extends SingleTargetProductDialog {
                                                                                        parameterMap,
                                                                                        null);
         OperatorMenu menuSupport = new OperatorMenu(this.getJDialog(),
-                                                    operatorSpi.getOperatorClass(), parameterSupport, appContext, helpID);
+                                                    operatorSpi.getOperatorClass(), parameterSupport, helpID);
         getJDialog().setJMenuBar(menuSupport.createDefaultMenu());
     }
 
