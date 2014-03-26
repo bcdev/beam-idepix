@@ -60,8 +60,7 @@
             <class>org.esa.beam.visat.actions.ActionGroup</class>
             <text>IDEPIX Generic classification of pixels...</text>
             <shortDescr>
-                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
-                sensors.
+                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
             </shortDescr>
             <mnemonic/>
             <parent>tool</parent>
@@ -71,7 +70,7 @@
         <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
-            <text>CoastColour...</text>
+            <text>OC CCI / CoastColour ...</text>
             <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
@@ -80,25 +79,25 @@
         <action>
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
-            <text>GlobAlbedo...</text>
+            <text>LC CCI / GlobAlbedo ...</text>
             <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
             <helpId>idepixChain</helpId>
         </action>
 
-        <action>
-            <id>schillercloud</id>
-            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
-            <operatorName>SchillerCloud</operatorName>
-            <dialogTitle>Schillers Cloud-mask</dialogTitle>
-            <targetProductNameSuffix>_schillercloud</targetProductNameSuffix>
-            <text>Schillers Cloud-mask...</text>
-            <shortDescr>A cloud mask based on Schillers neural nets.</shortDescr>
-            <parent>tool</parent>
-            <helpID>schillercloud</helpID>
-            <placeAfter>idepix</placeAfter>
-        </action>
+        <!--<action>-->
+            <!--<id>schillercloud</id>-->
+            <!--<class>org.esa.beam.visat.actions.DefaultOperatorAction</class>-->
+            <!--<operatorName>SchillerCloud</operatorName>-->
+            <!--<dialogTitle>Schillers Cloud-mask</dialogTitle>-->
+            <!--<targetProductNameSuffix>_schillercloud</targetProductNameSuffix>-->
+            <!--<text>Schillers Cloud-mask...</text>-->
+            <!--<shortDescr>A cloud mask based on Schillers neural nets.</shortDescr>-->
+            <!--<parent>tool</parent>-->
+            <!--<helpID>schillercloud</helpID>-->
+            <!--<placeAfter>idepix</placeAfter>-->
+        <!--</action>-->
     </extension>
 
     <extension point="beam-ui:helpSets">

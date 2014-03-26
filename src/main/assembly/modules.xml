@@ -31,7 +31,7 @@
             <scope>runtime</scope>
             <includes>
                 <include>*:beam-meris-brr*</include>
-                <include>*:beam-meris-glint*</include>
+                <!--<include>*:beam-meris-glint*</include>-->
                 <include>*:beam-meris-l2auxdata*</include>
                 <include>*:beam-meris-radiometry*</include>
                 <include>*:beam-meris-sdr*</include>

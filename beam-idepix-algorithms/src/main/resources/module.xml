@@ -54,9 +54,9 @@
     <dependency>
         <module>beam-meris-radiometry</module>
     </dependency>
-    <dependency>
-        <module>beam-meris-glint</module>
-    </dependency>
+    <!--<dependency>-->
+        <!--<module>beam-meris-glint</module>-->
+    <!--</dependency>-->
 
     <categories>Application,Processor,MERIS,AATSR</categories>
 
@@ -77,7 +77,7 @@
         <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
-            <text>CoastColour (MERIS)...</text>
+            <text>OC CCI / CoastColour (MERIS)...</text>
             <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
@@ -87,7 +87,7 @@
         <action>
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
-            <text>GlobAlbedo (MERIS, AATSR, VGT)...</text>
+            <text>LC CCI / GlobAlbedo (MERIS, AATSR, VGT)...</text>
             <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
