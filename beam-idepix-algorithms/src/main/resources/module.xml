@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.0.3-SNAPSHOT</version>
+    <version>2.1-SNAPSHOT</version>
     <name>Generic classification of pixels</name>
     <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
     </description>
@@ -77,8 +77,9 @@
         <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
-            <text>OC CCI / CoastColour (MERIS)...</text>
-            <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
+            <!--<text>OC CCI / CoastColour (MERIS)...</text>-->
+            <text>Water...</text>
+            <shortDescr>Pixel classification over water (OC-CCI and CoastColour algorithm)</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
             <helpId>idepixChain</helpId>
@@ -87,8 +88,9 @@
         <action>
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
-            <text>LC CCI / GlobAlbedo (MERIS, AATSR, VGT)...</text>
-            <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
+            <!--<text>LC CCI / GlobAlbedo (MERIS, AATSR, VGT)...</text>-->
+            <text>Land...</text>
+            <shortDescr>Pixel classification over land (LC-CCI and GlobAlbedo algorithm)</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
             <helpId>idepixChain</helpId>

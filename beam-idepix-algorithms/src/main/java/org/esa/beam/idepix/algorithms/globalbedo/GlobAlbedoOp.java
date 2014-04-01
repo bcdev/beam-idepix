@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with GlobAlbedo algorithm.")
@@ -49,19 +49,20 @@ public class GlobAlbedoOp extends BasisOp {
     private Product pbaroProduct;
 
     // Globalbedo parameters
-    @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "true",
+               label = " Write TOA Radiances to the target product")
     private boolean gaCopyRadiances = true;
-    @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
-    boolean gaCopySubsetOfRadiances;
-    @Parameter(defaultValue = "false", label = "Copy MERIS TOA reflectance bands (MERIS/AATSR synergy)")
-    boolean gaCopyMerisToaReflectances;
-    @Parameter(defaultValue = "false", label = " Compute only the flag band")
-    private boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue = "false", label = " Copy pressure bands (MERIS)")
+//    @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
+//    boolean gaCopySubsetOfRadiances = false;
+//    @Parameter(defaultValue = "false", label = "Copy MERIS TOA reflectance bands (MERIS/AATSR synergy)")
+    boolean gaCopyMerisToaReflectances = false;
+//    @Parameter(defaultValue = "false", label = " Compute only the flag band")
+    private boolean gaComputeFlagsOnly = false;
+    @Parameter(defaultValue = "false", label = " Write pressure bands to the target product")
     private boolean gaCopyPressure;
-    @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances (MERIS)")
+    @Parameter(defaultValue = "false", label = " Write Rayleigh Corrected Reflectances to the target product")
     private boolean gaCopyRayleigh = false;
-    @Parameter(defaultValue = "true", label = " Compute cloud shadow (MERIS)")
+    @Parameter(defaultValue = "true", label = " Compute cloud shadow ")
     private boolean gaComputeMerisCloudShadow;
     @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
                valueSet = {
@@ -75,7 +76,7 @@ public class GlobAlbedoOp extends BasisOp {
     private String ctpMode;
     @Parameter(defaultValue = "false", label = " Use GETASSE30 DEM for Barometric Pressure Computation")
     private boolean gaUseGetasse = false;
-    @Parameter(defaultValue = "false", label = " Copy input annotation bands (VGT)")
+    @Parameter(defaultValue = "false", label = " Write input annotation bands to the target product (VGT only)")
     private boolean gaCopyAnnotations;
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int gaCloudBufferWidth;
@@ -84,32 +85,32 @@ public class GlobAlbedoOp extends BasisOp {
     private int wmResolution;
     @Parameter(defaultValue = "false", label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
-    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+//    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "false", label = " Apply 'Blue dense' cloud algorithm  (MERIS)")
+//    @Parameter(defaultValue = "false", label = " Apply 'Blue dense' cloud algorithm  (MERIS)")
     boolean gaApplyBlueDenseCloudAlgorithm = false;
-    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm (MERIS)")
+//    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm (MERIS)")
     private boolean gaComputeSchillerClouds = false;
-    @Parameter(defaultValue = "true", label = " Consider water mask fraction")
+//    @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean gaUseWaterMaskFraction = true;
-    @Parameter(defaultValue = "false", label = " Use forward view for cloud flag determination (AATSR)")
-    private boolean gaUseAatsrFwardForClouds;
-    @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
-    boolean gaUseIstomenaSeaIceAlgorithm;
-    @Parameter(defaultValue = "true", label = " Use Schiller algorithm for sea ice determination outside AATSR")
-    boolean gaUseSchillerSeaIceAlgorithm;
-    @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
-    float gaRefl1600SeaIceThresh;
-    @Parameter(defaultValue = "false", label = "Write Schiller Seaice Output bands (MERIS 1600 and Cloud/Seaice prob)")
-    boolean gaWriteSchillerSeaiceNetBands;
+//    @Parameter(defaultValue = "false", label = " Use forward view for cloud flag determination (AATSR)")
+    private boolean gaUseAatsrFwardForClouds = false;
+//    @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
+    boolean gaUseIstomenaSeaIceAlgorithm = false;
+//    @Parameter(defaultValue = "true", label = " Use Schiller algorithm for sea ice determination outside AATSR")
+    boolean gaUseSchillerSeaIceAlgorithm = true;
+//    @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
+    float gaRefl1600SeaIceThresh = 2.0f;
+//    @Parameter(defaultValue = "false", label = "Write Schiller Seaice Output bands (MERIS 1600 and Cloud/Seaice prob)")
+    boolean gaWriteSchillerSeaiceNetBands = false;
 
-    @Parameter(defaultValue = "_M", label = "MERIS/AATSR collocation master product band names extension")
-    private String bandExtensionMaster;
-    @Parameter(defaultValue = "_S", label = "MERIS/AATSR collocation slave product band names extension")
-    private String bandExtensionSlave;
+//    @Parameter(defaultValue = "_M", label = "MERIS/AATSR collocation master product band names extension")
+    private String bandExtensionMaster = "_M";
+//    @Parameter(defaultValue = "_S", label = "MERIS/AATSR collocation slave product band names extension")
+    private String bandExtensionSlave= "_S";
 
-    @Parameter(defaultValue = "RR", label = "MERIS resolution")
-    private String merisResolution;
+//    @Parameter(defaultValue = "RR", label = "MERIS resolution")
+    private String merisResolution = "RR";
 
 
     private Map<String, Object> gaCloudClassificationParameters;
@@ -139,7 +140,7 @@ public class GlobAlbedoOp extends BasisOp {
     private Map<String, Object> createGaCloudClassificationParameters() {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
-        gaCloudClassificationParameters.put("gaCopySubsetOfRadiances", gaCopySubsetOfRadiances);
+//        gaCloudClassificationParameters.put("gaCopySubsetOfRadiances", gaCopySubsetOfRadiances);
         gaCloudClassificationParameters.put("gaCopyMerisToaReflectances", gaCopyMerisToaReflectances);
         gaCloudClassificationParameters.put("gaCopyRayleigh", gaCopyRayleigh);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);

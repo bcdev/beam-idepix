@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class IdepixConstants {
 
-    public static final String IDEPIX_VERSION = "v2.0-SNAPSHOT";
+    public static final String IDEPIX_VERSION = "v2.1";
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
@@ -124,10 +124,9 @@ public class IdepixConstants {
 
     public static final String inputconsistencyErrorMessage =
             "Selected cloud screening algorithm cannot be used with given input product. \n\n" +
-                    "Valid combinations are: \n" +
-                    " - QWG for MERIS products \n" +
-                    " - GlobColour for MERIS, AATSR, VGT products \n" +
-                    " - CoastColour for MERIS products ";
+                    "Valid are: \n" +
+                    " - MERIS and VGT products over land \n" +
+                    " - MERIS products over water ";
 
 
     public static final String ctpModeDefault = "Derive from Neural Net";

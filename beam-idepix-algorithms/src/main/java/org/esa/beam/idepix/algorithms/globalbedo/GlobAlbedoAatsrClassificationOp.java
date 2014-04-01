@@ -25,7 +25,7 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.aatsr",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",

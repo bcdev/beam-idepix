@@ -66,7 +66,7 @@ import java.util.Map;
  * This class provides the Mepix QWG cloud classification.
  */
 @OperatorMetadata(alias = "idepix.coastcolour.classification",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
@@ -142,41 +142,42 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     @Parameter(description = "PScatt Pressure Threshold.", defaultValue = "700.0")
     private double userDefinedPScattPressureThreshold;
 
-    @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.185")
-    private double userDefinedRhoToa442Threshold;
+//    @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.03")
+    private double userDefinedRhoToa442Threshold = 0.03;
 
-    @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
-    private double userDefinedDeltaRhoToa442Threshold;   // default changed from 0.185, 2011/03/25
+//    @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
+    private double userDefinedDeltaRhoToa442Threshold = 0.03;   // default changed from 0.185, 2011/03/25
+
     //    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
-    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.2") // 20130702
-    public double userDefinedGlintThreshold;
+//    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.2") // 20130702
+    public double userDefinedGlintThreshold = 0.2;
 
 
-    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "865",
-               valueSet = {
-                       "412",
-                       "442",
-                       "490",
-                       "510",
-                       "560",
-                       "620",
-                       "665",
-                       "681",
-                       "705",
-                       "753",
-                       "760",
-                       "775",
-                       "865",
-                       "890",
-                       "900"
-               })
-    private int rhoAgReferenceWavelength;     // default changed from 442, 2011/03/25
+//    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "865",
+//               valueSet = {
+//                       "412",
+//                       "442",
+//                       "490",
+//                       "510",
+//                       "560",
+//                       "620",
+//                       "665",
+//                       "681",
+//                       "705",
+//                       "753",
+//                       "760",
+//                       "775",
+//                       "865",
+//                       "890",
+//                       "900"
+//               })
+    private int rhoAgReferenceWavelength = 865;     // default changed from 442, 2011/03/25
 
     @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
     private double userDefinedRhoToa753Threshold;
-    @Parameter(description = "User Defined MDSI Threshold.", defaultValue = "0.01")
+    @Parameter(description = "MDSI Feature Value 'high' threshold.", defaultValue = "0.01")
     private double userDefinedMDSIThreshold;
-    @Parameter(description = "User Defined NDVI Threshold.", defaultValue = "0.1")
+    @Parameter(description = "NDVI Feature Value 'high' threshold.", defaultValue = "0.1")
     private double userDefinedNDVIThreshold;
     @Parameter(description = "User Defined Sea Ice Threshold on Climatology.", defaultValue = "10.0")
     private double seaIceThreshold;
@@ -184,14 +185,14 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private boolean ccOutputSeaIceClimatologyValue;
     @Parameter(label = " RhoGlint Debug Values", defaultValue = "false")
     private boolean ccOutputRhoglintDebugValues;
-    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")
-    private double schillerAmbiguous;
-    @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
-    private double schillerSure;
-    @Parameter(label = " Schiller Cloud Value", defaultValue = "true")
-    private boolean ccOutputSchillerCloudValue;
-    @Parameter(label = " FLH Value computed from radiances", defaultValue = "false")
-    private boolean ccOutputFLHValue;
+    @Parameter(label = "Cloud screening 'ambiguous' threshold", defaultValue = "1.4")
+    private double cloudScreeningAmbiguous;     // Schiller
+    @Parameter(label = "Cloud screening 'sure' threshold", defaultValue = "1.8")
+    private double cloudScreeningSure;         // Schiller
+    @Parameter(label = " Cloud Probability Feature Value", defaultValue = "true")
+    private boolean ccOutputCloudProbabilityFeatureValue;    // Schiller
+//    @Parameter(label = " FLH Value computed from radiances", defaultValue = "false")
+//    private boolean ccOutputFLHValue;
 
 
     private Band cloudFlagBand;
@@ -263,11 +264,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         if (ccOutputSeaIceClimatologyValue) {
             seaIceClimatologyOutputBand = targetProduct.addBand("sea_ice_climatology_value", ProductData.TYPE_FLOAT32);
         }
-        if (ccOutputSchillerCloudValue) {
+        if (ccOutputCloudProbabilityFeatureValue) {
             schillerValueOutputBand = targetProduct.addBand(SCHILLER, ProductData.TYPE_FLOAT32);
-        }
-        if (ccOutputFLHValue) {
-            flhValueOutputBand = targetProduct.addBand(FLH, ProductData.TYPE_FLOAT32);
         }
         if (ccOutputRhoglintDebugValues) {
             rhoGlintOutputBand = targetProduct.addBand(RHO_GLINT, ProductData.TYPE_FLOAT32);
@@ -502,13 +500,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                             final double chiW = computeChiW(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, chiW);
                         }
-                        if (ccOutputSchillerCloudValue && band == schillerValueOutputBand) {
+                        if (ccOutputCloudProbabilityFeatureValue && band == schillerValueOutputBand) {
                             float schillerValue = computeSchillerCloudValue(sd, pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, schillerValue);
-                        }
-                        if (ccOutputFLHValue && band == flhValueOutputBand) {
-                            float flhValue = computeFLHValue(sd, pixelInfo);
-                            targetTile.setSample(pixelInfo.x, pixelInfo.y, flhValue);
                         }
                         if (ccOutputSeaIceClimatologyValue && band == seaIceClimatologyOutputBand) {
                             float seaIceMaxValue = computeSeaiceClimatologyValue(sd, pixelInfo);
@@ -609,8 +603,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             is_snow_ice = (high_mdsi && bright_f);
         }
 
-        double ambiguousThresh = schillerAmbiguous;
-        double sureThresh = schillerSure;
+        double ambiguousThresh = cloudScreeningAmbiguous;
+        double sureThresh = cloudScreeningSure;
         // this seems to avoid false cloud flagging in glint regions:
         if (is_glint_risk) {
             ambiguousThresh += 0.1;
@@ -658,8 +652,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     private float computeSchillerCloudValue(SourceData sd, PixelInfo pixelInfo) {
         final boolean glintRisk = isGlintRisk(sd, pixelInfo);
-        double ambiguousThresh = schillerAmbiguous;
-        double sureThresh = schillerSure;
+        double ambiguousThresh = cloudScreeningAmbiguous;
+        double sureThresh = cloudScreeningSure;
         // this seems to avoid false cloud flagging in glint regions:
         if (glintRisk) {
             ambiguousThresh += 0.1;

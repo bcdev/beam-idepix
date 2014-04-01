@@ -32,7 +32,7 @@ import java.io.InputStreamReader;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
@@ -51,8 +51,6 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaCopyRadiances;
     @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances (MERIS)")
     boolean gaCopyRayleigh = false;
-    @Parameter(defaultValue = "false", label = "Copy subset of input radiance bands (MERIS/AATSR synergy)")
-    boolean gaCopySubsetOfRadiances;
     @Parameter(defaultValue = "false", label = "Copy MERIS TOA reflectance bands (MERIS/AATSR synergy)")
     boolean gaCopyMerisToaReflectances;
     @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")

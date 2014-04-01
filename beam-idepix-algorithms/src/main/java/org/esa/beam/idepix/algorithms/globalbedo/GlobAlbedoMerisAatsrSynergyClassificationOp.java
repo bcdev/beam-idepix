@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globalbedo.classification.merisaatsr",
-                  version = "2.0.3-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2013 by Brockmann Consult",
@@ -211,9 +211,6 @@ public class GlobAlbedoMerisAatsrSynergyClassificationOp extends GlobAlbedoClass
         }
         if (gaCopyRayleigh) {
             copyRayleighReflectances();
-        }
-        if (!gaCopyRadiances && gaCopySubsetOfRadiances) {
-            copySubsetOfRadiances();
         }
         if (gaCopyMerisToaReflectances) {
             copyMerisToaReflectances();

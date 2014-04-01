@@ -73,6 +73,7 @@ public class IdepixWithFSGProductTest {
     }
 
     @Test
+    @Ignore
     public void testCreatingTargetProduct_CoastColour_Algo() {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "CoastColour");
