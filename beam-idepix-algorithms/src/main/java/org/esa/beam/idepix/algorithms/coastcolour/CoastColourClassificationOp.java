@@ -81,23 +81,15 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String MDSI = MerisClassificationOp.MDSI;
     public static final String RHO_GLINT = MerisClassificationOp.RHO_GLINT;
     public static final String SCHILLER = MerisClassificationOp.SCHILLER;
-    public static final String FLH =  MerisClassificationOp.FLH;
 
-    public static final int F_CLOUD = 0;
-    public static final int F_BRIGHT = 1;
-    public static final int F_BRIGHT_RC = 2;
-    public static final int F_LOW_PSCATT = 3;
-    public static final int F_CLOUD_AMBIGUOUS = 4;
-    public static final int F_SLOPE_1 = 5;
-    public static final int F_SLOPE_2 = 6;
-    public static final int F_BRIGHT_TOA = 7;
-    public static final int F_HIGH_MDSI = 8;
-    public static final int F_SNOW_ICE = 9;
-    public static final int F_GLINTRISK = 10;
-    public static final int F_CLOUD_BUFFER = 11;
-    public static final int F_CLOUD_SHADOW = 12;
     public static final int F_LAND = 13;
     public static final int F_COASTLINE = 14;
+    public static final int F_CLOUD = 0;
+    public static final int F_CLOUD_AMBIGUOUS = 4;
+    public static final int F_CLOUD_BUFFER = 11;
+    public static final int F_CLOUD_SHADOW = 12;
+    public static final int F_SNOW_ICE = 9;
+    public static final int F_GLINTRISK = 10;
     public static final int F_MIXED_PIXEL = 15;
 
     private static final int BAND_BRIGHT_N = MerisClassificationOp.BAND_BRIGHT_N;
@@ -142,10 +134,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     @Parameter(description = "PScatt Pressure Threshold.", defaultValue = "700.0")
     private double userDefinedPScattPressureThreshold;
 
-//    @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.03")
+    //    @Parameter(description = "User Defined RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedRhoToa442Threshold = 0.03;
 
-//    @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
+    //    @Parameter(description = "User Defined Delta RhoTOA442 Threshold.", defaultValue = "0.03")
     private double userDefinedDeltaRhoToa442Threshold = 0.03;   // default changed from 0.185, 2011/03/25
 
     //    @Parameter(description = "User Defined Glint Threshold.", defaultValue = "0.015")
@@ -153,7 +145,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public double userDefinedGlintThreshold = 0.2;
 
 
-//    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "865",
+    //    @Parameter(description = " Rho AG Reference Wavelength [nm]", defaultValue = "865",
 //               valueSet = {
 //                       "412",
 //                       "442",
@@ -275,22 +267,22 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
-        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
-        flagCoding.addFlag("F_BRIGHT_RC", BitSetter.setFlag(0, F_BRIGHT_RC), null);
-        flagCoding.addFlag("F_LOW_PSCATT", BitSetter.setFlag(0, F_LOW_PSCATT), null);
-        flagCoding.addFlag("F_SLOPE_1", BitSetter.setFlag(0, F_SLOPE_1), null);
-        flagCoding.addFlag("F_SLOPE_2", BitSetter.setFlag(0, F_SLOPE_2), null);
-        flagCoding.addFlag("F_BRIGHT_TOA", BitSetter.setFlag(0, F_BRIGHT_TOA), null);
-        flagCoding.addFlag("F_HIGH_MDSI", BitSetter.setFlag(0, F_HIGH_MDSI), null);
-        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
-        flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
-        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), null);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, F_COASTLINE), null);
+        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
         flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, F_CLOUD_AMBIGUOUS), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), null);
+        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
+        flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
         flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, F_MIXED_PIXEL), null);
+//        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
+//        flagCoding.addFlag("F_BRIGHT_RC", BitSetter.setFlag(0, F_BRIGHT_RC), null);
+//        flagCoding.addFlag("F_LOW_PSCATT", BitSetter.setFlag(0, F_LOW_PSCATT), null);
+//        flagCoding.addFlag("F_SLOPE_1", BitSetter.setFlag(0, F_SLOPE_1), null);
+//        flagCoding.addFlag("F_SLOPE_2", BitSetter.setFlag(0, F_SLOPE_2), null);
+//        flagCoding.addFlag("F_BRIGHT_TOA", BitSetter.setFlag(0, F_BRIGHT_TOA), null);
+//        flagCoding.addFlag("F_HIGH_MDSI", BitSetter.setFlag(0, F_HIGH_MDSI), null);
         return flagCoding;
     }
 
@@ -303,13 +295,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         maskGroup.add(Mask.BandMathsType.create("cc_coastline", "IDEPIX CC coastline flag", w, h,
                                                 CLOUD_FLAGS + ".F_COASTLINE",
                                                 Color.GREEN, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC mixed pixel flag", w, h,
-                                                CLOUD_FLAGS + ".F_MIXED_PIXEL",
-                                                Color.GREEN.darker().darker(), 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD",
                                                 Color.YELLOW.darker(), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous", "IDEPIX CC cloud spatial flag", w, h,
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous", "IDEPIX CC cloud ambiguous flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD_AMBIGUOUS",
                                                 Color.YELLOW, 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
@@ -322,25 +311,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                                                 CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
                                                 CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_interm_bright", "IDEPIX CC result of bright test", w, h,
-                                                CLOUD_FLAGS + ".F_BRIGHT", Color.YELLOW.darker(), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_interm_low_pscatt",
-                                                "IDEPIX CC result of test on apparent scattering (over ocean)",
-                                                w, h, CLOUD_FLAGS + ".F_LOW_PSCATT", Color.YELLOW.brighter(), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_interm_prel_bright", "IDEPIX CC result of preliminary bright test",
-                                                w, h, CLOUD_FLAGS + ".F_BRIGHT_RC", Color.YELLOW.darker().darker(),
-                                                0.5f));
-
-        // not used as masks but still available as flag
-//        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
-//                                                   CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
-//        bitmaskDefs[7] = Mask.BandMathsType.create("f_slope_2", "IDEPIX old slope 2 test", w, h,
-//                                                   CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
-//        bitmaskDefs[8] = Mask.BandMathsType.create("f_bright_toa", "IDEPIX second bright test", w, h,
-//                                                   CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
-//        bitmaskDefs[9] = Mask.BandMathsType.create("f_high_mdsi",
-//                                                   "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
-//                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
+        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC mixed pixel flag", w, h,
+                                                CLOUD_FLAGS + ".F_MIXED_PIXEL",
+                                                Color.GREEN.darker().darker(), 0.5f));
     }
 
 
@@ -560,11 +533,11 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         // Compute slopes- step 2.1.7
         spec_slopes(sd, pixelInfo, resultFlags, isLand);
         final boolean bright_f = resultFlags[0];
-        final boolean slope_1_f = resultFlags[1];
-        final boolean slope_2_f = resultFlags[2];
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright_f);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_1, slope_1_f);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_2, slope_2_f);
+//        final boolean slope_1_f = resultFlags[1];
+//        final boolean slope_2_f = resultFlags[2];
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright_f);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_1, slope_1_f);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SLOPE_2, slope_2_f);
 
         // table-driven classification- step 2.1.8
         // DPM #2.1.8-1
@@ -573,18 +546,18 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
 
         final boolean bright_toa_f = resultFlags[3];  // bright_2
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_TOA, bright_toa_f);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_TOA, bright_toa_f);
         final boolean high_mdsi = resultFlags[4];
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_HIGH_MDSI, high_mdsi);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_HIGH_MDSI, high_mdsi);
         final boolean bright_rc = resultFlags[5];    // bright_1
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_RC, bright_rc);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT_RC, bright_rc);
 
         final boolean bright = bright_rc || bright_toa_f;
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_BRIGHT, bright);
 
         final double pscattPressure = pixelInfo.pscattPressure;
-        final boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
-                                     (sd.rhoToa[Constants.bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
+//        final boolean low_p_pscatt = (pscattPressure < userDefinedPScattPressureThreshold) &&
+//                                     (sd.rhoToa[Constants.bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
         final boolean land_coast = isLand || isCoastline;
 
         boolean is_snow_ice = false;
@@ -621,7 +594,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
 
 
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice && !isCloud);
     }
 
@@ -679,7 +652,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         final float diff1 = 681.0f - 665.0f;
         final float diff2 = 705.0f - 665.0f;
-        final float flhValue = rad8 - 1.005f * (rad7 + (rad9 - rad7)* diff1 / diff2);
+        final float flhValue = rad8 - 1.005f * (rad7 + (rad9 - rad7) * diff1 / diff2);
 
         return flhValue;
     }
@@ -734,7 +707,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         final double chiw = computeChiW(sd, pixelInfo);
         final double deltaAzimuth = sd.deltaAzimuth[pixelInfo.index];
         final double windm = Math.sqrt(sd.windu[pixelInfo.index] * sd.windu[pixelInfo.index] +
-                                       sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
+                                               sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
             /* allows to retrieve Glint reflectance for wurrent geometry and wind */
         return glintRef(sd.sza[pixelInfo.index], sd.vza[pixelInfo.index], deltaAzimuth, windm, chiw);
     }
@@ -788,7 +761,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         final double thetaScatt = calcScatteringAngle(dc, pixelInfo) * MathUtils.DTOR;
         double cosThetaScatt = Math.cos(thetaScatt);
         return userDefinedRhoToa442Threshold + userDefinedDeltaRhoToa442Threshold *
-                                               cosThetaScatt * cosThetaScatt;
+                cosThetaScatt * cosThetaScatt;
     }
 
     /**
@@ -846,14 +819,14 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         boolean bright_toa_f = false;
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                            || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
+                || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (isLand) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {
             final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
             final double ndvi = (rhoAg[Constants.bb10] - rhoAg[Constants.bb7]) / (rhoAg[Constants.bb10] + rhoAg[Constants.bb7]);
             bright_toa_f = (rhoAg[wavelengthIndex] > rhoThreshOffsetTerm) &&
-                           ndvi > userDefinedNDVIThreshold;
+                    ndvi > userDefinedNDVIThreshold;
             bright_f = bright_rc || bright_toa_f;
         }
 

@@ -49,15 +49,18 @@ public class CoastColourOp extends BasisOp {
 
 
     // Coastcolour parameters
-    @Parameter(defaultValue = "false",
+    @Parameter(description = "Write TOA reflectances to the target product.",
+               defaultValue = "false",
                label = " Write TOA Reflectances to the target product")
     private boolean ccOutputRad2Refl = false;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(description = "Write Gas Absorption Correction Flag to the target product.",
+               defaultValue = "false",
                label = " Write Gas Absorption Correction Flag to the target product")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(description = "Write Rayleigh Corrected Reflectances to the target product.",
+               defaultValue = "false",
                label = " Write Rayleigh Corrected Reflectances  to the target product")
     private boolean ccOutputRayleigh = false;           // but always compute!!
 
@@ -65,6 +68,7 @@ public class CoastColourOp extends BasisOp {
     private boolean ccMixedPixel = true;   // keep fixed
 
     @Parameter(defaultValue = "false",
+               description = "Write Spectral Unmixing Abundance Bands to the target product.",
                label = " Write Spectral Unmixing Abundance Bands to the target product")
     private boolean ccOutputSma = false;
 
@@ -72,10 +76,13 @@ public class CoastColourOp extends BasisOp {
     private boolean ccOutputL2Pressures = false;         // but always compute!!
 
     @Parameter(defaultValue = "false",
+               description = "Write Cloud Probability Feature Value to the target product.",
                label = " Write Cloud Probability Feature Value to the target product")
     private boolean ccOutputCloudProbabilityFeatureValue = false;
 
-    @Parameter(label = "Write Sea Ice Climatology Max Value to the target product", defaultValue = "false")
+    @Parameter(label = "Write Sea Ice Climatology Max Value to the target product",
+               description = "Write Sea Ice Climatology Max Value to the target product.",
+               defaultValue = "false")
     private boolean ccOutputSeaIceClimatologyValue;
 
     private boolean ccOutputRhoglintDebugValues = false;     // keep fixed
@@ -83,7 +90,9 @@ public class CoastColourOp extends BasisOp {
 //    @Parameter(defaultValue = "false", label = " FLH Value computed from radiances")
 //    private boolean ccOutputFLHValue = false;
 
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
+    @Parameter(defaultValue = "2",
+               description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
+               label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
 //    @Parameter(label = " P1 Scaled Pressure Threshold ", defaultValue = "1000.0")
@@ -99,11 +108,13 @@ public class CoastColourOp extends BasisOp {
 //    @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
     private double ccUserDefinedRhoToa753Threshold = 0.1;   // keep fixed
 
-    @Parameter(label = " MDSI Feature Value 'high' threshold ", defaultValue = "0.01")
+//    @Parameter(label = " MDSI Feature Value 'high' threshold ",
+//               description = "A threshold value above which the MDSI Feature Value is .",
+//               defaultValue = "0.01")
     private double ccUserDefinedMDSIThreshold = 0.01;
 
-    @Parameter(label = " NDVI Feature Value 'high' threshold ", defaultValue = "0.1")
-    private double ccUserDefinedNDVIThreshold;
+//    @Parameter(label = " NDVI Feature Value 'high' threshold ", defaultValue = "0.1")
+    private double ccUserDefinedNDVIThreshold = 0.1;
 
 //    @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
 //    private double ccUserDefinedRhoToa442Threshold = 0.03;

@@ -182,21 +182,21 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
     @Override
     public void extendTargetProduct() throws OperatorException {
-        if (!gaComputeFlagsOnly && gaCopyPressure) {
-            pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
-            pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-                                             IdepixConstants.NO_DATA_VALUE,
-                                             true);
-            p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-                                             true);
-            pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-                                             IdepixConstants.NO_DATA_VALUE,
-                                             true);
-        }
+//        if (!gaComputeFlagsOnly && gaCopyPressure) {
+//            pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
+//            IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
+//            pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
+//            IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
+//                                             IdepixConstants.NO_DATA_VALUE,
+//                                             true);
+//            p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
+//            IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
+//                                             true);
+//            pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
+//            IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
+//                                             IdepixConstants.NO_DATA_VALUE,
+//                                             true);
+//        }
         if (gaCopyRadiances) {
             copyRadiances();
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
