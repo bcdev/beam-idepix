@@ -67,7 +67,7 @@ public class IdepixUtils {
     }
 
     public static boolean isValidAatsrProduct(Product product) {
-        return product.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+        return false; // not yet supported in public version
     }
 
     public static boolean isValidVgtProduct(Product product) {
@@ -75,24 +75,17 @@ public class IdepixUtils {
     }
 
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
-        // todo: needs to be more strict, but for the moment we assume this is enough...
-        return product.getName().contains("COLLOC") || product.getProductType().contains("COLLOC");
+        return false; // not yet supported in public version
     }
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
-        if (AlgorithmSelector.IPF == algorithm ||
-                AlgorithmSelector.CoastColour == algorithm ||
-                AlgorithmSelector.GlobCover == algorithm ||
-                AlgorithmSelector.MagicStick == algorithm ||
-                AlgorithmSelector.Schiller == algorithm ||
-                AlgorithmSelector.FubScapeM == algorithm) {
+        if (AlgorithmSelector.CoastColour == algorithm) {
             return (isValidMerisProduct(sourceProduct));
+        } else  if (AlgorithmSelector.GlobAlbedo == algorithm) {
+            return (isValidMerisProduct(sourceProduct) || isValidVgtProduct(sourceProduct));
+        } else {
+            return false;
         }
-        return AlgorithmSelector.GlobAlbedo == algorithm &&
-                (isValidMerisProduct(sourceProduct) ||
-                        isValidAatsrProduct(sourceProduct) ||
-                        isValidVgtProduct(sourceProduct) ||
-                        isValidMerisAatsrSynergyProduct(sourceProduct));
     }
 
     public static void logErrorMessage(String msg) {

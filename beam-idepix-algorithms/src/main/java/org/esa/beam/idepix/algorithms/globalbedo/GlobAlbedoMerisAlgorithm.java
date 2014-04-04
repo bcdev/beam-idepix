@@ -28,13 +28,11 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     private float pbaro;
     private float brr442;
     private float brr442Thresh;
-    private boolean applyBlueDenseCloudAlgorithm;
 
     @Override
     public boolean isCloud() {
         boolean threshTest = whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH;
-        boolean bbtest =  applyBlueDenseCloudAlgorithm ? isBlueDenseCloud() : false;
-        return !isInvalid() && ((threshTest || bbtest) && !isClearSnow());
+        return !isInvalid() && (threshTest && !isClearSnow());
     }
 
     @Override
@@ -171,10 +169,6 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
         this.l1FlagLand = l1FlagLand;
     }
 
-    public void setApplyBlueDenseCloudAlgorithm(boolean applyBlueDenseCloudAlgorithm) {
-        this.applyBlueDenseCloudAlgorithm = applyBlueDenseCloudAlgorithm;
-    }
-
     public void setP1(float p1) {
         this.p1 = p1;
     }
@@ -231,31 +225,6 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public float getPressureThreshold() {
         return PRESSURE_THRESH;
-    }
-
-    // PRIVATE METHODS
-
-    private boolean isBlueDenseCloud() {
-        final float D_BBT = 0.25f;
-
-        final float R1_BBT = -1f;
-        final float R2_BBT = 0.01f;
-        final float R3_BBT = 0.1f;
-        final float R4_BBT = 0.95f;
-        final float R5_BBT = 0.05f;
-        final float R6_BBT = 0.6f;
-        final float R7_BBT = 0.45f;
-
-        if (refl[0] >= D_BBT) {
-            final float ndvi = (refl[12] - refl[6]) / (refl[12] + refl[6]);
-            final float ndsi = (refl[9] - refl[12]) / (refl[9] + refl[12]);
-            final float po2 = refl[10] / refl[9];
-            return !(((ndvi <= R1_BBT * ndsi + R2_BBT) || (ndsi >= R3_BBT)) &&
-                    (po2 <= R7_BBT)) &&
-                    !((refl[12] <= R4_BBT * refl[6] + R5_BBT) &&
-                            (refl[12] <= R6_BBT) && (po2 <= R7_BBT));
-        }
-        return false;
     }
 
 }

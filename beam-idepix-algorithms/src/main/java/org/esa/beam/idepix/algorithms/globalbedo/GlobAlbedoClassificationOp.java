@@ -15,15 +15,11 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.Rectangle;
-import java.io.BufferedReader;
+import java.awt.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 /**
  * Basic operator for GlobAlbedo pixel classification
@@ -45,61 +41,53 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    @Parameter(defaultValue = "false", label = "Compute only the flag band")
-    boolean gaComputeFlagsOnly;
-    @Parameter(defaultValue = "true", label = "Copy input radiance bands")
-    boolean gaCopyRadiances;
-    @Parameter(defaultValue = "false", label = " Copy Rayleigh Corrected Reflectances (MERIS)")
-    boolean gaCopyRayleigh = false;
-    @Parameter(defaultValue = "false", label = "Copy MERIS TOA reflectance bands (MERIS/AATSR synergy)")
-    boolean gaCopyMerisToaReflectances;
-    @Parameter(defaultValue = "false", label = "Copy pressure bands (MERIS)")
-    boolean gaCopyPressure;
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    int gaCloudBufferWidth;
-    @Parameter(defaultValue = "true", label = "Use land-water flag from L1b product instead (faster)")
-    boolean gaUseL1bLandWaterFlag;
-    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
-    boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "false", label = " Apply 'Blue dense' cloud algorithm  (MERIS)")
-    boolean gaApplyBlueDenseCloudAlgorithm;
-    @Parameter(defaultValue = "true", label = " Consider water mask fraction")
-    boolean gaUseWaterMaskFraction = true;
-    @Parameter(defaultValue = "false", label = "Copy input annotation bands (VGT)")
-    boolean gaCopyAnnotations;
-    @Parameter(defaultValue = "false", label = " Use the NN based Schiller cloud algorithm")
-    boolean gaComputeSchillerClouds = false;
-    @Parameter(defaultValue = "false", label = " Use forward view for cloud flag determination (AATSR)")
-    boolean gaUseAatsrFwardForClouds;
-    @Parameter(defaultValue = "false", label = " Use Istomena et al. algorithm for sea ice determination (AATSR)")
-    boolean gaUseIstomenaSeaIceAlgorithm;
-    @Parameter(defaultValue = "true", label = " Use Schiller algorithm for sea ice determination outside AATSR")
-    boolean gaUseSchillerSeaIceAlgorithm;
-    @Parameter(defaultValue = "2.0", label = " AATSR refl[1600] threshold for sea ice determination (MERIS/AATSR)")
-    float gaRefl1600SeaIceThresh;
-    @Parameter(defaultValue = "false", label = "Write Schiller Seaice Output bands (MERIS 1600 and Cloud/Seaice prob)")
-    boolean gaWriteSchillerSeaiceNetBands;
 
-    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = "Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+    // Globalbedo user options
+    @Parameter(defaultValue = "true",
+               label = " Write TOA Radiances to the target product",
+               description = " Write TOA Radiances to the target product (has only effect for MERIS L1b products)")
+    boolean gaCopyRadiances = false;
+
+    @Parameter(defaultValue = "true",
+               label = " Write TOA Reflectances to the target product",
+               description = " Write TOA Radiances to the target product")
+    boolean gaCopyToaReflectances = true;
+
+
+    @Parameter(defaultValue = "false",
+               label = " Write Feature Values to the target product",
+               description = " Write all Feature Values to the target product")
+    boolean gaCopyFeatureValues = false;
+
+    @Parameter(defaultValue = "false",
+               label = " Write input annotation bands to the target product (VGT only)",
+               description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
+    boolean gaCopyAnnotations;
+
+    @Parameter(defaultValue = "2",
+               label = " Width of cloud buffer (# of pixels)",
+               description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
+    int gaCloudBufferWidth;
+
+    @Parameter(defaultValue = "50", valueSet = {"50", "150"},
+               label = " Resolution of used land-water mask in m/pixel",
+               description = "Resolution of the used SRTM land-water mask in m/pixel")
     int wmResolution;
 
-    public static final String SCHILLER_SEAICE_INNER_NET_NAME = "6_1271.6.net";
-    public static final String SCHILLER_SEAICE_OUTER_NET_NAME = "6_912.1.net";
-
-    String seaiceInnerNeuralNetString;
-    String seaiceOuterNeuralNetString;
-
-    NNffbpAlphaTabFast seaiceInnerNeuralNet;
-    NNffbpAlphaTabFast seaiceOuterNeuralNet;
+    @Parameter(defaultValue = "false",
+               label = " Use land-water flag from L1b product instead",
+               description = "Use land-water flag from L1b product instead")
+    boolean gaUseL1bLandWaterFlag;
 
     WatermaskClassifier classifier;
 
     WatermaskStrategy strategy = null;
 
+    static final int MERIS_L1B_F_LAND = 4;
     static final byte WATERMASK_FRACTION_THRESH = 23;   // for 3x3 subsampling, this means 2 subpixels water
-    Band temperatureBand;
+
     Band cloudFlagBand;
+    Band temperatureBand;
     Band brightBand;
     Band whiteBand;
     Band brightWhiteBand;
@@ -108,23 +96,13 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     Band ndsiBand;
     Band glintRiskBand;
     Band radioLandBand;
+
     Band radioWaterBand;
-    Band pressureBand;
-    Band pbaroOutputBand;
-    Band schillerSeaiceMeris1600Band;
-    Band schillerSeaiceCloudProbBand;
-
-    Band p1OutputBand;
-
-    Band pscattOutputBand;
-    static final int MERIS_L1B_F_LAND = 4;
-    static final int AATSR_L1B_F_LAND = 0;
 
     @Override
     public void initialize() throws OperatorException {
         setBands();
 
-        readSchillerSeaiceNets();
         setWatermaskStrategy();
         createTargetProduct();
         extendTargetProduct();
@@ -134,20 +112,6 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     abstract void extendTargetProduct();
 
-    private void readSchillerSeaiceNets() {
-        final InputStream innerNeuralNetStream = getClass().getResourceAsStream(SCHILLER_SEAICE_INNER_NET_NAME);
-        seaiceInnerNeuralNetString = readNeuralNetFromStream(innerNeuralNetStream);
-        final InputStream outerNeuralNetStream = getClass().getResourceAsStream(SCHILLER_SEAICE_OUTER_NET_NAME);
-        seaiceOuterNeuralNetString = readNeuralNetFromStream(outerNeuralNetStream);
-
-        try {
-            seaiceInnerNeuralNet = new NNffbpAlphaTabFast(seaiceInnerNeuralNetString);
-            seaiceOuterNeuralNet = new NNffbpAlphaTabFast(seaiceOuterNeuralNetString);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller seaice neural nets: " + e.getMessage());
-        }
-    }
-
     void setWatermaskStrategy() {
         try {
             classifier = new WatermaskClassifier(wmResolution, 3, 3);
@@ -155,27 +119,6 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             getLogger().warning("Watermask classifier could not be initialized - fallback mode is used.");
         }
         strategy = new DefaultWatermaskStrategy(classifier);
-    }
-
-    private String readNeuralNetFromStream(InputStream neuralNetStream) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(neuralNetStream));
-        try {
-            String line = reader.readLine();
-            final StringBuilder sb = new StringBuilder();
-            while (line != null) {
-                // have to append line terminator, cause it's not included in line
-                sb.append(line).append('\n');
-                line = reader.readLine();
-            }
-            return sb.toString();
-        } catch (IOException ioe) {
-            throw new OperatorException("Could not initialize neural net", ioe);
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException ignore) {
-            }
-        }
     }
 
     void createTargetProduct() throws OperatorException {
@@ -196,7 +139,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
         targetProduct.setEndTime(sourceProduct.getEndTime());
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
 
-        if (!gaComputeFlagsOnly) {
+        if (gaCopyFeatureValues) {
             brightBand = targetProduct.addBand("bright_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightBand, "Brightness", "dl", IdepixConstants.NO_DATA_VALUE, true);
             whiteBand = targetProduct.addBand("white_value", ProductData.TYPE_FLOAT32);
@@ -223,32 +166,16 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
                                              IdepixConstants.NO_DATA_VALUE, true);
         }
 
-        if (gaWriteSchillerSeaiceNetBands) {
-            schillerSeaiceCloudProbBand = targetProduct.addBand("schiller_seaice_cloud_prob", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(schillerSeaiceCloudProbBand, "Schiller Seaice Cloud Prob Value", "", IdepixConstants.NO_DATA_VALUE,
-                                             true);
-            schillerSeaiceMeris1600Band = targetProduct.addBand("schiller_seaice_meris1600", ProductData.TYPE_FLOAT32);
-            IdepixUtils.setNewBandProperties(schillerSeaiceMeris1600Band, "Schiller Seaice MERIS1600 Value", "", IdepixConstants.NO_DATA_VALUE,
-                                             true);
-        }
-
         // new bit masks:
         IdepixUtils.setupIdepixCloudscreeningBitmasks(targetProduct);
 
     }
 
-    void setPixelSamples(Band band, Tile targetTile, Tile p1Tile, Tile pbaroTile, Tile pscattTile, int y, int x,
+    void setPixelSamples(Band band, Tile targetTile, int y, int x,
                          GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute more pixel properties and write to distinct band
         if (band == brightBand) {
-            if (x == 500 && y == 1200) {
-                System.out.println("x = " + x);
-            }
-            if (x == 560 && y == 1200) {
-                System.out.println("x = " + x);
-            }
             targetTile.setSample(x, y, globAlbedoAlgorithm.brightValue());
-//            targetTile.setSample(x, y, ((GlobAlbedoMerisAatsrSynergyAlgorithm) globAlbedoAlgorithm).getBrr442ThreshMeris()); // test!
         } else if (band == whiteBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.whiteValue());
         } else if (band == brightWhiteBand) {
@@ -263,22 +190,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             targetTile.setSample(x, y, globAlbedoAlgorithm.ndsiValue());
         } else if (band == glintRiskBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.glintRiskValue());
-        } else if (band == pressureBand) {
-            targetTile.setSample(x, y, globAlbedoAlgorithm.pressureValue());
-        } else if (band == pbaroOutputBand) {
-            targetTile.setSample(x, y, pbaroTile.getSampleFloat(x, y));
-        } else if (band == p1OutputBand) {
-            targetTile.setSample(x, y, p1Tile.getSampleFloat(x, y));
-        } else if (band == pscattOutputBand) {
-            targetTile.setSample(x, y, pscattTile.getSampleFloat(x, y));
         } else if (band == radioLandBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.radiometricLandValue());
         } else if (band == radioWaterBand) {
             targetTile.setSample(x, y, globAlbedoAlgorithm.radiometricWaterValue());
-        } else if (band == schillerSeaiceMeris1600Band) {
-            targetTile.setSample(x, y, ((GlobAlbedoMerisAatsrSynergyAlgorithm) globAlbedoAlgorithm).getSchillerRefl1600Meris());
-        } else if (band == schillerSeaiceCloudProbBand) {
-            targetTile.setSample(x, y, ((GlobAlbedoMerisAatsrSynergyAlgorithm) globAlbedoAlgorithm).getSchillerSeaiceCloudProb());
         }
     }
 
@@ -368,7 +283,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoClassificationOp.class, "idepix.globalbedo.classification");
+            super(GlobAlbedoClassificationOp.class);
         }
     }
 }

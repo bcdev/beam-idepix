@@ -49,7 +49,7 @@ public class IdepixConstants {
     /**
      * The names of the VGT spectral band names.
      */
-    public static String[] VGT_RADIANCE_BAND_NAMES = {
+    public static String[] VGT_REFLECTANCE_BAND_NAMES = {
             VGT_RADIANCE_0_BAND_NAME, // 0
             VGT_RADIANCE_2_BAND_NAME, // 1
             VGT_RADIANCE_3_BAND_NAME, // 2

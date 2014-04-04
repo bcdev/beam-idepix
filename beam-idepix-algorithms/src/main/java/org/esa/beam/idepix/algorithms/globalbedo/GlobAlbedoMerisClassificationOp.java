@@ -58,11 +58,6 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private Band pbaroBand;
     private Band pscattBand;
 
-    private Band pressureBand;
-    private Band pbaroOutputBand;
-    private Band p1OutputBand;
-    private Band pscattOutputBand;
-
     private SchillerAlgorithm landNN = null;
 
     @Override
@@ -104,9 +99,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                            if (gaUseWaterMaskFraction) {
-                                waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
-                            }
+                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
                         }
                     }
 
@@ -143,16 +136,12 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                     // for given instrument, compute more pixel properties and write to distinct band
                     for (Band band : targetProduct.getBands()) {
                         final Tile targetTile = targetTiles.get(band);
-                        setPixelSamples(band, targetTile, p1Tile, pbaroTile, pscattTile, y, x, globAlbedoAlgorithm);
+                        setPixelSamples(band, targetTile, y, x, globAlbedoAlgorithm);
                     }
                 }
             }
             // set cloud buffer flags...
-            if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
-            } else {
-                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
-            }
+            setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
@@ -175,31 +164,17 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         pscattBand = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
         brr442ThreshBand = cloudProduct.getBand("rho442_thresh_term");
 
-        if (gaComputeSchillerClouds) {
-            landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
-        }
+        landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
     }
 
     @Override
     public void extendTargetProduct() throws OperatorException {
-//        if (!gaComputeFlagsOnly && gaCopyPressure) {
-//            pressureBand = targetProduct.addBand("pressure_value", ProductData.TYPE_FLOAT32);
-//            IdepixUtils.setNewBandProperties(pressureBand, "Pressure", "hPa", IdepixConstants.NO_DATA_VALUE, true);
-//            pbaroOutputBand = targetProduct.addBand("pbaro_value", ProductData.TYPE_FLOAT32);
-//            IdepixUtils.setNewBandProperties(pbaroOutputBand, "Barometric Pressure", "hPa",
-//                                             IdepixConstants.NO_DATA_VALUE,
-//                                             true);
-//            p1OutputBand = targetProduct.addBand("p1_value", ProductData.TYPE_FLOAT32);
-//            IdepixUtils.setNewBandProperties(p1OutputBand, "P1 Pressure", "hPa", IdepixConstants.NO_DATA_VALUE,
-//                                             true);
-//            pscattOutputBand = targetProduct.addBand("pscatt_value", ProductData.TYPE_FLOAT32);
-//            IdepixUtils.setNewBandProperties(pscattOutputBand, "PScatt Pressure", "hPa",
-//                                             IdepixConstants.NO_DATA_VALUE,
-//                                             true);
-//        }
         if (gaCopyRadiances) {
             copyRadiances();
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+        }
+        if (gaCopyToaReflectances) {
+            copyReflectances();
         }
     }
 
@@ -208,11 +183,15 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
             ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
                                   targetProduct, true);
         }
+    }
+
+    private void copyReflectances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
                                   targetProduct, true);
         }
     }
+
 
     private GlobAlbedoAlgorithm createMerisAlgorithm(Tile merisL1bFlagTile,
                                                      Tile brr442Tile, Tile p1Tile,
@@ -241,24 +220,16 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         gaAlgorithm.setP1(p1Tile.getSampleFloat(x, y));
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscatt(pscattTile.getSampleFloat(x, y));
-        gaAlgorithm.setApplyBlueDenseCloudAlgorithm(gaApplyBlueDenseCloudAlgorithm);
 
         if (gaUseL1bLandWaterFlag) {
             final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND);
             gaAlgorithm.setL1FlagLand(isLand);
             setIsWater(watermask, gaAlgorithm);
         } else {
-            if (gaUseWaterMaskFraction) {
-                final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
-                                       watermaskFraction < WATERMASK_FRACTION_THRESH;
-                gaAlgorithm.setL1FlagLand(isLand);
-                setIsWaterByFraction(watermaskFraction, gaAlgorithm);
-            } else {
-                final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
-                                       !(watermask == WatermaskClassifier.WATER_VALUE);
-                gaAlgorithm.setL1FlagLand(isLand);
-                setIsWater(watermask, gaAlgorithm);
-            }
+            final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND) &&
+                    watermaskFraction < WATERMASK_FRACTION_THRESH;
+            gaAlgorithm.setL1FlagLand(isLand);
+            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
         }
 
         return gaAlgorithm;

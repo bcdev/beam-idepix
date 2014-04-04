@@ -46,9 +46,9 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         final Band smFlagBand = sourceProduct.getBand("SM");
         final Tile smFlagTile = getSourceTile(smFlagBand, rectangle);
 
-        Tile[] vgtReflectanceTiles = new Tile[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
-        float[] vgtReflectance = new float[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
-        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
+        Tile[] vgtReflectanceTiles = new Tile[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
+        float[] vgtReflectance = new float[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
+        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
             vgtReflectanceTiles[i] = getSourceTile(vgtReflectanceBands[i], rectangle);
         }
 
@@ -67,9 +67,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
                         if (geoCoding.canGetGeoPos()) {
                             geoPos = geoCoding.getGeoPos(new PixelPos(x, y), geoPos);
                             waterMaskSample = strategy.getWatermaskSample(geoPos.lat, geoPos.lon);
-                            if (gaUseWaterMaskFraction) {
-                                waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
-                            }
+                            waterMaskFraction = strategy.getWatermaskFraction(geoCoding, x, y);
                         }
                     }
 
@@ -83,16 +81,12 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
                     for (Band band : targetProduct.getBands()) {
                         final Tile targetTile = targetTiles.get(band);
-                        setPixelSamples(band, targetTile, null, null, null, y, x, globAlbedoAlgorithm);
+                        setPixelSamples(band, targetTile, y, x, globAlbedoAlgorithm);
                     }
                 }
             }
             // set cloud buffer flags...
-            if (gaLcCloudBuffer) {
-                IdepixUtils.setCloudBufferLC(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
-            } else {
-                setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
-            }
+            setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
@@ -101,16 +95,16 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
     @Override
     public void setBands() {
-        vgtReflectanceBands = new Band[IdepixConstants.VGT_RADIANCE_BAND_NAMES.length];
-        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
-            vgtReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i]);
+        vgtReflectanceBands = new Band[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
+        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
+            vgtReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.VGT_REFLECTANCE_BAND_NAMES[i]);
         }
     }
 
     @Override
     public void extendTargetProduct() throws OperatorException {
-        if (gaCopyRadiances) {
-            copyRadiances();
+        if (gaCopyToaReflectances) {
+            copyReflectances();
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         }
 
@@ -125,10 +119,10 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         }
     }
 
-    private void copyRadiances() {
-        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
+    private void copyReflectances() {
+        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
             // write the original reflectance bands:
-            ProductUtils.copyBand(IdepixConstants.VGT_RADIANCE_BAND_NAMES[i], sourceProduct,
+            ProductUtils.copyBand(IdepixConstants.VGT_REFLECTANCE_BAND_NAMES[i], sourceProduct,
                                   targetProduct, true);
         }
     }
@@ -140,7 +134,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
         GlobAlbedoVgtAlgorithm gaAlgorithm = new GlobAlbedoVgtAlgorithm();
 
-        for (int i = 0; i < IdepixConstants.VGT_RADIANCE_BAND_NAMES.length; i++) {
+        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
             vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
         }
 
@@ -154,17 +148,10 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
             gaAlgorithm.setSmLand(isLand);
             setIsWater(watermask, gaAlgorithm);
         } else {
-            if (gaUseWaterMaskFraction) {
-                final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
-                                       watermaskFraction < WATERMASK_FRACTION_THRESH;
-                gaAlgorithm.setSmLand(isLand);
-                setIsWaterByFraction(watermaskFraction, gaAlgorithm);
-            } else {
-                final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
-                                       !(watermask == WatermaskClassifier.WATER_VALUE);
-                gaAlgorithm.setSmLand(isLand);
-                setIsWater(watermask, gaAlgorithm);
-            }
+            final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
+                    watermaskFraction < WATERMASK_FRACTION_THRESH;
+            gaAlgorithm.setSmLand(isLand);
+            setIsWaterByFraction(watermaskFraction, gaAlgorithm);
         }
 
 
@@ -190,7 +177,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoVgtClassificationOp.class, "idepix.globalbedo.classification.vgt");
+            super(GlobAlbedoVgtClassificationOp.class);
         }
     }
 
