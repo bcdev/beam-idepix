@@ -2,14 +2,7 @@ package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -25,18 +18,18 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.operators.CloudShadow",
-                  version = "2.1-SNAPSHOT",
-                  internal = true,
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2008 by Brockmann Consult",
-                  description = "This operator provides a sensor-dependent cloud shadow algorithm.")
+        version = "2.1-SNAPSHOT",
+        internal = true,
+        authors = "Olaf Danne",
+        copyright = "(c) 2008 by Brockmann Consult",
+        description = "This operator provides a sensor-dependent cloud shadow algorithm.")
 public class IdepixCloudShadowOp extends Operator {
 
     private static final int MEAN_EARTH_RADIUS = 6372000;
@@ -59,17 +52,18 @@ public class IdepixCloudShadowOp extends Operator {
     private Product ctpProduct;
     @TargetProduct
     private Product targetProduct;
+
     @Parameter
     private int shadowWidth;
     @Parameter(description = "CTP constant value", defaultValue = "500.0")
     private float ctpConstantValue;
 
     @Parameter(description = " CTP value to use in MERIS cloud shadow algorithm",
-               defaultValue = "Derive from Neural Net")
+            defaultValue = "Derive from Neural Net")
     private String ctpMode;
 
     @Parameter(description = "If 'true', cloud shadow is computed for cloud buffer as well",
-               defaultValue = "false")
+            defaultValue = "false")
     private boolean shadowForCloudBuffer;
 
     private int sourceProductTypeId;
@@ -92,9 +86,10 @@ public class IdepixCloudShadowOp extends Operator {
             }
             altitudeRDN = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
         }
+        final int shadowHeight = shadowWidth;
         rectCalculator = new RectangleExtender(new Rectangle(cloudProduct.getSceneRasterWidth(),
-                                                             cloudProduct.getSceneRasterHeight()),
-                                               shadowWidth, shadowWidth);
+                cloudProduct.getSceneRasterHeight()),
+                shadowWidth, shadowHeight);
         geoCoding = l1bProduct.getGeoCoding();
     }
 
@@ -158,18 +153,18 @@ public class IdepixCloudShadowOp extends Operator {
             Rectangle sourceRectangle = rectCalculator.extend(targetRectangle);
 
             Tile inputCloudTile = getSourceTile(cloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS),
-                                                sourceRectangle);
+                    sourceRectangle);
             copyInputCloudFlags(targetTile, targetRectangle, inputCloudTile);
 
             // compute cloud shadow and add to cloud classification band...
             Tile szaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
-                                         sourceRectangle);
+                    sourceRectangle);
             Tile saaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
-                                         sourceRectangle);
+                    sourceRectangle);
             Tile vzaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
-                                         sourceRectangle);
+                    sourceRectangle);
             Tile vaaTile = getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
-                                         sourceRectangle);
+                    sourceRectangle);
 
             Tile altTile = getSourceTile(altitudeRDN, sourceRectangle);
             Tile ctpTile = null;
@@ -184,7 +179,7 @@ public class IdepixCloudShadowOp extends Operator {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
                     int cloudFlag = inputCloudTile.getSampleInt(x, y);
                     if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) ||
-                        (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
+                            (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float vza = vzaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
@@ -244,7 +239,7 @@ public class IdepixCloudShadowOp extends Operator {
         // distLat and distLon are in degrees
         double distLat = -(deltaY / MEAN_EARTH_RADIUS) * MathUtils.RTOD;
         double distLon = -(deltaX / (MEAN_EARTH_RADIUS *
-                                     Math.cos(appCloud.getLat() * MathUtils.DTOR))) * MathUtils.RTOD;
+                Math.cos(appCloud.getLat() * MathUtils.DTOR))) * MathUtils.RTOD;
 
         double latCloud = appCloud.getLat() + distLat;
         double lonCloud = appCloud.getLon() + distLon;
@@ -259,7 +254,7 @@ public class IdepixCloudShadowOp extends Operator {
         GeoPos pos = new GeoPos();
 
         while ((iter < MAX_ITER) && (dist > DIST_THRESHOLD)
-               && (surfaceAlt < cloudAlt)) {
+                && (surfaceAlt < cloudAlt)) {
             double lat0 = lat;
             double lon0 = lon;
             pos.setLocation((float) lat, (float) lon);
@@ -299,7 +294,7 @@ public class IdepixCloudShadowOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixCloudShadowOp.class, "idepix.operators.CloudShadow");
+            super(IdepixCloudShadowOp.class);
         }
     }
 }

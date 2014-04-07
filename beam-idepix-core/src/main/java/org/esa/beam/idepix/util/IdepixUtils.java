@@ -5,16 +5,13 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BitSetter;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -35,10 +32,8 @@ public class IdepixUtils {
 
     public static boolean isInputValid(Product inputProduct) {
         if (!isValidMerisProduct(inputProduct) &&
-                !isValidAatsrProduct(inputProduct) &&
-                !isValidVgtProduct(inputProduct) &&
-                !isValidMerisAatsrSynergyProduct(inputProduct)) {
-            logErrorMessage("Input product must be either MERIS, AATSR, colocated MERIS/AATSR, or VGT L1b!");
+                !isValidVgtProduct(inputProduct)) {
+            logErrorMessage("Input product must be either MERIS or VGT L1b!");
         }
         return true;
     }
@@ -66,16 +61,8 @@ public class IdepixUtils {
         return IdepixConstants.MERIS_CCL1P_TYPE_PATTERN.matcher(product.getProductType()).matches();
     }
 
-    public static boolean isValidAatsrProduct(Product product) {
-        return false; // not yet supported in public version
-    }
-
     public static boolean isValidVgtProduct(Product product) {
         return product.getProductType().startsWith(IdepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
-    }
-
-    public static boolean isValidMerisAatsrSynergyProduct(Product product) {
-        return false; // not yet supported in public version
     }
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
@@ -153,27 +140,6 @@ public class IdepixUtils {
         band.setUnit(unit);
         band.setNoDataValue(noDataValue);
         band.setNoDataValueUsed(useNoDataValue);
-    }
-
-    public static Map<Integer, Integer> setupMerisWavelengthIndexMap() {
-        Map<Integer, Integer> merisWavelengthIndexMap = new HashMap<Integer, Integer>();
-        merisWavelengthIndexMap.put(412, 0);
-        merisWavelengthIndexMap.put(442, 1);
-        merisWavelengthIndexMap.put(490, 2);
-        merisWavelengthIndexMap.put(510, 3);
-        merisWavelengthIndexMap.put(560, 4);
-        merisWavelengthIndexMap.put(620, 5);
-        merisWavelengthIndexMap.put(665, 6);
-        merisWavelengthIndexMap.put(681, 7);
-        merisWavelengthIndexMap.put(705, 8);
-        merisWavelengthIndexMap.put(753, 9);
-        merisWavelengthIndexMap.put(760, 10);
-        merisWavelengthIndexMap.put(775, 11);
-        merisWavelengthIndexMap.put(865, 12);
-        merisWavelengthIndexMap.put(890, 13);
-        merisWavelengthIndexMap.put(900, 14);
-
-        return merisWavelengthIndexMap;
     }
 
     public static FlagCoding createIdepixFlagCoding(String flagIdentifier) {
@@ -269,91 +235,6 @@ public class IdepixUtils {
         }
 
         return endmembers;
-    }
-
-    public static void setCloudBufferLC(String bandName, Tile targetTile, Rectangle rectangle) {
-        //  set alternative cloud buffer flag as used in LC-CCI project:
-        // 1. use 2x2 square with reference pixel in upper left
-        // 2. move this square row-by-row over the tile
-        // 3. if reference pixel is not clouds, don't do anything
-        // 4. if reference pixel is cloudy:
-        //    - if 2x2 square only has cloud pixels, then set cloud buffer of two pixels
-        //      in both x and y direction of reference pixel.
-        //    - if 2x2 square also has non-cloudy pixels, do the same but with cloud buffer of only 1
-
-        if (bandName.equals(IDEPIX_CLOUD_FLAGS)) {
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
-                    if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-                        // reference pixel is upper left (x, y)
-                        // first set buffer of 1 in each direction
-                        int bufferWidth = 1;
-                        int LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
-                        int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
-                        int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
-                        int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
-                        // now check if whole 2x2 square (x+1,y), (x, y+1), (x+1, y+1) is cloudy
-                        if (targetTile.getSampleBit(x + 1, y, IdepixConstants.F_CLOUD) &&
-                                targetTile.getSampleBit(x, y + 1, IdepixConstants.F_CLOUD) &&
-                                targetTile.getSampleBit(x + 1, y + 1, IdepixConstants.F_CLOUD)) {
-                            // set buffer of 2 in each direction
-                            bufferWidth = 2;
-                            LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
-                            RIGHT_BORDER = Math.min(x + 1 + bufferWidth, rectangle.x + rectangle.width - 1);
-                            TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
-                            BOTTOM_BORDER = Math.min(y + 1 + bufferWidth, rectangle.y + rectangle.height - 1);
-                        }
-                        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-                            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
-                            }
-                        }
-
-                    }
-                }
-            }
-            int bufferWidth = 1;
-
-            // south tile boundary...
-            final int ySouth = rectangle.y + rectangle.height - 1;
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
-                int LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
-                int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
-//                int TOP_BORDER = ySouth - bufferWidth;
-                int TOP_BORDER = Math.max(rectangle.y, ySouth - bufferWidth);
-                if (targetTile.getSampleBit(x, ySouth, IdepixConstants.F_CLOUD)) {
-                    for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-                        for (int j = TOP_BORDER; j <= ySouth; j++) {
-                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
-                        }
-                    }
-                }
-            }
-
-            // east tile boundary...
-            final int xEast = rectangle.x + rectangle.width - 1;
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
-//                int LEFT_BORDER = xEast - bufferWidth;
-                int LEFT_BORDER = Math.max(rectangle.x, xEast - bufferWidth);
-                int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
-                int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
-                if (targetTile.getSampleBit(xEast, y, IdepixConstants.F_CLOUD)) {
-                    for (int i = LEFT_BORDER; i <= xEast; i++) {
-                        for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                            targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
-                        }
-                    }
-                }
-            }
-            // pixel in lower right corner...
-            if (targetTile.getSampleBit(xEast, ySouth, IdepixConstants.F_CLOUD)) {
-                for (int i = Math.max(rectangle.x, xEast - 1); i <= xEast; i++) {
-                    for (int j = Math.max(rectangle.y, ySouth - 1); j <= ySouth; j++) {
-                        targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
-                    }
-                }
-            }
-        }
     }
 
     public static double convertGeophysicalToMathematicalAngle(double inAngle) {

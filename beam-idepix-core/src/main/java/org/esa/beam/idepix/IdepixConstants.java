@@ -1,7 +1,5 @@
 package org.esa.beam.idepix;
 
-import org.esa.beam.dataio.envisat.EnvisatConstants;
-
 import java.util.regex.Pattern;
 
 /**
@@ -67,38 +65,6 @@ public class IdepixConstants {
     };
 
     public static final float[] VGT_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f};
-
-    public static String[] AATSR_REFLECTANCE_BAND_NAMES = {
-            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_0550_BAND_NAME, // 0
-            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_0670_BAND_NAME, // 1
-            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_0870_BAND_NAME, // 2
-            EnvisatConstants.AATSR_L1B_REFLEC_NADIR_1600_BAND_NAME, // 3
-            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_0550_BAND_NAME, // 4
-            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_0670_BAND_NAME, // 5
-            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_0870_BAND_NAME, // 6
-            EnvisatConstants.AATSR_L1B_REFLEC_FWARD_1600_BAND_NAME  // 7
-    };
-
-    public static String[] AATSR_BTEMP_BAND_NAMES = {
-            EnvisatConstants.AATSR_L1B_BTEMP_NADIR_0370_BAND_NAME, // 0
-            EnvisatConstants.AATSR_L1B_BTEMP_NADIR_1100_BAND_NAME, // 1
-            EnvisatConstants.AATSR_L1B_BTEMP_NADIR_1200_BAND_NAME, // 2
-            EnvisatConstants.AATSR_L1B_BTEMP_FWARD_0370_BAND_NAME, // 3
-            EnvisatConstants.AATSR_L1B_BTEMP_FWARD_1100_BAND_NAME, // 4
-            EnvisatConstants.AATSR_L1B_BTEMP_FWARD_1200_BAND_NAME, // 5
-    };
-
-    public static final float[] AATSR_REFL_WAVELENGTHS = {
-            450.0f,
-            645.0f,
-            835.0f,
-            1670.0f,
-            450.0f,
-            645.0f,
-            835.0f,
-            1670.0f
-    };
-    public static final float[] AATSR_TEMP_WAVELENGTHS = {370.0f, 1100.0f, 1200.0f, 370.0f, 1100.0f, 1200.0f};
 
     public static final float[] MERIS_WAVELENGTHS =
             {

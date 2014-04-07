@@ -15,12 +15,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.meris.brr.CloudClassificationOp;
-import org.esa.beam.meris.brr.GaseousCorrectionOp;
-import org.esa.beam.meris.brr.HelperFunctions;
-import org.esa.beam.meris.brr.LandClassificationOp;
-import org.esa.beam.meris.brr.Rad2ReflOp;
-import org.esa.beam.meris.brr.RayleighCorrection;
+import org.esa.beam.meris.brr.*;
 import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
@@ -28,7 +23,7 @@ import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.Map;
 
 
@@ -61,8 +56,6 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
     static final int[] BANDS_TO_CORRECT = new int[]{
             bb1, bb2, bb3, bb4, bb5, bb6, bb7, bb8, bb9, bb10, bb12, bb13, bb14
     };
-    static final int[] BANDS_TO_NOT_CORRECT = new int[]{bb11, bb15};
-
 
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
@@ -394,7 +387,7 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(IdepixRayleighCorrectionOp.class, "idepix.operators.IdepixRayleighCorrection");
+            super(IdepixRayleighCorrectionOp.class);
         }
     }
 }

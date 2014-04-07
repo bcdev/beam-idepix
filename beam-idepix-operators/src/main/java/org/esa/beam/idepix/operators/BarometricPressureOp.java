@@ -282,7 +282,7 @@ public class BarometricPressureOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(BarometricPressureOp.class, "idepix.operators.BarometricPressure");
+            super(BarometricPressureOp.class);
         }
     }
 }

@@ -81,15 +81,11 @@ public class LisePressureOp extends BasisOp {
     private static final String P_1_LISE = "p1_lise";
     public static final String PRESSURE_LISE_P1 = P_1_LISE;
     private static final String SURFACE_PRESS_LISE = "surface_press_lise";
-    public static final String PRESSURE_LISE_PSURF = SURFACE_PRESS_LISE;
     private static final String P_2_LISE = "p2_lise";
-    public static final String PRESSURE_LISE_P2 = P_2_LISE;
     private static final String PSCATT_LISE = "pscatt_lise";
     public static final String PRESSURE_LISE_PSCATT = PSCATT_LISE;
 
-    //    private static final String INVALID_EXPRESSION = "l1_flags.INVALID or l1_flags.LAND_OCEAN";
     private static final String INVALID_EXPRESSION = "l1_flags.INVALID";
-    private static final String INVALID_EXPRESSION_OCEAN = "l1_flags.INVALID or l1_flags.LAND_OCEAN";
     private static final String INVALID_EXPRESSION_LAND = "l1_flags.INVALID or not l1_flags.LAND_OCEAN";
 
     private static final String O2_RAYLEIGH_TRANSMITTANCES_FILE_NAME = "transmittances_O2_Ray_OCEAN_21f.d";
@@ -111,9 +107,6 @@ public class LisePressureOp extends BasisOp {
 
     private static final int C_NUM_M = 6;
     private static final int C_NUM_RHO = 6;
-
-    /* Number of bands in L1b */
-    private static final int L1_BAND_NUM = 15;
 
     private static final int NPIXEL = 4625;
     private double[] spectralCoefficients = new double[NPIXEL];

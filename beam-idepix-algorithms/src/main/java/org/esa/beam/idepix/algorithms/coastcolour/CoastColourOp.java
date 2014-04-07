@@ -28,8 +28,8 @@ import java.util.Map;
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.coastcolour",
         version = "2.1-SNAPSHOT",
-        authors = "Olaf Danne",
-        copyright = "(c) 2012 by Brockmann Consult",
+        authors = "Carsten Brockmann, Olaf Danne", // todo clarify
+        copyright = "(c) 2012, 2013 by Brockmann Consult",
         description = "Pixel identification and classification with CoastColour algorithm.")
 public class CoastColourOp extends BasisOp {
 
@@ -49,105 +49,55 @@ public class CoastColourOp extends BasisOp {
 
 
     // Coastcolour parameters
-    @Parameter(description = "Write TOA reflectances to the target product.",
-               defaultValue = "false",
-               label = " Write TOA Reflectances to the target product")
+    @Parameter(defaultValue = "false",
+            description = "Write TOA reflectances to the target product.",
+            label = " Write TOA Reflectances to the target product")
     private boolean ccOutputRad2Refl = false;
 
-    @Parameter(description = "Write Gas Absorption Correction Flag to the target product.",
-               defaultValue = "false",
-               label = " Write Gas Absorption Correction Flag to the target product")
+    @Parameter(defaultValue = "false",
+            description = "Write Gas Absorption Correction Flag to the target product.",
+            label = " Write Gas Absorption Correction Flag to the target product")
     private boolean ccOutputGaseous = false;
 
-    @Parameter(description = "Write Rayleigh Corrected Reflectances to the target product.",
-               defaultValue = "false",
-               label = " Write Rayleigh Corrected Reflectances  to the target product")
+    @Parameter(defaultValue = "false",
+            description = "Write Rayleigh Corrected Reflectances to the target product.",
+            label = " Write Rayleigh Corrected Reflectances  to the target product")
     private boolean ccOutputRayleigh = false;           // but always compute!!
 
-//    @Parameter(defaultValue = "false", label = " Mixed Pixel Flag (requires Rayleigh corrected reflectances!)")
-    private boolean ccMixedPixel = true;   // keep fixed
-
     @Parameter(defaultValue = "false",
-               description = "Write Spectral Unmixing Abundance Bands to the target product.",
-               label = " Write Spectral Unmixing Abundance Bands to the target product")
+            description = "Write Spectral Unmixing Abundance Bands to the target product.",
+            label = " Write Spectral Unmixing Abundance Bands to the target product")
     private boolean ccOutputSma = false;
 
-//    @Parameter(defaultValue = "false", label = " L2 Cloud Top Pressure and Surface Pressure")
-    private boolean ccOutputL2Pressures = false;         // but always compute!!
-
     @Parameter(defaultValue = "false",
-               description = "Write Cloud Probability Feature Value to the target product.",
-               label = " Write Cloud Probability Feature Value to the target product")
+            description = "Write Cloud Probability Feature Value to the target product.",
+            label = " Write Cloud Probability Feature Value to the target product")
     private boolean ccOutputCloudProbabilityFeatureValue = false;
 
-    @Parameter(label = "Write Sea Ice Climatology Max Value to the target product",
-               description = "Write Sea Ice Climatology Max Value to the target product.",
-               defaultValue = "false")
+    @Parameter(defaultValue = "false",
+            description = "Write Sea Ice Climatology Max Value to the target product.",
+            label = "Write Sea Ice Climatology Max Value to the target product"
+            )
     private boolean ccOutputSeaIceClimatologyValue;
 
-    private boolean ccOutputRhoglintDebugValues = false;     // keep fixed
-
-//    @Parameter(defaultValue = "false", label = " FLH Value computed from radiances")
-//    private boolean ccOutputFLHValue = false;
-
     @Parameter(defaultValue = "2",
-               description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
-               label = "Width of cloud buffer (# of pixels)")
+            description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
+            label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
-//    @Parameter(label = " P1 Scaled Pressure Threshold ", defaultValue = "1000.0")
-    private double ccUserDefinedP1ScaledThreshold = 1000.0;   // keep fixed
-
-//    @Parameter(label = " PScatt Pressure Threshold ", defaultValue = "700.0")
-    private double ccUserDefinedPScattPressureThreshold = 700.0;      // keep fixed
-
-    //    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.015")
-//    @Parameter(label = " Theoretical Glint Threshold", defaultValue = "0.2")  // 20130702
-//    private double ccUserDefinedGlintThreshold;
-
-//    @Parameter(label = " RhoTOA753 Threshold ", defaultValue = "0.1")
-    private double ccUserDefinedRhoToa753Threshold = 0.1;   // keep fixed
-
-//    @Parameter(label = " MDSI Feature Value 'high' threshold ",
-//               description = "A threshold value above which the MDSI Feature Value is .",
-//               defaultValue = "0.01")
-    private double ccUserDefinedMDSIThreshold = 0.01;
-
-//    @Parameter(label = " NDVI Feature Value 'high' threshold ", defaultValue = "0.1")
-    private double ccUserDefinedNDVIThreshold = 0.1;
-
-//    @Parameter(label = " Bright Test Threshold ", defaultValue = "0.03")
-//    private double ccUserDefinedRhoToa442Threshold = 0.03;
-
-//    @Parameter(label = " Bright Test Reference Wavelength [nm]", defaultValue = "865",
-//            valueSet = {
-//                    "412", "442", "490", "510", "560", "620", "665",
-//                    "681", "705", "753", "760", "775", "865", "890", "900"
-//            })
-//    private int ccRhoAgReferenceWavelength;   // default changed from 442, 2011/03/25
-
-//    @Parameter(label = "Resolution of land mask", defaultValue = "50",
-//            description = "The resolution of the land mask in meter.", valueSet = {"50", "150"})
-//    private int ccLandMaskResolution;
-    private int ccLandMaskResolution = 50;       // keep fixed
-//    @Parameter(label = "Source pixel over-sampling (X)", defaultValue = "3",
-//            description = "The factor used to over-sample the source pixels in X-direction.")
-//    private int ccOversamplingFactorX;
-    private int ccOversamplingFactorX = 3;   // keep fixed
-//    @Parameter(label = "Source pixel over-sampling (Y)", defaultValue = "3",
-//            description = "The factor used to over-sample the source pixels in Y-direction.")
-//    private int ccOversamplingFactorY;
-    private int ccOversamplingFactorY = 3;      // keep fixed
-
-//    @Parameter(label = "Sea Ice Threshold on Climatology", defaultValue = "10.0")
-//    private double ccSeaIceThreshold;
-    private double ccSeaIceThreshold = 10.0;       // keep fixed
-
-    @Parameter(label = "Cloud screening 'ambiguous' threshold", defaultValue = "1.4")
+    @Parameter(defaultValue = "1.4",
+            description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as still ambiguous.",
+            label = "Cloud screening 'ambiguous' threshold" )
     private double ccCloudScreeningAmbiguous = 1.4;      // Schiller
 
-    @Parameter(label = "Cloud screening 'sure' threshold", defaultValue = "1.8")
+    @Parameter(defaultValue = "1.8",
+            description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as sure.",
+            label = "Cloud screening 'sure' threshold")
     private double ccCloudScreeningSure = 1.8;       // Schiller
+
+    private static final int CC_LAND_MASK_RESOLUTION = 50;
+    private static final int CC_OVERSAMPLING_FACTOR_X = 3;
+    private static final int CC_OVERSAMPLING_FACTOR_Y = 3;
 
     private Product smaProduct;
 
@@ -181,7 +131,7 @@ public class CoastColourOp extends BasisOp {
                 CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
 
         smaProduct = null;
-        if (ccMixedPixel || ccOutputSma) {
+        if (ccOutputSma) {
             smaProduct = IdepixProducts.computeSpectralUnmixingProduct(rayleighProduct, true);
         }
 
@@ -199,9 +149,9 @@ public class CoastColourOp extends BasisOp {
 
     private void computeCoastColourMerisCloudProduct() {
         HashMap<String, Object> waterParameters = new HashMap<String, Object>();
-        waterParameters.put("resolution", ccLandMaskResolution);
-        waterParameters.put("subSamplingFactorX", ccOversamplingFactorX);
-        waterParameters.put("subSamplingFactorY", ccOversamplingFactorY);
+        waterParameters.put("resolution", CC_LAND_MASK_RESOLUTION);
+        waterParameters.put("subSamplingFactorX", CC_OVERSAMPLING_FACTOR_X);
+        waterParameters.put("subSamplingFactorY", CC_OVERSAMPLING_FACTOR_Y);
         Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
 
         Map<String, Product> cloudInputProducts = new HashMap<String, Product>(4);
@@ -212,22 +162,10 @@ public class CoastColourOp extends BasisOp {
         cloudInputProducts.put("waterMask", waterMaskProduct);
 
         Map<String, Object> cloudClassificationParameters = new HashMap<String, Object>(11);
-        cloudClassificationParameters.put("l2Pressures", true);   // always compute!
-        cloudClassificationParameters.put("ccUserDefinedP1ScaledThreshold", ccUserDefinedP1ScaledThreshold);
-        cloudClassificationParameters.put("userDefinedPScattPressureThreshold", ccUserDefinedPScattPressureThreshold);
-//        cloudClassificationParameters.put("userDefinedGlintThreshold", ccUserDefinedGlintThreshold);
-//        cloudClassificationParameters.put("userDefinedRhoToa442Threshold", ccUserDefinedRhoToa442Threshold);
-        cloudClassificationParameters.put("userDefinedRhoToa753Threshold", ccUserDefinedRhoToa753Threshold);
-        cloudClassificationParameters.put("userDefinedMDSIThreshold", ccUserDefinedMDSIThreshold);
-        cloudClassificationParameters.put("userDefinedNDVIThreshold", ccUserDefinedNDVIThreshold);
-//        cloudClassificationParameters.put("rhoAgReferenceWavelength", ccRhoAgReferenceWavelength);
-        cloudClassificationParameters.put("seaIceThreshold", ccSeaIceThreshold);
         cloudClassificationParameters.put("cloudScreeningAmbiguous", ccCloudScreeningAmbiguous);
         cloudClassificationParameters.put("cloudScreeningSure", ccCloudScreeningSure);
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
-        cloudClassificationParameters.put("ccOutputRhoglintDebugValues", ccOutputRhoglintDebugValues);
         cloudClassificationParameters.put("ccOutputCloudProbabilityFeatureValue", ccOutputCloudProbabilityFeatureValue);
-//        cloudClassificationParameters.put("ccOutputFLHValue", ccOutputFLHValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                 cloudClassificationParameters, cloudInputProducts);
     }
@@ -249,9 +187,6 @@ public class CoastColourOp extends BasisOp {
         if (ccOutputRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }
-        if (ccOutputL2Pressures) {
-            IdepixProducts.addL2PressureBands(merisCloudProduct, targetProduct);
-        }
         if (ccOutputGaseous) {
             IdepixProducts.addGaseousCorrectionBands(gasProduct, targetProduct);
         }
@@ -263,9 +198,6 @@ public class CoastColourOp extends BasisOp {
         }
         if (ccOutputSeaIceClimatologyValue) {
             IdepixProducts.addCCSeaiceClimatologyValueBand(merisCloudProduct, targetProduct);
-        }
-        if (ccOutputRhoglintDebugValues) {
-            IdepixProducts.addCCRhoGlintDebugValueBands(merisCloudProduct, targetProduct);
         }
         if (ccOutputCloudProbabilityFeatureValue) {
             IdepixProducts.addCCSchillerCloudValueBand(merisCloudProduct, targetProduct);
@@ -297,7 +229,7 @@ public class CoastColourOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(CoastColourOp.class, "idepix.coastcolour");
+            super(CoastColourOp.class);
         }
     }
 }

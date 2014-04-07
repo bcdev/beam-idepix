@@ -20,7 +20,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -41,8 +40,7 @@ import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 
 import static org.esa.beam.meris.l2auxdata.Constants.*;
 
@@ -66,7 +64,6 @@ public class MerisClassificationOp extends MerisBasisOp {
     public static final String MDSI = "mdsi";
     public static final String RHO_GLINT = "rho_glint";
     public static final String SCHILLER = "schiller_cloud_value";
-    public static final String FLH = "flh";
 
     public static final int BAND_BRIGHT_N = 0;
     public static final int BAND_SLOPE_N_1 = 1;
@@ -95,8 +92,6 @@ public class MerisClassificationOp extends MerisBasisOp {
     private Band psurfOutputBand;
     private Band scattAngleOutputBand;
     private Band rhoThreshOutputBand;
-    private Band rhoGlintOutputBand;
-    private Band rhoAgOutputBand;
     private Band mdsiOutputBand;
 
     @SourceProduct(alias = "l1b")
@@ -172,39 +167,6 @@ public class MerisClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
         return flagCoding;
     }
-
-    private static Mask[] createBitmaskDefs(Product sourceProduct) {
-
-        Mask[] bitmaskDefs = new Mask[10];
-
-        int w = sourceProduct.getSceneRasterWidth();
-        int h = sourceProduct.getSceneRasterHeight();
-
-        bitmaskDefs[0] = Mask.BandMathsType.create("f_cloud", "IDEPIX final cloud flag", w, h, CLOUD_FLAGS + ".F_CLOUD",
-                                                   Color.CYAN, 0.5f);
-        bitmaskDefs[1] = Mask.BandMathsType.create("f_bright", "IDEPIX combined of old and second bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT", new Color(0, 153, 153), 0.5f);
-        bitmaskDefs[2] = Mask.BandMathsType.create("f_bright_rc", "IDEPIX old bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT_RC", new Color(204, 255, 204), 0.5f);
-        bitmaskDefs[3] = Mask.BandMathsType.create("f_low_p_pscatt", "IDEPIX test on apparent scattering (over ocean)",
-                                                   w, h, CLOUD_FLAGS + ".F_LOW_P_PSCATT", new Color(153, 153, 0), 0.5f);
-        bitmaskDefs[4] = Mask.BandMathsType.create("f_low_p_p1", "IDEPIX test on P1 (over land)", w, h,
-                                                   CLOUD_FLAGS + ".F_LOW_P_P1", Color.GRAY, 0.5f);
-        bitmaskDefs[5] = Mask.BandMathsType.create("f_slope_1", "IDEPIX old slope 1 test", w, h,
-                                                   CLOUD_FLAGS + ".F_SLOPE_1", Color.PINK, 0.5f);
-        bitmaskDefs[6] = Mask.BandMathsType.create("f_slope_2", "IDEPIX old slope 2 test", w, h,
-                                                   CLOUD_FLAGS + ".F_SLOPE_2", new Color(153, 0, 153), 0.5f);
-        bitmaskDefs[7] = Mask.BandMathsType.create("f_bright_toa", "IDEPIX second bright test", w, h,
-                                                   CLOUD_FLAGS + ".F_BRIGHT_TOA", Color.LIGHT_GRAY, 0.5f);
-        bitmaskDefs[8] = Mask.BandMathsType.create("f_high_mdsi",
-                                                   "IDEPIX MDSI above threshold (warning: not sufficient for snow detection)",
-                                                   w, h, CLOUD_FLAGS + ".F_HIGH_MDSI", Color.blue, 0.5f);
-        bitmaskDefs[9] = Mask.BandMathsType.create("f_snow_ice", "IDEPIX snow/ice flag", w, h,
-                                                   CLOUD_FLAGS + ".F_SNOW_ICE", Color.DARK_GRAY, 0.5f);
-
-        return bitmaskDefs;
-    }
-
 
     private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
 
@@ -488,16 +450,6 @@ public class MerisClassificationOp extends MerisBasisOp {
         return sd.radiance[radianceBandId].getSampleFloat(x, y) > auxData.Saturation_L[bandId];
     }
 
-    public static void addBitmasks(Product sourceProduct, Product targetProduct) {
-        Mask[] bitmaskDefs = createBitmaskDefs(sourceProduct);
-
-        int index = 0;
-        for (Mask bitmaskDef : bitmaskDefs) {
-            targetProduct.getMaskGroup().add(index++, bitmaskDef);
-        }
-    }
-
-
     private static class SourceData {
 
         private float[][] rhoToa;
@@ -539,7 +491,7 @@ public class MerisClassificationOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MerisClassificationOp.class, "idepix.operators.MerisClassification");
+            super(MerisClassificationOp.class);
         }
     }
 }

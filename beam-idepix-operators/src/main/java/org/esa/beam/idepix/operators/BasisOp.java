@@ -7,6 +7,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.util.ProductUtils;
 
+@SuppressWarnings("JavaDoc")
 @OperatorMetadata(alias = "idepix.operators.Basis",
                   version = "2.1-SNAPSHOT",
                   internal = true,
@@ -98,7 +99,7 @@ public abstract class BasisOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(BasisOp.class, "idepix.operators.Basis");
+            super(BasisOp.class);
         }
     }
 }

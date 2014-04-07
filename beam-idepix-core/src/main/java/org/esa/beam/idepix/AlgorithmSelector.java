@@ -7,11 +7,6 @@ package org.esa.beam.idepix;
  * @version $Revision: $ $Date:  $
  */
 public enum AlgorithmSelector {
-    IPF,
     GlobAlbedo,
-    GlobCover,
     CoastColour,
-    MagicStick,
-    Schiller,
-    FubScapeM
 }

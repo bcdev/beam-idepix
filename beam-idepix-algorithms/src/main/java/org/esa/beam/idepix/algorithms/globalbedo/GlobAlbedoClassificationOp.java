@@ -50,7 +50,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     @Parameter(defaultValue = "true",
                label = " Write TOA Reflectances to the target product",
-               description = " Write TOA Radiances to the target product")
+               description = " Write TOA Reflectances to the target product")
     boolean gaCopyToaReflectances = true;
 
 

@@ -129,7 +129,7 @@ public class IdepixDefaultDialog extends SingleTargetProductDialog {
 		form.setPreferredSize(new Dimension(IdepixDefaultDialog.DIALOG_WIDTH, IdepixDefaultDialog.DIALOG_HEIGHT));
         form.add("I/O Parameters", ioParametersPanel);
 
-        final OperatorParameterSupport parameterSupport = new OperatorParameterSupport(operatorSpi.getOperatorClass(),
+        final OperatorParameterSupport parameterSupport = new OperatorParameterSupport(operatorSpi.getOperatorDescriptor(),
                                                                                        null,
                                                                                        parameterMap,
                                                                                        null);

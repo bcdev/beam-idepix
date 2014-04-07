@@ -11,8 +11,8 @@ public interface WatermaskStrategy {
     /**
      * Returns a watermask sample value at a given geo-position
      *
-     * @param lat
-     * @param lon
+     * @param lat - latitude
+     * @param lon - longitude
      *
      * @return the watermask sample
      */

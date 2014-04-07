@@ -56,7 +56,7 @@ public class GlobAlbedoOp extends BasisOp {
 
     @Parameter(defaultValue = "true",
                label = " Write TOA Reflectances to the target product",
-               description = " Write TOA Radiances to the target product")
+               description = " Write TOA Reflectances to the target product")
     private boolean gaCopyToaReflectances = true;
 
     @Parameter(defaultValue = "false",
@@ -71,8 +71,7 @@ public class GlobAlbedoOp extends BasisOp {
 
     @Parameter(defaultValue = "Derive from Neural Net",
                label = " CTP value to use in MERIS cloud shadow algorithm",
-               description = " CTP value to use in MERIS cloud shadow algorithm " +
-                       "(has only effect if the cloud shadow is computed)",
+               description = " CTP value to use in MERIS cloud shadow algorithm",
                valueSet = {
                        IdepixConstants.ctpModeDefault,
                        "850 hPa",
@@ -85,7 +84,7 @@ public class GlobAlbedoOp extends BasisOp {
 
     @Parameter(defaultValue = "false",
                label = " Use GETASSE30 DEM for Barometric Pressure Computation",
-               description = " If installed, use GETASSE30 DEM for Barometric Pressure Computation. " +
+               description = " If selected and installed, use GETASSE30 DEM for Barometric Pressure Computation. " +
                        "Otherwise use tie point altitude.")
     private boolean gaUseGetasse = false;
 
@@ -106,7 +105,7 @@ public class GlobAlbedoOp extends BasisOp {
 
     @Parameter(defaultValue = "false",
                label = " Use land-water flag from L1b product instead",
-               description = "Use land-water flag from L1b product instead")
+               description = "Use land-water flag from L1b product instead of SRTM mask")
     private boolean gaUseL1bLandWaterFlag;
 
     private Map<String, Object> gaCloudClassificationParameters;

@@ -131,12 +131,17 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
     public abstract float radiometricWaterValue();
 
     public abstract float getBrightWhiteThreshold();
+
     public abstract float getNdsiThreshold();
+
     public abstract float getNdviThreshold();
+
     public abstract float getBrightThreshold();
+
     public abstract float getWhiteThreshold();
-    public abstract float getTemperatureThreshold();
+
     public abstract float getGlintThreshold();
+
     public abstract float getPressureThreshold();
 
     public void setRefl(float[] refl) {

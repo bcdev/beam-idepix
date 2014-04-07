@@ -2,13 +2,7 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -25,7 +19,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -39,12 +33,15 @@ import java.util.List;
  * @since Idepix 1.3.1
  */
 @OperatorMetadata(alias = "idepix.coastcolour.postprocess",
-                  version = "2.1-SNAPSHOT",
-                  internal = true,
-                  authors = "Marco Peters",
-                  copyright = "(c) 2011 by Brockmann Consult",
-                  description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
+        version = "2.1-SNAPSHOT",
+        internal = true,
+        authors = "Marco Peters",
+        copyright = "(c) 2011 by Brockmann Consult",
+        description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
 public class CoastColourPostProcessOp extends MerisBasisOp {
+
+    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
+    private int cloudBufferWidth;
 
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
@@ -58,18 +55,12 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     private Product smaProduct;
 
 
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
-
     private static final int MEAN_EARTH_RADIUS = 6372000;
 
     private Band origCloudFlagBand;
     private TiePointGrid szaTPG;
-    private TiePointGrid vzaTPG;
     private TiePointGrid saaTPG;
-    private TiePointGrid vaaTPG;
     private Band ctpBand;
-    private RasterDataNode altitudeRDN;
 
     private Band landAbundanceBand;
     private Band waterAbundanceBand;
@@ -88,21 +79,17 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     @Override
     public void initialize() throws OperatorException {
         Product postProcessedCloudProduct = createCompatibleProduct(merisCloudProduct,
-                                                                    "postProcessedCloud", "postProcessedCloud");
+                "postProcessedCloud", "postProcessedCloud");
         origCloudFlagBand = merisCloudProduct.getBand(CloudClassificationOp.CLOUD_FLAGS);
         szaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-        vzaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
         saaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        vaaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
         ctpBand = ctpProduct.getBand("cloud_top_press");
         int shadowWidth;
         int shadowHeight;
         if (l1bProduct.getProductType().equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
-            altitudeRDN = l1bProduct.getBand("altitude");
             shadowWidth = 64;
             shadowHeight = 64;
         } else {
-            altitudeRDN = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
             shadowWidth = 16;
             shadowHeight = 16;
         }
@@ -120,8 +107,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         geoCoding = l1bProduct.getGeoCoding();
 
         rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                             l1bProduct.getSceneRasterHeight()),
-                                               shadowWidth, shadowHeight);
+                l1bProduct.getSceneRasterHeight()),
+                shadowWidth, shadowHeight);
 
 
         ProductUtils.copyBand(CloudClassificationOp.CLOUD_FLAGS, merisCloudProduct, postProcessedCloudProduct, false);
@@ -175,8 +162,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                 checkForCancellation();
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                     computeMixedPixelFlag(x, y, landAbundanceTile, waterAbundanceTile,
-                                          cloudAbundanceTile, summaryErrorTile,
-                                          brr7nTile, brr9nTile, brr10nTile, brr12nTile, sourceFlagTile, targetTile);
+                            cloudAbundanceTile, summaryErrorTile,
+                            brr7nTile, brr9nTile, brr10nTile, brr12nTile, sourceFlagTile, targetTile);
                 }
             }
         }
@@ -201,8 +188,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             for (int x = x0; x < x0 + w; x++) {
                 final boolean isCloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                 if (!isCloud) {
-                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile, targetRectangle,
-                                                                   extendedRectangle);
+                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile,
+                            extendedRectangle);
                     targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
                 }
             }
@@ -369,7 +356,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         final boolean b11 = !isCloud;
 
         final boolean isMixedPixel = isAlreadyMixedPixel ||
-                                     (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
+                (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
         targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, isMixedPixel);
 
         // former expression used by AR - currently not used any more
@@ -425,14 +412,12 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                     }
                 }
             }
-//            cb -= 300.0f;      // todo: discuss
         }
         return cb;
     }
 
-    // used by Michael's aproach
-    // todo: clarify this algorithm with GK, MP and add comments !!!
-    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile, Rectangle targetRectangle,
+    // used by MP's aproach
+    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile,
                                    Rectangle sourceRectangle) {
         final double sza = szaTile.getSampleDouble(x, y);
         final double saa = saaTile.getSampleDouble(x, y);
@@ -498,7 +483,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(CoastColourPostProcessOp.class, "idepix.coastcolour.postprocess");
+            super(CoastColourPostProcessOp.class);
         }
     }
 }

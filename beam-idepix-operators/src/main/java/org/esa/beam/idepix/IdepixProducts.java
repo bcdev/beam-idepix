@@ -5,12 +5,15 @@ import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorSpi;
-import org.esa.beam.idepix.operators.*;
+import org.esa.beam.idepix.operators.BarometricPressureOp;
+import org.esa.beam.idepix.operators.IdepixRayleighCorrectionOp;
+import org.esa.beam.idepix.operators.LisePressureOp;
+import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.*;
-import org.esa.beam.meris.cloud.BlueBandOp;
-import org.esa.beam.meris.cloud.CloudProbabilityOp;
-import org.esa.beam.meris.cloud.CombinedCloudOp;
+import org.esa.beam.meris.brr.GaseousCorrectionOp;
+import org.esa.beam.meris.brr.LandClassificationOp;
+import org.esa.beam.meris.brr.Rad2ReflOp;
+import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.unmixing.SpectralUnmixingOp;
 
@@ -31,14 +34,6 @@ public class IdepixProducts {
     public static Product computeCloudTopPressureProduct(Product sourceProduct) {
         return GPF.createProduct("Meris.CloudTopPressureOp", GPF.NO_PARAMS, sourceProduct);
     }
-
-    // Cloud Top Pressure with FUB Straylight Correction
-    public static Product computeCloudTopPressureStraylightProduct(Product sourceProduct, boolean straylightCorr) {
-        Map<String, Object> params = new HashMap<String, Object>(1);
-        params.put("straylightCorr", straylightCorr);
-        return GPF.createProduct("Meris.CloudTopPressureOp", params, sourceProduct);
-    }
-
 
     public static Product computeBarometricPressureProduct(Product sourceProduct, boolean useGetasseDem) {
         Map<String, Object> params = new HashMap<String, Object>(1);
@@ -135,54 +130,6 @@ public class IdepixProducts {
         return GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), GPF.NO_PARAMS, input);
     }
 
-    public static Product computeBlueBandProduct(Product sourceProduct, Product brrProduct) {
-        Map<String, Product> input = new HashMap<String, Product>(2);
-        input.put("l1b", sourceProduct);
-        input.put("toar", brrProduct);
-        return GPF.createProduct("Meris.BlueBand", GPF.NO_PARAMS, input);
-    }
-
-    public static Product computeBrrProduct(Product sourceProduct, boolean outputToar, boolean correctWater) {
-        Map<String, Product> input = new HashMap<String, Product>(1);
-        input.put("input", sourceProduct);
-        Map<String, Object> params = new HashMap<String, Object>(2);
-        params.put("outputToar", outputToar);
-        params.put("correctWater", correctWater);
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(BrrOp.class), params, input);
-    }
-
-    public static Product computeCombinedCloudProduct(Product blueBandProduct, Product cloudProbabilityProduct) {
-        Map<String, Product> input = new HashMap<String, Product>(2);
-        input.put("cloudProb", cloudProbabilityProduct);
-        input.put("blueBand", blueBandProduct);
-        return GPF.createProduct("Meris.CombinedCloud", GPF.NO_PARAMS, input);
-    }
-
-    public static Product computePsurfNNProduct(Product sourceProduct, Product merisCloudProduct,
-                                                boolean pressureFubTropicalAtmosphere,
-                                                boolean straylightCorr) {
-        Map<String, Product> input = new HashMap<String, Product>(2);
-        input.put("l1b", sourceProduct);
-        input.put("cloud", merisCloudProduct);
-        Map<String, Object> params = new HashMap<String, Object>(2);
-        params.put("tropicalAtmosphere", pressureFubTropicalAtmosphere);
-        // mail from RL, 2009/03/19: always apply correction on FUB pressure
-        // currently only for RR (FR coefficients still missing)
-        params.put("straylightCorr", straylightCorr);
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(SurfacePressureFubOp.class), params, input);
-    }
-
-    public static Product computeCloudProbabilityProduct(Product sourceProduct) {
-        Map<String, Product> input = new HashMap<String, Product>(1);
-        input.put("input", sourceProduct);
-        Map<String, Object> params = new HashMap<String, Object>(3);
-        params.put("configFile", "cloud_config.txt");
-        params.put("validLandExpression", "not l1_flags.INVALID and dem_alt > -50");
-        params.put("validOceanExpression", "not l1_flags.INVALID and dem_alt <= -50");
-        return GPF.createProduct("Meris.CloudProbability", params, input);
-    }
-
-
     public static void addRadiance2ReflectanceBands(Product rad2reflProduct, Product targetProduct) {
         for (String bandname : rad2reflProduct.getBandNames()) {
             if (!targetProduct.containsBand(bandname)) {
@@ -191,42 +138,6 @@ public class IdepixProducts {
             }
         }
     }
-
-    public static void addL2PressureBands(Product merisCloudProduct, Product targetProduct) {
-        for (String bandname : merisCloudProduct.getBandNames()) {
-            if (bandname.equalsIgnoreCase(MerisClassificationOp.PRESSURE_CTP) ||
-                    bandname.equalsIgnoreCase(MerisClassificationOp.PRESSURE_SURFACE)) {
-                moveBand(targetProduct, merisCloudProduct, bandname);
-            }
-        }
-    }
-
-    // currently not needed
-//    public static void addMdsiBand(Product merisCloudProduct, Product targetProduct) {
-//        for (String bandname : merisCloudProduct.getBandNames()) {
-//            if (bandname.equalsIgnoreCase(MerisClassificationOp.MDSI)) {
-//                moveBand(targetProduct, merisCloudProduct, bandname);
-//            }
-//        }
-//    }
-
-    // currently not needed
-//    public static void addRhoThreshBand(Product merisCloudProduct, Product targetProduct) {
-//        for (String bandname : merisCloudProduct.getBandNames()) {
-//            if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_THRESH_TERM)) {
-//                moveBand(targetProduct, merisCloudProduct, bandname);
-//            }
-//        }
-//    }
-
-    // currently not needed
-//    public static void addScattAngleBand(Product merisCloudProduct, Product targetProduct) {
-//        for (String bandname : merisCloudProduct.getBandNames()) {
-//            if (bandname.equalsIgnoreCase(MerisClassificationOp.SCATT_ANGLE)) {
-//                moveBand(targetProduct, merisCloudProduct, bandname);
-//            }
-//        }
-//    }
 
     public static void addCCSeaiceClimatologyValueBand(Product merisCloudProduct, Product targetProduct) {
         for (String bandname : merisCloudProduct.getBandNames()) {
@@ -243,26 +154,6 @@ public class IdepixProducts {
             }
         }
     }
-
-    public static void addCCFLHValueBand(Product merisCloudProduct, Product targetProduct) {
-        for (String bandname : merisCloudProduct.getBandNames()) {
-            if (bandname.equalsIgnoreCase(MerisClassificationOp.FLH)) {
-                moveBand(targetProduct, merisCloudProduct, bandname);
-            }
-        }
-    }
-
-    public static void addCCRhoGlintDebugValueBands(Product merisCloudProduct, Product targetProduct) {
-        for (String bandname : merisCloudProduct.getBandNames()) {
-            if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_GLINT)) {
-                moveBand(targetProduct, merisCloudProduct, bandname);
-            }
-            if (bandname.equalsIgnoreCase(MerisClassificationOp.RHO_GLINT + "_chiw_term")) {
-                moveBand(targetProduct, merisCloudProduct, bandname);
-            }
-        }
-    }
-
 
     public static void addRayleighCorrectionBands(Product rayleighProduct, Product targetProduct) {
         int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
@@ -302,98 +193,6 @@ public class IdepixProducts {
         band.setSampleCoding(flagCoding);
         System.out.println("adding band: " + band.getName());
         targetProduct.addBand(band);
-    }
-
-    public static void addCombinedCloudProductBands(Product combinedCloudProduct, Product targetProduct) {
-        FlagCoding flagCoding = CombinedCloudOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        Band band = combinedCloudProduct.getBand(CombinedCloudOp.FLAG_BAND_NAME);
-        band.setSampleCoding(flagCoding);
-        moveBand(targetProduct, combinedCloudProduct, CombinedCloudOp.FLAG_BAND_NAME);
-    }
-
-    public static void addCloudProbabilityProductBands(Product cloudProbabilityProduct, Product targetProduct) {
-        FlagCoding flagCoding = CloudProbabilityOp.createCloudFlagCoding(targetProduct);
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : cloudProbabilityProduct.getBands()) {
-            if (!targetProduct.containsBand(band.getName())) {
-                if (band.getName().equals(CloudProbabilityOp.CLOUD_FLAG_BAND)) {
-                    band.setSampleCoding(flagCoding);
-                }
-                targetProduct.addBand(band);
-            }
-        }
-    }
-
-    public static void addCloudClassificationFlagBand(Product merisCloudProduct, Product targetProduct) {
-        FlagCoding flagCoding = MerisClassificationOp.createFlagCoding(
-                MerisClassificationOp.CLOUD_FLAGS);
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : merisCloudProduct.getBands()) {
-            if (band.getName().equals(MerisClassificationOp.CLOUD_FLAGS)) {
-                band.setSampleCoding(flagCoding);
-                targetProduct.addBand(band);
-            }
-        }
-    }
-
-    public static void addBlueBandProductBands(Product blueBandProduct, Product targetProduct) {
-        FlagCoding flagCoding = BlueBandOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        Band band = blueBandProduct.getBand(BlueBandOp.BLUE_FLAG_BAND);
-        band.setSampleCoding(flagCoding);
-        moveBand(targetProduct, blueBandProduct, BlueBandOp.BLUE_FLAG_BAND);
-    }
-
-    public static void addPressureLiseProductBands(Product pressureLiseProduct, Product targetProduct,
-                                                   boolean pressureOutputPSurfLise, boolean pressureOutputP2Lise) {
-        addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_P1);
-        if (pressureOutputPSurfLise) {
-            addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_PSURF);
-        }
-        if (pressureOutputP2Lise) {
-            addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_P2);
-        }
-        addPressureLiseProductBand(pressureLiseProduct, targetProduct, LisePressureOp.PRESSURE_LISE_PSCATT);
-    }
-
-
-    public static void addPressureLiseProductBand(Product pressureLiseProduct, Product targetProduct, String bandname) {
-        moveBand(targetProduct, pressureLiseProduct, bandname);
-    }
-
-    public static void addPsurfNNProductBands(Product psurfNNProduct, Product targetProduct) {
-        for (String bandname : psurfNNProduct.getBandNames()) {
-            moveBand(targetProduct, psurfNNProduct, bandname);
-        }
-    }
-
-    public static void addBarometricPressureProductBands(Product pbaroProduct, Product targetProduct) {
-        for (String bandname : pbaroProduct.getBandNames()) {
-            moveBand(targetProduct, pbaroProduct, bandname);
-        }
-    }
-
-
-    public static void addCtpStraylightProductBands(Product ctpProductStraylight, Product targetProduct) {
-        for (String bandname : ctpProductStraylight.getBandNames()) {
-            if (!bandname.equals(MerisClassificationOp.CLOUD_FLAGS)) {
-                moveBand(targetProduct, ctpProductStraylight, bandname);
-            }
-        }
-    }
-
-    public static void addLandClassificationBand(Product landProduct, Product targetProduct) {
-        FlagCoding flagCoding = LandClassificationOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        for (Band band : landProduct.getBands()) {
-            if (!targetProduct.containsBand(band.getName())) {
-                if (band.getName().equals(LandClassificationOp.LAND_FLAGS)) {
-                    band.setSampleCoding(flagCoding);
-                }
-                targetProduct.addBand(band);
-            }
-        }
     }
 
     private static void moveBand(Product targetProduct, Product product, String bandname) {

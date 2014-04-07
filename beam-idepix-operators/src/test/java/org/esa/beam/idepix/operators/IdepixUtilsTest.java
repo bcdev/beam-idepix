@@ -122,19 +122,6 @@ public class IdepixUtilsTest extends TestCase {
         assertEquals(true, band2.isNoDataValueUsed());
     }
 
-    public void testGetMerisWavelengthIndex() {
-        Map<Integer, Integer> merisWavelengthIndexMap = IdepixUtils.setupMerisWavelengthIndexMap();
-
-        int wl_1 = 412;
-        assertEquals(0, merisWavelengthIndexMap.get(wl_1).intValue());
-        int wl_2 = 560;
-        assertEquals(4, merisWavelengthIndexMap.get(wl_2).intValue());
-        int wl_3 = 900;
-        assertEquals(14, merisWavelengthIndexMap.get(wl_3).intValue());
-        int wl_4 = 1234;
-        assertNull(merisWavelengthIndexMap.get(wl_4));
-    }
-
     public void testConvertGeophysicalToMathematicalAngle() {
         double geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(31.0);
         assertEquals(59.0, geoAngle, 1.0);

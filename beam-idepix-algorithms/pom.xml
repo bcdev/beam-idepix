@@ -24,12 +24,6 @@
             <groupId>org.esa.beam.idepix</groupId>
             <artifactId>beam-idepix-core</artifactId>
         </dependency>
-
-        <!--<dependency>-->
-            <!--<groupId>org.esa.beam</groupId>-->
-            <!--<artifactId>beam-meris-glint</artifactId>-->
-        <!--</dependency>-->
-
     </dependencies>
 
 </project>

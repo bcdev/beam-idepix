@@ -2,12 +2,7 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -22,7 +17,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.Map;
 
 /**
@@ -242,7 +237,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoMerisClassificationOp.class, "idepix.globalbedo.classification.meris");
+            super(GlobAlbedoMerisClassificationOp.class);
         }
     }
 
