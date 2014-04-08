@@ -4,12 +4,10 @@
 
 <toc version="2.0" categoryclosedimage="folder" categoryopenimage="folder" topicimage="doc">
 
-    <tocitem text="IDEPIX - Generic Pixel Identification Tool" target="idepixChain">
-        <tocitem text="IDEPIX - User Manual" target="idepixIndex">
-            <tocitem text="Introduction" target="idepixIntro"/>
-            <tocitem text="Software Installation" target="idepixInstall"/>
-            <tocitem text="Product Description" target="idepixProducts"/>
-            <tocitem text="User Interface" target="idepixGui"/>
+    <tocitem text="Data Processors">
+        <tocitem text="Idepix Processors" target="IdepixPlugIn">
+            <tocitem text="Overview" target="algorithms"/>
+            <tocitem text="Processor Description" target="processor"/>
         </tocitem>
     </tocitem>
 </toc>

@@ -5,11 +5,8 @@
 
 <map version="2.0">
 
-    <mapID target="idepixChain" url="idepix/Idepix.html"/>
-    <mapID target="idepixIndex" url="idepix/index.html"/>
-    <mapID target="idepixIntro" url="idepix/ch01.html"/>
-    <mapID target="idepixInstall" url="idepix/ch02.html"/>
-    <mapID target="idepixProducts" url="idepix/ch03.html"/>
-    <mapID target="idepixGui" url="idepix/ch04.html"/>
+    <mapID target="IdepixPlugIn" url="idepix/IdepixTool.html"/>
+    <mapID target="algorithms" url="idepix/IdepixAlgorithmsOverview.html"/>
+    <mapID target="processor" url="idepix/IdepixDescription.html"/>
 
 </map>

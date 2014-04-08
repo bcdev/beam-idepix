@@ -28,14 +28,17 @@ import java.util.Map;
  * @author Olaf Danne
  */
 @SuppressWarnings({"FieldCanBeLocal"})
-@OperatorMetadata(alias = "idepix.globalbedo",
-                  version = "2.1-SNAPSHOT",
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2012 by Brockmann Consult",
-                  description = "Pixel identification and classification with GlobAlbedo algorithm.")
+@OperatorMetadata(alias = "Idepix.Land",
+                  version = "2.1",
+                  authors = "C.Brockmann, O. Danne",
+                  copyright = "(c) 2010-2012 by Brockmann Consult",
+                  description = "Pixel identification and classification over land with an algorithm developed " +
+                          "within the GlobAlbedo and CCI Land Cover projects.")
 public class GlobAlbedoOp extends BasisOp {
 
-    @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
+    @SourceProduct(alias = "l1bProduct",
+                   label = "L1b product)",
+                   description = "The MERIS or SPOT-VGT L1b product.")
     private Product sourceProduct;
 
     @TargetProduct(description = "The target product.")

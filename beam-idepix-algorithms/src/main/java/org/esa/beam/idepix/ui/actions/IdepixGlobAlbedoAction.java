@@ -15,10 +15,10 @@
 package org.esa.beam.idepix.ui.actions;
 
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.ui.DefaultSingleTargetProductDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.ui.IdepixDefaultDialog;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
 /**
@@ -29,11 +29,13 @@ import org.esa.beam.visat.actions.AbstractVisatAction;
 public class IdepixGlobAlbedoAction extends AbstractVisatAction {
     @Override
     public void actionPerformed(CommandEvent commandEvent) {
-        final IdepixDefaultDialog dialog =
-            new IdepixDefaultDialog(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class),
-                    getAppContext(),
-                    "IDEPIX Pixel Identification Tool - GlobAlbedo Algorithm -  " + IdepixConstants.IDEPIX_VERSION,
-                    "idepixChain","");
+        final DefaultSingleTargetProductDialog dialog =
+                new DefaultSingleTargetProductDialog(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class),
+                                                     getAppContext(),
+                                                     "IDEPIX Pixel Identification Tool - Land - " + IdepixConstants.IDEPIX_VERSION,
+                                                     "IdepixPlugIn");
+        System.setProperty("gpfMode", "GUI");
+        dialog.setTargetProductNameSuffix("_IDEPIX");
         dialog.show();
     }
 

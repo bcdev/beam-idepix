@@ -26,14 +26,17 @@ import java.util.Map;
  * @author Olaf Danne
  */
 @SuppressWarnings({"FieldCanBeLocal"})
-@OperatorMetadata(alias = "idepix.coastcolour",
-        version = "2.1-SNAPSHOT",
-        authors = "Carsten Brockmann, Olaf Danne", // todo clarify
-        copyright = "(c) 2012, 2013 by Brockmann Consult",
-        description = "Pixel identification and classification with CoastColour algorithm.")
+@OperatorMetadata(alias = "Idepix.Water",
+        version = "2.1",
+        authors = "R. Doerffer, H. Schiller, C. Brockmann, O. Danne, M.Peters",
+        copyright = "(c) 2010-2013 Brockmann Consult",
+        description = "Pixel identification and classification over water with an algorithm developed " +
+                "within the CoastColour and CCI Ocean Colour projects.")
 public class CoastColourOp extends BasisOp {
 
-    @SourceProduct(alias = "source", label = "Name (MERIS L1b product)", description = "The source product.")
+    @SourceProduct(alias = "l1bProduct",
+                   label = "MERIS L1b product",
+                   description = "The MERIS L1b source product.")
     private Product sourceProduct;
 
     @TargetProduct(description = "The target product.")
@@ -49,10 +52,10 @@ public class CoastColourOp extends BasisOp {
 
 
     // Coastcolour parameters
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             description = "Write TOA reflectances to the target product.",
             label = " Write TOA Reflectances to the target product")
-    private boolean ccOutputRad2Refl = false;
+    private boolean ccOutputRad2Refl = true;
 
     @Parameter(defaultValue = "false",
             description = "Write Gas Absorption Correction Flag to the target product.",

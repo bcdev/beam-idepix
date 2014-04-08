@@ -207,13 +207,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
         flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
         flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, F_MIXED_PIXEL), null);
-//        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, F_BRIGHT), null);
-//        flagCoding.addFlag("F_BRIGHT_RC", BitSetter.setFlag(0, F_BRIGHT_RC), null);
-//        flagCoding.addFlag("F_LOW_PSCATT", BitSetter.setFlag(0, F_LOW_PSCATT), null);
-//        flagCoding.addFlag("F_SLOPE_1", BitSetter.setFlag(0, F_SLOPE_1), null);
-//        flagCoding.addFlag("F_SLOPE_2", BitSetter.setFlag(0, F_SLOPE_2), null);
-//        flagCoding.addFlag("F_BRIGHT_TOA", BitSetter.setFlag(0, F_BRIGHT_TOA), null);
-//        flagCoding.addFlag("F_HIGH_MDSI", BitSetter.setFlag(0, F_HIGH_MDSI), null);
         return flagCoding;
     }
 

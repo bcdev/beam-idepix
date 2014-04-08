@@ -54,9 +54,6 @@
     <dependency>
         <module>beam-meris-radiometry</module>
     </dependency>
-    <!--<dependency>-->
-        <!--<module>beam-meris-glint</module>-->
-    <!--</dependency>-->
 
     <categories>Application,Processor,MERIS,AATSR</categories>
 
@@ -71,7 +68,7 @@
             </shortDescr>
             <mnemonic/>
             <parent>tools</parent>
-            <helpID>idepixChain</helpID>
+            <helpID>IdepixPlugIn</helpID>
             <placeAfter/>
         </action>
         <action>
@@ -82,7 +79,7 @@
             <shortDescr>Pixel classification over water (OC-CCI and CoastColour algorithm)</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
+            <helpId>IdepixPlugIn</helpId>
             <placeAfter>ipfAlgo</placeAfter>
         </action>
         <action>
@@ -93,7 +90,7 @@
             <shortDescr>Pixel classification over land (LC-CCI and GlobAlbedo algorithm)</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
+            <helpId>IdepixPlugIn</helpId>
             <placeAfter>coastcolourAlgo</placeAfter>
         </action>
     </extension>

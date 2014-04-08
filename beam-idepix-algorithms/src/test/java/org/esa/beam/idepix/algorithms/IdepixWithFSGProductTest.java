@@ -66,20 +66,19 @@ public class IdepixWithFSGProductTest {
     public void testCreatingTargetProduct_GlobAlbedo_Algo() {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "GlobAlbedo");
-        final Product product = GPF.createProduct("idepix.globalbedo", parameters, sourceProduct);
+        final Product product = GPF.createProduct("Idepix.Land", parameters, sourceProduct);
         Assert.assertNotNull(product);
         Assert.assertNotNull(product.getGeoCoding());
         Assert.assertTrue(product.getGeoCoding() instanceof PixelGeoCoding);
     }
 
     @Test
-    @Ignore
     public void testCreatingTargetProduct_CoastColour_Algo() {
         final HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("algorithm", "CoastColour");
         parameters.put("ccOutputRayleigh", true);
         parameters.put("ccMixedPixel", false);
-        final Product product = GPF.createProduct("idepix.coastcolour", parameters, sourceProduct);
+        final Product product = GPF.createProduct("Idepix.Water", parameters, sourceProduct);
         Assert.assertNotNull(product);
         Assert.assertNotNull(product.getGeoCoding());
         Assert.assertTrue(product.getGeoCoding() instanceof PixelGeoCoding);
