@@ -16,7 +16,7 @@
 
 <html>
 <head>
-    <title>IdePix Tool</title>
+    <title>IdePix Pixel Classification over Water</title>
     <link rel="stylesheet" href="../style.css">
 </head>
 
@@ -33,19 +33,6 @@
     </tr>
 </table>
 
-<h3>User Interfaces</h3>
-
-<p>
-    The IdePix Tool can be invoked from the VISAT tool menu by selecting
-    the <b>IDEPIX Generic classification of pixels...</b> entry, or in batch mode by using the command line
-    tool <i><code>gpt</code></i> (Graph Processing Tool) which is located
-    in the BEAM <code>bin</code> directory.
-</p>
-
-<br>
-<hr>
-
-
 <!-------- Water Processor (CC/OC CCI) --------------------------------------->
 <h3>IdePix Water Pixel Classification</h3>
 
@@ -53,8 +40,8 @@
 
 <p>
     Selecting the <b>IDEPIX Generic classification of pixels...</b> entry from the VISAT tool menu opens another
-    sub-menu with the two entries 'Water...' and 'Land...'. Selecting 'Water' from this sub-menu pops up the
-    'IDEPIX Pixel Identification Tool - Water' dialog:
+    sub-menu with the two entries 'Water...' and 'Land...'. Selecting 'Water' from this sub-menu pops up the 'IDEPIX
+    Pixel Identification Tool - Water' dialog:
 </p>
 
 <p align="center">
@@ -64,7 +51,7 @@
 <h5>Source Products</h5>
 
 <p class="i1">
-    <b>L1b product:</b>
+    <b>MERIS L1b product:</b>
     Here the user specifies the MERIS L1b source product. The combo box presents
     a list of all products open in VISAT. The user may select one of these
     or, by clicking on the button next to the combo box, choose a product
@@ -123,7 +110,7 @@
     <b>Write Spectral Unmixing Abundance Bands to the target product:</b>
     This checkbox indicates if the abundance bands from the spectral unmixing process
     shall be written to the target product. For more details see the help documentation of the
-    BEAM <it>Spectral Unmixing Tool</it>.
+    BEAM <it>Spectral Unmixing Tool</it> [4].
 </p>
 
 <p class="i1">
@@ -172,7 +159,7 @@
     <b>Open Parameters...:</b>
     When this entry is selected, an 'Open File' dialog will appear.
     Here, a BEAM GPF parameters XML file can be selected, containing
-    MERIS BRR processing parameters which were saved earlier.
+    IdePix water pixel classification parameters which were saved earlier.
     These parameters will be loaded and applied for an upcoming processing.
 </p>
 
@@ -190,7 +177,7 @@
 </p>
 
 <p align="center">
-    <img src="images/water_file_menu_display_params.png" alt="File Menu Display Parms"/>
+    <img src="images/water_file_menu_display_params.png" alt="Water File Menu Display Parms"/>
 </p>
 
 
@@ -235,7 +222,7 @@
 
 <p class="i1">
     <b>Close:</b>
-    When this button is clicked, the processor toolwindow will be closed.
+    When this button is clicked, the processor tool window will be closed.
 </p>
 
 
@@ -286,7 +273,7 @@ For example, an IdePix water pixel classification could be started with
 <div class="itemizedlist">
     <ul type="bullet">
         <li style="list-style-type: disc">
-            ${BEAM-INSTALL-DIR}/bin/gpt test_idepix_water.xml -SMERIS_L1b=./MER_Idepix_test.dim
+            ${BEAM-INSTALL-DIR}/bin/gpt test_idepix_water.xml -Sl1bProduct=./MER_Idepix_test.dim
 
         </li>
     </ul>

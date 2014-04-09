@@ -37,36 +37,64 @@
 <h3>Summary</h3>
 
 <p>
-    The <em>IdePix</em> tool consists of two separate parts for water and land pixel
-    classification...
+    The IdePix pixel classification tool provides a classification of pixels with respect to their underlying attributes,
+    e.g. if the pixel is regarded as cloudy, as a snow or ice pixel, etc. Since separate algorithms are applied for the
+    classification over water and land, the tool is also divided into user interfaces for water and land.
+    Supported products are MERIS L1b for classification over water, and both MERIS and SPOT-VGT L1b for classification
+    over land.
 </p>
 
-<p align="center">
-    <img src="images/idepix_flow_water.png" alt="IdePix water pixel classification"/>
+<h3>User Interfaces</h3>
 
-<div style="text-align: center;"><it>The IdePix water pixel classification (taken from [1]).</it></div>
+<p>
+    The IdePix Tool can be invoked from the VISAT tool menu by selecting
+    the <b>IDEPIX Generic classification of pixels...</b> entry, or in batch mode by using the command line
+    tool <i><code>gpt</code></i> (Graph Processing Tool) which is located
+    in the BEAM <code>bin</code> directory.
 </p>
-<br>
-
-<p align="center">
-    <img src="images/idepix_flow_water.png" alt="IdePix land pixel classification"/>
-
-<div style="text-align: center;"><it>The IdePix land pixel classification (taken from [1]).</it></div>
-</p>
-<br>
 
 <h3>Algorithms</h3>
 
 <p>
-    The underlying algorithms are presented in detail in [1] (water ) and [2] (land)...
+    The IdePix tool for water pixel classification was developed in the frame of the ESA DUE project 'CoastColour' [1], and
+    the ESA OceanColour CCI project [2]. The classification is mainly based on the algorithms described in [3], chapter 5.
 </p>
+
+<p>
+    The IdePix tool for land pixel classification was developed in the frame of the ESA DUE project 'GlobAlbedo' [5], and
+    the ESA LandCover CCI project [6]. The classification is mainly based on the algorithm described in [7].
+</p>
+
 <br>
 
 <h3>References</h3>
 
 <p class="i1">
     <b>[1]</b>
-    Bourg, L. (2009): MERIS Level 2 Detailed Processing Model. ACRI-ST, Document No. PO-TN-MEL-GS-0006, 15 July 2009.
+    CoastColour Project Web Site: <a href="http://www.coastcolour.org">www.coastcolour.org</a><br><br>
+
+    <b>[2]</b>
+    OceanColour Project Web Site: <a href="http://www.esa-oceancolour-cci.org/">www.esa-oceancolour-cci.org</a><br><br>
+
+    <b>[3]</b>
+    Bourg, L. (2009): MERIS Level 2 Detailed Processing Model. ACRI-ST, Document No. PO-TN-MEL-GS-0006, 15 July 2009.<br><br>
+
+    <b>[4]</b>
+    BEAM Spectral Unmixing Tool Help Documentation:
+    <a href="http://www.brockmann-consult.de/beam/doc/help/unmixing/SpectralUnmixingTool.html">www.brockmann-consult.de/beam/doc/help/unmixing/SpectralUnmixingTool.html</a>
+    <br><br>
+
+    <b>[5]</b>
+    GlobAlbedo Project Web Site: <a href="http://globalbedo.org/">http://globalbedo.org</a><br><br>
+
+    <b>[6]</b>
+    LandCover Project Web Site: <a href="http://www.esa-landcover-cci.org/">www.esa-landcover-cci.org</a><br><br>
+
+    <b>[7]</b>
+    GlobAlbedo ATBD 'Pixel Classification'. Version 4.1, 26 June 2012.<br><br>
+
+    <b>[8]</b>
+    Farr, T. G., et al. (2007), The Shuttle Radar Topography Mission, Rev. Geophys., 45, RG2004, doi:10.1029/2005RG000183.
 </p>
 <br>
 

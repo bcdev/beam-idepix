@@ -37,7 +37,7 @@ import java.util.Map;
 public class GlobAlbedoOp extends BasisOp {
 
     @SourceProduct(alias = "l1bProduct",
-                   label = "L1b product)",
+                   label = "L1b product",
                    description = "The MERIS or SPOT-VGT L1b product.")
     private Product sourceProduct;
 

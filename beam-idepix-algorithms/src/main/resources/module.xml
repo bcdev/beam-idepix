@@ -63,8 +63,7 @@
             <class>org.esa.beam.visat.actions.ActionGroup</class>
             <text>IDEPIX Generic classification of pixels...</text>
             <shortDescr>
-                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
-                sensors.
+                IDEPIX Generic classification of pixels (e.g. clouds, snow, ice) originating from MERIS and SPOT-VGT sensors.
             </shortDescr>
             <mnemonic/>
             <parent>tools</parent>

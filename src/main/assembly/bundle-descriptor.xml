@@ -5,51 +5,45 @@
     <processorDescriptors>
 
         <processorDescriptor>
-            <executableName>idepix.coastcolour</executableName>
-            <processorName>Idepix (CC Algorithm)</processorName>
+            <executableName>Idepix.Water</executableName>
+            <processorName>Idepix (Water Pixel Classification)</processorName>
             <processorVersion>${pom.version}</processorVersion>
             <defaultParameters><![CDATA[
 
      <!-- CHANGES to previous Idepix version: -->
-     <!--     - CC user option added to write FLH value to output product -->
+     <!--     - Major cleanup for first public release in BEAM 5, i.e. experimental user options were removed. -->
      <!-- This version was provided by O.Danne -->
      <!-- **************************** -->
 
     <parameters>
     <!-- ***********Idepix CC Parameters start here*********** -->
 
-     <!-- Whether to additionally write TOA Reflectances -->
-     <ccOutputRad2Refl>false</ccOutputRad2Refl>
+     <!-- Whether to additionally write TOA Reflectances to the target product -->
+     <ccOutputRad2Refl>true</ccOutputRad2Refl>
 
-     <!-- Whether to additionally write Gas Absorption Corrected Reflectances -->
+     <!-- Whether to additionally write the Gas Absorption Correction Flag to the target product -->
      <ccOutputGaseous>false</ccOutputGaseous>
 
-     <!-- Whether to additionally write Rayleigh Corrected Reflectances -->
+     <!-- Whether to additionally write Rayleigh Corrected Reflectances to the target product -->
      <ccOutputRayleigh>false</ccOutputRayleigh>
 
-     <!-- Whether to pre-compute mixed pixel flag from spectral unmixing (requires Rayleigh corrected reflectances!) -->
-     <ccMixedPixel>false</ccMixedPixel>
-
-     <!-- Whether to additionally write Spectral Unmixing Abundance Bands (requires Rayleigh corrected reflectances!) -->
+     <!-- Whether to additionally write Spectral Unmixing Abundance Bands to the target product -->
      <ccOutputSma>false</ccOutputSma>
 
-     <!-- Whether to additionally write L2 Cloud Top Pressure and Surface Pressure -->
-     <ccOutputL2Pressures>false</ccOutputL2Pressures>
+     <!-- Whether to additionally write the Cloud Probability Feature value to the target product -->
+     <ccOutputCloudProbabilityFeatureValue>false</ccOutputCloudProbabilityFeatureValue>
 
-     <!-- Whether to additionally write the Schiller cloud value -->
-     <ccOutputSchillerCloudValue>true</ccOutputSchillerCloudValue>
+     <!-- Whether to additionally write the sea ice climatology maximum value to the target product -->
+     <ccOutputSeaIceClimatologyValue>false</ccOutputSeaIceClimatologyValue>
 
-     <!-- Whether to additionally write the FLH Value computed from radiances -->
-     <ccOutputFLHValue>false</ccOutputFLHValue>
-
-     <!-- Schiller cloud threshold for ambiguous clouds -->
-     <ccSchillerAmbiguous>1.4</ccSchillerAmbiguous>
-
-     <!-- Schiller cloud threshold for sure clouds -->
-     <ccSchillerSure>1.8</ccSchillerSure>
-
-     <!-- The cloud buffer width -->
+     <!-- Width of cloud buffer (# of pixels) -->
      <ccCloudBufferWidth>2</ccCloudBufferWidth>
+
+     <!-- Cloud screening 'ambiguous' threshold -->
+     <ccCloudScreeningAmbiguous>1.8</ccCloudScreeningAmbiguous>
+
+     <!-- Cloud screening 'sure' threshold -->
+     <ccCloudScreeningSure>1.8</ccCloudScreeningSure>
 
 </parameters>]]></defaultParameters>
             <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>

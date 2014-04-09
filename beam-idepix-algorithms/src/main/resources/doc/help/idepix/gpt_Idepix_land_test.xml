@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<graph id="idepixLandTestGraph">
+<version>1.0</version>
+<node id="idepixLandTestNode">
+    <operator>Idepix.Water</operator>
+    <sources>
+        <l1bProduct>${l1bProduct}</l1bProduct>
+    </sources>
+    <parameters>
+        <ccOutputRad2Refl>true</ccOutputRad2Refl>
+        <ccOutputGaseous>false</ccOutputGaseous>
+        <ccOutputRayleigh>true</ccOutputRayleigh>
+        <ccOutputSma>false</ccOutputSma>
+        <ccOutputCloudProbabilityFeatureValue>true</ccOutputCloudProbabilityFeatureValue>
+        <ccOutputSeaIceClimatologyValue>true</ccOutputSeaIceClimatologyValue>
+        <ccCloudBufferWidth>3</ccCloudBufferWidth>
+        <ccCloudScreeningAmbiguous>1.3</ccCloudScreeningAmbiguous>
+        <ccCloudScreeningSure>1.85</ccCloudScreeningSure>
+    </parameters>
+</node>
+</graph>

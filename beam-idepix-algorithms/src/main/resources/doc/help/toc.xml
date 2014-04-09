@@ -7,7 +7,8 @@
     <tocitem text="Data Processors">
         <tocitem text="Idepix Processors" target="IdepixPlugIn">
             <tocitem text="Overview" target="algorithms"/>
-            <tocitem text="Processor Description" target="processor"/>
+            <tocitem text="Water Processor Description" target="waterprocessor"/>
+            <tocitem text="Land Processor Description" target="landprocessor"/>
         </tocitem>
     </tocitem>
 </toc>

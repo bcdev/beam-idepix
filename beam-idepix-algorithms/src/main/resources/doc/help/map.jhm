@@ -7,6 +7,7 @@
 
     <mapID target="IdepixPlugIn" url="idepix/IdepixTool.html"/>
     <mapID target="algorithms" url="idepix/IdepixAlgorithmsOverview.html"/>
-    <mapID target="processor" url="idepix/IdepixDescription.html"/>
+    <mapID target="waterprocessor" url="idepix/IdepixWaterDescription.html"/>
+    <mapID target="landprocessor" url="idepix/IdepixLandDescription.html"/>
 
 </map>
