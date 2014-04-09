@@ -67,7 +67,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String SCATT_ANGLE = MerisClassificationOp.SCATT_ANGLE;
     public static final String RHO_THRESH_TERM = MerisClassificationOp.RHO_THRESH_TERM;
     public static final String MDSI = MerisClassificationOp.MDSI;
-    public static final String SCHILLER = MerisClassificationOp.SCHILLER;
+    public static final String CLOUD_PROBABILITY_VALUE = MerisClassificationOp.CLOUD_PROBABILITY_VALUE;
 
     public static final int F_LAND = 13;
     public static final int F_COASTLINE = 14;
@@ -108,7 +108,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private Band scattAngleOutputBand;
     private Band rhoThreshOutputBand;
     private Band seaIceClimatologyOutputBand;
-    private Band schillerValueOutputBand;
+    private Band cloudProbabilityValueOutputBand;
     private Band mdsiOutputBand;
     private SeaIceClassifier seaIceClassifier;
     private Band ctpBand;
@@ -192,7 +192,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             seaIceClimatologyOutputBand = targetProduct.addBand("sea_ice_climatology_value", ProductData.TYPE_FLOAT32);
         }
         if (ccOutputCloudProbabilityFeatureValue) {
-            schillerValueOutputBand = targetProduct.addBand(SCHILLER, ProductData.TYPE_FLOAT32);
+            cloudProbabilityValueOutputBand = targetProduct.addBand(CLOUD_PROBABILITY_VALUE, ProductData.TYPE_FLOAT32);
         }
     }
 
@@ -389,12 +389,12 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                         if (band == mdsiOutputBand) {
                             setMdsi(sd, pixelInfo, targetTile);
                         }
-                        if (ccOutputCloudProbabilityFeatureValue && band == schillerValueOutputBand) {
-                            float schillerValue = computeSchillerCloudValue(sd, pixelInfo);
-                            targetTile.setSample(pixelInfo.x, pixelInfo.y, schillerValue);
+                        if (ccOutputCloudProbabilityFeatureValue && band == cloudProbabilityValueOutputBand) {
+                            final float probabilityValue = computeCloudProbabilityValue(sd, pixelInfo);
+                            targetTile.setSample(pixelInfo.x, pixelInfo.y, probabilityValue);
                         }
                         if (ccOutputSeaIceClimatologyValue && band == seaIceClimatologyOutputBand) {
-                            float seaIceMaxValue = computeSeaiceClimatologyValue(pixelInfo);
+                            final float seaIceMaxValue = computeSeaiceClimatologyValue(pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, seaIceMaxValue);
                         }
                     }
@@ -489,10 +489,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             sureThresh += 0.1;
         }
 
-        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
+        final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
 
-        boolean isCloud = schillerValue > ambiguousThresh;
-        boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
+        boolean isCloud = cloudProbValue > ambiguousThresh;
+        boolean isCloudAmbiguous = cloudProbValue > ambiguousThresh && cloudProbValue < sureThresh;
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk && !isCloud);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
@@ -528,7 +528,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         return false;
     }
 
-    private float computeSchillerCloudValue(SourceData sd, PixelInfo pixelInfo) {
+    private float computeCloudProbabilityValue(SourceData sd, PixelInfo pixelInfo) {
         final boolean glintRisk = isGlintRisk(sd, pixelInfo);
         double ambiguousThresh = cloudScreeningAmbiguous;
         double sureThresh = cloudScreeningSure;
@@ -538,13 +538,13 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             sureThresh += 0.1;
         }
 
-        float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
-        boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
+        float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
+        boolean isCloudAmbiguous = cloudProbValue > ambiguousThresh && cloudProbValue < sureThresh;
         if (glintRisk && isCloudAmbiguous) {
-            schillerValue = Float.NaN;
+            cloudProbValue = Float.NaN;
         }
 
-        return schillerValue;
+        return cloudProbValue;
     }
 
     private float computeSeaiceClimatologyValue(PixelInfo pixelInfo) {
@@ -567,7 +567,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     }
 
 
-    private float computeSchillerCloud(SchillerAlgorithm schillerAlgorithm, final SourceData sd, final PixelInfo pixelInfo) {
+    private float computeCloudProbabilityValue(SchillerAlgorithm schillerAlgorithm, final SourceData sd, final PixelInfo pixelInfo) {
         return schillerAlgorithm.compute(new SchillerAlgorithm.Accessor() {
             @Override
             public double get(int index) {

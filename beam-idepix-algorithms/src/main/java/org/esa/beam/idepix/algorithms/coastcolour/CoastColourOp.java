@@ -203,7 +203,7 @@ public class CoastColourOp extends BasisOp {
             IdepixProducts.addCCSeaiceClimatologyValueBand(merisCloudProduct, targetProduct);
         }
         if (ccOutputCloudProbabilityFeatureValue) {
-            IdepixProducts.addCCSchillerCloudValueBand(merisCloudProduct, targetProduct);
+            IdepixProducts.addCCCloudProbabilityValueBand(merisCloudProduct, targetProduct);
         }
 
         addCloudClassificationFlagBandCoastColour();

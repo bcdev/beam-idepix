@@ -147,9 +147,9 @@ public class IdepixProducts {
         }
     }
 
-    public static void addCCSchillerCloudValueBand(Product merisCloudProduct, Product targetProduct) {
+    public static void addCCCloudProbabilityValueBand(Product merisCloudProduct, Product targetProduct) {
         for (String bandname : merisCloudProduct.getBandNames()) {
-            if (bandname.equalsIgnoreCase(MerisClassificationOp.SCHILLER)) {
+            if (bandname.equalsIgnoreCase(MerisClassificationOp.CLOUD_PROBABILITY_VALUE)) {
                 moveBand(targetProduct, merisCloudProduct, bandname);
             }
         }

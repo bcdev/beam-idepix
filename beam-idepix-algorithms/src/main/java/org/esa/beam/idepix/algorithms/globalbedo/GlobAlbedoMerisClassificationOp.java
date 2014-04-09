@@ -122,8 +122,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                                 return finalMerisRefl[index].getSampleDouble(finalX, finalY);
                             }
                         };
-                        float schillerCloud = landNN.compute(accessor);
-                        if (schillerCloud > 1.4) {  // a magic number...
+                        final float cloudProbValue = landNN.compute(accessor);
+                        if (cloudProbValue > 1.4) {  // a magic number...
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                         }
                     }

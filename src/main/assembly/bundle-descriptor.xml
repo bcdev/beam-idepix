@@ -153,7 +153,7 @@
                 </outputVariable>
 
                 <outputVariable>
-                    <name>schiller_cloud_value</name>
+                    <name>cloud_probability_value</name>
                     <defaultAggregator>AVG</defaultAggregator>
                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
                 </outputVariable>
