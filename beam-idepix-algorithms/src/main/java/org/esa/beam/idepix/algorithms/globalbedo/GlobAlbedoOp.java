@@ -96,7 +96,7 @@ public class GlobAlbedoOp extends BasisOp {
                description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
     private boolean gaCopyAnnotations;
 
-    @Parameter(defaultValue = "2",
+    @Parameter(defaultValue = "2", interval = "[0,100]",
                label = " Width of cloud buffer (# of pixels)",
                description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
     private int gaCloudBufferWidth;

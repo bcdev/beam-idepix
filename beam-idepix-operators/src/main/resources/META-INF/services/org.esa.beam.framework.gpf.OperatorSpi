@@ -4,5 +4,3 @@ org.esa.beam.idepix.operators.MerisClassificationOp$Spi
 org.esa.beam.idepix.operators.IdepixCloudShadowOp$Spi
 org.esa.beam.idepix.operators.IdepixRayleighCorrectionOp$Spi
 org.esa.beam.idepix.operators.LisePressureOp$Spi
-org.esa.beam.idepix.operators.MerisBrrCorrectionOp$Spi
-org.esa.beam.idepix.operators.SurfacePressureFubOp$Spi

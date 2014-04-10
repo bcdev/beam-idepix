@@ -3,8 +3,6 @@ org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp$Spi
 org.esa.beam.idepix.algorithms.coastcolour.CoastColourPostProcessOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisClassificationOp$Spi
-org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoAatsrClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoVgtClassificationOp$Spi
-org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisAatsrSynergyClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp$Spi
 

@@ -83,7 +83,7 @@ public class CoastColourOp extends BasisOp {
             )
     private boolean ccOutputSeaIceClimatologyValue;
 
-    @Parameter(defaultValue = "2",
+    @Parameter(defaultValue = "2", interval = "[0,100]",
             description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
             label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;

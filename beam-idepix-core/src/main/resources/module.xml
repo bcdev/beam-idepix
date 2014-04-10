@@ -2,19 +2,22 @@
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-core</symbolicName>
     <version>2.1-SNAPSHOT</version>
-    <name>Generic classification of pixels</name>
-    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
+    <name>Idepix Core</name>
+    <description>
+        This module contains core classes of IdePix, which is a generic classification tool for pixels originating from optical sensors.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>
         Max Planck Str.2, 21502 Geesthacht (Germany)
     </contactAddress>
-    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <copyright>(C) 2014 by Brockmann Consult GmbH</copyright>
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
-    <changelog/>
+    <changelog>
+        IdePix 2.1 is the initial public release for BEAM 5. Previous releases were for internal use only.
+    </changelog>
 
     <dependency>
         <module>beam-core</module>
