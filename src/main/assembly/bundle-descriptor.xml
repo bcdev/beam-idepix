@@ -40,7 +40,7 @@
      <ccCloudBufferWidth>2</ccCloudBufferWidth>
 
      <!-- Cloud screening 'ambiguous' threshold -->
-     <ccCloudScreeningAmbiguous>1.8</ccCloudScreeningAmbiguous>
+     <ccCloudScreeningAmbiguous>1.4</ccCloudScreeningAmbiguous>
 
      <!-- Cloud screening 'sure' threshold -->
      <ccCloudScreeningSure>1.8</ccCloudScreeningSure>

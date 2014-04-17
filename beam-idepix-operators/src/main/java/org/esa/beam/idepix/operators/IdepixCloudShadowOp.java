@@ -25,7 +25,7 @@ import java.awt.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.operators.CloudShadow",
-        version = "2.1-SNAPSHOT",
+        version = "2.0.9-SNAPSHOT",
         internal = true,
         authors = "Olaf Danne",
         copyright = "(c) 2008 by Brockmann Consult",

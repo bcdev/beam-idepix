@@ -81,12 +81,12 @@ public class CoastColourOp extends BasisOp {
             description = "Write Sea Ice Climatology Max Value to the target product.",
             label = "Write Sea Ice Climatology Max Value to the target product"
             )
-    private boolean ccOutputSeaIceClimatologyValue;
+    private boolean ccOutputSeaIceClimatologyValue = false;
 
     @Parameter(defaultValue = "2", interval = "[0,100]",
             description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
             label = "Width of cloud buffer (# of pixels)")
-    private int ccCloudBufferWidth;
+    private int ccCloudBufferWidth = 2;
 
     @Parameter(defaultValue = "1.4",
             description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as still ambiguous.",

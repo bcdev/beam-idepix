@@ -28,7 +28,7 @@ import java.util.Map;
 
 
 @OperatorMetadata(alias = "idepix.operators.IdepixRayleighCorrection",
-                  version = "2.1-SNAPSHOT",
+                  version = "2.0.9-SNAPSHOT",
                   internal = true,
                   authors = "Marco Zuehlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",

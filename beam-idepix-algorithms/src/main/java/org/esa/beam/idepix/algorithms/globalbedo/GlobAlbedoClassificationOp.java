@@ -28,7 +28,7 @@ import java.io.IOException;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-                  version = "2.1-SNAPSHOT",
+                  version = "2.0.9-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
