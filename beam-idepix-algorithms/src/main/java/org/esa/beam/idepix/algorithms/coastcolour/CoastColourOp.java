@@ -83,6 +83,12 @@ public class CoastColourOp extends BasisOp {
             )
     private boolean ccOutputSeaIceClimatologyValue;
 
+    @Parameter(defaultValue = "false",
+               description = "Check for sea/lake ice also outside Sea Ice Climatology area.",
+               label = "Check for sea/lake ice also outside sea ice climatology area"
+    )
+    private boolean ccIgnoreSeaIceClimatology;
+
     @Parameter(defaultValue = "2", interval = "[0,100]",
             description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
             label = "Width of cloud buffer (# of pixels)")
@@ -168,6 +174,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("cloudScreeningAmbiguous", ccCloudScreeningAmbiguous);
         cloudClassificationParameters.put("cloudScreeningSure", ccCloudScreeningSure);
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
+        cloudClassificationParameters.put("ccIgnoreSeaIceClimatology", ccIgnoreSeaIceClimatology);
         cloudClassificationParameters.put("ccOutputCloudProbabilityFeatureValue", ccOutputCloudProbabilityFeatureValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                 cloudClassificationParameters, cloudInputProducts);
