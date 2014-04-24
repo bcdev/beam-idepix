@@ -53,14 +53,14 @@ public class CoastColourOp extends BasisOp {
 
     // Coastcolour parameters
     @Parameter(defaultValue = "true",
-            description = "Write TOA reflectances to the target product.",
-            label = " Write TOA Reflectances to the target product")
-    private boolean ccOutputRad2Refl = true;
+            description = "Write TOA radiances to the target product.",
+            label = " Write TOA radiances to the target product")
+    private boolean ccOutputRadiance = true;
 
     @Parameter(defaultValue = "false",
-            description = "Write Gas Absorption Correction Flag to the target product.",
-            label = " Write Gas Absorption Correction Flag to the target product")
-    private boolean ccOutputGaseous = false;
+               description = "Write TOA reflectances to the target product.",
+               label = " Write TOA Reflectances to the target product")
+    private boolean ccOutputRad2Refl = false;
 
     @Parameter(defaultValue = "false",
             description = "Write Rayleigh Corrected Reflectances to the target product.",
@@ -149,6 +149,7 @@ public class CoastColourOp extends BasisOp {
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
+        targetProduct.setAutoGrouping("radiance:rho_toa:brr:spec_unmix");
         addBandsToTargetProduct();
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
@@ -194,11 +195,11 @@ public class CoastColourOp extends BasisOp {
     }
 
     private void addBandsToTargetProduct() {
+        if (ccOutputRadiance) {
+            IdepixProducts.addRadianceBands(sourceProduct, targetProduct);
+        }
         if (ccOutputRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
-        }
-        if (ccOutputGaseous) {
-            IdepixProducts.addGaseousCorrectionBands(gasProduct, targetProduct);
         }
         if (ccOutputRayleigh) {
             IdepixProducts.addRayleighCorrectionBands(rayleighProduct, targetProduct);

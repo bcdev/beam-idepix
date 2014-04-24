@@ -64,8 +64,8 @@
         <action>
             <id>idepix</id>
             <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>IDEPIX Generic classification of pixels...</text>
-            <shortDescr>IDEPIX Generic classification of pixels (e.g. clouds, snow, ice) originating from MERIS or SPOT-VGT sensor.</shortDescr>
+            <text>IDEPIX Classification of pixels...</text>
+            <shortDescr>IDEPIX Classification of pixels (e.g. clouds, snow, ice) originating from MERIS or SPOT-VGT sensor.</shortDescr>
             <mnemonic/>
             <parent>processing.preProcessing</parent>
             <helpID>IdepixPlugIn</helpID>
@@ -74,7 +74,7 @@
         <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
-            <text>Water...</text>
+            <text>Water (MERIS)...</text>
             <shortDescr>Pixel classification over water (OC-CCI and CoastColour algorithm)</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
@@ -83,7 +83,7 @@
         <action>
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
-            <text>Land...</text>
+            <text>Land (MERIS, SPOT-VGT)...</text>
             <shortDescr>Pixel classification over land (LC-CCI and GlobAlbedo algorithm)</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>

@@ -92,11 +92,6 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
     }
 
     @Override
-    public boolean isGlintRisk() {
-        return !isInvalid() && isWater() && isCloud() && (glintRiskValue() > getGlintThreshold());
-    }
-
-    @Override
     public boolean isHigh() {
         return (!isInvalid() && pressureValue() > getPressureThreshold());
     }

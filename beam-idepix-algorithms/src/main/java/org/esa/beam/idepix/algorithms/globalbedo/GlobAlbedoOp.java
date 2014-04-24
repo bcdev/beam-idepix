@@ -162,6 +162,7 @@ public class GlobAlbedoOp extends BasisOp {
                                            gaFinalCloudClassificationParameters, gaFinalCloudInput);
 
         targetProduct = gaCloudProduct;
+        targetProduct.setAutoGrouping("radiance:rho_toa:brr");
         if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
             addRayleighCorrectionBands();
         }
@@ -212,6 +213,7 @@ public class GlobAlbedoOp extends BasisOp {
                 if (band.getName().equals(RayleighCorrectionOp.RAY_CORR_FLAGS)) {
                     band.setSampleCoding(flagCoding);
                 }
+                band.setUnit("dl");
                 targetProduct.addBand(band);
                 targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
             }
