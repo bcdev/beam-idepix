@@ -16,6 +16,7 @@ import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.unmixing.SpectralUnmixingOp;
+import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -130,11 +131,21 @@ public class IdepixProducts {
         return GPF.createProduct(OperatorSpi.getOperatorAlias(LandClassificationOp.class), GPF.NO_PARAMS, input);
     }
 
+    public static void addRadianceBands(Product l1bProduct, Product targetProduct) {
+        for (String bandname : l1bProduct.getBandNames()) {
+            if (!targetProduct.containsBand(bandname) && bandname.startsWith(Rad2ReflOp.RADIANCE_BAND_PREFIX)) {
+                System.out.println("adding band: " + bandname);
+                ProductUtils.copyBand(bandname, l1bProduct, targetProduct, true);
+            }
+        }
+    }
+
     public static void addRadiance2ReflectanceBands(Product rad2reflProduct, Product targetProduct) {
         for (String bandname : rad2reflProduct.getBandNames()) {
-            if (!targetProduct.containsBand(bandname)) {
+            if (!targetProduct.containsBand(bandname) && bandname.startsWith(Rad2ReflOp.RHO_TOA_BAND_PREFIX)) {
                 System.out.println("adding band: " + bandname);
-                targetProduct.addBand(rad2reflProduct.getBand(bandname));
+                ProductUtils.copyBand(bandname, rad2reflProduct, targetProduct, true);
+                targetProduct.getBand(bandname).setUnit("dl");
             }
         }
     }
@@ -166,6 +177,7 @@ public class IdepixProducts {
                     band.setSampleCoding(flagCoding);
                 }
                 System.out.println("adding band: " + band.getName());
+                band.setUnit("dl");
                 targetProduct.addBand(band);
                 targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
             }
@@ -184,15 +196,6 @@ public class IdepixProducts {
                 targetProduct.getBand(origBandName).setName("spec_unmix_" + origBandName);
             }
         }
-    }
-
-    public static void addGaseousCorrectionBands(Product gasProduct, Product targetProduct) {
-        FlagCoding flagCoding = GaseousCorrectionOp.createFlagCoding();
-        targetProduct.getFlagCodingGroup().add(flagCoding);
-        Band band = gasProduct.getBand(GaseousCorrectionOp.GAS_FLAGS);
-        band.setSampleCoding(flagCoding);
-        System.out.println("adding band: " + band.getName());
-        targetProduct.addBand(band);
     }
 
     private static void moveBand(Product targetProduct, Product product, String bandname) {

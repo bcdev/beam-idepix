@@ -53,14 +53,14 @@ public class CoastColourOp extends BasisOp {
 
     // Coastcolour parameters
     @Parameter(defaultValue = "true",
-            description = "Write TOA reflectances to the target product.",
-            label = " Write TOA Reflectances to the target product")
-    private boolean ccOutputRad2Refl = true;
+            description = "Write TOA radiances to the target product.",
+            label = " Write TOA radiances to the target product")
+    private boolean ccOutputRadiance = true;
 
     @Parameter(defaultValue = "false",
-            description = "Write Gas Absorption Correction Flag to the target product.",
-            label = " Write Gas Absorption Correction Flag to the target product")
-    private boolean ccOutputGaseous = false;
+               description = "Write TOA reflectances to the target product.",
+               label = " Write TOA Reflectances to the target product")
+    private boolean ccOutputRad2Refl = false;
 
     @Parameter(defaultValue = "false",
             description = "Write Rayleigh Corrected Reflectances to the target product.",
@@ -81,12 +81,18 @@ public class CoastColourOp extends BasisOp {
             description = "Write Sea Ice Climatology Max Value to the target product.",
             label = "Write Sea Ice Climatology Max Value to the target product"
             )
-    private boolean ccOutputSeaIceClimatologyValue = false;
+    private boolean ccOutputSeaIceClimatologyValue;
+
+    @Parameter(defaultValue = "false",
+               description = "Check for sea/lake ice also outside Sea Ice Climatology area.",
+               label = "Check for sea/lake ice also outside sea ice climatology area"
+    )
+    private boolean ccIgnoreSeaIceClimatology;
 
     @Parameter(defaultValue = "2", interval = "[0,100]",
             description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
             label = "Width of cloud buffer (# of pixels)")
-    private int ccCloudBufferWidth = 2;
+    private int ccCloudBufferWidth;
 
     @Parameter(defaultValue = "1.4",
             description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as still ambiguous.",
@@ -143,6 +149,7 @@ public class CoastColourOp extends BasisOp {
 
         targetProduct = createCompatibleProduct(sourceProduct, "MER", "MER_L2");
 
+        targetProduct.setAutoGrouping("radiance:rho_toa:brr:spec_unmix");
         addBandsToTargetProduct();
 
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
@@ -168,6 +175,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("cloudScreeningAmbiguous", ccCloudScreeningAmbiguous);
         cloudClassificationParameters.put("cloudScreeningSure", ccCloudScreeningSure);
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
+        cloudClassificationParameters.put("ccIgnoreSeaIceClimatology", ccIgnoreSeaIceClimatology);
         cloudClassificationParameters.put("ccOutputCloudProbabilityFeatureValue", ccOutputCloudProbabilityFeatureValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                 cloudClassificationParameters, cloudInputProducts);
@@ -187,11 +195,11 @@ public class CoastColourOp extends BasisOp {
     }
 
     private void addBandsToTargetProduct() {
+        if (ccOutputRadiance) {
+            IdepixProducts.addRadianceBands(sourceProduct, targetProduct);
+        }
         if (ccOutputRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
-        }
-        if (ccOutputGaseous) {
-            IdepixProducts.addGaseousCorrectionBands(gasProduct, targetProduct);
         }
         if (ccOutputRayleigh) {
             IdepixProducts.addRayleighCorrectionBands(rayleighProduct, targetProduct);

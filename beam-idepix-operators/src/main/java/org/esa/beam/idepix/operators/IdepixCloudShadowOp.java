@@ -25,7 +25,7 @@ import java.awt.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.operators.CloudShadow",
-        version = "2.0.9-SNAPSHOT",
+        version = "2.1-SNAPSHOT",
         internal = true,
         authors = "Olaf Danne",
         copyright = "(c) 2008 by Brockmann Consult",
@@ -178,7 +178,7 @@ public class IdepixCloudShadowOp extends Operator {
             for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
                     int cloudFlag = inputCloudTile.getSampleInt(x, y);
-                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) ||
+                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_SURE) ||
                             (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;

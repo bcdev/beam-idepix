@@ -27,7 +27,7 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.meris",
-                  version = "2.0.9-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
@@ -112,7 +112,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
-                    if (landNN != null && !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                    // apply improvement from Schiller NN approach...
+                    if (landNN != null && !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
                         final int finalX = x;
                         final int finalY = y;
                         final Tile[] finalMerisRefl = merisReflectanceTiles;
@@ -123,9 +124,16 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                             }
                         };
                         final float cloudProbValue = landNN.compute(accessor);
-                        if (cloudProbValue > 1.4) {  // a magic number...
-                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                        if (cloudProbValue > 1.4 && cloudProbValue <= 1.8) {
+                            // this would be as 'CLOUD_AMBIGUOUS' in CC and makes many coastlines as cloud...
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
                         }
+                        if (cloudProbValue > 1.8) {
+                            //   'CLOUD_SURE' as in CC (20140424, OD)
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
+                        }
+                    } else if (cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
+                        cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
@@ -184,9 +192,9 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
                                   targetProduct, true);
+            targetProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)).setUnit("dl");
         }
     }
-
 
     private GlobAlbedoAlgorithm createMerisAlgorithm(Tile merisL1bFlagTile,
                                                      Tile brr442Tile, Tile p1Tile,

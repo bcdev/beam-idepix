@@ -41,6 +41,11 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
+    public boolean isGlintRisk() {
+        return false;
+    }
+
+    @Override
     public float spectralFlatnessValue() {
         final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[2],
                                                         IdepixConstants.MERIS_WAVELENGTHS[0],

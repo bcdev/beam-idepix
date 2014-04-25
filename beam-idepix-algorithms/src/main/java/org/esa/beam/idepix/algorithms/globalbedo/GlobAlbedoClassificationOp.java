@@ -28,7 +28,7 @@ import java.io.IOException;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-                  version = "2.0.9-SNAPSHOT",
+                  version = "2.1-SNAPSHOT",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
@@ -46,7 +46,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     @Parameter(defaultValue = "true",
                label = " Write TOA Radiances to the target product",
                description = " Write TOA Radiances to the target product (has only effect for MERIS L1b products)")
-    boolean gaCopyRadiances = false;
+    boolean gaCopyRadiances = true;
 
     @Parameter(defaultValue = "true",
                label = " Write TOA Reflectances to the target product",
@@ -84,6 +84,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     WatermaskStrategy strategy = null;
 
     static final int MERIS_L1B_F_LAND = 4;
+    static final int MERIS_L1B_F_COASTLINE = 6;
     static final byte WATERMASK_FRACTION_THRESH = 23;   // for 3x3 subsampling, this means 2 subpixels water
 
     Band cloudFlagBand;
@@ -200,7 +201,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     void setCloudFlag(Tile targetTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         // for given instrument, compute boolean pixel properties and write to cloud flag band
         targetTile.setSample(x, y, IdepixConstants.F_INVALID, globAlbedoAlgorithm.isInvalid());
-        targetTile.setSample(x, y, IdepixConstants.F_CLOUD, globAlbedoAlgorithm.isCloud());
+        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, globAlbedoAlgorithm.isCloud());
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false); // not computed here
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, globAlbedoAlgorithm.isClearLand());
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, globAlbedoAlgorithm.isClearWater());
@@ -213,14 +214,13 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
         targetTile.setSample(x, y, IdepixConstants.F_BRIGHTWHITE, globAlbedoAlgorithm.isBrightWhite());
         targetTile.setSample(x, y, IdepixConstants.F_HIGH, globAlbedoAlgorithm.isHigh());
         targetTile.setSample(x, y, IdepixConstants.F_VEG_RISK, globAlbedoAlgorithm.isVegRisk());
-        targetTile.setSample(x, y, IdepixConstants.F_GLINT_RISK, globAlbedoAlgorithm.isGlintRisk());
     }
 
     void setCloudBuffer(String bandName, Tile targetTile, Rectangle rectangle) {
         if (bandName.equals(IdepixUtils.IDEPIX_CLOUD_FLAGS)) {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                    if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+                    if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
                         int LEFT_BORDER = Math.max(x - gaCloudBufferWidth, rectangle.x);
                         int RIGHT_BORDER = Math.min(x + gaCloudBufferWidth, rectangle.x + rectangle.width - 1);
                         int TOP_BORDER = Math.max(y - gaCloudBufferWidth, rectangle.y);

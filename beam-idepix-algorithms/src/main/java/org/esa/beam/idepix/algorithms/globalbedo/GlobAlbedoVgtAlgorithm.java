@@ -43,6 +43,11 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     }
 
     @Override
+    public boolean isGlintRisk() {
+        return false;
+    }
+
+    @Override
     public float brightValue() {
         double value;
 

@@ -18,8 +18,11 @@
     <parameters>
     <!-- ***********Idepix CC Parameters start here*********** -->
 
+     <!-- Whether to additionally write TOA Radiances to the target product -->
+     <ccOutputRadiance>true</ccOutputRadiance>
+
      <!-- Whether to additionally write TOA Reflectances to the target product -->
-     <ccOutputRad2Refl>true</ccOutputRad2Refl>
+     <ccOutputRad2Refl>false</ccOutputRad2Refl>
 
      <!-- Whether to additionally write the Gas Absorption Correction Flag to the target product -->
      <ccOutputGaseous>false</ccOutputGaseous>
@@ -40,7 +43,7 @@
      <ccCloudBufferWidth>2</ccCloudBufferWidth>
 
      <!-- Cloud screening 'ambiguous' threshold -->
-     <ccCloudScreeningAmbiguous>1.4</ccCloudScreeningAmbiguous>
+     <ccCloudScreeningAmbiguous>1.8</ccCloudScreeningAmbiguous>
 
      <!-- Cloud screening 'sure' threshold -->
      <ccCloudScreeningSure>1.8</ccCloudScreeningSure>
