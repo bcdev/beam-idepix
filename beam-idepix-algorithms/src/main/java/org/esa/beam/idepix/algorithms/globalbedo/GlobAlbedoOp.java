@@ -13,11 +13,14 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
+import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.operators.IdepixCloudShadowOp;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.meris.brr.CloudClassificationOp;
 import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
+import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +53,7 @@ public class GlobAlbedoOp extends BasisOp {
     private Product rayleighProduct;
     private Product pressureLiseProduct;
     private Product pbaroProduct;
+    private Product gaPostProcessingProduct;
 
     // Globalbedo user options
     @Parameter(defaultValue = "true",
@@ -112,6 +116,7 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseL1bLandWaterFlag;
 
     private Map<String, Object> gaCloudClassificationParameters;
+    private Product gaCloudProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -144,7 +149,6 @@ public class GlobAlbedoOp extends BasisOp {
     }
 
     private void processGlobAlbedoMeris() {
-        Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
         computeMerisAlgorithmInputProducts(gaCloudInput);
 
@@ -161,11 +165,18 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
                                            gaFinalCloudClassificationParameters, gaFinalCloudInput);
 
-        targetProduct = gaCloudProduct;
+        // Post Cloud Classification (i.e. coastline refinement)
+        computeGlobAlbedoPostProcessProduct();
+
+//        targetProduct = gaCloudProduct;
+        targetProduct = IdepixUtils.cloneProduct(gaCloudProduct);
         targetProduct.setAutoGrouping("radiance:rho_toa:brr");
         if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
             addRayleighCorrectionBands();
         }
+
+        Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        cloudFlagBand.setSourceImage(gaPostProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
     }
 
     private void computeMerisAlgorithmInputProducts(Map<String, Product> gaCloudInput) {
@@ -219,6 +230,17 @@ public class GlobAlbedoOp extends BasisOp {
             }
         }
     }
+
+    private void computeGlobAlbedoPostProcessProduct() {
+        HashMap<String, Product> input = new HashMap<String, Product>();
+        input.put("l1b", sourceProduct);
+        input.put("merisCloud", gaCloudProduct);
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("cloudBufferWidth", gaCloudBufferWidth);
+        gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoPostProcessOp.class), params, input);
+    }
+
 
 
     /**
