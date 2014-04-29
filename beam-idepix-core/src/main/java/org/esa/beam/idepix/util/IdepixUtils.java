@@ -1,14 +1,12 @@
 package org.esa.beam.idepix.util;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BitSetter;
+import org.esa.beam.util.ProductUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +23,47 @@ public class IdepixUtils {
 
     private IdepixUtils() {
     }
+
+    public static Product cloneProduct(Product sourceProduct) {
+        Product clonedProduct = new Product(sourceProduct.getName(),
+                                            sourceProduct.getProductType(),
+                                            sourceProduct.getSceneRasterWidth(),
+                                            sourceProduct.getSceneRasterHeight());
+
+        ProductUtils.copyMetadata(sourceProduct, clonedProduct);
+        ProductUtils.copyGeoCoding(sourceProduct, clonedProduct);
+        ProductUtils.copyFlagCodings(sourceProduct, clonedProduct);
+        ProductUtils.copyFlagBands(sourceProduct, clonedProduct, true);
+        ProductUtils.copyMasks(sourceProduct, clonedProduct);
+        clonedProduct.setStartTime(sourceProduct.getStartTime());
+        clonedProduct.setEndTime(sourceProduct.getEndTime());
+
+        // copy all bands from source product
+        for (Band b : sourceProduct.getBands()) {
+            if (!clonedProduct.containsBand(b.getName())) {
+                ProductUtils.copyBand(b.getName(), sourceProduct, clonedProduct, true);
+                if (isIdepixSpectralBand(b)) {
+                    ProductUtils.copyRasterDataNodeProperties(b, clonedProduct.getBand(b.getName()));
+                }
+            }
+        }
+
+        for (int i = 0; i < sourceProduct.getNumTiePointGrids(); i++) {
+            TiePointGrid srcTPG = sourceProduct.getTiePointGridAt(i);
+            if (!clonedProduct.containsTiePointGrid(srcTPG.getName())) {
+                clonedProduct.addTiePointGrid(srcTPG.cloneTiePointGrid());
+            }
+        }
+
+
+        return clonedProduct;
+    }
+
+    public static boolean isIdepixSpectralBand(Band b) {
+        return b.getName().startsWith("radiance") || b.getName().startsWith("refl") ||
+                b.getName().startsWith("brr") || b.getName().startsWith("rho_toa");
+    }
+
 
     public static boolean validateInputProduct(Product inputProduct, AlgorithmSelector algorithm) {
         return isInputValid(inputProduct) && isInputConsistent(inputProduct, algorithm);
@@ -68,7 +107,7 @@ public class IdepixUtils {
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
         if (AlgorithmSelector.CoastColour == algorithm) {
             return (isValidMerisProduct(sourceProduct));
-        } else  if (AlgorithmSelector.GlobAlbedo == algorithm) {
+        } else if (AlgorithmSelector.GlobAlbedo == algorithm) {
             return (isValidMerisProduct(sourceProduct) || isValidVgtProduct(sourceProduct));
         } else {
             return false;
@@ -173,31 +212,6 @@ public class IdepixUtils {
         Mask mask;
         Random r = new Random();
 
-//        maskGroup.add(Mask.BandMathsType.create("cc_land", "IDEPIX CC land flag", w, h,
-//                                                CLOUD_FLAGS + ".F_LAND",
-//                                                Color.GREEN.darker(), 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_coastline", "IDEPIX CC coastline flag", w, h,
-//                                                CLOUD_FLAGS + ".F_COASTLINE",
-//                                                Color.GREEN, 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
-//                                                CLOUD_FLAGS + ".F_CLOUD",
-//                                                Color.YELLOW.darker(), 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous", "IDEPIX CC cloud ambiguous flag", w, h,
-//                                                CLOUD_FLAGS + ".F_CLOUD_AMBIGUOUS",
-//                                                Color.YELLOW, 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
-//                                                CLOUD_FLAGS + ".F_CLOUD_BUFFER",
-//                                                new Color(204, 255, 204), 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_cloud_shadow", "IDEPIX CC cloud shadow flag", w, h,
-//                                                CLOUD_FLAGS + ".F_CLOUD_SHADOW",
-//                                                Color.BLUE, 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
-//                                                CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
-//                                                CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f));
-//        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC mixed pixel flag", w, h,
-//                                                CLOUD_FLAGS + ".F_MIXED_PIXEL",
-//                                                Color.GREEN.darker().darker(), 0.5f));
 
         mask = Mask.BandMathsType.create("lc_invalid", "IDEPIX LC invalid flag", w, h, "cloud_classif_flags.F_INVALID",
                                          getRandomColour(r), 0.5f);
@@ -206,7 +220,7 @@ public class IdepixUtils {
                                          Color.yellow, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_ambiguous", "IDEPIX LC cloud ambiguous flag", w, h, "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
-                                         Color.yellow, 0.5f);
+                                         Color.magenta, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_buffer", "IDEPIX LC cloud buffer flag", w, h,
                                          "cloud_classif_flags.F_CLOUD_BUFFER", Color.red, 0.5f);
@@ -221,7 +235,7 @@ public class IdepixUtils {
                                          "cloud_classif_flags.F_CLEAR_WATER", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_clear_snow", "IDEPIX LC clear snow flag ", w, h,
-                                         "cloud_classif_flags.F_CLEAR_SNOW", Color.magenta, 0.5f);
+                                         "cloud_classif_flags.F_CLEAR_SNOW", getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_land", "IDEPIX LC land flag", w, h, "cloud_classif_flags.F_LAND",
                                          getRandomColour(r), 0.5f);
