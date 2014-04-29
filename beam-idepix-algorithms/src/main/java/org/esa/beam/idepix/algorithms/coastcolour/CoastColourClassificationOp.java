@@ -228,7 +228,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         maskGroup.add(Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD",
                                                 Color.YELLOW.darker(), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous", "IDEPIX CC cloud ambiguous flag", w, h,
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous", "IDEPIX CC cloud ambiguous flag: " +
+                                                        "this cloud is not 100% sure, and an atmospheric " +
+                                                        "correction may be possible, depending on the performance of " +
+                                                        "an atmospheric correction and the accuracy requirements. ", w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD_AMBIGUOUS",
                                                 Color.YELLOW, 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,

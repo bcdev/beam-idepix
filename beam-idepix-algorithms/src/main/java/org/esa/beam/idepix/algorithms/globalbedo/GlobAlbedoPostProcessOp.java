@@ -178,7 +178,6 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         }
 
         if (removeCloudFlag) {
-            System.out.println("removing cloud flag from x,y = " + x + "," + y);
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
         }

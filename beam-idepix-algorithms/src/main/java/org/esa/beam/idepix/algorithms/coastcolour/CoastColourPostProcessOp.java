@@ -289,7 +289,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         if (removeCloudFlag) {
             targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD, false);
-            targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, true);
+            boolean is_land = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_LAND);
+            targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, !is_land);
         }
         // return whether this is still a cloud
         return !removeCloudFlag;
@@ -357,12 +358,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         final boolean isMixedPixel = isAlreadyMixedPixel ||
                 (((b1 && b2) && (b3 && b4 && b2)) || (b5 && b6 && b7) || b8 && b9) && b10 && b11;
-        targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, isMixedPixel);
-
-        // former expression used by AR - currently not used any more
-//        final boolean isMixedPixelOld = (((b1 && b2) && (b3 && waterAbundance < 0.9 && b2)) ||
-//                b5 && b6 && b7) && b10;
-//        targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, isMixedPixelOld);
+        targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, isMixedPixel && !isLand);
     }
 
     private boolean isPixelSurroundedByCloudShadow(int x, int y, Rectangle targetRectangle, boolean[][] isCloudShadow) {

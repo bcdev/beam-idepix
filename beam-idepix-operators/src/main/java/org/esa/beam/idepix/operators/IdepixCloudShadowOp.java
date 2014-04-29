@@ -207,6 +207,17 @@ public class IdepixCloudShadowOp extends Operator {
                     }
                 }
             }
+
+            // keep cloud shadow only for non-cloudy pixels
+//            for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
+//                for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
+//                    int cloudFlag = inputCloudTile.getSampleInt(x, y);
+//                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_SURE)) {
+//                        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW,false);
+//                    }
+//                }
+//            }
+
         }
     }
 
