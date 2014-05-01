@@ -13,22 +13,22 @@ public class IdepixConstants {
     public static final String IDEPIX_VERSION = "v2.1";
 
     public static final int F_INVALID = 0;
-    public static final int F_CLOUD_SURE = 1;
+    public static final int F_CLOUD = 1;
     public static final int F_CLOUD_AMBIGUOUS = 2;
-    public static final int F_CLOUD_BUFFER = 3;
-    public static final int F_CLOUD_SHADOW = 4;
-    public static final int F_CLEAR_LAND = 5;
-    public static final int F_CLEAR_WATER = 6;
+    public static final int F_CLOUD_SURE = 3;
+    public static final int F_CLOUD_BUFFER = 4;
+    public static final int F_CLOUD_SHADOW = 5;
+    public static final int F_COASTLINE = 6;
     public static final int F_CLEAR_SNOW = 7;
-    public static final int F_LAND = 8;
-    public static final int F_WATER = 9;
-    public static final int F_SEAICE = 10;
-    public static final int F_BRIGHT = 11;
-    public static final int F_WHITE = 12;
-    public static final int F_BRIGHTWHITE = 13;
-    public static final int F_HIGH = 14;
-    public static final int F_VEG_RISK = 15;
-
+    public static final int F_CLEAR_LAND = 8;
+    public static final int F_CLEAR_WATER = 9;
+    public static final int F_LAND = 10;
+    public static final int F_WATER = 11;
+    public static final int F_BRIGHT = 12;
+    public static final int F_WHITE = 13;
+    public static final int F_BRIGHTWHITE = 14;
+    public static final int F_HIGH = 15;
+    public static final int F_VEG_RISK = 16;
 
     public static String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
 

@@ -113,7 +113,9 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
                     // apply improvement from Schiller NN approach...
-                    if (landNN != null && !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
+                    if (landNN != null &&
+                            !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD) &&
+                            !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
                         final int finalX = x;
                         final int finalY = y;
                         final Tile[] finalMerisRefl = merisReflectanceTiles;
@@ -127,13 +129,17 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                         if (cloudProbValue > 1.4 && cloudProbValue <= 1.8) {
                             // this would be as 'CLOUD_AMBIGUOUS' in CC and makes many coastlines as cloud...
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                         }
                         if (cloudProbValue > 1.8) {
                             //   'CLOUD_SURE' as in CC (20140424, OD)
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                         }
                     } else if (cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
-                        cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
+                        cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
+                        cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                     }
 
                     // for given instrument, compute more pixel properties and write to distinct band
@@ -144,7 +150,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                 }
             }
             // set cloud buffer flags...
-            setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
+//            setCloudBuffer(IdepixUtils.IDEPIX_CLOUD_FLAGS, cloudFlagTargetTile, rectangle);
 
         } catch (Exception e) {
             throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
