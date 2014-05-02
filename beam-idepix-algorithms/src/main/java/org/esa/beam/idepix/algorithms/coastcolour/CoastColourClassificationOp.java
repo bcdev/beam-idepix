@@ -114,11 +114,11 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String F_CLOUD_SURE_DESCR_TEXT = "Fully opaque clouds with full confidence of their detection";
     public static final String F_CLOUD_BUFFER_DESCR_TEXT = "A buffer of n pixels around a cloud. n is a user supplied parameter. Applied to pixels masked as 'cloud'";
     public static final String F_CLOUD_SHADOW_DESCR_TEXT = "Pixels is affect by a cloud shadow";
-    public static final String F_SNOW_ICE_DESCR_TEXT = "IDEPIX CC snow/ice flag";
-    public static final String F_MIXED_PIXEL_DESCR_TEXT = "IDEPIX CC mixed pixel flag";
-    public static final String F_GLINTRISK_DESCR_TEXT = "IDEPIX CC glint risk flag";
-    public static final String F_COASTLINE_DESCR_TEXT = "IDEPIX CC coastline flag";
-    public static final String F_LAND_DESCR_TEXT = "IDEPIX CC land flag";
+    public static final String F_SNOW_ICE_DESCR_TEXT = "Snow/ice pixels";
+    public static final String F_MIXED_PIXEL_DESCR_TEXT = "Land/water 'mixed' pixels";
+    public static final String F_GLINTRISK_DESCR_TEXT = "Pixels with glint risk";
+    public static final String F_COASTLINE_DESCR_TEXT = "Pixels at a coastline";
+    public static final String F_LAND_DESCR_TEXT = "Land pixels";
 
     private SchillerAlgorithm landWaterNN;
     private L2AuxData auxData;
@@ -386,6 +386,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                             final int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
                             // values bigger than 100 indicate no data
                             if (waterFraction <= 100) {
+                                // todo: this does not work if we have a PixelGeocoding. In that case, waterFraction
+                                // is always 0 or 100!! (TS, OD, 20140502)
                                 isCoastline = waterFraction < 100 && waterFraction > 0;
                                 isLand = waterFraction == 0;
                             } else {

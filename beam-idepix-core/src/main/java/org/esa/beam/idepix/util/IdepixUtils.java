@@ -19,25 +19,25 @@ import java.util.Random;
  */
 public class IdepixUtils {
 
-    public static final String F_INVALID_DESCR_TEXT = "IDEPIX LC invalid flag";
+    public static final String F_INVALID_DESCR_TEXT = "Invalid pixels";
     public static final String F_CLOUD_DESCR_TEXT = "Pixels which are either cloud_sure or cloud_ambiguous";
     public static final String F_CLOUD_AMBIGUOUS_DESCR_TEXT = "Semi transparent clouds, or clouds where the detection level is uncertain";
     public static final String F_CLOUD_SURE_DESCR_TEXT = "Fully opaque clouds with full confidence of their detection";
     public static final String F_CLOUD_BUFFER_DESCR_TEXT = "A buffer of n pixels around a cloud. n is a user supplied parameter. Applied to pixels masked as 'cloud'";
     public static final String F_CLOUD_SHADOW_DESCR_TEXT = "Pixels is affect by a cloud shadow";
-    public static final String F_COASTLINE_DESCR_TEXT = "IDEPIX LC coastline flag";
-    public static final String F_CLEAR_SNOW_DESCR_TEXT = "IDEPIX LC clear snow flag";
-    public static final String F_CLEAR_LAND_DESCR_TEXT = "IDEPIX LC clear land flag";
-    public static final String F_CLEAR_WATER_DESCR_TEXT = "IDEPIX LC clear water flag";
-    public static final String F_LAND_DESCR_TEXT = "IDEPIX LC land flag";
-    public static final String F_WATER_DESCR_TEXT = "IDEPIX LC water flag";
-    public static final String F_BRIGHT_DESCR_TEXT = "IDEPIX LC bright flag";
-    public static final String F_WHITE_DESCR_TEXT = "IDEPIX LC white flag";
-    public static final String F_BRIGHTWHITE_DESCR_TEXT = "IDEPIX LC brightwhite flag";
-    public static final String F_HIGH_DESCR_TEXT = "IDEPIX LC 'high' flag";
-    public static final String F_VEG_RISK_DESCR_TEXT = "IDEPIX LC vegetation risk flag";
+    public static final String F_COASTLINE_DESCR_TEXT = "Pixels at a coastline";
+    public static final String F_CLEAR_SNOW_DESCR_TEXT = "Clear snow/ice pixels";
+    public static final String F_CLEAR_LAND_DESCR_TEXT = "Clear land pixels";
+    public static final String F_CLEAR_WATER_DESCR_TEXT = "Clear water pixels";
+    public static final String F_LAND_DESCR_TEXT = "Land pixels";
+    public static final String F_WATER_DESCR_TEXT = "Water pixels";
+    public static final String F_BRIGHT_DESCR_TEXT = "Bright pixels";
+    public static final String F_WHITE_DESCR_TEXT = "White pixels";
+    public static final String F_BRIGHTWHITE_DESCR_TEXT = "'Brightwhite' pixels";
+    public static final String F_HIGH_DESCR_TEXT = "High pixels";
+    public static final String F_VEG_RISK_DESCR_TEXT = "Pixels with vegetation risk";
 
-    private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("aatsrrecalibration");
+    private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("idepix");
     public static final String IDEPIX_CLOUD_FLAGS = "cloud_classif_flags";
 
     private IdepixUtils() {
@@ -244,7 +244,7 @@ public class IdepixUtils {
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_ambiguous",
                 F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_AMBIGUOUS and not cloud_classif_flags.F_CLOUD_SURE",
+                "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
                 new Color(255, 219, 156), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_sure",

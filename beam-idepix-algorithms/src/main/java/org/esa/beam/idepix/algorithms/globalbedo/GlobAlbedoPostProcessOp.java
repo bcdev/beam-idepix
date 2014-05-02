@@ -32,11 +32,11 @@ import java.util.HashMap;
  * @since Idepix 2.1
  */
 @OperatorMetadata(alias = "idepix.globalbedo.postprocess",
-        version = "2.1-SNAPSHOT",
-        internal = true,
-        authors = "Marco Peters",
-        copyright = "(c) 2011 by Brockmann Consult",
-        description = "Refines the cloud classification of Meris.GlobAlbedoCloudClassification operator.")
+                  version = "2.1-SNAPSHOT",
+                  internal = true,
+                  authors = "Marco Peters",
+                  copyright = "(c) 2011 by Brockmann Consult",
+                  description = "Refines the cloud classification of Meris.GlobAlbedoCloudClassification operator.")
 public class GlobAlbedoPostProcessOp extends MerisBasisOp {
 
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
@@ -65,7 +65,7 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
     @Override
     public void initialize() throws OperatorException {
         Product postProcessedCloudProduct = createCompatibleProduct(merisCloudProduct,
-                "postProcessedCloud", "postProcessedCloud");
+                                                                    "postProcessedCloud", "postProcessedCloud");
 
         HashMap<String, Object> waterParameters = new HashMap<String, Object>();
         waterParameters.put("resolution", 50);
@@ -91,8 +91,8 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         }
 
         rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                l1bProduct.getSceneRasterHeight()),
-                extendedWidth, extendedHeight
+                                                             l1bProduct.getSceneRasterHeight()),
+                                               extendedWidth, extendedHeight
         );
 
 
@@ -118,8 +118,11 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                 if (targetRectangle.contains(x, y)) {
                     boolean isCloud = sourceFlagTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                     combineFlags(x, y, sourceFlagTile, targetTile);
-                    if (isCloud) {
-                        if (isNearCoastline(x, y, waterFractionTile, extendedRectangle)) {
+
+                    if (isNearCoastline(x, y, waterFractionTile, extendedRectangle)) {
+                        targetTile.setSample(x, y, IdepixConstants.F_COASTLINE, true);
+                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+                        if (isCloud) {
                             refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, extendedRectangle);
                         }
                     }
@@ -127,15 +130,11 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                     if (isCloudAfterRefinement) {
                         computeCloudBuffer(x, y, sourceFlagTile, targetTile);
                     }
-                    if (isCoastlinePixel(x, y, waterFractionTile)) {
-                        targetTile.setSample(x, y, IdepixConstants.F_COASTLINE, true);
-                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
-                    }
                 }
             }
         }
 
-        // todo: do we want this??
+        // todo: maybe use this in future??
         // compute cloud shadow as proposed by Michael (as in 'Fronts' project)
 //        computeCloudShadowMichael(targetTile, extendedRectangle, sourceFlagTile, szaTile, saaTile, ctpTile);
 
@@ -180,7 +179,7 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                 final boolean isCloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                 if (!isCloud) {
                     isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile,
-                            extendedRectangle);
+                                                                   extendedRectangle);
                     targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
                 }
             }
@@ -317,6 +316,8 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
             final int waterFraction = waterFractionTile.getSampleInt(x, y);
             // values bigger than 100 indicate no data
             if (waterFraction <= 100) {
+                // todo: this does not work if we have a PixelGeocoding. In that case, waterFraction
+                // is always 0 or 100!! (TS, OD, 20140502)
                 isCoastline = waterFraction < 100 && waterFraction > 0;
             }
         }
@@ -337,11 +338,19 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         final int RIGHT_BORDER = Math.min(x + windowWidth, rectangle.x + rectangle.width - 1);
         final int TOP_BORDER = Math.max(y - windowWidth, rectangle.y);
         final int BOTTOM_BORDER = Math.min(y + windowWidth, rectangle.y + rectangle.height - 1);
+        final int waterFractionCenter = waterFractionTile.getSampleInt(x, y);
         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                 if (rectangle.contains(i, j)) {
-                    if (isCoastlinePixel(i, j, waterFractionTile)) {
-                        return true;
+                    if (!(l1bProduct.getGeoCoding() instanceof TiePointGeoCoding) &&
+                            !(l1bProduct.getGeoCoding() instanceof CrsGeoCoding)) {
+                        if (waterFractionTile.getSampleInt(i, j) != waterFractionCenter) {
+                            return true;
+                        }
+                    } else {
+                        if (isCoastlinePixel(i, j, waterFractionTile)) {
+                            return true;
+                        }
                     }
                 }
             }
