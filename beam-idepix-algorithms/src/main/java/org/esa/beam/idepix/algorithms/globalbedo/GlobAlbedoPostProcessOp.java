@@ -128,6 +128,10 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                     }
                     boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                     if (isCloudAfterRefinement) {
+                        // set the CLEAR_* flags to false to have consistent flagging
+                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, false);
+                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
+                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, false);
                         computeCloudBuffer(x, y, sourceFlagTile, targetTile);
                     }
                 }
