@@ -50,6 +50,12 @@
                     <defaultValue>false</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
+                    <name>ccIgnoreSeaIceClimatology</name>
+                    <type>boolean</type>
+                    <description>Whether to check for sea/lake ice also outside Sea Ice Climatology area</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
                     <name>ccCloudBufferWidth</name>
                     <type>string</type>
                     <description>The width (# of pixels) of the 'safety buffer' around a pixel identified as cloudy, must be in [0,100]
