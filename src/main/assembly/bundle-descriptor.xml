@@ -1,5 +1,5 @@
 <bundleDescriptor>
-    <bundleName>beam-idepix-cc</bundleName>
+    <bundleName>beam-idepix</bundleName>
     <bundleVersion>${pom.version}</bundleVersion>
 
     <processorDescriptors>
@@ -8,50 +8,92 @@
             <executableName>Idepix.Water</executableName>
             <processorName>Idepix (Water Pixel Classification)</processorName>
             <processorVersion>${pom.version}</processorVersion>
-            <defaultParameters><![CDATA[
 
-     <!-- CHANGES to previous Idepix version: -->
-     <!--     - Major cleanup for first public release in BEAM 5, i.e. experimental user options were removed. -->
-     <!-- This version was provided by O.Danne -->
-     <!-- **************************** -->
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>ccOutputRadiance</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write TOA Radiances to the target product</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccOutputRad2Refl</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write TOA Reflectances to the target product</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccOutputRayleigh</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write Rayleigh Corrected Reflectances to the target product
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccOutputSma</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write Spectral Unmixing Abundance Bands to the target product
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccOutputCloudProbabilityFeatureValue</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write the Cloud Probability Feature value to the target product
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccOutputSeaIceClimatologyValue</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write the sea ice climatology maximum value to the target product</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccIgnoreSeaIceClimatology</name>
+                    <type>boolean</type>
+                    <description>Whether to check for sea/lake ice also outside Sea Ice Climatology area</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccCloudBufferWidth</name>
+                    <type>string</type>
+                    <description>The width (# of pixels) of the 'safety buffer' around a pixel identified as cloudy, must be in [0,100]
+                    </description>
+                    <defaultValue>2</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccCloudScreeningAmbiguous</name>
+                    <type>string</type>
+                    <description>Threshold of Cloud Probability Feature Value above which cloud is regarded as still ambiguous (i.e. a higher value results in fewer ambiguous clouds)
+                    </description>
+                    <defaultValue>1.4</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccCloudScreeningSure</name>
+                    <type>string</type>
+                    <description>Threshold of Cloud Probability Feature Value above which cloud is regarded as sure (i.e. a higher value results in fewer sure clouds)
+                    </description>
+                    <defaultValue>1.8</defaultValue>
+                </parameterDescriptor>
 
-    <parameters>
-    <!-- ***********Idepix CC Parameters start here*********** -->
+            </parameterDescriptors>
 
-     <!-- Whether to additionally write TOA Radiances to the target product -->
-     <ccOutputRadiance>true</ccOutputRadiance>
-
-     <!-- Whether to additionally write TOA Reflectances to the target product -->
-     <ccOutputRad2Refl>false</ccOutputRad2Refl>
-
-     <!-- Whether to additionally write the Gas Absorption Correction Flag to the target product -->
-     <ccOutputGaseous>false</ccOutputGaseous>
-
-     <!-- Whether to additionally write Rayleigh Corrected Reflectances to the target product -->
-     <ccOutputRayleigh>false</ccOutputRayleigh>
-
-     <!-- Whether to additionally write Spectral Unmixing Abundance Bands to the target product -->
-     <ccOutputSma>false</ccOutputSma>
-
-     <!-- Whether to additionally write the Cloud Probability Feature value to the target product -->
-     <ccOutputCloudProbabilityFeatureValue>false</ccOutputCloudProbabilityFeatureValue>
-
-     <!-- Whether to additionally write the sea ice climatology maximum value to the target product -->
-     <ccOutputSeaIceClimatologyValue>false</ccOutputSeaIceClimatologyValue>
-
-     <!-- Width of cloud buffer (# of pixels) -->
-     <ccCloudBufferWidth>2</ccCloudBufferWidth>
-
-     <!-- Cloud screening 'ambiguous' threshold -->
-     <ccCloudScreeningAmbiguous>1.8</ccCloudScreeningAmbiguous>
-
-     <!-- Cloud screening 'sure' threshold -->
-     <ccCloudScreeningSure>1.8</ccCloudScreeningSure>
-
-</parameters>]]></defaultParameters>
             <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
             <descriptionHtml>
-                <![CDATA[<p>Performs Idepix pixel identification with CoastColour algorithm.</p>]]>
+                <![CDATA[
+                <p>Performs Idepix pixel identification with CoastColour/OC-CCI algorithm.</p>
+
+                <p>CHANGES to previous version:
+                <ul>
+                   <li>
+                       Final adaptations for first public release in BEAM 5 (still running with BEAM 4.11 here)
+                   </li>
+                </ul>
+                </p>
+
+                <p>This version was provided by O.Danne.</p>
+                ]]>
             </descriptionHtml>
             <inputProductTypes>MERIS_L1B</inputProductTypes>
             <outputProductType>IDEPIX_L2</outputProductType>
@@ -79,6 +121,278 @@
             </jobConfig>
 
             <outputVariables>
+                <outputVariable>
+                    <name>radiance_1</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_2</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_3</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_4</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_5</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_6</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_7</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_8</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_9</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_10</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_11</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_12</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_13</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_14</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_15</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+
+                <outputVariable>
+                    <name>cloud_probability_value</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+
+                <outputVariable>
+                    <name>l1_flags</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>cloud_classif_flags</name>
+                </outputVariable>
+            </outputVariables>
+
+        </processorDescriptor>
+
+        <processorDescriptor>
+            <executableName>Idepix.Land</executableName>
+            <processorName>Idepix (Land Pixel Classification)</processorName>
+            <processorVersion>${pom.version}</processorVersion>
+
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>gaCopyRadiances</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write TOA Radiances to the target product</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaCopyToaReflectances</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write TOA Reflectances to the target product</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaCopyRayleigh</name>
+                    <type>boolean</type>
+                    <description>Whether to additionally write Rayleigh Corrected Reflectances to the target product
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaCopyFeatureValues</name>
+                    <type>boolean</type>
+                    <description>Whether to write Feature Values to the target product
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaCopyAnnotations</name>
+                    <type>boolean</type>
+                    <description>Whether to write input annotation bands to the target product (VGT only)</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaCloudBufferWidth</name>
+                    <type>string</type>
+                    <description>The width (# of pixels) of the 'safety buffer' around a pixel identified as cloudy, must be in [0,100]
+                    </description>
+                    <defaultValue>2</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>wmResolution</name>
+                    <type>string</type>
+                    <description>Resolution of the used SRTM land-water mask in m/pixel
+                    </description>
+                    <defaultValue>50</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaUseL1bLandWaterFlag</name>
+                    <type>boolean</type>
+                    <description>Use land-water flag from L1b product instead of SRTM mask
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+
+            </parameterDescriptors>
+
+            <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+            <descriptionHtml>
+                <![CDATA[
+                <p>Performs Idepix pixel identification with GlobAlbedo/LC-CCI algorithm.</p>
+
+                <p>CHANGES to previous version:
+                <ul>
+                   <li>
+                       Final adaptations for first public release in BEAM 5 (still running with BEAM 4.11 here)
+                   </li>
+                </ul>
+                </p>
+
+                <p>This version was provided by O.Danne.</p>
+                ]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B</inputProductTypes>
+            <outputProductType>IDEPIX_L2</outputProductType>
+            <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
+
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.hadoop.mapred.child.java.opts</name>
+                    <value>-Xmx1500M</value>
+                </jobParameter>
+
+                <jobParameter>
+                    <name>calvalus.system.beam.envisat.usePixelGeoCoding</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
+                    <value>true</value>
+                </jobParameter>
+
+                <jobParameter>
+                    <name>calvalus.output.compression</name>
+                    <value>NONE</value>
+                </jobParameter>
+            </jobConfig>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>radiance_1</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_2</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_3</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_4</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_5</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_6</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_7</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_8</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_9</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_10</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_11</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_12</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_13</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_14</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>radiance_15</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+
                 <outputVariable>
                     <name>rho_toa_1</name>
                     <defaultAggregator>AVG</defaultAggregator>
