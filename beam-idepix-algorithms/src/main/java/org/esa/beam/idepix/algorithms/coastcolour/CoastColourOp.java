@@ -152,8 +152,8 @@ public class CoastColourOp extends BasisOp {
         targetProduct.setAutoGrouping("radiance:rho_toa:brr:spec_unmix");
         addBandsToTargetProduct();
 
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         CoastColourClassificationOp.addBitmasks(targetProduct);
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         renameL1bMaskNames(targetProduct);
     }
 

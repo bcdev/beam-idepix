@@ -3,6 +3,7 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -20,6 +21,7 @@ import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -33,11 +35,11 @@ import java.util.List;
  * @since Idepix 1.3.1
  */
 @OperatorMetadata(alias = "idepix.coastcolour.postprocess",
-        version = "2.1-SNAPSHOT",
-        internal = true,
-        authors = "Marco Peters",
-        copyright = "(c) 2011 by Brockmann Consult",
-        description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
+                  version = "2.1-SNAPSHOT",
+                  internal = true,
+                  authors = "Marco Peters",
+                  copyright = "(c) 2011 by Brockmann Consult",
+                  description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
 public class CoastColourPostProcessOp extends MerisBasisOp {
 
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
@@ -70,6 +72,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     private Band brr9nBand;
     private Band brr10nBand;
     private Band brr12nBand;
+    private Band landWaterBand;
 
     private RectangleExtender rectCalculator;
 
@@ -79,7 +82,15 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     @Override
     public void initialize() throws OperatorException {
         Product postProcessedCloudProduct = createCompatibleProduct(merisCloudProduct,
-                "postProcessedCloud", "postProcessedCloud");
+                                                                    "postProcessedCloud", "postProcessedCloud");
+
+        HashMap<String, Object> waterParameters = new HashMap<String, Object>();
+        waterParameters.put("resolution", 50);
+        waterParameters.put("subSamplingFactorX", 3);
+        waterParameters.put("subSamplingFactorY", 3);
+        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, l1bProduct);
+        landWaterBand = waterMaskProduct.getBand("land_water_fraction");
+
         origCloudFlagBand = merisCloudProduct.getBand(CloudClassificationOp.CLOUD_FLAGS);
         szaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
         saaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
@@ -107,8 +118,9 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         geoCoding = l1bProduct.getGeoCoding();
 
         rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                l1bProduct.getSceneRasterHeight()),
-                shadowWidth, shadowHeight);
+                                                             l1bProduct.getSceneRasterHeight()),
+                                               shadowWidth, shadowHeight
+        );
 
 
         ProductUtils.copyBand(CloudClassificationOp.CLOUD_FLAGS, merisCloudProduct, postProcessedCloudProduct, false);
@@ -124,25 +136,27 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         Tile szaTile = getSourceTile(szaTPG, extendedRectangle);
         Tile saaTile = getSourceTile(saaTPG, extendedRectangle);
         Tile ctpTile = getSourceTile(ctpBand, extendedRectangle);
+        final Tile waterFractionTile = getSourceTile(landWaterBand, extendedRectangle);
 
         for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
             checkForCancellation();
             for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
-
                 if (targetRectangle.contains(x, y)) {
-                    boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
-                    combineFlags(x, y, sourceFlagTile, targetTile);
-                    if (isCloud) {
-                        if (isNearCoastline(x, y, sourceFlagTile, extendedRectangle)) {
-                            isCloud = refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, targetTile, extendedRectangle);
+                    if (targetRectangle.contains(x, y)) {
+                        boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+                        combineFlags(x, y, sourceFlagTile, targetTile);
+
+                        if (isNearCoastline(x, y, sourceFlagTile, waterFractionTile, extendedRectangle)) {
+                            targetTile.setSample(x, y, CoastColourClassificationOp.F_COASTLINE, true);
+                            refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+                            if (isCloud) {
+                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, extendedRectangle);
+                            }
                         }
-                    }
-                    if (isCloud) {
-                        computeCloudBuffer(x, y, sourceFlagTile, targetTile);
-                    }
-                    final boolean isCoastline = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_COASTLINE);
-                    if (isCoastline) {
-                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+                        boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+                        if (isCloudAfterRefinement) {
+                            computeCloudBuffer(x, y, sourceFlagTile, targetTile);
+                        }
                     }
                 }
             }
@@ -162,18 +176,19 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                 checkForCancellation();
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                     computeMixedPixelFlag(x, y, landAbundanceTile, waterAbundanceTile,
-                            cloudAbundanceTile, summaryErrorTile,
-                            brr7nTile, brr9nTile, brr10nTile, brr12nTile, sourceFlagTile, targetTile);
+                                          cloudAbundanceTile, summaryErrorTile,
+                                          brr7nTile, brr9nTile, brr10nTile, brr12nTile, sourceFlagTile, targetTile);
                 }
             }
         }
 
         // compute cloud shadow as proposed by Michael (as in 'Fronts' project)
-        computeCloudShadowMichael(targetTile, extendedRectangle, sourceFlagTile, szaTile, saaTile, ctpTile);
+        computeCloudShadowMichael(targetTile, extendedRectangle, sourceFlagTile, waterFractionTile, szaTile, saaTile, ctpTile);
 
     }
 
-    private void computeCloudShadowMichael(Tile targetTile, Rectangle extendedRectangle, Tile sourceFlagTile, Tile szaTile, Tile saaTile,
+    private void computeCloudShadowMichael(Tile targetTile, Rectangle extendedRectangle, Tile sourceFlagTile,
+                                           Tile waterFractionTile, Tile szaTile, Tile saaTile,
                                            Tile ctpTile) {
         Rectangle targetRectangle = targetTile.getRectangle();
 
@@ -188,8 +203,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             for (int x = x0; x < x0 + w; x++) {
                 final boolean isCloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                 if (!isCloud) {
-                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile,
-                            extendedRectangle);
+                    isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, waterFractionTile, ctpTile, szaTile, saaTile,
+                                                                   extendedRectangle);
                     targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
                 }
             }
@@ -238,34 +253,46 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                 boolean is_already_cloud = sourceFlagTile.getSampleBit(i, j, CoastColourClassificationOp.F_CLOUD);
-                boolean is_land = sourceFlagTile.getSampleBit(i, j, CoastColourClassificationOp.F_LAND);
-                if (!is_already_cloud && !is_land && rectangle.contains(i, j)) {
+                if (!is_already_cloud && rectangle.contains(i, j)) {
                     targetTile.setSample(i, j, CoastColourClassificationOp.F_CLOUD_BUFFER, true);
                 }
             }
         }
     }
 
-    private boolean isNearCoastline(int x, int y, Tile sourceFlagTile, Rectangle rectangle) {
+    private boolean isNearCoastline(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Rectangle rectangle) {
         final int windowWidth = 1;
         final int LEFT_BORDER = Math.max(x - windowWidth, rectangle.x);
         final int RIGHT_BORDER = Math.min(x + windowWidth, rectangle.x + rectangle.width - 1);
         final int TOP_BORDER = Math.max(y - windowWidth, rectangle.y);
         final int BOTTOM_BORDER = Math.min(y + windowWidth, rectangle.y + rectangle.height - 1);
-        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                if (rectangle.contains(i, j)) {
-                    final boolean is_coastline = sourceFlagTile.getSampleBit(i, j, CoastColourClassificationOp.F_COASTLINE);
-                    if (is_coastline) {
+
+        if (!(l1bProduct.getGeoCoding() instanceof TiePointGeoCoding) &&
+                !(l1bProduct.getGeoCoding() instanceof CrsGeoCoding)) {
+            final int waterFractionCenter = waterFractionTile.getSampleInt(x, y);
+            for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                    if (waterFractionTile.getSampleInt(i, j) != waterFractionCenter) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+                for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                    final boolean isAlreadyCoastline = sourceFlagTile.getSampleBit(i, j, CoastColourClassificationOp.F_COASTLINE);
+                    if (isAlreadyCoastline) {
                         return true;
                     }
                 }
             }
         }
+
+
         return false;
     }
 
-    private boolean refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile targetTile, Rectangle rectangle) {
+    private boolean refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile, Rectangle rectangle) {
         final int windowWidth = 1;
         final int LEFT_BORDER = Math.max(x - windowWidth, rectangle.x);
         final int RIGHT_BORDER = Math.min(x + windowWidth, rectangle.x + rectangle.width - 1);
@@ -279,7 +306,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                     boolean is_cloud = sourceFlagTile.getSampleBit(i, j, CoastColourClassificationOp.F_CLOUD);
-                    if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, sourceFlagTile, rectangle)) {
+                    if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, sourceFlagTile, waterFractionTile, rectangle)) {
                         removeCloudFlag = false;
                         break;
                     }
@@ -289,6 +316,8 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
 
         if (removeCloudFlag) {
             targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD, false);
+            targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SURE, false);
+            targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_AMBIGUOUS, false);
             boolean is_land = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_LAND);
             targetTile.setSample(x, y, CoastColourClassificationOp.F_MIXED_PIXEL, !is_land);
         }
@@ -413,7 +442,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     }
 
     // used by MP's aproach
-    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile ctpTile, Tile szaTile, Tile saaTile,
+    private boolean getCloudShadow(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile ctpTile, Tile szaTile, Tile saaTile,
                                    Rectangle sourceRectangle) {
         final double sza = szaTile.getSampleDouble(x, y);
         final double saa = saaTile.getSampleDouble(x, y);
@@ -432,7 +461,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             if (sourceRectangle.contains(xCurrent, yCurrent)) {
                 final boolean is_cloud_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourClassificationOp.F_CLOUD);
                 final boolean is_mixed_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourClassificationOp.F_MIXED_PIXEL);
-                final boolean isNearCoastline = isNearCoastline(xCurrent, yCurrent, sourceFlagTile, sourceRectangle);
+                final boolean isNearCoastline = isNearCoastline(xCurrent, yCurrent, sourceFlagTile, waterFractionTile, sourceRectangle);
                 if (is_cloud_current && !is_mixed_current && !isNearCoastline) {
                     final GeoPos geoPosCurrent = geoCoding.getGeoPos(new PixelPos(xCurrent, yCurrent), null);
                     final double dist = computeDistance(geoPos, geoPosCurrent);

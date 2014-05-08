@@ -54,11 +54,11 @@ import java.util.Calendar;
  * This class provides the Mepix QWG cloud classification.
  */
 @OperatorMetadata(alias = "idepix.coastcolour.classification",
-                  version = "2.1-SNAPSHOT",
-                  internal = true,
-                  authors = "Marco Zühlke, Olaf Danne",
-                  copyright = "(c) 2007 by Brockmann Consult",
-                  description = "MERIS L2 cloud classification (version from MEPIX processor).")
+        version = "2.1-SNAPSHOT",
+        internal = true,
+        authors = "Marco Zühlke, Olaf Danne",
+        copyright = "(c) 2007 by Brockmann Consult",
+        description = "MERIS L2 cloud classification (version from MEPIX processor).")
 public class CoastColourClassificationOp extends MerisBasisOp {
 
     public static final String CLOUD_FLAGS = MerisClassificationOp.CLOUD_FLAGS;
@@ -69,15 +69,27 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String MDSI = MerisClassificationOp.MDSI;
     public static final String CLOUD_PROBABILITY_VALUE = MerisClassificationOp.CLOUD_PROBABILITY_VALUE;
 
-    public static final int F_LAND = 13;
-    public static final int F_COASTLINE = 14;
+    //    public static final int F_LAND = 13;
+//    public static final int F_COASTLINE = 14;
+//    public static final int F_CLOUD = 0;
+//    public static final int F_CLOUD_AMBIGUOUS = 4;
+//    public static final int F_CLOUD_BUFFER = 11;
+//    public static final int F_CLOUD_SHADOW = 12;
+//    public static final int F_SNOW_ICE = 9;
+//    public static final int F_GLINTRISK = 10;
+//    public static final int F_MIXED_PIXEL = 15;
+//
+
     public static final int F_CLOUD = 0;
-    public static final int F_CLOUD_AMBIGUOUS = 4;
-    public static final int F_CLOUD_BUFFER = 11;
-    public static final int F_CLOUD_SHADOW = 12;
-    public static final int F_SNOW_ICE = 9;
-    public static final int F_GLINTRISK = 10;
-    public static final int F_MIXED_PIXEL = 15;
+    public static final int F_CLOUD_AMBIGUOUS = 1;
+    public static final int F_CLOUD_SURE = 2;
+    public static final int F_CLOUD_BUFFER = 3;
+    public static final int F_CLOUD_SHADOW = 4;
+    public static final int F_SNOW_ICE = 5;
+    public static final int F_MIXED_PIXEL = 6;
+    public static final int F_GLINTRISK = 7;
+    public static final int F_COASTLINE = 8;
+    public static final int F_LAND = 9;
 
     private static final int BAND_BRIGHT_N = MerisClassificationOp.BAND_BRIGHT_N;
     private static final int BAND_SLOPE_N_1 = MerisClassificationOp.BAND_SLOPE_N_1;
@@ -96,6 +108,17 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private static final double CC_MDSI_THRESHOLD = 0.01;
     private static final double CC_NDVI_THRESHOLD = 0.1;
     private static final double CC_SEA_ICE_THRESHOLD = 10.0;
+
+    public static final String F_CLOUD_DESCR_TEXT = "Pixels which are either cloud_sure or cloud_ambiguous";
+    public static final String F_CLOUD_AMBIGUOUS_DESCR_TEXT = "Semi transparent clouds, or clouds where the detection level is uncertain";
+    public static final String F_CLOUD_SURE_DESCR_TEXT = "Fully opaque clouds with full confidence of their detection";
+    public static final String F_CLOUD_BUFFER_DESCR_TEXT = "A buffer of n pixels around a cloud. n is a user supplied parameter. Applied to pixels masked as 'cloud'";
+    public static final String F_CLOUD_SHADOW_DESCR_TEXT = "Pixels is affect by a cloud shadow";
+    public static final String F_SNOW_ICE_DESCR_TEXT = "Snow/ice pixels";
+    public static final String F_MIXED_PIXEL_DESCR_TEXT = "Land/water 'mixed' pixels";
+    public static final String F_GLINTRISK_DESCR_TEXT = "Pixels with glint risk";
+    public static final String F_COASTLINE_DESCR_TEXT = "Pixels at a coastline";
+    public static final String F_LAND_DESCR_TEXT = "Land pixels";
 
     private SchillerAlgorithm landWaterNN;
     private L2AuxData auxData;
@@ -136,8 +159,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private boolean ccOutputSeaIceClimatologyValue;
 
     @Parameter(defaultValue = "false",
-               description = "Check for sea/lake ice also outside Sea Ice Climatology area.",
-               label = "Check for sea/lake ice also outside Sea Ice Climatology area"
+            description = "Check for sea/lake ice also outside Sea Ice Climatology area.",
+            label = "Check for sea/lake ice also outside Sea Ice Climatology area"
     )
     private boolean ccIgnoreSeaIceClimatology;
 
@@ -204,51 +227,61 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
-        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), null);
-        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, F_COASTLINE), null);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), null);
-        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, F_CLOUD_AMBIGUOUS), null);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), null);
-        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), null);
-        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), null);
-        flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), null);
-        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, F_MIXED_PIXEL), null);
+        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), F_CLOUD_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, F_CLOUD_AMBIGUOUS), F_CLOUD_AMBIGUOUS_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, F_CLOUD_SURE), F_CLOUD_SURE_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, F_CLOUD_BUFFER), F_CLOUD_BUFFER_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, F_CLOUD_SHADOW), F_CLOUD_SHADOW_DESCR_TEXT);
+        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, F_SNOW_ICE), F_SNOW_ICE_DESCR_TEXT);
+        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, F_MIXED_PIXEL), F_MIXED_PIXEL_DESCR_TEXT);
+        flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, F_GLINTRISK), F_GLINTRISK_DESCR_TEXT);
+        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, F_COASTLINE), F_COASTLINE_DESCR_TEXT);
+        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, F_LAND), F_LAND_DESCR_TEXT);
         return flagCoding;
     }
 
     private static void createBitmaskDefs(ProductNodeGroup<Mask> maskGroup) {
         int w = maskGroup.getProduct().getSceneRasterWidth();
         int h = maskGroup.getProduct().getSceneRasterHeight();
-        maskGroup.add(Mask.BandMathsType.create("cc_land", "IDEPIX CC land flag", w, h,
-                                                CLOUD_FLAGS + ".F_LAND",
-                                                Color.GREEN.darker(), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_coastline", "IDEPIX CC coastline flag", w, h,
-                                                CLOUD_FLAGS + ".F_COASTLINE",
-                                                Color.GREEN, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_cloud", "IDEPIX CC cloud flag", w, h,
-                                                CLOUD_FLAGS + ".F_CLOUD",
-                                                Color.YELLOW.darker(), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous", "IDEPIX CC cloud ambiguous flag: " +
-                                                        "this cloud is not 100% sure, and an atmospheric " +
-                                                        "correction may be possible, depending on the performance of " +
-                                                        "an atmospheric correction and the accuracy requirements. ", w, h,
-                                                CLOUD_FLAGS + ".F_CLOUD_AMBIGUOUS",
-                                                Color.YELLOW, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer", "IDEPIX CC cloud buffer flag", w, h,
-                                                CLOUD_FLAGS + ".F_CLOUD_BUFFER",
-                                                new Color(204, 255, 204), 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_cloud_shadow", "IDEPIX CC cloud shadow flag", w, h,
-                                                CLOUD_FLAGS + ".F_CLOUD_SHADOW",
-                                                Color.BLUE, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_snow_ice", "IDEPIX CC snow/ice flag", w, h,
-                                                CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_glint_risk", "IDEPIX CC glint risk flag", w, h,
-                                                CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f));
-        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel", "IDEPIX CC mixed pixel flag", w, h,
-                                                CLOUD_FLAGS + ".F_MIXED_PIXEL",
-                                                Color.GREEN.darker().darker(), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud",
+                F_CLOUD_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_CLOUD",
+                new Color(178,178,0), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_ambiguous",
+                F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_CLOUD_AMBIGUOUS",
+                new Color(255,219,156), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_sure",
+                F_CLOUD_SURE_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_CLOUD and not " + CLOUD_FLAGS + ".F_CLOUD_AMBIGUOUS",
+                new Color(224,224,30), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_buffer",
+                F_CLOUD_BUFFER_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_CLOUD_BUFFER",
+                new Color(204, 255, 204), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_cloud_shadow",
+                F_CLOUD_SHADOW_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_CLOUD_SHADOW",
+                Color.BLUE, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_snow_ice",
+                F_SNOW_ICE_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_SNOW_ICE", Color.CYAN, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_mixed_pixel",
+                F_MIXED_PIXEL_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_MIXED_PIXEL",
+                Color.GREEN.darker().darker(), 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_glint_risk",
+                F_GLINTRISK_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_GLINTRISK", Color.PINK, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_coastline",
+                F_COASTLINE_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_COASTLINE",
+                Color.GREEN, 0.5f));
+        maskGroup.add(Mask.BandMathsType.create("cc_land",
+                F_LAND_DESCR_TEXT, w, h,
+                CLOUD_FLAGS + ".F_LAND",
+                Color.GREEN.darker(), 0.5f));
     }
-
 
     private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
 
@@ -282,13 +315,13 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                 l1bProduct.getBand(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME),
                 rectangle).getRawSamples().getElems();
         sd.sza = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.vza = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.saa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
         sd.vaa = (float[]) getSourceTile(l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
-                                         rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
 
         sd.sins = new float[sd.sza.length];
         sd.sinv = new float[sd.vza.length];
@@ -312,13 +345,13 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         sd.altitude = getSourceTile(altitudeRDN, rectangle).getSamplesFloat();
 
         sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
-                                                   rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
 
         sd.windu = (float[]) getSourceTile(l1bProduct.getTiePointGrid("zonal_wind"),
-                                           rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
 
         sd.windv = (float[]) getSourceTile(l1bProduct.getTiePointGrid("merid_wind"),
-                                           rectangle).getRawSamples().getElems();
+                rectangle).getRawSamples().getElems();
 
         sd.l1Flags = getSourceTile(l1bProduct.getBand(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME), rectangle);
         return sd;
@@ -353,6 +386,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                             final int waterFraction = waterFractionTile.getSampleInt(pixelInfo.x, pixelInfo.y);
                             // values bigger than 100 indicate no data
                             if (waterFraction <= 100) {
+                                // todo: this does not work if we have a PixelGeocoding. In that case, waterFraction
+                                // is always 0 or 100!! (TS, OD, 20140502)
                                 isCoastline = waterFraction < 100 && waterFraction > 0;
                                 isLand = waterFraction == 0;
                             } else {
@@ -369,8 +404,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                             // ECMWF pressure is only corrected for positive
                             // altitudes and only for land pixels
                             pixelInfo.ecmwfPressure = HelperFunctions.correctEcmwfPressure(sd.ecmwfPressure[i],
-                                                                                           sd.altitude[i],
-                                                                                           auxData.press_scale_height);
+                                    sd.altitude[i],
+                                    auxData.press_scale_height);
                         } else {
                             pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
                         }
@@ -442,9 +477,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
         PixelId.Pressure press = pixelId.computePressure(sd.rhoToa[Constants.bb753][pixelInfo.index],
-                                                         sd.rhoToa[Constants.bb760][pixelInfo.index],
-                                                         pixelInfo.airMass,
-                                                         sd.detectorIndex[pixelInfo.index]);
+                sd.rhoToa[Constants.bb760][pixelInfo.index],
+                pixelInfo.airMass,
+                sd.detectorIndex[pixelInfo.index]);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, Math.max(0.0, press.value));
     }
 
@@ -507,16 +542,17 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
 
-        boolean isCloud = cloudProbValue > ambiguousThresh;
+        boolean isCloudSure = cloudProbValue > ambiguousThresh;
         boolean isCloudAmbiguous = cloudProbValue > ambiguousThresh && cloudProbValue < sureThresh;
 
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk && !isCloud);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk && !isCloudSure);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_SURE, isCloudSure);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloudAmbiguous || isCloudSure);
 
 
 //        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_LOW_PSCATT, low_p_pscatt);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice && !isCloud);
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice && !isCloudSure);
     }
 
     private boolean isPixelClassifiedAsSeaice(GeoPos geoPos) {
@@ -612,7 +648,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         final double chiw = computeChiW(sd, pixelInfo);
         final double deltaAzimuth = sd.deltaAzimuth[pixelInfo.index];
         final double windm = Math.sqrt(sd.windu[pixelInfo.index] * sd.windu[pixelInfo.index] +
-                                               sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
+                sd.windv[pixelInfo.index] * sd.windv[pixelInfo.index]);
             /* allows to retrieve Glint reflectance for wurrent geometry and wind */
         return glintRef(sd.sza[pixelInfo.index], sd.vza[pixelInfo.index], deltaAzimuth, windm, chiw);
     }
@@ -703,7 +739,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
         rayleighCorrection.ref_rayleigh(deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
-                                        coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
+                coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
         /* DPM #2.1.7-4 */
         double[] rhoAg = new double[Constants.L1_BAND_NUM];
         for (int band = Constants.bb412; band <= Constants.bb900; band++) {

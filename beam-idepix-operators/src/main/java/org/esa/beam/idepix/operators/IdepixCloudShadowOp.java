@@ -99,7 +99,7 @@ public class IdepixCloudShadowOp extends Operator {
 
         targetProduct = new Product(cloudProduct.getName(), cloudProduct.getProductType(), sceneWidth, sceneHeight);
 
-        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
+        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT32);
         FlagCoding flagCoding = IdepixUtils.createIdepixFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -178,7 +178,7 @@ public class IdepixCloudShadowOp extends Operator {
             for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
                 for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
                     int cloudFlag = inputCloudTile.getSampleInt(x, y);
-                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_SURE) ||
+                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) ||
                             (shadowForCloudBuffer && BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_BUFFER))) {
                         final float sza = szaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
                         final float saa = saaTile.getSampleFloat(x, y) * MathUtils.DTOR_F;
@@ -209,14 +209,14 @@ public class IdepixCloudShadowOp extends Operator {
             }
 
             // keep cloud shadow only for non-cloudy pixels
-//            for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
-//                for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
-//                    int cloudFlag = inputCloudTile.getSampleInt(x, y);
-//                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD_SURE)) {
-//                        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW,false);
-//                    }
-//                }
-//            }
+            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                    int cloudFlag = inputCloudTile.getSampleInt(x, y);
+                    if (BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD)) {
+                        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false);
+                    }
+                }
+            }
 
         }
     }
