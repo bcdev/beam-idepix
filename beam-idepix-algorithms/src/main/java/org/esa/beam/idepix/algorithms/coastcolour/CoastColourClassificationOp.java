@@ -514,7 +514,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         if (!land_coast) {
             // over water
             final GeoPos geoPos = getGeoPos(pixelInfo);
-            // todo: introduce user option that we classify as snow_ice even outside climatology ice cover
             // todo: discuss
 //            if (isPixelClassifiedAsSeaice(geoPos)) {
 //                is_snow_ice = bright_rc && high_mdsi;

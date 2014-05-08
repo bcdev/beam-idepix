@@ -152,17 +152,6 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
                 gaCloudClassificationParameters, gaCloudInput);
 
-        // todo: we have a weird sequence of cloud, cloud shadow, and 'post processing'. check this finally!!
-//        Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
-//        gaFinalCloudInput.put("l1b", sourceProduct);
-//        gaFinalCloudInput.put("cloud", gaCloudProduct);
-//        gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
-//        Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
-//        gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
-//        gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", true);
-//        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-//                gaFinalCloudClassificationParameters, gaFinalCloudInput);
-
         // Post Cloud Classification (i.e. coastline refinement)
         computeGlobAlbedoPostProcessProduct();
 
