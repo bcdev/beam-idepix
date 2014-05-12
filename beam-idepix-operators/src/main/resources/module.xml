@@ -2,9 +2,9 @@
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-operators</symbolicName>
     <version>2.1</version>
-    <name>IdePix Operators</name>
+    <name>Idepix Operators</name>
     <description>
-        This module contains the operators of IdePix, which is a generic classification tool for pixels originating from optical sensors.
+        Idepix internal operators. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
@@ -16,7 +16,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
-        IdePix 2.1 is the initial public release for BEAM 5. Previous releases were for internal use only.
+        <b>Version 2.1:</b><br/>
+        Initial public release for BEAM 5. Previous releases were for project-internal use only.<br/>
     </changelog>
 
     <dependency>
@@ -55,6 +56,6 @@
         <module>beam-meris-radiometry</module>
     </dependency>
 
-    <categories>Application,Processor,MERIS,AATSR</categories>
+    <categories>Application,Processor,MERIS,AATSR,Idepix</categories>
 
 </module>

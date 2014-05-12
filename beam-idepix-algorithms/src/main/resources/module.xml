@@ -2,9 +2,9 @@
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
     <version>2.1</version>
-    <name>IdePix Algorithms</name>
+    <name>Idepix Algorithms</name>
     <description>
-        This module contains the algorithms of IdePix, which is a generic classification tool for pixels originating from optical sensors.
+        Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
@@ -16,7 +16,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
-        IdePix 2.1 is the initial public release for BEAM 5. Previous releases were for internal use only.
+        <b>Version 2.1:</b><br/>
+        Initial public release for BEAM 5. Previous releases were for project-internal use only.<br/>
     </changelog>
 
     <dependency>
@@ -58,14 +59,14 @@
         <module>beam-meris-radiometry</module>
     </dependency>
 
-    <categories>Application,Processor,MERIS,AATSR</categories>
+    <categories>Application,Processor,MERIS,AATSR,Idepix</categories>
 
     <extension point="beam-ui:actions">
         <action>
             <id>idepix</id>
             <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>IDEPIX Classification of pixels...</text>
-            <shortDescr>IDEPIX Classification of pixels (e.g. clouds, snow, ice) originating from MERIS or SPOT-VGT sensor.</shortDescr>
+            <text>Idepix Classification of pixels...</text>
+            <shortDescr>Idepix Classification of pixels (e.g. clouds, snow, ice) originating from MERIS or SPOT-VGT sensor.</shortDescr>
             <mnemonic/>
             <parent>processing.preProcessing</parent>
             <helpID>IdepixPlugIn</helpID>
@@ -75,7 +76,7 @@
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
             <text>Water (MERIS)...</text>
-            <shortDescr>Pixel classification over water (OC-CCI and CoastColour algorithm)</shortDescr>
+            <shortDescr>Pixel classification over water (Ocean Colour CCI and CoastColour algorithm)</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
             <helpId>IdepixPlugIn</helpId>
@@ -84,7 +85,7 @@
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
             <text>Land (MERIS, SPOT-VGT)...</text>
-            <shortDescr>Pixel classification over land (LC-CCI and GlobAlbedo algorithm)</shortDescr>
+            <shortDescr>Pixel classification over land (Land Cover CCI and GlobAlbedo algorithm)</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
             <helpId>IdepixPlugIn</helpId>

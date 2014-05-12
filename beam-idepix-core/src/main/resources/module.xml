@@ -4,19 +4,18 @@
     <version>2.1</version>
     <name>Idepix Core</name>
     <description>
-        This module contains core classes of IdePix, which is a generic classification tool for pixels originating from optical sensors.
+        Idepix core module. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
-    <contactAddress>
-        Max Planck Str.2, 21502 Geesthacht (Germany)
-    </contactAddress>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
     <copyright>(C) 2014 by Brockmann Consult GmbH</copyright>
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
-        IdePix 2.1 is the initial public release for BEAM 5. Previous releases were for internal use only.
+        <b>Version 2.1:</b><br/>
+        Initial public release for BEAM 5. Previous releases were for project-internal use only.<br/>
     </changelog>
 
     <dependency>
@@ -51,6 +50,6 @@
         <module>beam-meris-radiometry</module>
     </dependency>
 
-    <categories>Application,Processor,MERIS,AATSR</categories>
+    <categories>Application,Processor,MERIS,AATSR,Idepix</categories>
 
 </module>
