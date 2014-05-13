@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
  */
 public class IdepixConstants {
 
+    @Deprecated
     public static final String IDEPIX_VERSION = "v2.1";
 
     public static final int F_INVALID = 0;

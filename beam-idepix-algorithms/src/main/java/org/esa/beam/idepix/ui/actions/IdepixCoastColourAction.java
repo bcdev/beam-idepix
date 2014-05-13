@@ -17,7 +17,6 @@ package org.esa.beam.idepix.ui.actions;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.ui.DefaultSingleTargetProductDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
-import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.coastcolour.CoastColourOp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -32,7 +31,7 @@ public class IdepixCoastColourAction extends AbstractVisatAction {
         final DefaultSingleTargetProductDialog dialog =
             new DefaultSingleTargetProductDialog(OperatorSpi.getOperatorAlias(CoastColourOp.class),
                     getAppContext(),
-                    "IDEPIX Pixel Identification Tool - Water - " + IdepixConstants.IDEPIX_VERSION,
+                    "Idepix - Pixel Identification and Classification above Water",
                     "IdepixPlugIn");
         System.setProperty("gpfMode", "GUI");
         dialog.setTargetProductNameSuffix("_IDEPIX");
