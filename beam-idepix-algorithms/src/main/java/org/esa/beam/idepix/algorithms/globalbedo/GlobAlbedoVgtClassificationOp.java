@@ -162,7 +162,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         final boolean isB0Good = smFlagTile.getSampleBit(x, y, SM_F_B0_GOOD);
         final boolean isB2Good = smFlagTile.getSampleBit(x, y, SM_F_B2_GOOD);
         final boolean isB3Good = smFlagTile.getSampleBit(x, y, SM_F_B3_GOOD);
-        final boolean isMirGood = smFlagTile.getSampleBit(x, y, SM_F_MIR_GOOD);
+        final boolean isMirGood = smFlagTile.getSampleBit(x, y, SM_F_MIR_GOOD) || vgtReflectance[3] <= 0.65; // MIR_refl
         if (!isB0Good || !isB2Good || !isB3Good || !isMirGood) {
             for (int i = 0; i < vgtReflectance.length; i++) {
                 vgtReflectance[i] = Float.NaN;
