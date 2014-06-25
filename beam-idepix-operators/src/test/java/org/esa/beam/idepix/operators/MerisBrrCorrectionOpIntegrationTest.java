@@ -3,7 +3,6 @@ package org.esa.beam.idepix.operators;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.meris.brr.BrrOp;
 import org.esa.beam.util.io.FileUtils;
 import org.junit.*;
 

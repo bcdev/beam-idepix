@@ -8,6 +8,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.idepix.operators.*;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.*;
+import org.esa.beam.meris.brr.operator.BrrOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;

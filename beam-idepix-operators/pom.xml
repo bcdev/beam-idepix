@@ -8,7 +8,7 @@
     <parent>
         <artifactId>beam-idepix</artifactId>
         <groupId>org.esa.beam.idepix</groupId>
-        <version>2.2-EVOLUTION-SNAPSHOT</version>
+        <version>3.0-EVOLUTION-SNAPSHOT</version>
     </parent>
 
     <artifactId>beam-idepix-operators</artifactId>
