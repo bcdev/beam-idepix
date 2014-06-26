@@ -74,6 +74,15 @@ public class IdepixUtils {
         return product.getProductType().startsWith(IdepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
     }
 
+    public static boolean isValidModisProduct(Product product) {
+        return true; // todo
+    }
+
+    public static boolean isValidSeawifsProduct(Product product) {
+        return true; // todo
+    }
+
+
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
         // todo: needs to be more strict, but for the moment we assume this is enough...
         return product.getName().contains("COLLOC") || product.getProductType().contains("COLLOC");
@@ -87,12 +96,17 @@ public class IdepixUtils {
                 AlgorithmSelector.Schiller == algorithm ||
                 AlgorithmSelector.FubScapeM == algorithm) {
             return (isValidMerisProduct(sourceProduct));
+        } else if (AlgorithmSelector.GlobAlbedo == algorithm) {
+            return (isValidMerisProduct(sourceProduct) ||
+                    isValidAatsrProduct(sourceProduct) ||
+                    isValidVgtProduct(sourceProduct) ||
+                    isValidMerisAatsrSynergyProduct(sourceProduct));
+        } else if (AlgorithmSelector.Occci == algorithm) {
+            return (isValidModisProduct(sourceProduct) ||
+                    isValidSeawifsProduct(sourceProduct));
+        } else {
+            return false;
         }
-        return AlgorithmSelector.GlobAlbedo == algorithm &&
-                (isValidMerisProduct(sourceProduct) ||
-                        isValidAatsrProduct(sourceProduct) ||
-                        isValidVgtProduct(sourceProduct) ||
-                        isValidMerisAatsrSynergyProduct(sourceProduct));
     }
 
     public static void logErrorMessage(String msg) {

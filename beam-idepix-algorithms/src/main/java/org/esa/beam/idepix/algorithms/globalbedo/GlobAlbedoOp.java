@@ -42,7 +42,6 @@ public class GlobAlbedoOp extends BasisOp {
 
     private Product rad2reflProduct;
     private Product ctpProduct;
-    private Product merisCloudProduct;
     private Product rayleighProduct;
     private Product pressureLiseProduct;
     private Product pbaroProduct;
@@ -194,7 +193,7 @@ public class GlobAlbedoOp extends BasisOp {
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
                                                                         true, false, true, false, false, true);
         gaCloudInput.put("pressure", pressureLiseProduct);
-        merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
+        Product merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
                                                                     pressureLiseProduct, pbaroProduct, true);
         gaCloudInput.put("cloud", merisCloudProduct);
         final Product gasProduct = IdepixProducts.
