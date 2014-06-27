@@ -17,4 +17,7 @@ org.esa.beam.idepix.algorithms.schiller.SchillerClassificationOp$Spi
 org.esa.beam.idepix.algorithms.scapem.FubScapeMOp$Spi
 org.esa.beam.idepix.algorithms.scapem.FubScapeMClassificationOp$Spi
 org.esa.beam.idepix.algorithms.scapem.FubScapeMLakesOp$Spi
+org.esa.beam.idepix.algorithms.occci.OccciOp$Spi
+org.esa.beam.idepix.algorithms.occci.OccciClassificationOp$Spi
+org.esa.beam.idepix.algorithms.occci.OccciPostProcessingOp$Spi
 

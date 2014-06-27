@@ -8,6 +8,7 @@ package org.esa.beam.idepix.algorithms.occci;
 public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
 
     // in general, implementations are instrument-dependent:
+    public abstract boolean isInvalid();
     public abstract boolean isCloud();
     public abstract boolean isCloudAmbiguous();
     public abstract boolean isCloudBuffer();

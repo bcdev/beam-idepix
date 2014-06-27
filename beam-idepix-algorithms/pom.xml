@@ -30,6 +30,11 @@
             <artifactId>beam-meris-glint</artifactId>
         </dependency>
 
+        <!--<dependency>-->
+            <!--<groupId>org.esa.beam</groupId>-->
+            <!--<artifactId>seadas-reader</artifactId>-->
+        <!--</dependency>-->
+
     </dependencies>
 
 </project>

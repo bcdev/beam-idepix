@@ -8,6 +8,13 @@ package org.esa.beam.idepix.algorithms.occci;
  */
 public class OccciSeawifsAlgorithm extends OccciAlgorithm {
 
+    private float[] refl;
+
+    @Override
+    public boolean isInvalid() {
+        return false;
+    }
+
     @Override
     public boolean isCloud() {
         return false;
@@ -56,5 +63,10 @@ public class OccciSeawifsAlgorithm extends OccciAlgorithm {
     @Override
     public boolean isCloudSure() {
         return false;
+    }
+
+    // setters
+    public void setRefl(float[] reflectance) {
+        refl = reflectance;
     }
 }
