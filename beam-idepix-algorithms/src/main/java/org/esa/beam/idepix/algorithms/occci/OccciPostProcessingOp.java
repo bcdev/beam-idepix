@@ -17,6 +17,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.RectangleExtender;
 
 import java.awt.*;
 import java.util.Map;
@@ -44,55 +45,69 @@ public class OccciPostProcessingOp extends BasisOp {
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
+    private RectangleExtender rectCalculator;
+
     @Override
     public void initialize() throws OperatorException {
         createTargetProduct();
+
+        rectCalculator = new RectangleExtender(new Rectangle(classifProduct.getSceneRasterWidth(),
+                                                             classifProduct.getSceneRasterHeight()),
+                                               cloudBufferWidth, cloudBufferWidth);
     }
 
     @Override
-    public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
+    public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
+        final Band classifFlagSourceBand = classifProduct.getBand(Constants.CLASSIF_BAND_NAME);
+        Rectangle targetRectangle = targetTile.getRectangle();
+        Rectangle extendedRectangle = rectCalculator.extend(targetRectangle);
+        Tile classifFlagSourceTile = getSourceTile(classifFlagSourceBand, extendedRectangle);
 
-        final Band cloudFlagBand = targetProduct.getBand(Constants.CLASSIF_BAND_NAME);
-        final Band cloudFlagSourceBand = classifProduct.getBand(Constants.CLASSIF_BAND_NAME);
-        final MultiLevelImage classifImage = classifProduct.getBand(Constants.CLASSIF_BAND_NAME).getSourceImage();
-        cloudFlagBand.setSourceImage(classifImage);
-        final Tile cloudFlagTile = targetTiles.get(cloudFlagBand);
-        final Tile cloudFlagSourceTile = getSourceTile(cloudFlagSourceBand, rectangle);
-        setCloudBuffer(Constants.CLASSIF_BAND_NAME, cloudFlagTile, cloudFlagSourceTile, rectangle);
-    }
+        for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
+            checkForCancellation();
+            for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
 
-    private void createTargetProduct() throws OperatorException {
-        targetProduct = createCompatibleProduct(classifProduct, classifProduct.getName(), classifProduct.getProductType());
-        ProductUtils.copyFlagCodings(classifProduct, targetProduct);
-        OccciUtils.setupOccciClassifBitmask(targetProduct);
-
-        Band cloudFlagBand = targetProduct.addBand(Constants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
-//        cloudFlagBand.setSampleCoding(targetProduct.getFlagCodingGroup().get(Constants.CLASSIF_BAND_NAME));
-
-    }
-
-    void setCloudBuffer(String bandName, Tile targetTile, Tile sourceTile, Rectangle rectangle) {
-        if (bandName.equals(Constants.CLASSIF_BAND_NAME)) {
-            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-//                    if (targetTile.getSampleBit(x, y, Constants.F_CLOUD)) {
-                    if (sourceTile.getSampleBit(x, y, Constants.F_CLOUD)) {
-                        int LEFT_BORDER = Math.max(x - cloudBufferWidth, rectangle.x);
-                        int RIGHT_BORDER = Math.min(x + cloudBufferWidth, rectangle.x + rectangle.width - 1);
-                        int TOP_BORDER = Math.max(y - cloudBufferWidth, rectangle.y);
-                        int BOTTOM_BORDER = Math.min(y + cloudBufferWidth, rectangle.y + rectangle.height - 1);
-                        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-                            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                if (!targetTile.getSampleBit(i, j, Constants.F_INVALID)) {
-                                    targetTile.setSample(i, j, Constants.F_CLOUD_BUFFER, true);
-                                }
-                            }
-                        }
+                if (targetRectangle.contains(x, y)) {
+                    boolean isCloud = classifFlagSourceTile.getSampleBit(x, y, Constants.F_CLOUD);
+                    combineFlags(x, y, classifFlagSourceTile, targetTile);
+                    if (isCloud) {
+                        computeCloudBuffer(x, y, classifFlagSourceTile, targetTile);
                     }
                 }
             }
         }
     }
+
+    private void createTargetProduct() throws OperatorException {
+        targetProduct = createCompatibleProduct(classifProduct, classifProduct.getName(), classifProduct.getProductType());
+        ProductUtils.copyBand(Constants.CLASSIF_BAND_NAME, classifProduct, targetProduct, false);
+        ProductUtils.copyFlagCodings(classifProduct, targetProduct);
+        OccciUtils.setupOccciClassifBitmask(targetProduct);
+    }
+
+    private void combineFlags(int x, int y, Tile sourceFlagTile, Tile targetTile) {
+        int sourceFlags = sourceFlagTile.getSampleInt(x, y);
+        int computedFlags = targetTile.getSampleInt(x, y);
+        targetTile.setSample(x, y, sourceFlags | computedFlags);
+    }
+
+    private void computeCloudBuffer(int x, int y, Tile sourceFlagTile, Tile targetTile) {
+        Rectangle rectangle = targetTile.getRectangle();
+        final int LEFT_BORDER = Math.max(x - cloudBufferWidth, rectangle.x);
+        final int RIGHT_BORDER = Math.min(x + cloudBufferWidth, rectangle.x + rectangle.width - 1);
+        final int TOP_BORDER = Math.max(y - cloudBufferWidth, rectangle.y);
+        final int BOTTOM_BORDER = Math.min(y + cloudBufferWidth, rectangle.y + rectangle.height - 1);
+        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
+            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
+                boolean is_already_cloud = sourceFlagTile.getSampleBit(i, j, Constants.F_CLOUD);
+                boolean is_land = sourceFlagTile.getSampleBit(i, j, Constants.F_LAND);
+                if (!is_already_cloud && !is_land && rectangle.contains(i, j)) {
+                    targetTile.setSample(i, j, Constants.F_CLOUD_BUFFER, true);
+                }
+            }
+        }
+    }
+
 
     /**
      * The Service Provider Interface (SPI) for the operator.

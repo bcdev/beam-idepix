@@ -32,6 +32,12 @@ public class OccciClassificationOp extends PixelOperator {
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
     String sensorTypeString;
 
+    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")
+    private double schillerAmbiguous;
+
+    @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
+    private double schillerSure;
+
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
@@ -113,6 +119,8 @@ public class OccciClassificationOp extends PixelOperator {
 //        occciAlgorithm.setWaterNN(waterNN);
 //        occciAlgorithm.setAccessor(accessor);
 
+        occciAlgorithm.setAmbiguousThresh(schillerAmbiguous);
+        occciAlgorithm.setSureThresh(schillerSure);
         occciAlgorithm.setRefl(modisReflectance);
 
         return occciAlgorithm;

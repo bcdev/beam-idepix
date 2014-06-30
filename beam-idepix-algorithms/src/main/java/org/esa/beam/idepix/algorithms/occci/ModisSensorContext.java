@@ -20,15 +20,22 @@ class ModisSensorContext implements SensorContext {
     private static final String[] EARTH_SUN_DISTANCE_NAMES = {"Earth-Sun_Distance", "Earth-Sun Distance"};
     private static final int[] START_POSITION_IN_PRODUCT_DATA = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
 
-    private final static String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB_8";
-    private final static String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB_9";
-    private final static String MODIS_L1B_RADIANCE_3_BAND_NAME = "EV_1KM_RefSB_10";
-    private final static String MODIS_L1B_RADIANCE_4_BAND_NAME = "EV_1KM_RefSB_11";
-    private final static String MODIS_L1B_RADIANCE_5_BAND_NAME = "EV_1KM_RefSB_12";
-    private final static String MODIS_L1B_RADIANCE_6_BAND_NAME = "EV_1KM_RefSB_13lo";
-    private final static String MODIS_L1B_RADIANCE_7_BAND_NAME = "EV_1KM_RefSB_14lo";
-    private final static String MODIS_L1B_RADIANCE_8_BAND_NAME = "EV_1KM_RefSB_15";
-    private final static String MODIS_L1B_RADIANCE_9_BAND_NAME = "EV_1KM_RefSB_16";
+    private final static String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB_8";                    // 412
+    private final static String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB_9";                    // 443
+    private final static String MODIS_L1B_RADIANCE_3_BAND_NAME = "EV_1KM_RefSB_10";                   // 488
+    private final static String MODIS_L1B_RADIANCE_4_BAND_NAME = "EV_1KM_RefSB_11";                   // 531
+    private final static String MODIS_L1B_RADIANCE_5_BAND_NAME = "EV_1KM_RefSB_12";                   // 547
+    private final static String MODIS_L1B_RADIANCE_6_BAND_NAME = "EV_1KM_RefSB_13lo";                 // 667
+    private final static String MODIS_L1B_RADIANCE_7_BAND_NAME = "EV_1KM_RefSB_14lo";                 // 678
+    private final static String MODIS_L1B_RADIANCE_8_BAND_NAME = "EV_1KM_RefSB_15";                   // 748
+    private final static String MODIS_L1B_RADIANCE_9_BAND_NAME = "EV_1KM_RefSB_16";                   // 869
+    private final static String MODIS_L1B_RADIANCE_10_BAND_NAME = "EV_250_Aggr1km_RefSB_1";           // 645
+    private final static String MODIS_L1B_RADIANCE_11_BAND_NAME = "EV_250_Aggr1km_RefSB_2";           // 859
+    private final static String MODIS_L1B_RADIANCE_12_BAND_NAME = "EV_500_Aggr1km_RefSB_3";           // 469
+    private final static String MODIS_L1B_RADIANCE_13_BAND_NAME = "EV_500_Aggr1km_RefSB_4";           // 555
+    private final static String MODIS_L1B_RADIANCE_14_BAND_NAME = "EV_500_Aggr1km_RefSB_5";           // 1240
+    private final static String MODIS_L1B_RADIANCE_15_BAND_NAME = "EV_500_Aggr1km_RefSB_6";           // 1640
+    private final static String MODIS_L1B_RADIANCE_16_BAND_NAME = "EV_500_Aggr1km_RefSB_7";           // 2130
 
     private final static String[] MODIS_L1B_SPECTRAL_BAND_NAMES = {
             MODIS_L1B_RADIANCE_1_BAND_NAME,

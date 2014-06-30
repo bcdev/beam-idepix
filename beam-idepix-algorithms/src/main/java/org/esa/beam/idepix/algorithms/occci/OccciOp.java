@@ -42,7 +42,12 @@ public class OccciOp extends BasisOp {
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
     String sensorTypeString;
 
-    @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
+    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")
+    private double ccSchillerAmbiguous;
+    @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
+    private double ccSchillerSure;
+
+    @Parameter(defaultValue = "1", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
@@ -77,6 +82,7 @@ public class OccciOp extends BasisOp {
 
         // post processing:
         // - cloud buffer
+        // - cloud shadow todo
         Map<String, Object> postProcessParameters = new HashMap<String, Object>();
         postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
         Map<String, Product> postProcessInput = new HashMap<String, Product>();
@@ -107,6 +113,8 @@ public class OccciOp extends BasisOp {
     private Map<String, Object> createOccciCloudClassificationParameters() {
         Map<String, Object> occciCloudClassificationParameters = new HashMap<String, Object>(1);
         occciCloudClassificationParameters.put("sensorTypeString", sensorTypeString);
+        occciCloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
+        occciCloudClassificationParameters.put("schillerSure", ccSchillerSure);
         occciCloudClassificationParameters.put("cloudBufferWidth", cloudBufferWidth);
         occciCloudClassificationParameters.put("wmResolution", wmResolution);
 
