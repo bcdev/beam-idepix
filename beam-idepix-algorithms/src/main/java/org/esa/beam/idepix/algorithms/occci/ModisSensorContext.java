@@ -13,8 +13,12 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
  * @author olafd
  */
 class ModisSensorContext implements SensorContext {
-    private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f};
+    private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{
+            413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f,
+            645.f, 859.f,
+            469.f, 555.f, 1240.f, 1640.f, 2130.f
+    };
     private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 8, 9, 15, 18, 21, 26};
 
     private static final String[] EARTH_SUN_DISTANCE_NAMES = {"Earth-Sun_Distance", "Earth-Sun Distance"};
@@ -47,13 +51,38 @@ class ModisSensorContext implements SensorContext {
             MODIS_L1B_RADIANCE_7_BAND_NAME,
             MODIS_L1B_RADIANCE_8_BAND_NAME,
             MODIS_L1B_RADIANCE_9_BAND_NAME,
+            MODIS_L1B_RADIANCE_10_BAND_NAME,
+            MODIS_L1B_RADIANCE_11_BAND_NAME,
+            MODIS_L1B_RADIANCE_12_BAND_NAME,
+            MODIS_L1B_RADIANCE_13_BAND_NAME,
+            MODIS_L1B_RADIANCE_14_BAND_NAME,
+            MODIS_L1B_RADIANCE_15_BAND_NAME,
+            MODIS_L1B_RADIANCE_16_BAND_NAME,
     };
     private final static int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
     private final static double surfacePressureDefaultValue = 1019.0;
     private final static double ozoneDefaultValue = 330.0;
 
     // derived from cahalan table from Kerstin tb 2013-11-15
-    private final static double[] defaultSolarFluxes = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1545.183846, 1507.529167, 1277.037, 945.3382727};
+    private final static double[] defaultSolarFluxes = new double[]{
+            1740.458085,          // 412
+            1844.698571,          // 443
+            1949.723913,          // 488
+            1875.394737,          // 531
+            1882.428333,          // 547
+            1545.183846,          // 667
+            1507.529167,          // 678
+            1277.037,             // 748
+            945.3382727,          // 869
+            1600.0,                      // 645         roughly interpolated from
+            // http://en.wikipedia.org/wiki/File:MODIS_ATM_solar_irradiance.png todo: get Cahalan table from KS
+            950.0,                      // 859         roughly interpolated
+            1895.0,                      // 469         roughly interpolated
+            1880.0,                      // 555         roughly interpolated
+            480.0,                      // 1240        roughly interpolated
+            280.0,                      // 1640        roughly interpolated
+            120.0                      // 2130        roughly interpolated
+    };
     private static final String globalMetadataName = "GLOBAL_METADATA";
 
     private double[] solarFluxes;

@@ -1,9 +1,7 @@
 package org.esa.beam.idepix.algorithms.occci;
 
-import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
@@ -12,8 +10,10 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,24 +28,33 @@ import java.util.Map;
 @OperatorMetadata(alias = "idepix.occci",
                   version = "3.0-EVOLUTION-SNAPSHOT",
                   copyright = "(c) 2014 by Brockmann Consult",
-                  description = "Pixel identification and classification with Oc-CCI algorithm.")
+                  description = "Pixel identification and classification with OC-CCI algorithm.")
 public class OccciOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MODIS/SeaWiFS L1b product)", description = "The source product.")
     private Product sourceProduct;
 
-    @TargetProduct(description = "The target product.")
-    private Product targetProduct;
 
     private Product rad2reflProduct;
+
+
+    @Parameter(defaultValue = "true",
+               label = " Reflective solar bands",
+               description = "Write TOA reflective solar bands (RefSB) to target product.")
+    private boolean ocOutputRad2Refl = true;
+
+    @Parameter(defaultValue = "false",
+               label = " Emissive bands",
+               description = "Write 'Emissive' to target product.")
+    private boolean ocOutputEmissive = false;
 
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
     String sensorTypeString;
 
-    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")
-    private double ccSchillerAmbiguous;
+    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")   // todo: adjust default?
+    private double ocSchillerAmbiguous;
     @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
-    private double ccSchillerSure;
+    private double ocSchillerSure;
 
     @Parameter(defaultValue = "1", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
@@ -90,13 +99,14 @@ public class OccciOp extends BasisOp {
         Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
                                                        postProcessParameters, postProcessInput);
         setTargetProduct(postProcessProduct);
+        addBandsToTargetProduct(postProcessProduct);
     }
 
     private void processOccciSeawifs() {
         Map<String, Product> seawifsClassifInput = new HashMap<String, Product>(4);
         computeModisAlgorithmInputProducts(seawifsClassifInput);
 
-        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
+        Product targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
                                           occciCloudClassificationParameters, seawifsClassifInput);
     }
 
@@ -113,12 +123,30 @@ public class OccciOp extends BasisOp {
     private Map<String, Object> createOccciCloudClassificationParameters() {
         Map<String, Object> occciCloudClassificationParameters = new HashMap<String, Object>(1);
         occciCloudClassificationParameters.put("sensorTypeString", sensorTypeString);
-        occciCloudClassificationParameters.put("schillerAmbiguous", ccSchillerAmbiguous);
-        occciCloudClassificationParameters.put("schillerSure", ccSchillerSure);
+        occciCloudClassificationParameters.put("schillerAmbiguous", ocSchillerAmbiguous);
+        occciCloudClassificationParameters.put("schillerSure", ocSchillerSure);
         occciCloudClassificationParameters.put("cloudBufferWidth", cloudBufferWidth);
         occciCloudClassificationParameters.put("wmResolution", wmResolution);
 
         return occciCloudClassificationParameters;
+    }
+
+    private void addBandsToTargetProduct(Product targetProduct) {
+        if (ocOutputRad2Refl) {
+            copySourceBands(rad2reflProduct, targetProduct, "RefSB");
+        }
+        if (ocOutputEmissive) {
+            copySourceBands(rad2reflProduct, targetProduct, "Emissive");
+        }
+    }
+
+    private static void copySourceBands(Product rad2reflProduct, Product targetProduct, String bandNameSubstring) {
+        for (String bandname : rad2reflProduct.getBandNames()) {
+            if (bandname.contains(bandNameSubstring) && !targetProduct.containsBand(bandname)) {
+                System.out.println("copy band: " + bandname);
+                ProductUtils.copyBand(bandname, rad2reflProduct, targetProduct, true);
+            }
+        }
     }
 
 

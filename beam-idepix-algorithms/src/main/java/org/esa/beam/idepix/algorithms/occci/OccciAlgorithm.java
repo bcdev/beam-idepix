@@ -18,4 +18,7 @@ public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
     public abstract boolean isGlintRisk();
     public abstract boolean isCoastline();
     public abstract boolean isLand();
+
+    public abstract float brightValue();
+    public abstract float ndsiValue();
 }

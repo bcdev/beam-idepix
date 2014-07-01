@@ -14,6 +14,11 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     private static final double GLINT_INCREMENT = 0.1;
 
+    private static final double THRESH_BRIGHT_CLOUD_AMBIGUOUS = 0.05;
+    private static final double THRESH_BRIGHT_CLOUD_SURE = 0.07;
+    private static final double THRESH_BRIGHT_SNOW_ICE = 0.07;
+    private static final double THRESH_NDSI_SNOW_ICE = 0.07;
+
     private float[] refl;
     private SchillerAlgorithm waterNN;
     private SchillerAlgorithm.Accessor accessor;
@@ -27,35 +32,8 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isCloud() {
-        if (waterNN != null && accessor != null) {
-            // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
-            final double schillerValue = (double) waterNN.compute(accessor);
-            return schillerValue > 1.35;
-        } else {
-            // test
-            final double r = new Random().nextDouble();
-            return (r > 0.5);
-        }
+        return isCloudAmbiguous() || isCloudSure();
     }
-
-    // this is from CC MERIS:
-//    double ambiguousThresh = schillerAmbiguous;
-//    double sureThresh = schillerSure;
-//    // this seems to avoid false cloud flagging in glint regions:
-//    if (is_glint_risk) {
-//        ambiguousThresh += 0.1;
-//        sureThresh += 0.1;
-//    }
-//
-//    float schillerValue = computeSchillerCloud(landWaterNN, sd, pixelInfo);
-//
-//    boolean isCloud = schillerValue > ambiguousThresh;
-//    boolean isCloudAmbiguous = schillerValue > ambiguousThresh && schillerValue < sureThresh;
-//
-//    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk && !isCloud);
-//    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloud);
-//    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
-
 
     @Override
     public boolean isCloudAmbiguous() {
@@ -63,11 +41,12 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
             final double schillerValue = (double) waterNN.compute(accessor);
             final double thresh = isGlintRisk() ? ambiguousThresh : ambiguousThresh + GLINT_INCREMENT;
-            return schillerValue > thresh;
+            return schillerValue > thresh && !isCloudSure();
         } else {
             // test (as long as we have no Schiller)
-            final double r = new Random().nextDouble();
-            return (r > 0.3);
+//            final double r = new Random().nextDouble();
+//            return (r > 0.5  && !isCloudSure());
+            return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS  && !isCloudSure());
         }
     }
 
@@ -81,8 +60,9 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             return schillerValue > thresh;
         } else {
             // test (as long as we have no Schiller)
-            final double r = new Random().nextDouble();
-            return (r > 0.7);
+//            final double r = new Random().nextDouble();
+//            return (r > 0.8  && !isCloudSure());
+            return (brightValue() > THRESH_BRIGHT_CLOUD_SURE);
         }
     }
 
@@ -101,12 +81,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     @Override
     public boolean isSnowIce() {
         // todo
-        // needs mdsi and brightness
-        // MERIS: mdsi depends on rho_toa_865,885; brightness depends on rho_ag (bottom of Rayleigh)
+        // needs ndsi and brightness
+        // MERIS: ndsi depends on rho_toa_865,885; brightness depends on rho_ag (bottom of Rayleigh)
         // maybe we can forget the Rayleigh (it's small)
         // MODIS: for slope use bands 16 (869nm) and 7 (2130nm, 500m spatial), threshold to be adjusted
         // for brightness use band 16 (Rayleigh corrected?)
-        return false;
+
+        return (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
     }
 
     @Override
@@ -132,6 +113,19 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     @Override
     public boolean isLand() {
         return false;
+    }
+
+
+    @Override
+    public float brightValue() {
+        // use EV_250_Aggr1km_RefSB_1
+        return refl[10];
+    }
+
+    @Override
+    public float ndsiValue() {
+        // use EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7
+        return (refl[10] - refl[15])/(refl[10] + refl[15]);
     }
 
     ///////////////////////////////////////////////////////////////////////
