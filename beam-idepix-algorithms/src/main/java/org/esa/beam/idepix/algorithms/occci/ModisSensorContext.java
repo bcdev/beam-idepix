@@ -74,14 +74,13 @@ class ModisSensorContext implements SensorContext {
             1507.529167,          // 678
             1277.037,             // 748
             945.3382727,          // 869
-            1600.0,                      // 645         roughly interpolated from
-            // http://en.wikipedia.org/wiki/File:MODIS_ATM_solar_irradiance.png todo: get Cahalan table from KS
-            950.0,                      // 859         roughly interpolated
-            1895.0,                      // 469         roughly interpolated
-            1880.0,                      // 555         roughly interpolated
-            480.0,                      // 1240        roughly interpolated
-            280.0,                      // 1640        roughly interpolated
-            120.0                      // 2130        roughly interpolated
+            1601.482295,          // 645
+            967.137667,           // 859
+            2072.03625,           // 469
+            1874.005,             // 555
+            456.1987143,          // 1240
+            229.882,              // 1640
+            92.5171833            // 2130
     };
     private static final String globalMetadataName = "GLOBAL_METADATA";
 
@@ -130,7 +129,18 @@ class ModisSensorContext implements SensorContext {
     }
 
     @Override
-    public void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode) {
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct) {
+        sampleConfigurer.defineSample(Constants.SRC_SZA, "SolarZenith", sourceProduct);
+        sampleConfigurer.defineSample(Constants.SRC_SAA, "SolarAzimuth", sourceProduct);
+        sampleConfigurer.defineSample(Constants.SRC_VZA, "SensorZenith", sourceProduct);
+        sampleConfigurer.defineSample(Constants.SRC_VAA, "SensorAzimuth", sourceProduct);
+        for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            sampleConfigurer.defineSample(Constants.MODIS_SRC_RAD_OFFSET + i, MODIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct);
+        }
+    }
+
+    @Override
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer) {
         sampleConfigurer.defineSample(Constants.SRC_SZA, "SolarZenith");
         sampleConfigurer.defineSample(Constants.SRC_SAA, "SolarAzimuth");
         sampleConfigurer.defineSample(Constants.SRC_VZA, "SensorZenith");
@@ -148,16 +158,16 @@ class ModisSensorContext implements SensorContext {
      * @param inputs input data vector
      */
     @Override
-    public void scaleInputSpectralDataToRadiance(double[] inputs) {
+    public void scaleInputSpectralDataToRadiance(double[] inputs, int offset) {
         final double oneDivEarthSunDistanceSquare = 1.0 / (earthSunDistance * earthSunDistance);
         for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            final int index = Constants.SEAWIFS_SRC_RAD_OFFSET + i;
+            final int index = offset + i;
             inputs[index] = inputs[index] * solarFluxes[i] * oneDivEarthSunDistanceSquare / Math.PI;
         }
     }
 
     @Override
-    public void scaleInputSpectralDataToReflectance(double[] inputs) {
+    public void scaleInputSpectralDataToReflectance(double[] inputs, int offset) {
         // nothing to do - MODIS comes as TOA reflectance
     }
 
@@ -174,12 +184,6 @@ class ModisSensorContext implements SensorContext {
     @Override
     public double[] getSolarFluxes(Product sourceProduct) {
         return solarFluxes;
-    }
-
-    @Override
-    public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
-        System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET, MODIS_L1B_NUM_SPECTRAL_BANDS);
-        return input;
     }
 
     @Override
@@ -232,6 +236,11 @@ class ModisSensorContext implements SensorContext {
     @Override
     public int getDetectorIndex(Sample[] samples) {
         return -1;
+    }
+
+    @Override
+    public int getSrcRadOffset() {
+        return Constants.MODIS_SRC_RAD_OFFSET;
     }
 
     @Override

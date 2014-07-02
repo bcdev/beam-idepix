@@ -77,11 +77,12 @@ public class IdepixUtils {
     }
 
     public static boolean isValidModisProduct(Product product) {
-        return true; // todo
+        return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
+                product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
     }
 
     public static boolean isValidSeawifsProduct(Product product) {
-        return true; // todo
+        return (product.getName().matches("S[0-9]{13}.(?i)(L1B_LAC)"));
     }
 
 

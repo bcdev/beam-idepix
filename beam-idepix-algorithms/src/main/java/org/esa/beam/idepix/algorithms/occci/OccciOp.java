@@ -7,10 +7,8 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -40,13 +38,23 @@ public class OccciOp extends BasisOp {
 
     @Parameter(defaultValue = "true",
                label = " Reflective solar bands",
-               description = "Write TOA reflective solar bands (RefSB) to target product.")
+               description = "Write TOA reflective solar bands (RefSB) to target product (MODIS).")
     private boolean ocOutputRad2Refl = true;
 
     @Parameter(defaultValue = "false",
                label = " Emissive bands",
-               description = "Write 'Emissive' to target product.")
+               description = "Write 'Emissive' to target product (MODIS).")
     private boolean ocOutputEmissive = false;
+
+    @Parameter(defaultValue = "true",
+               label = " Radiance bands",
+               description = "Write TOA radiance to target product (SeaWiFS).")
+    private boolean ocOutputRadiance = true;
+
+    @Parameter(defaultValue = "false",
+               label = " Debug bands",
+               description = "Write further useful bands to target product.")
+    private boolean ocOutputDebug = false;
 
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
     String sensorTypeString;
@@ -61,9 +69,11 @@ public class OccciOp extends BasisOp {
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
-    private int wmResolution;
+    private int ocWaterMaskResolution;
 
     private Map<String, Object> occciCloudClassificationParameters;
+    private Product classifProduct;
+    private Product waterMaskProduct;
 
 
     @Override
@@ -86,8 +96,8 @@ public class OccciOp extends BasisOp {
         Map<String, Product> modisClassifInput = new HashMap<String, Product>(4);
         computeModisAlgorithmInputProducts(modisClassifInput);
 
-        Product classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
-                                                               occciCloudClassificationParameters, modisClassifInput);
+        classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
+                                           occciCloudClassificationParameters, modisClassifInput);
 
         // post processing:
         // - cloud buffer
@@ -106,18 +116,44 @@ public class OccciOp extends BasisOp {
         Map<String, Product> seawifsClassifInput = new HashMap<String, Product>(4);
         computeModisAlgorithmInputProducts(seawifsClassifInput);
 
-        Product targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
+        classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
                                           occciCloudClassificationParameters, seawifsClassifInput);
+
+        // post processing:
+        // - cloud buffer
+        // - cloud shadow todo
+        Map<String, Object> postProcessParameters = new HashMap<String, Object>();
+        postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
+        Map<String, Product> postProcessInput = new HashMap<String, Product>();
+        postProcessInput.put("classif", classifProduct);
+        Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
+                                                       postProcessParameters, postProcessInput);
+        setTargetProduct(postProcessProduct);
+        addBandsToTargetProduct(postProcessProduct);
     }
 
     private void computeModisAlgorithmInputProducts(Map<String, Product> modisClassifInput) {
+        createWaterMaskProduct();
+        modisClassifInput.put("waterMask", waterMaskProduct);
+
         rad2reflProduct = sourceProduct; // we will convert pixelwise later, for MODIS inputs are TOA reflectances anyway
         modisClassifInput.put("refl", rad2reflProduct);
     }
 
     private void computeSeawifsAlgorithmInputProducts(Map<String, Product> seawifsClassifInput) {
+        createWaterMaskProduct();
+        seawifsClassifInput.put("waterMask", waterMaskProduct);
+
         rad2reflProduct = sourceProduct; // we will convert pixelwise later
         seawifsClassifInput.put("refl", rad2reflProduct);
+    }
+
+    private void createWaterMaskProduct() {
+        HashMap<String, Object> waterParameters = new HashMap<String, Object>();
+        waterParameters.put("resolution", ocWaterMaskResolution);
+        waterParameters.put("subSamplingFactorX", 3);
+        waterParameters.put("subSamplingFactorY", 3);
+        waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
     }
 
     private Map<String, Object> createOccciCloudClassificationParameters() {
@@ -126,7 +162,8 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("schillerAmbiguous", ocSchillerAmbiguous);
         occciCloudClassificationParameters.put("schillerSure", ocSchillerSure);
         occciCloudClassificationParameters.put("cloudBufferWidth", cloudBufferWidth);
-        occciCloudClassificationParameters.put("wmResolution", wmResolution);
+        occciCloudClassificationParameters.put("wmResolution", ocWaterMaskResolution);
+        occciCloudClassificationParameters.put("ocOutputDebug", ocOutputDebug);
 
         return occciCloudClassificationParameters;
     }
@@ -137,6 +174,13 @@ public class OccciOp extends BasisOp {
         }
         if (ocOutputEmissive) {
             copySourceBands(rad2reflProduct, targetProduct, "Emissive");
+        }
+        if (ocOutputRadiance) {
+            copySourceBands(rad2reflProduct, targetProduct, "L_");
+        }
+
+        if (ocOutputDebug) {
+            copySourceBands(classifProduct, targetProduct, "_value");
         }
     }
 

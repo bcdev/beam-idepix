@@ -30,7 +30,9 @@ public interface SensorContext {
 
     int[] getNnOutputIndices();
 
-    void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode);
+    void configureSourceSamples(SampleConfigurer sampleConfigurer);
+
+    void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct);
 
     /**
      * Scales the input spectral data to be consistent with the MERIS case. Resulting data should be TOA radiance in
@@ -39,7 +41,7 @@ public interface SensorContext {
      *
      * @param inputs input data vector
      */
-    void scaleInputSpectralDataToRadiance(double[] inputs);
+    void scaleInputSpectralDataToRadiance(double[] inputs, int offset);
 
     /**
      * Scales the input spectral data to be consistent with MERIS TOA reflectances  (dimensionless)
@@ -47,13 +49,11 @@ public interface SensorContext {
      *
      * @param inputs input data vector
      */
-    void scaleInputSpectralDataToReflectance(double[] inputs);
+    void scaleInputSpectralDataToReflectance(double[] inputs, int offset);
 
     void copyTiePointData(double[] inputs, Sample[] sourceSamples);
 
     double[] getSolarFluxes(Product sourceProduct);
-
-    double[] copySolarFluxes(double[] input, double[] solarFluxes);
 
     double getSurfacePressure();
 
@@ -64,6 +64,8 @@ public interface SensorContext {
     void init(Product sourceProduct);
 
     int getDetectorIndex(Sample[] samples);
+
+    int getSrcRadOffset();
 
     int getTargetSampleOffset();
 

@@ -89,15 +89,27 @@ class SeaWiFSSensorContext implements SensorContext {
     }
 
     @Override
-    public void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode) {
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct) {
+        sampleConfigurer.defineSample(Constants.SRC_SZA, "solz", sourceProduct);
+        sampleConfigurer.defineSample(Constants.SRC_SAA, "sola", sourceProduct);
+        sampleConfigurer.defineSample(Constants.SRC_VZA, "senz", sourceProduct);
+        sampleConfigurer.defineSample(Constants.SRC_VAA, "sena", sourceProduct);
+        for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            sampleConfigurer.defineSample(Constants.SEAWIFS_SRC_RAD_OFFSET+ i, SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct);
+        }
+    }
+
+    @Override
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer) {
         sampleConfigurer.defineSample(Constants.SRC_SZA, "solz");
         sampleConfigurer.defineSample(Constants.SRC_SAA, "sola");
         sampleConfigurer.defineSample(Constants.SRC_VZA, "senz");
         sampleConfigurer.defineSample(Constants.SRC_VAA, "sena");
         for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            sampleConfigurer.defineSample(Constants.MODIS_SRC_RAD_OFFSET + i, SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i]);
+            sampleConfigurer.defineSample(Constants.SEAWIFS_SRC_RAD_OFFSET + i, SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i]);
         }
     }
+
 
     /**
      * Scales the input spectral data to be consistent with the MERIS case. Resulting data should be TOA radiance in
@@ -107,20 +119,20 @@ class SeaWiFSSensorContext implements SensorContext {
      * @param inputs input data vector
      */
     @Override
-    public void scaleInputSpectralDataToRadiance(double[] inputs) {
+    public void scaleInputSpectralDataToRadiance(double[] inputs, int offset) {
         for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            final int index = Constants.SEAWIFS_SRC_RAD_OFFSET + i;
+            final int index = offset + i;
             inputs[index] *= 10.0;
         }
     }
 
     @Override
-    public void scaleInputSpectralDataToReflectance(double[] inputs) {
+    public void scaleInputSpectralDataToReflectance(double[] inputs, int offset) {
         // first scale to consistent radiances:
-        scaleInputSpectralDataToRadiance(inputs);
+        scaleInputSpectralDataToRadiance(inputs, offset);
         final double oneDivEarthSunDistanceSquare = 1.0 / (earthSunDistance * earthSunDistance);
         for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            final int index = Constants.SEAWIFS_SRC_RAD_OFFSET + i;
+            final int index = offset + i;
             // this is rad2refl:
             inputs[index] = inputs[index] * Math.PI  / (solarFluxes[i] * oneDivEarthSunDistanceSquare);
         }
@@ -139,12 +151,6 @@ class SeaWiFSSensorContext implements SensorContext {
     @Override
     public double[] getSolarFluxes(Product sourceProduct) {
         return defaultNasaSolarFluxes;
-    }
-
-    @Override
-    public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
-        System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET, SEAWIFS_L1B_NUM_SPECTRAL_BANDS);
-        return input;
     }
 
     @Override
@@ -171,6 +177,11 @@ class SeaWiFSSensorContext implements SensorContext {
     @Override
     public int getDetectorIndex(Sample[] samples) {
         return -1;
+    }
+
+    @Override
+    public int getSrcRadOffset() {
+        return Constants.SEAWIFS_SRC_RAD_OFFSET;
     }
 
     @Override

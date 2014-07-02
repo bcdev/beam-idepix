@@ -9,11 +9,19 @@ package org.esa.beam.idepix.algorithms.occci;
 interface OccciPixelProperties {
 
     /**
+     * returns a boolean indicating if a pixel is regarded as invalid
+     *
+     * @return isCloud
+     */
+    boolean isInvalid();
+
+    /**
      * returns a boolean indicating if a pixel is cloudy (surely or ambiguous)
      *
      * @return isCloud
      */
     boolean isCloud();
+
 
     /**
      * returns a boolean indicating if a pixel is cloudy but ambiguous

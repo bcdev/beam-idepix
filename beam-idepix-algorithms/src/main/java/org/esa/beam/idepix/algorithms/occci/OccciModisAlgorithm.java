@@ -1,9 +1,5 @@
 package org.esa.beam.idepix.algorithms.occci;
 
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
-
-import java.util.Random;
-
 /**
  * IDEPIX pixel identification algorithm for OC-CCI/MODIS
  * todo: implement
@@ -14,20 +10,23 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     private static final double GLINT_INCREMENT = 0.1;
 
-    private static final double THRESH_BRIGHT_CLOUD_AMBIGUOUS = 0.05;
-    private static final double THRESH_BRIGHT_CLOUD_SURE = 0.07;
-    private static final double THRESH_BRIGHT_SNOW_ICE = 0.07;
-    private static final double THRESH_NDSI_SNOW_ICE = 0.07;
-
-    private float[] refl;
-    private SchillerAlgorithm waterNN;
-    private SchillerAlgorithm.Accessor accessor;
-    private double ambiguousThresh;
-    private double sureThresh;
+    // as long as we have no Schiller, CLOUD thresholds experimentally selected just from A2009125001500.L1B_LAC:
+    private static final double THRESH_BRIGHT_CLOUD_AMBIGUOUS = 0.07;
+    private static final double THRESH_BRIGHT_CLOUD_SURE = 0.15;
+    // SNOW_ICE thresholds experimentally selected just from MOD021KM.A2014121.0155.006.2014121132820.hdf
+    // more investigations needed
+    private static final double THRESH_BRIGHT_SNOW_ICE = 0.25;
+    private static final double THRESH_NDSI_SNOW_ICE = 0.8;
 
     @Override
-    public boolean isInvalid() {
-        return false;
+    public boolean isSnowIce() {
+        // needs ndsi and brightness
+        // MERIS: ndsi depends on rho_toa_865,885; brightness depends on rho_ag (bottom of Rayleigh)
+        // maybe we can forget the Rayleigh (it's small)
+        // MODIS: for slope use bands 16 (869nm) and 7 (2130nm, 500m spatial), threshold to be adjusted
+        // for brightness use band 16 (Rayleigh corrected?)
+
+        return (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
     }
 
     @Override
@@ -37,6 +36,10 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isCloudAmbiguous() {
+        if (isSnowIce()) {   // this check has priority
+            return false;
+        }
+
         if (waterNN != null && accessor != null) {
             // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
             final double schillerValue = (double) waterNN.compute(accessor);
@@ -44,14 +47,15 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             return schillerValue > thresh && !isCloudSure();
         } else {
             // test (as long as we have no Schiller)
-//            final double r = new Random().nextDouble();
-//            return (r > 0.5  && !isCloudSure());
             return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS  && !isCloudSure());
         }
     }
 
     @Override
     public boolean isCloudSure() {
+        if (isSnowIce()) {   // this check has priority
+            return false;
+        }
 
         if (waterNN != null && accessor != null) {
             // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
@@ -60,34 +64,20 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             return schillerValue > thresh;
         } else {
             // test (as long as we have no Schiller)
-//            final double r = new Random().nextDouble();
-//            return (r > 0.8  && !isCloudSure());
             return (brightValue() > THRESH_BRIGHT_CLOUD_SURE);
         }
     }
 
     @Override
     public boolean isCloudBuffer() {
-        // will be applied in post processing!
+        // is applied in post processing!
         return false;
     }
 
     @Override
     public boolean isCloudShadow() {
-        // will be applied in post processing!
+        // will be applied in post processing once we have an appropriate algorithm
         return false;
-    }
-
-    @Override
-    public boolean isSnowIce() {
-        // todo
-        // needs ndsi and brightness
-        // MERIS: ndsi depends on rho_toa_865,885; brightness depends on rho_ag (bottom of Rayleigh)
-        // maybe we can forget the Rayleigh (it's small)
-        // MODIS: for slope use bands 16 (869nm) and 7 (2130nm, 500m spatial), threshold to be adjusted
-        // for brightness use band 16 (Rayleigh corrected?)
-
-        return (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
     }
 
     @Override
@@ -105,48 +95,19 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         return false;
     }
 
-    @Override
-    public boolean isCoastline() {
-        return false;
-    }
-
-    @Override
-    public boolean isLand() {
-        return false;
-    }
-
+    ///////////////////////////////////////////////////////////////////////
+    // feature values
 
     @Override
     public float brightValue() {
         // use EV_250_Aggr1km_RefSB_1
-        return refl[10];
+        return (float) refl[10];
     }
 
     @Override
     public float ndsiValue() {
         // use EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7
-        return (refl[10] - refl[15])/(refl[10] + refl[15]);
+        return (float) ((refl[10] - refl[15])/(refl[10] + refl[15]));
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    // setters
-    public void setRefl(float[] reflectance) {
-        refl = reflectance;
-    }
-
-    public void setWaterNN(SchillerAlgorithm waterNN) {
-        this.waterNN = waterNN;
-    }
-
-    public void setAccessor(SchillerAlgorithm.Accessor accessor) {
-        this.accessor = accessor;
-    }
-
-    public void setAmbiguousThresh(double ambiguousThresh) {
-        this.ambiguousThresh = ambiguousThresh;
-    }
-
-    public void setSureThresh(double sureThresh) {
-        this.sureThresh = sureThresh;
-    }
 }

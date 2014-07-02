@@ -32,17 +32,17 @@ public class ModisSensorContextTest {
 
     @Test
     public void testGetNumSpectralInputBands() {
-        assertEquals(9, modisSensorContext.getNumSpectralInputBands());
+        assertEquals(16, modisSensorContext.getNumSpectralInputBands());
     }
 
     @Test
     public void testGetNumSpectralOutputBands() {
-        assertEquals(9, modisSensorContext.getNumSpectralOutputBands());
+        assertEquals(16, modisSensorContext.getNumSpectralOutputBands());
     }
 
     @Test
     public void testGetSpectralOutputBandIndices() {
-        final int[] expectedIndices = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+        final int[] expectedIndices = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         final int[] indices = modisSensorContext.getSpectralOutputBandIndices();
 
         assertArrayEquals(expectedIndices, indices);
@@ -50,7 +50,8 @@ public class ModisSensorContextTest {
 
     @Test
     public void testGetSpectralOutputWavelengths() {
-        final float[] expectedWavelengths = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f};
+        final float[] expectedWavelengths = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f,
+        645.0f, 859.0f, 469.0f, 555.0f, 1240.0f, 1640.0f, 2130.0f};
 
         final float[] wavelengths = modisSensorContext.getSpectralOutputWavelengths();
         assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
@@ -67,7 +68,7 @@ public class ModisSensorContextTest {
     public void testGetSpectralInputBandNames() {
         final String[] spectralBandNames = modisSensorContext.getSpectralInputBandNames();
         assertNotNull(spectralBandNames);
-        assertEquals(9, spectralBandNames.length);
+        assertEquals(16, spectralBandNames.length);
 
         assertEquals("EV_1KM_RefSB_8", spectralBandNames[0]);
         assertEquals("EV_1KM_RefSB_9", spectralBandNames[1]);
@@ -78,6 +79,13 @@ public class ModisSensorContextTest {
         assertEquals("EV_1KM_RefSB_14lo", spectralBandNames[6]);
         assertEquals("EV_1KM_RefSB_15", spectralBandNames[7]);
         assertEquals("EV_1KM_RefSB_16", spectralBandNames[8]);
+        assertEquals("EV_250_Aggr1km_RefSB_1", spectralBandNames[9]);
+        assertEquals("EV_250_Aggr1km_RefSB_2", spectralBandNames[10]);
+        assertEquals("EV_500_Aggr1km_RefSB_3", spectralBandNames[11]);
+        assertEquals("EV_500_Aggr1km_RefSB_4", spectralBandNames[12]);
+        assertEquals("EV_500_Aggr1km_RefSB_5", spectralBandNames[13]);
+        assertEquals("EV_500_Aggr1km_RefSB_6", spectralBandNames[14]);
+        assertEquals("EV_500_Aggr1km_RefSB_7", spectralBandNames[15]);
     }
 
     @Test
@@ -89,7 +97,7 @@ public class ModisSensorContextTest {
     public void testConfigureSourceSamples() {
         final TestSampleConfigurer testSampleConfigurer = new TestSampleConfigurer();
 
-        modisSensorContext.configureSourceSamples(testSampleConfigurer, false);
+        modisSensorContext.configureSourceSamples(testSampleConfigurer);
 
         assertEquals("SolarZenith", testSampleConfigurer.get(0));
         assertEquals("SolarAzimuth", testSampleConfigurer.get(1));
@@ -130,39 +138,18 @@ public class ModisSensorContextTest {
     }
 
     @Test
-    public void testGetSolarFluxes() {
-        final double[] expectedResults = new double[]{184.5 * Math.PI, 194.5 * Math.PI, 204.5 * Math.PI, 214.5 * Math.PI, 224.5 * Math.PI, 234.5 * Math.PI, 254.5 * Math.PI, 274.5 * Math.PI, 284.5 * Math.PI};
-        final Product product = createProductWithSolarFluxMetadata();
-
-        modisSensorContext.init(product);
-
-        final double[] solarFluxes = modisSensorContext.getSolarFluxes(product);
-        assertArrayEquals(expectedResults, solarFluxes, 1e-8);
-    }
-
-    @Test
     public void testGetSolarFluxes_noFluxesInMetadata() {
-        final double[] expectedResults = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1545.183846, 1507.529167, 1277.037, 945.3382727};
+        final double[] expectedResults = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737,
+                1882.428333, 1545.183846, 1507.529167, 1277.037,
+                945.3382727, 1601.482295, 967.137667, 2072.03625,
+                1874.005, 456.1987143, 229.882, 92.5171833
+        };
         final Product product = new Product("No", "flux", 2, 2);
 
         modisSensorContext.init(product);
 
         final double[] solarFluxes = modisSensorContext.getSolarFluxes(product);
         assertArrayEquals(expectedResults, solarFluxes, 1e-8);
-    }
-
-    @Test
-    public void testCopySolarFluxes() {
-        double[] input = new double[40];
-        final double[] solarFluxes = new double[9];
-        for (int i = 0; i < solarFluxes.length; i++) {
-            solarFluxes[i] = i;
-        }
-
-        input = modisSensorContext.copySolarFluxes(input, solarFluxes);
-        for (int i = 0; i < solarFluxes.length; i++) {
-            assertEquals(solarFluxes[i], input[i + 25], 1e-8);
-        }
     }
 
     @Test
@@ -195,16 +182,6 @@ public class ModisSensorContextTest {
     public void testCorrectViewAzimuth() {
         assertEquals(43.9, modisSensorContext.correctViewAzimuth(43.9), 1e-8);
         assertEquals(-55.13 + 360.0, modisSensorContext.correctViewAzimuth(-55.13), 1e-8);
-    }
-
-    @Test
-    public void testScaleInputSpectralData() {
-        final double[] input = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-
-        modisSensorContext.scaleInputSpectralDataToRadiance(input);
-
-        final double[] expected = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 554.0050149440083, 1174.3715843568225, 1861.8491905105352, 2387.8267411366005, 2995.9777421318645, 2951.0837649197515, 3359.030062965603, 3251.9480169799162, 2708.194661894864};
-        assertArrayEquals(expected, input, 1e-8);
     }
 
     private Product createProductWithSolarFluxMetadata() {

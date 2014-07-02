@@ -11,6 +11,11 @@ package org.esa.beam.idepix.algorithms.occci;
 class Constants {
 
     public static final String CLASSIF_BAND_NAME = "pixel_classif_flags";
+    public static final String LAND_WATER_FRACTION_BAND_NAME = "land_water_fraction";
+
+    // debug bands:
+    public static final String BRIGHTNESS_BAND_NAME = "brightness_value";
+    public static final String NDSI_BAND_NAME = "ndsi_value";
 
     static final int SRC_SZA = 0;
     static final int SRC_SAA = 1;
@@ -21,7 +26,7 @@ class Constants {
     static final int SRC_MWIND = 6;
     static final int SRC_ZWIND = 7;
     static final int MODIS_SRC_RAD_OFFSET = 8;
-    static final int SEAWIFS_SRC_RAD_OFFSET = 10;
+    static final int SEAWIFS_SRC_RAD_OFFSET = 8;
     static final int SRC_DETECTOR = 23;
     static final int SRC_MASK = 24;
     static final int SRC_SOL_FLUX_OFFSET = 25;
