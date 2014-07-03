@@ -29,7 +29,7 @@ class SeaWiFSSensorContext implements SensorContext {
     private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "L_765";
     private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "L_865";
 
-    private static final String[] SEAWIFS_L1B_SPECTRAL_BAND_NAMES = {
+    static final String[] SEAWIFS_L1B_SPECTRAL_BAND_NAMES = {
             SEAWIFS_L1B_RADIANCE_1_BAND_NAME,
             SEAWIFS_L1B_RADIANCE_2_BAND_NAME,
             SEAWIFS_L1B_RADIANCE_3_BAND_NAME,

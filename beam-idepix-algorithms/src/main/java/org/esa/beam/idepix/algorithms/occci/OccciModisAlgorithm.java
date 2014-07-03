@@ -36,7 +36,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isCloudAmbiguous() {
-        if (isSnowIce()) {   // this check has priority
+        if (isLand() || isCloudSure()) {   // this check has priority
             return false;
         }
 
@@ -44,16 +44,16 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
             final double schillerValue = (double) waterNN.compute(accessor);
             final double thresh = isGlintRisk() ? ambiguousThresh : ambiguousThresh + GLINT_INCREMENT;
-            return schillerValue > thresh && !isCloudSure();
+            return schillerValue > thresh;
         } else {
             // test (as long as we have no Schiller)
-            return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS  && !isCloudSure());
+            return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS);
         }
     }
 
     @Override
     public boolean isCloudSure() {
-        if (isSnowIce()) {   // this check has priority
+        if (isLand() || isSnowIce()) {   // this has priority
             return false;
         }
 

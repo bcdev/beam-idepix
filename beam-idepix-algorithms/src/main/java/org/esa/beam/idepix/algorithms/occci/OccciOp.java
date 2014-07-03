@@ -46,10 +46,15 @@ public class OccciOp extends BasisOp {
                description = "Write 'Emissive' to target product (MODIS).")
     private boolean ocOutputEmissive = false;
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
                label = " Radiance bands",
                description = "Write TOA radiance to target product (SeaWiFS).")
-    private boolean ocOutputRadiance = true;
+    private boolean ocOutputSeawifsRadiance = false;
+
+    @Parameter(defaultValue = "true",
+               label = " Reflectance bands",
+               description = "Write TOA reflectance to target product (SeaWiFS).")
+    private boolean ocOutputSeawifsRefl = true;
 
     @Parameter(defaultValue = "false",
                label = " Debug bands",
@@ -84,20 +89,16 @@ public class OccciOp extends BasisOp {
         }
 
         occciCloudClassificationParameters = createOccciCloudClassificationParameters();
-        if (IdepixUtils.isValidModisProduct(sourceProduct)) {
-            processOccciModis();
-        } else if (IdepixUtils.isValidSeawifsProduct(sourceProduct)) {
-            processOccciSeawifs();
-        }
-
+        processOccci();
     }
 
-    private void processOccciModis() {
+    private void processOccci() {
         Map<String, Product> modisClassifInput = new HashMap<String, Product>(4);
-        computeModisAlgorithmInputProducts(modisClassifInput);
+        computeAlgorithmInputProducts(modisClassifInput);
 
         classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
                                            occciCloudClassificationParameters, modisClassifInput);
+        classifProduct.setGeoCoding(sourceProduct.getGeoCoding());
 
         // post processing:
         // - cloud buffer
@@ -106,46 +107,19 @@ public class OccciOp extends BasisOp {
         postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
         Map<String, Product> postProcessInput = new HashMap<String, Product>();
         postProcessInput.put("classif", classifProduct);
+        postProcessInput.put("waterMask", waterMaskProduct);
         Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
                                                        postProcessParameters, postProcessInput);
         setTargetProduct(postProcessProduct);
         addBandsToTargetProduct(postProcessProduct);
     }
 
-    private void processOccciSeawifs() {
-        Map<String, Product> seawifsClassifInput = new HashMap<String, Product>(4);
-        computeModisAlgorithmInputProducts(seawifsClassifInput);
-
-        classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
-                                          occciCloudClassificationParameters, seawifsClassifInput);
-
-        // post processing:
-        // - cloud buffer
-        // - cloud shadow todo
-        Map<String, Object> postProcessParameters = new HashMap<String, Object>();
-        postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
-        Map<String, Product> postProcessInput = new HashMap<String, Product>();
-        postProcessInput.put("classif", classifProduct);
-        Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
-                                                       postProcessParameters, postProcessInput);
-        setTargetProduct(postProcessProduct);
-        addBandsToTargetProduct(postProcessProduct);
-    }
-
-    private void computeModisAlgorithmInputProducts(Map<String, Product> modisClassifInput) {
+    private void computeAlgorithmInputProducts(Map<String, Product> modisClassifInput) {
         createWaterMaskProduct();
         modisClassifInput.put("waterMask", waterMaskProduct);
 
         rad2reflProduct = sourceProduct; // we will convert pixelwise later, for MODIS inputs are TOA reflectances anyway
         modisClassifInput.put("refl", rad2reflProduct);
-    }
-
-    private void computeSeawifsAlgorithmInputProducts(Map<String, Product> seawifsClassifInput) {
-        createWaterMaskProduct();
-        seawifsClassifInput.put("waterMask", waterMaskProduct);
-
-        rad2reflProduct = sourceProduct; // we will convert pixelwise later
-        seawifsClassifInput.put("refl", rad2reflProduct);
     }
 
     private void createWaterMaskProduct() {
@@ -164,6 +138,7 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("cloudBufferWidth", cloudBufferWidth);
         occciCloudClassificationParameters.put("wmResolution", ocWaterMaskResolution);
         occciCloudClassificationParameters.put("ocOutputDebug", ocOutputDebug);
+        occciCloudClassificationParameters.put("ocOutputSeawifsRadiance", ocOutputSeawifsRadiance);
 
         return occciCloudClassificationParameters;
     }
@@ -175,12 +150,16 @@ public class OccciOp extends BasisOp {
         if (ocOutputEmissive) {
             copySourceBands(rad2reflProduct, targetProduct, "Emissive");
         }
-        if (ocOutputRadiance) {
+        if (ocOutputSeawifsRadiance) {
             copySourceBands(rad2reflProduct, targetProduct, "L_");
         }
 
         if (ocOutputDebug) {
             copySourceBands(classifProduct, targetProduct, "_value");
+        }
+
+        if (ocOutputSeawifsRefl) {
+            copySourceBands(classifProduct, targetProduct, "_refl");
         }
     }
 

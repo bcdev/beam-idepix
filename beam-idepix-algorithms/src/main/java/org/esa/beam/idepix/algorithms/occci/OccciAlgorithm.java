@@ -38,7 +38,7 @@ public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
     @Override
     public boolean isCoastline() {
         // NOTE that this does not work if we have a PixelGeocoding. In that case, waterFraction
-        // is always 0 or 100!! (TS, OD, 20140502)
+        // is always 0 or 100!! (TS, OD, 20140502). If so, get a coastline in post processing approach.
         return waterFraction < 100 && waterFraction > 0;
     }
 
