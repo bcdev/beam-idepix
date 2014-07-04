@@ -33,6 +33,9 @@ import java.awt.*;
                   internal = true)
 public class OccciPostProcessingOp extends BasisOp {
 
+    @SourceProduct(alias = "refl", description = "MODIS/SeaWiFS L1b reflectance product")
+    private Product reflProduct;
+
     @SourceProduct(alias = "classif", description = "MODIS/SeaWiFS pixel classification product")
     private Product classifProduct;
 
@@ -230,6 +233,9 @@ public class OccciPostProcessingOp extends BasisOp {
         targetProduct = createCompatibleProduct(classifProduct, classifProduct.getName(), classifProduct.getProductType());
         ProductUtils.copyBand(Constants.CLASSIF_BAND_NAME, classifProduct, targetProduct, false);
         ProductUtils.copyFlagCodings(classifProduct, targetProduct);
+        ProductUtils.copyTiePointGrids(reflProduct, targetProduct);
+        targetProduct.setGeoCoding(reflProduct.getGeoCoding());
+
         OccciUtils.setupOccciClassifBitmask(targetProduct);
     }
 

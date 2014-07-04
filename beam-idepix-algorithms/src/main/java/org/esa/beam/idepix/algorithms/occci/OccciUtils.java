@@ -51,17 +51,17 @@ public class OccciUtils {
                                          getRandomColour(r), 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 
-        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixel", w, h,
+        mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixel (sure or ambiguous)", w, h,
                                          "pixel_classif_flags.F_CLOUD",
                                          Color.yellow, 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 
-        mask = Mask.BandMathsType.create("F_CLOUD_AMBIGUOUS", "Cloud ambiguous pixel", w, h,
+        mask = Mask.BandMathsType.create("F_CLOUD_AMBIGUOUS", "Cloudy pixel (ambiguous)", w, h,
                                          "pixel_classif_flags.F_CLOUD_AMBIGUOUS",
                                          Color.blue, 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 
-        mask = Mask.BandMathsType.create("F_CLOUD_SURE", "Cloudy pixel", w, h,
+        mask = Mask.BandMathsType.create("F_CLOUD_SURE", "Cloudy pixel (sure)", w, h,
                                          "pixel_classif_flags.F_CLOUD_SURE",
                                          Color.red, 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);

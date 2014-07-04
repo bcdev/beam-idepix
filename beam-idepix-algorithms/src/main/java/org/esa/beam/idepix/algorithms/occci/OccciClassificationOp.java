@@ -8,6 +8,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
 /**
@@ -30,12 +31,12 @@ public class OccciClassificationOp extends PixelOperator {
     private Product waterMaskProduct;
 
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
-    String sensorTypeString;
+    String productTypeString;
 
-    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")
+    @Parameter(label = "Schiller cloud threshold ambiguous clouds", defaultValue = "1.4")
     private double schillerAmbiguous;
 
-    @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
+    @Parameter(label = "Schiller cloud threshold sure clouds", defaultValue = "1.8")
     private double schillerSure;
 
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
@@ -63,7 +64,7 @@ public class OccciClassificationOp extends PixelOperator {
 
     @Override
     protected void prepareInputs() throws OperatorException {
-        sensorContext = SensorContextFactory.fromTypeString(getSensorTypeString());
+        sensorContext = SensorContextFactory.fromTypeString(getProductTypeString());
         sensorContext.init(reflProduct);
 
         waterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.WATER);
@@ -226,6 +227,7 @@ public class OccciClassificationOp extends PixelOperator {
         classifFlagBand.setSampleCoding(flagCoding);
         getTargetProduct().getFlagCodingGroup().add(flagCoding);
 
+        getTargetProduct().setGeoCoding(reflProduct.getGeoCoding());
         OccciUtils.setupOccciClassifBitmask(getTargetProduct());
 
         // debug bands:
@@ -249,9 +251,9 @@ public class OccciClassificationOp extends PixelOperator {
         }
     }
 
-    String getSensorTypeString() {
-        if (StringUtils.isNotNullAndNotEmpty(sensorTypeString)) {
-            return sensorTypeString;
+    String getProductTypeString() {
+        if (StringUtils.isNotNullAndNotEmpty(productTypeString)) {
+            return productTypeString;
         } else {
             return reflProduct.getProductType();
         }

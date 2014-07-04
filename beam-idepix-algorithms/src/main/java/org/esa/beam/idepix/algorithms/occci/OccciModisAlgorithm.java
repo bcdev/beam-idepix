@@ -36,7 +36,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isCloudAmbiguous() {
-        if (isLand() || isCloudSure()) {   // this check has priority
+        if (isLand() || isCloudSure() || isSnowIce()) {   // this check has priority
             return false;
         }
 

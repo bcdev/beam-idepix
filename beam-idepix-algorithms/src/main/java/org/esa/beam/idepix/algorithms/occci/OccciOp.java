@@ -37,36 +37,43 @@ public class OccciOp extends BasisOp {
 
 
     @Parameter(defaultValue = "true",
-               label = " Reflective solar bands",
+               label = " Reflective solar bands (MODIS)",
                description = "Write TOA reflective solar bands (RefSB) to target product (MODIS).")
     private boolean ocOutputRad2Refl = true;
 
     @Parameter(defaultValue = "false",
-               label = " Emissive bands",
-               description = "Write 'Emissive' to target product (MODIS).")
+               label = " Emissive bands (MODIS)",
+               description = "Write 'Emissive' bands to target product (MODIS).")
     private boolean ocOutputEmissive = false;
 
     @Parameter(defaultValue = "false",
-               label = " Radiance bands",
-               description = "Write TOA radiance to target product (SeaWiFS).")
+               label = " Radiance bands (SeaWiFS)",
+               description = "Write TOA radiance bands to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRadiance = false;
 
     @Parameter(defaultValue = "true",
-               label = " Reflectance bands",
-               description = "Write TOA reflectance to target product (SeaWiFS).")
+               label = " Reflectance bands (SeaWiFS)",
+               description = "Write TOA reflectance bands to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRefl = true;
+
+    @Parameter(defaultValue = "true",
+               label = " Geometry bands (SeaWiFS)",
+               description = "Write geometry bands to target product (SeaWiFS).")
+    private boolean ocOutputGeometry = true;
 
     @Parameter(defaultValue = "false",
                label = " Debug bands",
                description = "Write further useful bands to target product.")
     private boolean ocOutputDebug = false;
 
-    @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
-    String sensorTypeString;
 
-    @Parameter(label = "Schiller cloud Threshold ambiguous clouds", defaultValue = "1.4")   // todo: adjust default?
+    @Parameter(label = " Product type",
+               description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
+    String productTypeString;
+
+    @Parameter(label = "Schiller cloud threshold ambiguous clouds", defaultValue = "1.4")   // todo: adjust default?
     private double ocSchillerAmbiguous;
-    @Parameter(label = "Schiller cloud Threshold sure clouds", defaultValue = "1.8")
+    @Parameter(label = "Schiller cloud threshold sure clouds", defaultValue = "1.8")
     private double ocSchillerSure;
 
     @Parameter(defaultValue = "1", label = " Width of cloud buffer (# of pixels)")
@@ -98,7 +105,6 @@ public class OccciOp extends BasisOp {
 
         classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
                                            occciCloudClassificationParameters, modisClassifInput);
-        classifProduct.setGeoCoding(sourceProduct.getGeoCoding());
 
         // post processing:
         // - cloud buffer
@@ -106,10 +112,12 @@ public class OccciOp extends BasisOp {
         Map<String, Object> postProcessParameters = new HashMap<String, Object>();
         postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
         Map<String, Product> postProcessInput = new HashMap<String, Product>();
+        postProcessInput.put("refl", rad2reflProduct);
         postProcessInput.put("classif", classifProduct);
         postProcessInput.put("waterMask", waterMaskProduct);
         Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
                                                        postProcessParameters, postProcessInput);
+
         setTargetProduct(postProcessProduct);
         addBandsToTargetProduct(postProcessProduct);
     }
@@ -132,7 +140,7 @@ public class OccciOp extends BasisOp {
 
     private Map<String, Object> createOccciCloudClassificationParameters() {
         Map<String, Object> occciCloudClassificationParameters = new HashMap<String, Object>(1);
-        occciCloudClassificationParameters.put("sensorTypeString", sensorTypeString);
+        occciCloudClassificationParameters.put("productTypeString", productTypeString);
         occciCloudClassificationParameters.put("schillerAmbiguous", ocSchillerAmbiguous);
         occciCloudClassificationParameters.put("schillerSure", ocSchillerSure);
         occciCloudClassificationParameters.put("cloudBufferWidth", cloudBufferWidth);
@@ -160,6 +168,11 @@ public class OccciOp extends BasisOp {
 
         if (ocOutputSeawifsRefl) {
             copySourceBands(classifProduct, targetProduct, "_refl");
+        }
+
+        if (ocOutputGeometry) {
+            copySourceBands(rad2reflProduct, targetProduct, "sol");       // SeaWiFS
+            copySourceBands(rad2reflProduct, targetProduct, "sen");       // SeaWiFS
         }
     }
 

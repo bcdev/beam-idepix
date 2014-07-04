@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-operators</symbolicName>
-    <version>2.2-EVOLUTION-SNAPSHOT</version>
+    <version>3.0-EVOLUTION-SNAPSHOT</version>
     <name>Generic classification of pixels</name>
     <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
     </description>
@@ -15,6 +15,7 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        - Change in 3.0-EVOLUTION-SNAPSHOT: added new MODIS/SeaWiFS algorithm for OC-CCI
         - Created new branch EVOLUTION, to be used for BC internal development.
          (MASTER branch will from now on be used for public releases)
         - Set initial version to 2.2-EVOLUTION-SNAPSHOT.
@@ -24,92 +25,92 @@
         <module>beam-idepix-core</module>
     </dependency>
 
-    <dependency>
-        <module>beam-core</module>
-    </dependency>
-    <dependency>
-        <module>beam-gpf</module>
-    </dependency>
-    <dependency>
-        <module>beam-unmix</module>
-    </dependency>
-    <dependency>
-        <module>beam-visat</module>
-        <optional>true</optional>
-    </dependency>
-    <dependency>
-        <module>beam-envisat-reader</module>
-    </dependency>
-    <dependency>
-        <module>beam-meris-brr</module>
-    </dependency>
-    <dependency>
-        <module>beam-meris-l2auxdata</module>
-    </dependency>
-    <dependency>
-        <module>beam-meris-sdr</module>
-    </dependency>
-    <dependency>
-        <module>beam-watermask</module>
-    </dependency>
-    <dependency>
-        <module>beam-meris-radiometry</module>
-    </dependency>
+    <!--<dependency>-->
+        <!--<module>beam-core</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-gpf</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-unmix</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-visat</module>-->
+        <!--<optional>true</optional>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-envisat-reader</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-meris-brr</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-meris-l2auxdata</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-meris-sdr</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-watermask</module>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+        <!--<module>beam-meris-radiometry</module>-->
+    <!--</dependency>-->
 
     <categories>Application,Processor,MERIS,AATSR</categories>
 
-    <extension point="beam-ui:actions">
-        <action>
-            <id>idepix</id>
-            <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>IDEPIX Generic classification of pixels...</text>
-            <shortDescr>
-                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
-                sensors.
-            </shortDescr>
-            <mnemonic/>
-            <parent>tool</parent>
-            <helpID>idepixChain</helpID>
-            <placeAfter/>
-        </action>
-        <action>
-            <id>coastcolourAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
-            <text>CoastColour...</text>
-            <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
-            <mnemonic>C</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-        </action>
-        <action>
-            <id>globalbedoAlgo</id>
-            <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
-            <text>GlobAlbedo...</text>
-            <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
-            <mnemonic>G</mnemonic>
-            <parent>idepix</parent>
-            <helpId>idepixChain</helpId>
-        </action>
+    <!--<extension point="beam-ui:actions">-->
+        <!--<action>-->
+            <!--<id>idepix</id>-->
+            <!--<class>org.esa.beam.visat.actions.ActionGroup</class>-->
+            <!--<text>IDEPIX Generic classification of pixels...</text>-->
+            <!--<shortDescr>-->
+                <!--IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical-->
+                <!--sensors.-->
+            <!--</shortDescr>-->
+            <!--<mnemonic/>-->
+            <!--<parent>tool</parent>-->
+            <!--<helpID>idepixChain</helpID>-->
+            <!--<placeAfter/>-->
+        <!--</action>-->
+        <!--<action>-->
+            <!--<id>coastcolourAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>-->
+            <!--<text>CoastColour...</text>-->
+            <!--<shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>-->
+            <!--<mnemonic>C</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
+        <!--<action>-->
+            <!--<id>globalbedoAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>-->
+            <!--<text>GlobAlbedo...</text>-->
+            <!--<shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>-->
+            <!--<mnemonic>G</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
 
-        <action>
-            <id>schillercloud</id>
-            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
-            <operatorName>SchillerCloud</operatorName>
-            <dialogTitle>Schillers Cloud-mask</dialogTitle>
-            <targetProductNameSuffix>_schillercloud</targetProductNameSuffix>
-            <text>Schillers Cloud-mask...</text>
-            <shortDescr>A cloud mask based on Schillers neural nets.</shortDescr>
-            <parent>tool</parent>
-            <helpID>schillercloud</helpID>
-            <placeAfter>idepix</placeAfter>
-        </action>
-    </extension>
+        <!--<action>-->
+            <!--<id>schillercloud</id>-->
+            <!--<class>org.esa.beam.visat.actions.DefaultOperatorAction</class>-->
+            <!--<operatorName>SchillerCloud</operatorName>-->
+            <!--<dialogTitle>Schillers Cloud-mask</dialogTitle>-->
+            <!--<targetProductNameSuffix>_schillercloud</targetProductNameSuffix>-->
+            <!--<text>Schillers Cloud-mask...</text>-->
+            <!--<shortDescr>A cloud mask based on Schillers neural nets.</shortDescr>-->
+            <!--<parent>tool</parent>-->
+            <!--<helpID>schillercloud</helpID>-->
+            <!--<placeAfter>idepix</placeAfter>-->
+        <!--</action>-->
+    <!--</extension>-->
 
-    <extension point="beam-ui:helpSets">
-        <helpSet>
-            <parent>beam-help</parent>
-            <path>doc/help/idepix.hs</path>
-        </helpSet>
-    </extension>
+    <!--<extension point="beam-ui:helpSets">-->
+        <!--<helpSet>-->
+            <!--<parent>beam-help</parent>-->
+            <!--<path>doc/help/idepix.hs</path>-->
+        <!--</helpSet>-->
+    <!--</extension>-->
 
 </module>

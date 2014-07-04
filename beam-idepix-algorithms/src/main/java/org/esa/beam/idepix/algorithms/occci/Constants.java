@@ -16,6 +16,10 @@ class Constants {
     // debug bands:
     public static final String BRIGHTNESS_BAND_NAME = "brightness_value";
     public static final String NDSI_BAND_NAME = "ndsi_value";
+    public static final String SOLZ_BAND_NAME = "solz";
+    public static final String SOLA_BAND_NAME = "sola";
+    public static final String SENZ_BAND_NAME = "senz";
+    public static final String SENA_BAND_NAME = "sena";
 
     static final int SRC_SZA = 0;
     static final int SRC_SAA = 1;

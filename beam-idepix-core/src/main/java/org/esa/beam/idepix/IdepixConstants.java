@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class IdepixConstants {
 
-    public static final String IDEPIX_VERSION = "v2.0-SNAPSHOT";
+    public static final String IDEPIX_VERSION = "3.0-EVOLUTION-SNAPSHOT";
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
