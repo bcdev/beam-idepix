@@ -36,6 +36,7 @@ public class IdepixUtils {
     public static final String F_BRIGHTWHITE_DESCR_TEXT = "'Brightwhite' pixels";
     public static final String F_HIGH_DESCR_TEXT = "High pixels";
     public static final String F_VEG_RISK_DESCR_TEXT = "Pixels with vegetation risk";
+    public static final String F_SEAICE_DESCR_TEXT = "Sea ice pixels";
 
     private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("idepix");
     public static final String IDEPIX_CLOUD_FLAGS = "cloud_classif_flags";
@@ -219,6 +220,7 @@ public class IdepixUtils {
         flagCoding.addFlag("F_BRIGHTWHITE", BitSetter.setFlag(0, IdepixConstants.F_BRIGHTWHITE), F_BRIGHTWHITE_DESCR_TEXT);
         flagCoding.addFlag("F_HIGH", BitSetter.setFlag(0, IdepixConstants.F_HIGH), F_HIGH_DESCR_TEXT);
         flagCoding.addFlag("F_VEG_RISK", BitSetter.setFlag(0, IdepixConstants.F_VEG_RISK), F_VEG_RISK_DESCR_TEXT);
+        flagCoding.addFlag("F_SEAICE", BitSetter.setFlag(0, IdepixConstants.F_SEAICE), F_SEAICE_DESCR_TEXT);
 
         return flagCoding;
     }

@@ -214,6 +214,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
         targetTile.setSample(x, y, IdepixConstants.F_BRIGHTWHITE, globAlbedoAlgorithm.isBrightWhite());
         targetTile.setSample(x, y, IdepixConstants.F_HIGH, globAlbedoAlgorithm.isHigh());
         targetTile.setSample(x, y, IdepixConstants.F_VEG_RISK, globAlbedoAlgorithm.isVegRisk());
+        targetTile.setSample(x, y, IdepixConstants.F_SEAICE, globAlbedoAlgorithm.isSeaIce());
     }
 
     void setCloudBuffer(String bandName, Tile targetTile, Rectangle rectangle) {
