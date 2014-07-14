@@ -12,7 +12,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 import org.esa.beam.idepix.util.Bresenham;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
@@ -23,6 +22,8 @@ import org.esa.beam.util.math.MathUtils;
 
 import java.awt.*;
 import java.util.HashMap;
+
+//import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 
 /**
  * Operator used to consolidate cloud flag for GlobAlbedo:
@@ -180,11 +181,11 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         for (int y = y0; y < y0 + h; y++) {
             checkForCancellation();
             for (int x = x0; x < x0 + w; x++) {
-                final boolean isCloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+                final boolean isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                 if (!isCloud) {
                     isCloudShadow[x - x0][y - y0] = getCloudShadow(x, y, sourceFlagTile, ctpTile, szaTile, saaTile,
                                                                    extendedRectangle);
-                    targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
+                    targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, isCloudShadow[x - x0][y - y0]);
                 }
             }
         }
@@ -193,13 +194,13 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                final boolean is_cloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+                final boolean is_cloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                 if (!is_cloud) {
-                    final boolean pixelSurroundedByClouds = isPixelSurrounded(x, y, targetTile, targetRectangle, CoastColourClassificationOp.F_CLOUD);
+                    final boolean pixelSurroundedByClouds = isPixelSurrounded(x, y, targetTile, targetRectangle, IdepixConstants.F_CLOUD);
                     final boolean pixelSurroundedByCloudShadow = isPixelSurroundedByCloudShadow(x, y, targetRectangle, isCloudShadow);
 
                     if (pixelSurroundedByClouds || pixelSurroundedByCloudShadow) {
-                        targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, true);
+                        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, true);
                     }
                 }
             }
@@ -209,7 +210,7 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         for (int y = y0; y < y0 + h; y++) {
             checkForCancellation();
             for (int x = x0; x < x0 + w; x++) {
-                final boolean is_cloud = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+                final boolean is_cloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                 if (!is_cloud) {
                     performCloudShadowBeltCorrection(x, y, targetTile, isCloudShadow);
                 }
@@ -239,7 +240,7 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         for (int i = x - 1; i <= x + 1; i++) {
             for (int j = y - 1; j <= y + 1; j++) {
                 if (rectangle.contains(i, j) && isCloudShadow[i - rectangle.x][j - rectangle.y]) {
-                    targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, true);
+                    targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, true);
                     break;
                 }
             }
@@ -252,7 +253,7 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
 
         // computes the cloud base in metres
         int cloudFlag = cloudTile.getSampleInt(x, y);
-        if (!BitSetter.isFlagSet(cloudFlag, CoastColourClassificationOp.F_CLOUD) || ctpTile == null) {
+        if (!BitSetter.isFlagSet(cloudFlag, IdepixConstants.F_CLOUD) || ctpTile == null) {
             cb = 0.0f;
         } else {
             cb = computeHeightFromPressure(ctpTile.getSampleFloat(x, y));
@@ -287,10 +288,9 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
             final int yCurrent = (int) pathPixel.getY();
 
             if (sourceRectangle.contains(xCurrent, yCurrent)) {
-                final boolean is_cloud_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourClassificationOp.F_CLOUD);
-                final boolean is_mixed_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, CoastColourClassificationOp.F_MIXED_PIXEL);
+                final boolean is_cloud_current = sourceFlagTile.getSampleBit(xCurrent, yCurrent, IdepixConstants.F_CLOUD);
                 final boolean isNearCoastline = isNearCoastline(xCurrent, yCurrent, sourceFlagTile, sourceRectangle);
-                if (is_cloud_current && !is_mixed_current && !isNearCoastline) {
+                if (is_cloud_current && !isNearCoastline) {
                     final GeoPos geoPosCurrent = geoCoding.getGeoPos(new PixelPos(xCurrent, yCurrent), null);
                     final double dist = computeDistance(geoPos, geoPosCurrent);
                     final double sunHeight = dist * Math.tan(MathUtils.DTOR * (90.0 - sza));

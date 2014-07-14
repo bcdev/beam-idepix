@@ -73,6 +73,11 @@ public class GlobAlbedoOp extends BasisOp {
             description = " Write all Feature Values to the target product")
     private boolean gaCopyFeatureValues = false;
 
+    @Parameter(defaultValue = "false",
+               label = " Compute cloud shadow",
+               description = " Compute cloud shadow with a preliminary algorithm")
+    private boolean gaComputeCloudShadow = false;
+
     @Parameter(defaultValue = "Derive from Neural Net",
             label = " CTP value to use in MERIS cloud shadow algorithm",
             description = " CTP value to use in MERIS cloud shadow algorithm",
@@ -112,6 +117,11 @@ public class GlobAlbedoOp extends BasisOp {
             description = "Use land-water flag from L1b product instead of SRTM mask")
     private boolean gaUseL1bLandWaterFlag;
 
+    @Parameter(defaultValue = "true",
+               label = " Refine pixel classification near coastlines",
+               description = "Refine pixel classification near coastlines. ")
+    private boolean gaRefineClassificationNearCoastlines;
+
     private Map<String, Object> gaCloudClassificationParameters;
     private Product gaCloudProduct;
 
@@ -136,6 +146,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyToaReflectances", gaCopyToaReflectances);
         gaCloudClassificationParameters.put("gaCopyFeatureValues", gaCopyFeatureValues);
+        gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
         gaCloudClassificationParameters.put("ctpMode", ctpMode);
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
@@ -152,38 +163,39 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
                 gaCloudClassificationParameters, gaCloudInput);
 
-        // todo: we have a weird sequence of cloud, cloud shadow, and 'post processing'. check this finally!!
-//        Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
-//        gaFinalCloudInput.put("l1b", sourceProduct);
-//        gaFinalCloudInput.put("cloud", gaCloudProduct);
-//        gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
-//        Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
-//        gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
-//        gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", true);
-//        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-//                gaFinalCloudClassificationParameters, gaFinalCloudInput);
-
         // Post Cloud Classification (i.e. coastline refinement)
-        computeGlobAlbedoPostProcessProduct();
-
-        Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
-        gaFinalCloudInput.put("l1b", sourceProduct);
-        gaFinalCloudInput.put("cloud", gaPostProcessingProduct);
-        gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
-        Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
-        gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
-        gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", false);
-        gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-                gaFinalCloudClassificationParameters, gaFinalCloudInput);
-
-        targetProduct = IdepixUtils.cloneProduct(gaCloudProduct);
-        targetProduct.setAutoGrouping("radiance:rho_toa:brr");
-        if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
-            addRayleighCorrectionBands();
+        if (gaRefineClassificationNearCoastlines) {
+            computeGlobAlbedoPostProcessProduct();
+        } else {
+            gaPostProcessingProduct = gaCloudProduct;
         }
 
-        Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
-        cloudFlagBand.setSourceImage(gaPostProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
+        if (gaComputeCloudShadow) {
+//            apply 'old' cloud shadow algorithm of limited quality
+//            todo: when available, implement improved algorithm in post-processing part
+            Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
+            gaFinalCloudInput.put("l1b", sourceProduct);
+            gaFinalCloudInput.put("cloud", gaPostProcessingProduct);
+            gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
+            Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
+            gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
+            gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", false);
+            gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
+                                                        gaFinalCloudClassificationParameters, gaFinalCloudInput);
+        }
+
+        if (gaRefineClassificationNearCoastlines || gaComputeCloudShadow) {
+            targetProduct = IdepixUtils.cloneProduct(gaCloudProduct);
+            targetProduct.setAutoGrouping("radiance:rho_toa:brr");
+            if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
+                addRayleighCorrectionBands();
+            }
+
+            Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+            cloudFlagBand.setSourceImage(gaPostProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
+        } else {
+            targetProduct = gaCloudProduct;
+        }
     }
 
     private void computeMerisAlgorithmInputProducts(Map<String, Product> gaCloudInput) {
