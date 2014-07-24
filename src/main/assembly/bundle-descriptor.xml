@@ -87,7 +87,7 @@
                 <p>CHANGES to previous version:
                 <ul>
                    <li>
-                       Final adaptations for first public release in BEAM 5 (still running with BEAM 4.11 here)
+                       Uses an updated BEAM MERIS Radiometry module (bug fix in case of very bright nearly saturated pixels)
                    </li>
                 </ul>
                 </p>
@@ -283,7 +283,7 @@
                 <p>CHANGES to previous version:
                 <ul>
                    <li>
-                       Final adaptations for first public release in BEAM 5 (still running with BEAM 4.11 here)
+                        Uses an updated BEAM MERIS Radiometry module (bug fix in case of very bright nearly saturated pixels)
                    </li>
                 </ul>
                 </p>

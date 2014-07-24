@@ -14,7 +14,9 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
-        <b>Version 2.1.1:</b><br/>
+        <b>Version 2.1.2:</b><br/>
+        Uses an updated BEAM MERIS Radiometry module (bug fix in case of very bright nearly saturated pixels).<br/>
+        <b>Version 2.1.2:</b><br/>
         Initial public release for BEAM 5. Previous releases were for project-internal use only.<br/>
     </changelog>
 
