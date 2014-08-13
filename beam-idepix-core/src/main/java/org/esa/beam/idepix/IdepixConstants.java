@@ -34,6 +34,10 @@ public class IdepixConstants {
 
     public static String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
 
+    public static String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
+    public static String AVHRR_RADIANCE_BAND_PREFIX = "avhrr_ch";
+    public static int AVHRR_L1b_NUM_SPECTRAL_BANDS = 5;
+
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;
     public static final int PRODUCT_TYPE_AATSR = 1;

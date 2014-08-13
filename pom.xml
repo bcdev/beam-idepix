@@ -198,13 +198,13 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>${beamVersion}</version>
+                <version>5.0.2</version>
             </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-ui</artifactId>
-                <version>${beamVersion}</version>
+                <version>5.0.1</version>
             </dependency>
 
             <dependency>
@@ -222,13 +222,19 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>${beamVersion}</version>
+                <version>5.0.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>seadas-reader</artifactId>
                 <version>1.5.5</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-avhrr-directory-reader</artifactId>
+                <version>1.0-SNAPSHOT</version>
             </dependency>
 
             <dependency>
@@ -258,7 +264,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-radiometry</artifactId>
-                <version>${beamVersion}</version>
+                <version>5.0.2</version>
             </dependency>
 
             <dependency>
@@ -270,7 +276,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-glint</artifactId>
-                <version>1.2.2</version>
+                <version>1.2.4</version>
             </dependency>
 
             <!-- JUnit Libraries ############################################# -->

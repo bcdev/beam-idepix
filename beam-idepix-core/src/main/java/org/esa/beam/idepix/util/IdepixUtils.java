@@ -37,6 +37,7 @@ public class IdepixUtils {
         if (!isValidMerisProduct(inputProduct) &&
                 !isValidAatsrProduct(inputProduct) &&
                 !isValidVgtProduct(inputProduct) &&
+                !isValidAvhrrProduct(inputProduct) &&
                 !isValidModisProduct(inputProduct) &&
                 !isValidSeawifsProduct(inputProduct) &&
                 !isValidMerisAatsrSynergyProduct(inputProduct)) {
@@ -76,13 +77,18 @@ public class IdepixUtils {
         return product.getProductType().startsWith(IdepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
     }
 
+    public static boolean isValidAvhrrProduct(Product product) {
+        return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE);
+    }
+
     public static boolean isValidModisProduct(Product product) {
         return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
                 product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
     }
 
     public static boolean isValidSeawifsProduct(Product product) {
-        return (product.getName().matches("S[0-9]{13}.(?i)(L1B_LAC)"));
+        return (product.getName().matches("S[0-9]{13}.(?i)(L1B_LAC)") ||
+                product.getName().matches("S[0-9]{13}.(?i)(L1B_HRPT)"));
     }
 
 
@@ -107,7 +113,9 @@ public class IdepixUtils {
         } else if (AlgorithmSelector.Occci == algorithm) {
             return (isValidModisProduct(sourceProduct) ||
                     isValidSeawifsProduct(sourceProduct));
-        } else {
+        } else if (AlgorithmSelector.AvhrrAc == algorithm) {
+            return (isValidAvhrrProduct(sourceProduct));
+        }else {
             return false;
         }
     }

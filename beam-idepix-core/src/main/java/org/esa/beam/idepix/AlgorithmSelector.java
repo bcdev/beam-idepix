@@ -9,9 +9,11 @@ package org.esa.beam.idepix;
 public enum AlgorithmSelector {
     IPF,
     GlobAlbedo,
+    AvhrrAc,
     GlobCover,
     CoastColour,
     MagicStick,
     Schiller,
-    Occci, FubScapeM
+    Occci,
+    FubScapeM
 }
