@@ -18,11 +18,6 @@ public class Bresenham {
     private int dx, dy, error, x_inc, y_inc, xx, yy, length, count;
 
     /**
-     * General case algorithm
-     */
-    private static final Bresenham bresenham = new Bresenham();
-
-    /**
      * Construct a Bresenham algorithm.
      */
     public Bresenham() {
@@ -144,6 +139,7 @@ public class Bresenham {
     public static List<PixelPos> getPathPixels(final int x1, final int y1, final int x2, final int y2, Rectangle rect) {
 
         List<PixelPos> path = new ArrayList<PixelPos>();
+        Bresenham bresenham = new Bresenham();
         int length = bresenham.plot(x1, y1, x2, y2);
         for (int i = 0; i < length; i++) {
             bresenham.next();
