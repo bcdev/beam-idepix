@@ -98,7 +98,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         ctpBand = ctpProduct.getBand("cloud_top_press");
         int shadowWidth;
         int shadowHeight;
-        if (l1bProduct.getProductType().equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME)) {
+        if (l1bProduct.getProductType().startsWith("MER_F")) {
             shadowWidth = 64;
             shadowHeight = 64;
         } else {
