@@ -1,10 +1,7 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -14,7 +11,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.Map;
 
 /**
@@ -55,6 +52,10 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         GeoPos geoPos = null;
         final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
+
+        final Band nnTargetBand = targetProduct.getBand("vgt_nn_value");
+        final Tile nnTargetTile = targetTiles.get(nnTargetBand);
+
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
@@ -79,6 +80,35 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
                                                                                  y, x);
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
+
+                    // apply improvement from Schiller NN approach...
+                    final double[] nnOutput = ((GlobAlbedoVgtAlgorithm) globAlbedoAlgorithm).getNnOutput();
+                    if (gaApplySchillerNN) {
+                        if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, false);
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
+                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
+                            if (nnOutput[0] > gaSchillerNNCloudAmbiguousLowerBoundaryValue &&
+                                    nnOutput[0] <= gaSchillerNNCloudAmbiguousSureSeparationValue) {
+                                // this would be as 'CLOUD_AMBIGUOUS'...
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                            }
+                            if (nnOutput[0] > gaSchillerNNCloudAmbiguousSureSeparationValue &&
+                                    nnOutput[0] <= gaSchillerNNCloudSureSnowSeparationValue) {
+                                // this would be as 'CLOUD_SURE'...
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                            }
+                            if (nnOutput[0] > gaSchillerNNCloudSureSnowSeparationValue) {
+                                // this would be as 'SNOW/ICE'...
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, true);
+                            }
+                        }
+                        nnTargetTile.setSample(x, y, nnOutput[0]);
+                    }
+
                     for (Band band : targetProduct.getBands()) {
                         final Tile targetTile = targetTiles.get(band);
                         setPixelSamples(band, targetTile, y, x, globAlbedoAlgorithm);
@@ -111,6 +141,10 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         if (gaCopyAnnotations) {
             copyAnnotations();
         }
+
+        if (gaApplySchillerNN) {
+            targetProduct.addBand("vgt_nn_value", ProductData.TYPE_FLOAT32);
+        }
     }
 
     private void copyAnnotations() {
@@ -141,6 +175,13 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         checkVgtReflectanceQuality(vgtReflectance, smFlagTile, x, y);
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);
+
+        double[] vgtNeuralNetInput = new double[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
+        for (int i = 0; i < vgtReflectanceSaturationCorrected.length; i++) {
+            vgtNeuralNetInput[i] = vgtReflectanceSaturationCorrected[i];
+        }
+        double[] vgtNeuralNetOutput = vgtNeuralNet.calc(vgtNeuralNetInput);
+        gaAlgorithm.setNnOutput(vgtNeuralNetOutput);
 
 
         if (gaUseL1bLandWaterFlag) {

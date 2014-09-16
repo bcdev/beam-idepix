@@ -102,6 +102,26 @@ public class GlobAlbedoOp extends BasisOp {
             description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
     private boolean gaCopyAnnotations;
 
+    @Parameter(defaultValue = "false",
+               label = " Apply Schiller NN for cloud classification (VGT only)",
+               description = " Apply Schiller NN for cloud classification (has only effect for VGT L1b products)")
+    private boolean gaApplySchillerNN;
+
+    @Parameter(defaultValue = "1.1",
+               label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
+               description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+    private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "2.7",
+               label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
+               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+    private double gaSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.6",
+               label = " Schiller NN cloud sure/snow separation value (VGT only)",
+               description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+    private double gaSchillerNNCloudSureSnowSeparationValue;
+
     @Parameter(defaultValue = "2", interval = "[0,100]",
             label = " Width of cloud buffer (# of pixels)",
             description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
@@ -150,6 +170,10 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("ctpMode", ctpMode);
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
+        gaCloudClassificationParameters.put("gaApplySchillerNN", gaApplySchillerNN);
+        gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousLowerBoundaryValue", gaSchillerNNCloudAmbiguousLowerBoundaryValue);
+        gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousSureSeparationValue", gaSchillerNNCloudAmbiguousSureSeparationValue);
+        gaCloudClassificationParameters.put("gaSchillerNNCloudSureSnowSeparationValue", gaSchillerNNCloudSureSnowSeparationValue);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
 

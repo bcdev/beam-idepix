@@ -25,6 +25,7 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     private static final float GLINT_THRESH = -3.65E-4f;
 
     private boolean smLand;
+    private double[] nnOutput;
 
     @Override
     public boolean isCloud() {
@@ -208,4 +209,11 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
         this.refl = refl;
     }
 
+    public void setNnOutput(double[] nnOutput) {
+        this.nnOutput = nnOutput;
+    }
+
+    public double[] getNnOutput() {
+        return nnOutput;
+    }
 }

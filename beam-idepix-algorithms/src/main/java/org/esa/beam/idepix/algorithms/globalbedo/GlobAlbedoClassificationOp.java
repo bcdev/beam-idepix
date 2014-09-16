@@ -15,11 +15,15 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * Basic operator for GlobAlbedo pixel classification
@@ -64,6 +68,26 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
                description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
     boolean gaCopyAnnotations;
 
+    @Parameter(defaultValue = "false",
+               label = " Apply Schiller NN for cloud classification (VGT only)",
+               description = " Apply Schiller NN for cloud classification (has only effect for VGT L1b products)")
+    boolean gaApplySchillerNN;
+
+    @Parameter(defaultValue = "1.1",
+               label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
+               description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+    double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "2.7",
+               label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
+               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+    double gaSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.6",
+               label = " Schiller NN cloud sure/snow separation value (VGT only)",
+               description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+    double gaSchillerNNCloudSureSnowSeparationValue;
+
     @Parameter(defaultValue = "2",
                label = " Width of cloud buffer (# of pixels)",
                description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
@@ -78,6 +102,12 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
                label = " Use land-water flag from L1b product instead",
                description = "Use land-water flag from L1b product instead")
     boolean gaUseL1bLandWaterFlag;
+
+    public static final String SCHILLER_VGT_NET_NAME = "3x2x2_341.8.net";
+
+    String vgtNeuralNetString;
+
+    NNffbpAlphaTabFast vgtNeuralNet;
 
     WatermaskClassifier classifier;
 
@@ -104,6 +134,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     public void initialize() throws OperatorException {
         setBands();
 
+        readSchillerNeuralNets();
         setWatermaskStrategy();
         createTargetProduct();
         extendTargetProduct();
@@ -112,6 +143,39 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     abstract void setBands();
 
     abstract void extendTargetProduct();
+
+    private void readSchillerNeuralNets() {
+        final InputStream vgtNeuralNetStream = getClass().getResourceAsStream(SCHILLER_VGT_NET_NAME);
+        vgtNeuralNetString = readNeuralNetFromStream(vgtNeuralNetStream);
+
+        try {
+            vgtNeuralNet = new NNffbpAlphaTabFast(vgtNeuralNetString);
+        } catch (IOException e) {
+            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
+        }
+    }
+
+    private String readNeuralNetFromStream(InputStream neuralNetStream) {
+        // todo: move method to a util place!
+        BufferedReader reader = new BufferedReader(new InputStreamReader(neuralNetStream));
+        try {
+            String line = reader.readLine();
+            final StringBuilder sb = new StringBuilder();
+            while (line != null) {
+                // have to append line terminator, cause it's not included in line
+                sb.append(line).append('\n');
+                line = reader.readLine();
+            }
+            return sb.toString();
+        } catch (IOException ioe) {
+            throw new OperatorException("Could not initialize neural net", ioe);
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException ignore) {
+            }
+        }
+    }
 
     void setWatermaskStrategy() {
         try {
