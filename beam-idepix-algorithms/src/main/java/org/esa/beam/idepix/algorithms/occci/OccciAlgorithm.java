@@ -23,6 +23,7 @@ public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
 
     float waterFraction;
     double[] refl;
+    double[] nnOutput;
     SchillerAlgorithm waterNN;
     SchillerAlgorithm.Accessor accessor;
     double ambiguousThresh;
@@ -55,6 +56,10 @@ public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
 
     public void setRefl(double[] reflectance) {
         refl = reflectance;
+    }
+
+    public void setNnOutput(double[] nnOutput) {
+        this.nnOutput = nnOutput;
     }
 
     public void setWaterNN(SchillerAlgorithm waterNN) {

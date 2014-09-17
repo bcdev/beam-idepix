@@ -31,13 +31,15 @@ public class OccciSeawifsAlgorithm extends OccciAlgorithm {
             return false;
         }
 
-        if (waterNN != null && accessor != null) {
-            // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
-            final double schillerValue = (double) waterNN.compute(accessor);
-            final double thresh = isGlintRisk() ? ambiguousThresh : ambiguousThresh + GLINT_INCREMENT;
-            return schillerValue > thresh;
+        // for SeaWiFS, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 : cloudy
+        // 1 : semitransparent cloud
+        // 2 : clear water
+        if (nnOutput != null) {
+            return nnOutput[0] >= 0.48 && nnOutput[0] < 1.47;    // separation numbers from report HS, 20140822
         } else {
-            // test (as long as we have no Schiller)
+            // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS);
         }
     }
@@ -48,13 +50,15 @@ public class OccciSeawifsAlgorithm extends OccciAlgorithm {
             return false;
         }
 
-        if (waterNN != null && accessor != null) {
-            // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
-            final double schillerValue = (double) waterNN.compute(accessor);
-            final double thresh = isGlintRisk() ? sureThresh : sureThresh + GLINT_INCREMENT;
-            return schillerValue > thresh;
+        // for SeaWiFS, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 : cloudy
+        // 1 : semitransparent cloud
+        // 2 : clear water
+        if (nnOutput != null) {
+            return nnOutput[0] >= 0.0 && nnOutput[0] < 0.48;   // separation numbers from report HS, 20140822
         } else {
-            // test (as long as we have no Schiller)
+            // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_SURE);
         }
     }
