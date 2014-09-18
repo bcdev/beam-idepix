@@ -27,6 +27,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     private float pbaro;
     private float brr442;
     private float brr442Thresh;
+    private double[] nnOutput;
 
     @Override
     public boolean isCloud() {
@@ -48,14 +49,14 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public float spectralFlatnessValue() {
         final double slope0 = IdepixUtils.spectralSlope(refl[0], refl[2],
-                                                        IdepixConstants.MERIS_WAVELENGTHS[0],
-                                                        IdepixConstants.MERIS_WAVELENGTHS[2]);
+                IdepixConstants.MERIS_WAVELENGTHS[0],
+                IdepixConstants.MERIS_WAVELENGTHS[2]);
         final double slope1 = IdepixUtils.spectralSlope(refl[4], refl[5],
-                                                        IdepixConstants.MERIS_WAVELENGTHS[4],
-                                                        IdepixConstants.MERIS_WAVELENGTHS[5]);
+                IdepixConstants.MERIS_WAVELENGTHS[4],
+                IdepixConstants.MERIS_WAVELENGTHS[5]);
         final double slope2 = IdepixUtils.spectralSlope(refl[6], refl[9],
-                                                        IdepixConstants.MERIS_WAVELENGTHS[6],
-                                                        IdepixConstants.MERIS_WAVELENGTHS[9]);
+                IdepixConstants.MERIS_WAVELENGTHS[6],
+                IdepixConstants.MERIS_WAVELENGTHS[9]);
 
 
         final double flatness = 1.0f - Math.abs(1000.0 * (slope0 + slope1 + slope2) / 3.0);
@@ -193,6 +194,9 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
         this.brr442Thresh = brr442Thresh;
     }
 
+    public void setNnOutput(double[] nnOutput) {
+        this.nnOutput = nnOutput;
+    }
 
     // THRESHOLD GETTERS
 
@@ -226,4 +230,8 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
         return PRESSURE_THRESH;
     }
 
+
+    public double[] getNnOutput() {
+        return nnOutput;
+    }
 }

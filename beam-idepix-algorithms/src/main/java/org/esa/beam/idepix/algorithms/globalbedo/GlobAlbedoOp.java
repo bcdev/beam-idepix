@@ -74,8 +74,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaCopyFeatureValues = false;
 
     @Parameter(defaultValue = "false",
-               label = " Compute cloud shadow",
-               description = " Compute cloud shadow with a preliminary algorithm")
+            label = " Compute cloud shadow",
+            description = " Compute cloud shadow with a preliminary algorithm")
     private boolean gaComputeCloudShadow = false;
 
     @Parameter(defaultValue = "Derive from Neural Net",
@@ -103,23 +103,28 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaCopyAnnotations;
 
     @Parameter(defaultValue = "false",
-               label = " Apply Schiller NN for cloud classification (VGT only)",
-               description = " Apply Schiller NN for cloud classification (has only effect for VGT L1b products)")
-    private boolean gaApplySchillerNN;
+            label = " Apply alternative Schiller NN for MERIS cloud classification",
+            description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
+    private boolean gaApplyMERISAlternativeSchillerNN;
+
+    @Parameter(defaultValue = "false",
+            label = " Apply Schiller NN for VGT cloud classification",
+            description = " Apply Schiller NN for VGT cloud classification (has only effect for VGT L1b products)")
+    private boolean gaApplyVGTSchillerNN;
 
     @Parameter(defaultValue = "1.1",
-               label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
-               description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
+            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-               label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
-               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-               label = " Schiller NN cloud sure/snow separation value (VGT only)",
-               description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud sure/snow separation value (VGT only)",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "2", interval = "[0,100]",
@@ -138,8 +143,8 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseL1bLandWaterFlag;
 
     @Parameter(defaultValue = "true",
-               label = " Refine pixel classification near coastlines",
-               description = "Refine pixel classification near coastlines. ")
+            label = " Refine pixel classification near coastlines",
+            description = "Refine pixel classification near coastlines. ")
     private boolean gaRefineClassificationNearCoastlines;
 
     private Map<String, Object> gaCloudClassificationParameters;
@@ -170,7 +175,8 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("ctpMode", ctpMode);
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
-        gaCloudClassificationParameters.put("gaApplySchillerNN", gaApplySchillerNN);
+        gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNN", gaApplyMERISAlternativeSchillerNN);
+        gaCloudClassificationParameters.put("gaApplyVGTSchillerNN", gaApplyVGTSchillerNN);
         gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousLowerBoundaryValue", gaSchillerNNCloudAmbiguousLowerBoundaryValue);
         gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousSureSeparationValue", gaSchillerNNCloudAmbiguousSureSeparationValue);
         gaCloudClassificationParameters.put("gaSchillerNNCloudSureSnowSeparationValue", gaSchillerNNCloudSureSnowSeparationValue);
@@ -205,7 +211,7 @@ public class GlobAlbedoOp extends BasisOp {
             gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
             gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", false);
             gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-                                                        gaFinalCloudClassificationParameters, gaFinalCloudInput);
+                    gaFinalCloudClassificationParameters, gaFinalCloudInput);
         }
 
         if (gaRefineClassificationNearCoastlines || gaComputeCloudShadow) {

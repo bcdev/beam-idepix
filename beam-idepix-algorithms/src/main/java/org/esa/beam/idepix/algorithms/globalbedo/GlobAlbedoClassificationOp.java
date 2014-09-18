@@ -32,11 +32,11 @@ import java.io.InputStreamReader;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification",
-                  version = "2.1",
-                  internal = true,
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2008, 2012 by Brockmann Consult",
-                  description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
+        version = "2.1",
+        internal = true,
+        authors = "Olaf Danne",
+        copyright = "(c) 2008, 2012 by Brockmann Consult",
+        description = "Basic operator for pixel classification from MERIS, AATSR or VGT data.")
 public abstract class GlobAlbedoClassificationOp extends Operator {
 
     @SourceProduct(alias = "gal1b", description = "The source product.")
@@ -48,66 +48,73 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     // Globalbedo user options
     @Parameter(defaultValue = "true",
-               label = " Write TOA Radiances to the target product",
-               description = " Write TOA Radiances to the target product (has only effect for MERIS L1b products)")
+            label = " Write TOA Radiances to the target product",
+            description = " Write TOA Radiances to the target product (has only effect for MERIS L1b products)")
     boolean gaCopyRadiances = true;
 
     @Parameter(defaultValue = "true",
-               label = " Write TOA Reflectances to the target product",
-               description = " Write TOA Reflectances to the target product")
+            label = " Write TOA Reflectances to the target product",
+            description = " Write TOA Reflectances to the target product")
     boolean gaCopyToaReflectances = true;
 
 
     @Parameter(defaultValue = "false",
-               label = " Write Feature Values to the target product",
-               description = " Write all Feature Values to the target product")
+            label = " Write Feature Values to the target product",
+            description = " Write all Feature Values to the target product")
     boolean gaCopyFeatureValues = false;
 
     @Parameter(defaultValue = "false",
-               label = " Write input annotation bands to the target product (VGT only)",
-               description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
+            label = " Write input annotation bands to the target product (VGT only)",
+            description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
     boolean gaCopyAnnotations;
 
     @Parameter(defaultValue = "false",
-               label = " Apply Schiller NN for cloud classification (VGT only)",
-               description = " Apply Schiller NN for cloud classification (has only effect for VGT L1b products)")
-    boolean gaApplySchillerNN;
+            label = " Apply alternative Schiller NN for MERIS cloud classification",
+            description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
+    boolean gaApplyMERISAlternativeSchillerNN;
+
+    @Parameter(defaultValue = "false",
+            label = " Apply Schiller NN for VGT cloud classification",
+            description = " Apply Schiller NN for VGT cloud classification (has only effect for VGT L1b products)")
+    boolean gaApplyVGTSchillerNN;
 
     @Parameter(defaultValue = "1.1",
-               label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
-               description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
+            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
     double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-               label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
-               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
     double gaSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-               label = " Schiller NN cloud sure/snow separation value (VGT only)",
-               description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud sure/snow separation value (VGT only)",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
     double gaSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "2",
-               label = " Width of cloud buffer (# of pixels)",
-               description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
+            label = " Width of cloud buffer (# of pixels)",
+            description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
     int gaCloudBufferWidth;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"},
-               label = " Resolution of used land-water mask in m/pixel",
-               description = "Resolution of the used SRTM land-water mask in m/pixel")
+            label = " Resolution of used land-water mask in m/pixel",
+            description = "Resolution of the used SRTM land-water mask in m/pixel")
     int wmResolution;
 
     @Parameter(defaultValue = "false",
-               label = " Use land-water flag from L1b product instead",
-               description = "Use land-water flag from L1b product instead")
+            label = " Use land-water flag from L1b product instead",
+            description = "Use land-water flag from L1b product instead")
     boolean gaUseL1bLandWaterFlag;
 
     public static final String SCHILLER_VGT_NET_NAME = "3x2x2_341.8.net";
-
     String vgtNeuralNetString;
-
     NNffbpAlphaTabFast vgtNeuralNet;
+
+    public static final String SCHILLER_MERIS_LAND_NET_NAME = "11x8x5x3_1062.5_land.net";
+    String merisLandNeuralNetString;
+    NNffbpAlphaTabFast merisLandNeuralNet;
 
     WatermaskClassifier classifier;
 
@@ -148,7 +155,11 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
         final InputStream vgtNeuralNetStream = getClass().getResourceAsStream(SCHILLER_VGT_NET_NAME);
         vgtNeuralNetString = readNeuralNetFromStream(vgtNeuralNetStream);
 
+        final InputStream merisLandNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MERIS_LAND_NET_NAME);
+        merisLandNeuralNetString = readNeuralNetFromStream(merisLandNeuralNetStream);
+
         try {
+            merisLandNeuralNet = new NNffbpAlphaTabFast(merisLandNeuralNetString);
             vgtNeuralNet = new NNffbpAlphaTabFast(vgtNeuralNetString);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
@@ -211,12 +222,12 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             IdepixUtils.setNewBandProperties(whiteBand, "Whiteness", "dl", IdepixConstants.NO_DATA_VALUE, true);
             brightWhiteBand = targetProduct.addBand("bright_white_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(brightWhiteBand, "Brightwhiteness", "dl", IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    true);
             temperatureBand = targetProduct.addBand("temperature_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(temperatureBand, "Temperature", "K", IdepixConstants.NO_DATA_VALUE, true);
             spectralFlatnessBand = targetProduct.addBand("spectral_flatness_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(spectralFlatnessBand, "Spectral Flatness", "dl",
-                                             IdepixConstants.NO_DATA_VALUE, true);
+                    IdepixConstants.NO_DATA_VALUE, true);
             ndviBand = targetProduct.addBand("ndvi_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(ndviBand, "NDVI", "dl", IdepixConstants.NO_DATA_VALUE, true);
             ndsiBand = targetProduct.addBand("ndsi_value", ProductData.TYPE_FLOAT32);
@@ -225,10 +236,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             IdepixUtils.setNewBandProperties(glintRiskBand, "GLINT_RISK", "dl", IdepixConstants.NO_DATA_VALUE, true);
             radioLandBand = targetProduct.addBand("radiometric_land_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioLandBand, "Radiometric Land Value", "", IdepixConstants.NO_DATA_VALUE,
-                                             true);
+                    true);
             radioWaterBand = targetProduct.addBand("radiometric_water_value", ProductData.TYPE_FLOAT32);
             IdepixUtils.setNewBandProperties(radioWaterBand, "Radiometric Water Value", "",
-                                             IdepixConstants.NO_DATA_VALUE, true);
+                    IdepixConstants.NO_DATA_VALUE, true);
         }
 
         // new bit masks:

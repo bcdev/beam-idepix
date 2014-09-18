@@ -83,7 +83,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
                     // apply improvement from Schiller NN approach...
                     final double[] nnOutput = ((GlobAlbedoVgtAlgorithm) globAlbedoAlgorithm).getNnOutput();
-                    if (gaApplySchillerNN) {
+                    if (gaApplyVGTSchillerNN) {
                         if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, false);
@@ -142,7 +142,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
             copyAnnotations();
         }
 
-        if (gaApplySchillerNN) {
+        if (gaApplyVGTSchillerNN) {
             targetProduct.addBand("vgt_nn_value", ProductData.TYPE_FLOAT32);
         }
     }
@@ -178,7 +178,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
         double[] vgtNeuralNetInput = new double[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
         for (int i = 0; i < vgtReflectanceSaturationCorrected.length; i++) {
-            vgtNeuralNetInput[i] = vgtReflectanceSaturationCorrected[i];
+            vgtNeuralNetInput[i] = Math.sqrt(vgtReflectanceSaturationCorrected[i]);
         }
         double[] vgtNeuralNetOutput = vgtNeuralNet.calc(vgtNeuralNetInput);
         gaAlgorithm.setNnOutput(vgtNeuralNetOutput);
