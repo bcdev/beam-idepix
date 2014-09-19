@@ -166,6 +166,15 @@ public class IdepixProducts {
         }
     }
 
+    public static void addMERISAlternativeNNOutputBand(Product merisCloudProduct, Product targetProduct) {
+        for (String bandname : merisCloudProduct.getBandNames()) {
+            if (bandname.equalsIgnoreCase("meris_water_nn_value")) {
+                moveBand(targetProduct, merisCloudProduct, bandname);
+            }
+        }
+    }
+//    addMERISAlternativeNNOutputBand
+
     public static void addRayleighCorrectionBands(Product rayleighProduct, Product targetProduct) {
         int l1_band_num = RayleighCorrectionOp.L1_BAND_NUM;
         FlagCoding flagCoding = RayleighCorrectionOp.createFlagCoding(l1_band_num);

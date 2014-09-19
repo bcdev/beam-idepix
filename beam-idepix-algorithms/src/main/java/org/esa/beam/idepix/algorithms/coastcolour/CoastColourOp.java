@@ -17,6 +17,7 @@ import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 
+import javax.media.jai.JAI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,11 +28,11 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "Idepix.Water",
-        version = "2.1",
-        authors = "R. Doerffer, H. Schiller, C. Brockmann, O. Danne, M.Peters",
-        copyright = "(c) 2010-2013 Brockmann Consult",
-        description = "Pixel identification and classification over water with an algorithm developed " +
-                "within the CoastColour and CCI Ocean Colour projects.")
+                  version = "2.1",
+                  authors = "R. Doerffer, H. Schiller, C. Brockmann, O. Danne, M.Peters",
+                  copyright = "(c) 2010-2013 Brockmann Consult",
+                  description = "Pixel identification and classification over water with an algorithm developed " +
+                          "within the CoastColour and CCI Ocean Colour projects.")
 public class CoastColourOp extends BasisOp {
 
     @SourceProduct(alias = "l1bProduct",
@@ -53,8 +54,8 @@ public class CoastColourOp extends BasisOp {
 
     // Coastcolour parameters
     @Parameter(defaultValue = "true",
-            description = "Write TOA radiances to the target product.",
-            label = " Write TOA radiances to the target product")
+               description = "Write TOA radiances to the target product.",
+               label = " Write TOA radiances to the target product")
     private boolean ccOutputRadiance = true;
 
     @Parameter(defaultValue = "false",
@@ -63,24 +64,24 @@ public class CoastColourOp extends BasisOp {
     private boolean ccOutputRad2Refl = false;
 
     @Parameter(defaultValue = "false",
-            description = "Write Rayleigh Corrected Reflectances to the target product.",
-            label = " Write Rayleigh Corrected Reflectances  to the target product")
+               description = "Write Rayleigh Corrected Reflectances to the target product.",
+               label = " Write Rayleigh Corrected Reflectances  to the target product")
     private boolean ccOutputRayleigh = false;           // but always compute!!
 
     @Parameter(defaultValue = "false",
-            description = "Write Spectral Unmixing Abundance Bands to the target product.",
-            label = " Write Spectral Unmixing Abundance Bands to the target product")
+               description = "Write Spectral Unmixing Abundance Bands to the target product.",
+               label = " Write Spectral Unmixing Abundance Bands to the target product")
     private boolean ccOutputSma = false;
 
     @Parameter(defaultValue = "false",
-            description = "Write Cloud Probability Feature Value to the target product.",
-            label = " Write Cloud Probability Feature Value to the target product")
+               description = "Write Cloud Probability Feature Value to the target product.",
+               label = " Write Cloud Probability Feature Value to the target product")
     private boolean ccOutputCloudProbabilityFeatureValue = false;
 
     @Parameter(defaultValue = "false",
-            description = "Write Sea Ice Climatology Max Value to the target product.",
-            label = "Write Sea Ice Climatology Max Value to the target product"
-            )
+               description = "Write Sea Ice Climatology Max Value to the target product.",
+               label = "Write Sea Ice Climatology Max Value to the target product"
+    )
     private boolean ccOutputSeaIceClimatologyValue;
 
     @Parameter(defaultValue = "false",
@@ -90,19 +91,45 @@ public class CoastColourOp extends BasisOp {
     private boolean ccIgnoreSeaIceClimatology;
 
     @Parameter(defaultValue = "2", interval = "[0,100]",
-            description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
-            label = "Width of cloud buffer (# of pixels)")
+               description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
+               label = "Width of cloud buffer (# of pixels)")
     private int ccCloudBufferWidth;
 
     @Parameter(defaultValue = "1.4",
-            description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as still ambiguous.",
-            label = "Cloud screening 'ambiguous' threshold" )
+               description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as still ambiguous.",
+               label = "Cloud screening 'ambiguous' threshold")
     private double ccCloudScreeningAmbiguous = 1.4;      // Schiller
 
     @Parameter(defaultValue = "1.8",
-            description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as sure.",
-            label = "Cloud screening 'sure' threshold")
+               description = "Threshold of Cloud Probability Feature Value above which cloud is regarded as sure.",
+               label = "Cloud screening 'sure' threshold")
     private double ccCloudScreeningSure = 1.8;       // Schiller
+
+    @Parameter(defaultValue = "true",
+               label = " Apply alternative Schiller NN for cloud classification",
+               description = " Apply Schiller NN for cloud classification ")
+    private boolean ccApplyMERISAlternativeSchillerNN;
+
+    @Parameter(defaultValue = "true",
+               label = " Use alternative Schiller 'ALL' NN ",
+               description = " Use Schiller 'ALL' NN (instead of 'WATER' NN) ")
+    private boolean ccUseMERISAlternativeSchillerAllNN;
+
+    @Parameter(defaultValue = "2.0",
+               label = " Alternative Schiller NN cloud ambiguous lower boundary ",
+               description = " Alternative Schiller NN cloud ambiguous lower boundary ")
+    double ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "3.7",
+               label = " Alternative Schiller NN cloud ambiguous/sure separation value ",
+               description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+    double ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.05",
+               label = " Alternative Schiller NN cloud sure/snow separation value ",
+               description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value ")
+    double ccAlternativeSchillerNNCloudSureSnowSeparationValue;
+
 
     private static final int CC_LAND_MASK_RESOLUTION = 50;
     private static final int CC_OVERSAMPLING_FACTOR_X = 3;
@@ -127,17 +154,17 @@ public class CoastColourOp extends BasisOp {
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                false,
-                true, false, false, true);
+                                                                        false,
+                                                                        true, false, false, true);
 
         computeCoastColourMerisCloudProduct();
 
         gasProduct = IdepixProducts.computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
 
         rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct,
-                merisCloudProduct, merisCloudProduct,
-                true,
-                CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
+                                                                          merisCloudProduct, merisCloudProduct,
+                                                                          true,
+                                                                          CoastColourClassificationOp.CLOUD_FLAGS + ".F_LAND");
 
         smaProduct = null;
         if (ccOutputSma) {
@@ -177,8 +204,13 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
         cloudClassificationParameters.put("ccIgnoreSeaIceClimatology", ccIgnoreSeaIceClimatology);
         cloudClassificationParameters.put("ccOutputCloudProbabilityFeatureValue", ccOutputCloudProbabilityFeatureValue);
+        cloudClassificationParameters.put("ccApplyMERISAlternativeSchillerNN", ccApplyMERISAlternativeSchillerNN);
+        cloudClassificationParameters.put("ccUseMERISAlternativeSchillerAllNN", ccUseMERISAlternativeSchillerAllNN);
+        cloudClassificationParameters.put("ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue", ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
+        cloudClassificationParameters.put("ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue", ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue);
+        cloudClassificationParameters.put("ccAlternativeSchillerNNCloudSureSnowSeparationValue", ccAlternativeSchillerNNCloudSureSnowSeparationValue);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
-                cloudClassificationParameters, cloudInputProducts);
+                                              cloudClassificationParameters, cloudInputProducts);
     }
 
     private void computeCoastColourPostProcessProduct(Product smaProduct1) {
@@ -212,6 +244,10 @@ public class CoastColourOp extends BasisOp {
         }
         if (ccOutputCloudProbabilityFeatureValue) {
             IdepixProducts.addCCCloudProbabilityValueBand(merisCloudProduct, targetProduct);
+        }
+
+        if (ccApplyMERISAlternativeSchillerNN) {
+            IdepixProducts.addMERISAlternativeNNOutputBand(merisCloudProduct, targetProduct);
         }
 
         addCloudClassificationFlagBandCoastColour();

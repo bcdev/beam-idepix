@@ -180,9 +180,11 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         for (int i = 0; i < vgtReflectanceSaturationCorrected.length; i++) {
             vgtNeuralNetInput[i] = Math.sqrt(vgtReflectanceSaturationCorrected[i]);
         }
-        double[] vgtNeuralNetOutput = vgtNeuralNet.calc(vgtNeuralNetInput);
-        gaAlgorithm.setNnOutput(vgtNeuralNetOutput);
 
+        synchronized (this) {
+            double[] vgtNeuralNetOutput = vgtNeuralNet.calc(vgtNeuralNetInput);
+            gaAlgorithm.setNnOutput(vgtNeuralNetOutput);
+        }
 
         if (gaUseL1bLandWaterFlag) {
             final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND);

@@ -27,11 +27,11 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.meris",
-        version = "2.1",
-        internal = true,
-        authors = "Olaf Danne",
-        copyright = "(c) 2008, 2012 by Brockmann Consult",
-        description = "This operator provides cloud screening from MERIS data.")
+                  version = "2.1",
+                  internal = true,
+                  authors = "Olaf Danne",
+                  copyright = "(c) 2008, 2012 by Brockmann Consult",
+                  description = "This operator provides cloud screening from MERIS data.")
 public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp {
 
     @SourceProduct(alias = "cloud", optional = true)
@@ -103,43 +103,63 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
                     // set up pixel properties for given instruments...
                     GlobAlbedoAlgorithm globAlbedoAlgorithm = createMerisAlgorithm(merisL1bFlagTile,
-                            brr442Tile, p1Tile,
-                            pbaroTile, pscattTile, brr442ThreshTile,
-                            merisReflectanceTiles,
-                            merisReflectance,
-                            merisBrrTiles, merisBrr,
-                            waterMaskSample,
-                            waterMaskFraction,
-                            y,
-                            x);
+                                                                                   brr442Tile, p1Tile,
+                                                                                   pbaroTile, pscattTile, brr442ThreshTile,
+                                                                                   merisReflectanceTiles,
+                                                                                   merisReflectance,
+                                                                                   merisBrrTiles, merisBrr,
+                                                                                   waterMaskSample,
+                                                                                   waterMaskFraction,
+                                                                                   y,
+                                                                                   x);
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
                     // apply improvement from Schiller NN approach...
                     if (gaApplyMERISAlternativeSchillerNN) {
                         final double[] nnOutput = ((GlobAlbedoMerisAlgorithm) globAlbedoAlgorithm).getNnOutput();
+
+                        // 'pure Schiller'
                         if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, false);
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
-                            if (nnOutput[0] > 2.6 &&
-                                    nnOutput[0] <= 3.7) {
+                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue &&
+                                    nnOutput[0] <= gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue) {
                                 // this would be as 'CLOUD_AMBIGUOUS'...
                                 cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
                                 cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                             }
-                            if (nnOutput[0] > 3.7 &&
-                                    nnOutput[0] <= 4.05) {
+                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
+                                    nnOutput[0] <= gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
                                 // this would be as 'CLOUD_SURE'...
                                 cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
                                 cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
                             }
-                            if (nnOutput[0] > 4.05) {
+                            if (nnOutput[0] > gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
                                 // this would be as 'SNOW/ICE'...
                                 cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, true);
                             }
                         }
+
+                        // 'refinement with Schiller', as with old net. // todo: what do we want??
+//                        if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD) &&
+//                                !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
+//                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue &&
+//                                    nnOutput[0] <= gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue) {
+//                                // this would be as 'CLOUD_AMBIGUOUS' in CC and makes many coastlines as cloud...
+//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
+//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+//                            }
+//                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
+//                                    nnOutput[0] <= gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
+//                                //   'CLOUD_SURE' as in CC (20140424, OD)
+//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
+//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
+//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+//                            }
+//                        }
                         nnTargetTile.setSample(x, y, nnOutput[0]);
                     } else {
                         if (landNN != null &&
@@ -224,14 +244,14 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private void copyRadiances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct,
-                    targetProduct, true);
+                                  targetProduct, true);
         }
     }
 
     private void copyReflectances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
-                    targetProduct, true);
+                                  targetProduct, true);
             targetProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)).setUnit("dl");
         }
     }
@@ -261,9 +281,11 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             merisNeuralNetInput[i] = Math.sqrt(merisReflectance[i]);
         }
-        double[] merisNeuralNetOutput = merisLandNeuralNet.calc(merisNeuralNetInput);
-        gaAlgorithm.setNnOutput(merisNeuralNetOutput);
 
+        synchronized (this) {
+            double[] merisNeuralNetOutput = merisLandNeuralNet.calc(merisNeuralNetInput);
+            gaAlgorithm.setNnOutput(merisNeuralNetOutput);
+        }
 
         gaAlgorithm.setBrr(merisBrr);
         gaAlgorithm.setBrr442(brr442Tile.getSampleFloat(x, y));

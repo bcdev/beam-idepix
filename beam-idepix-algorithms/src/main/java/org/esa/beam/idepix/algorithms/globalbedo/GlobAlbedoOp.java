@@ -102,10 +102,25 @@ public class GlobAlbedoOp extends BasisOp {
             description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
     private boolean gaCopyAnnotations;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Apply alternative Schiller NN for MERIS cloud classification",
             description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
     private boolean gaApplyMERISAlternativeSchillerNN;
+
+    @Parameter(defaultValue = "2.0",
+               label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
+               description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
+    double gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "3.7",
+               label = " Alternative Schiller NN cloud ambiguous/sure separation value (MERIS only)",
+               description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
+    double gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.05",
+               label = " Alternative Schiller NN cloud sure/snow separation value (MERIS only)",
+               description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
+    double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "false",
             label = " Apply Schiller NN for VGT cloud classification",
@@ -176,6 +191,9 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNN", gaApplyMERISAlternativeSchillerNN);
+        gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue", gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
+        gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue", gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue);
+        gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudSureSnowSeparationValue", gaAlternativeSchillerNNCloudSureSnowSeparationValue);
         gaCloudClassificationParameters.put("gaApplyVGTSchillerNN", gaApplyVGTSchillerNN);
         gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousLowerBoundaryValue", gaSchillerNNCloudAmbiguousLowerBoundaryValue);
         gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousSureSeparationValue", gaSchillerNNCloudAmbiguousSureSeparationValue);
