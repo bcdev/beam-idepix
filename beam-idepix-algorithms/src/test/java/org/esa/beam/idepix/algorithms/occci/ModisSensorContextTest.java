@@ -120,24 +120,6 @@ public class ModisSensorContextTest {
     }
 
     @Test
-    public void testCopyTiePointData() {
-        final double[] inputs = new double[6];
-        final TestSample[] sourceSamples = new TestSample[4];
-        for (int i = 0; i < sourceSamples.length; i++) {
-            sourceSamples[i] = new TestSample();
-            sourceSamples[i].set((double) i);
-        }
-
-        modisSensorContext.copyTiePointData(inputs, sourceSamples);
-
-        for (int i = 0; i < sourceSamples.length; i++) {
-            assertEquals(i, inputs[i], 1e-8);
-        }
-        assertEquals(1019.0, inputs[4], 1e-8);
-        assertEquals(330.0, inputs[5], 1e-8);
-    }
-
-    @Test
     public void testGetSolarFluxes_noFluxesInMetadata() {
         final double[] expectedResults = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737,
                 1882.428333, 1545.183846, 1507.529167, 1277.037,

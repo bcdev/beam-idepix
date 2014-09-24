@@ -20,13 +20,24 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isSnowIce() {
-        // needs ndsi and brightness
-        // MERIS: ndsi depends on rho_toa_865,885; brightness depends on rho_ag (bottom of Rayleigh)
-        // maybe we can forget the Rayleigh (it's small)
-        // MODIS: for slope use bands 16 (869nm) and 7 (2130nm, 500m spatial), threshold to be adjusted
-        // for brightness use band 16 (Rayleigh corrected?)
 
-        return (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
+        // for MODIS, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 < x < 2.1 : clear
+        // 2.1 < x < 3.55 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.55 < x < 4.1 : cloudy --> cloud sure
+        // 4.1 < x : clear snow/ice
+        if (nnOutput != null) {
+            return nnOutput[0] > 4.1 && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
+        } else {
+            // fallback
+            // needs ndsi and brightness
+            // MERIS: ndsi depends on rho_toa_865,885; brightness depends on rho_ag (bottom of Rayleigh)
+            // maybe we can forget the Rayleigh (it's small)
+            // MODIS: for slope use bands 16 (869nm) and 7 (2130nm, 500m spatial), threshold to be adjusted
+            // for brightness use band 16 (Rayleigh corrected?)
+            return (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
+        }
     }
 
     @Override
@@ -40,13 +51,16 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             return false;
         }
 
-        if (waterNN != null && accessor != null) {
-            // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
-            final double schillerValue = (double) waterNN.compute(accessor);
-            final double thresh = isGlintRisk() ? ambiguousThresh : ambiguousThresh + GLINT_INCREMENT;
-            return schillerValue > thresh;
+        // for MODIS, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 < x < 2.1 : clear
+        // 2.1 < x < 3.55 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.55 < x < 4.1 : cloudy --> cloud sure
+        // 4.1 < x : clear snow/ice
+        if (nnOutput != null) {
+            return nnOutput[0] > 2.1 && nnOutput[0] <= 3.55;    // separation numbers from HS, 20140923
         } else {
-            // test (as long as we have no Schiller)
+            // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS);
         }
     }
@@ -57,13 +71,15 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             return false;
         }
 
-        if (waterNN != null && accessor != null) {
-            // taken from SchillerClassificationOp, shall become active once we have a MODIS NN...
-            final double schillerValue = (double) waterNN.compute(accessor);
-            final double thresh = isGlintRisk() ? sureThresh : sureThresh + GLINT_INCREMENT;
-            return schillerValue > thresh;
+        // nnOutput[0] =
+        // 0 < x < 2.1 : clear
+        // 2.1 < x < 3.55 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.55 < x < 4.1 : cloudy --> cloud sure
+        // 4.1 < x : clear snow/ice
+        if (nnOutput != null) {
+            return nnOutput[0] > 3.55 && nnOutput[0] <= 4.1;   // separation numbers from HS, 20140923
         } else {
-            // test (as long as we have no Schiller)
+            // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_SURE);
         }
     }
@@ -101,13 +117,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     @Override
     public float brightValue() {
         // use EV_250_Aggr1km_RefSB_1
-        return (float) refl[10];
+        return (float) refl[15];
     }
 
     @Override
     public float ndsiValue() {
         // use EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7
-        return (float) ((refl[10] - refl[15])/(refl[10] + refl[15]));
+        return (float) ((refl[15] - refl[21])/(refl[15] + refl[21]));
     }
 
 }
