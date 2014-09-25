@@ -38,12 +38,6 @@ public class OccciClassificationOp extends PixelOperator {
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
     String productTypeString;
 
-    @Parameter(label = "Schiller cloud threshold ambiguous clouds", defaultValue = "1.4")
-    private double schillerAmbiguous;
-
-    @Parameter(label = "Schiller cloud threshold sure clouds", defaultValue = "1.8")
-    private double schillerSure;
-
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
@@ -64,15 +58,18 @@ public class OccciClassificationOp extends PixelOperator {
 
     private SensorContext sensorContext;
 
-    private SchillerAlgorithm waterNN;
-
     public static final String SCHILLER_MODIS_WATER_NET_NAME = "9x7x5x3_130.3_water.net";
-    public static final String SCHILLER_MODIS_LAND_NET_NAME = "9x7x5x3_130.3_land.net";
+    public static final String SCHILLER_MODIS_LAND_NET_NAME = "8x6x4x2_290.4_land.net";
+    public static final String SCHILLER_MODIS_ALL_NET_NAME = "9x7x5x3_319.7_all.net";
     public static final String SCHILLER_SEAWIFS_NET_NAME = "6x3_166.0.net";
 
     String modisWaterNeuralNetString;
+    String modisLandNeuralNetString;
+    String modisAllNeuralNetString;
     String seawifsNeuralNetString;
     NNffbpAlphaTabFast modisWaterNeuralNet;
+    NNffbpAlphaTabFast modisLandNeuralNet;
+    NNffbpAlphaTabFast modisAllNeuralNet;
     NNffbpAlphaTabFast seawifsNeuralNet;
 
 
@@ -81,20 +78,11 @@ public class OccciClassificationOp extends PixelOperator {
         readSchillerNets();
         sensorContext = SensorContextFactory.fromTypeString(getProductTypeString());
         sensorContext.init(reflProduct);
-
-        waterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.WATER);
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         OccciAlgorithm algorithm;
-
-        if (x == 255 && y == 735) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-        if (x == 300 && y == 700) {
-            System.out.println("x,y = " + x + "," + y);
-        }
 
         switch (sensorContext.getSensor()) {
             case MODIS:
@@ -110,13 +98,19 @@ public class OccciClassificationOp extends PixelOperator {
     }
 
     private void readSchillerNets() {
-        final InputStream modisNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_WATER_NET_NAME);
-        modisWaterNeuralNetString = readNeuralNetFromStream(modisNeuralNetStream);
+        final InputStream modisWaterNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_WATER_NET_NAME);
+        modisWaterNeuralNetString = readNeuralNetFromStream(modisWaterNeuralNetStream);
+        final InputStream modisLandNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_LAND_NET_NAME);
+        modisLandNeuralNetString = readNeuralNetFromStream(modisLandNeuralNetStream);
+        final InputStream modisAllNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_ALL_NET_NAME);
+        modisAllNeuralNetString = readNeuralNetFromStream(modisAllNeuralNetStream);
         final InputStream seawifsNeuralNetStream = getClass().getResourceAsStream(SCHILLER_SEAWIFS_NET_NAME);
         seawifsNeuralNetString = readNeuralNetFromStream(seawifsNeuralNetStream);
 
         try {
             modisWaterNeuralNet = new NNffbpAlphaTabFast(modisWaterNeuralNetString);
+            modisLandNeuralNet = new NNffbpAlphaTabFast(modisLandNeuralNetString);
+            modisAllNeuralNet = new NNffbpAlphaTabFast(modisAllNeuralNetString);
             seawifsNeuralNet = new NNffbpAlphaTabFast(seawifsNeuralNetString);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller seaice neural nets: " + e.getMessage());
@@ -164,60 +158,49 @@ public class OccciClassificationOp extends PixelOperator {
         }
     }
 
-//    private OccciSeawifsAlgorithm createOccciSeaWifsAlgorithm(int x, int y, Sample[] sourceSamples) {
-//        OccciSeawifsAlgorithm occciAlgorithm = new OccciSeawifsAlgorithm();
-//
-//        double[] seawifsReflectance = new double[sensorContext.getNumSpectralInputBands()];
-//        for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
-//            seawifsReflectance[i] = sourceSamples[Constants.SEAWIFS_SRC_RAD_OFFSET + i].getFloat();
-//        }
-//
-//        occciAlgorithm.setRefl(seawifsReflectance);
-//
-//        return occciAlgorithm;
-//    }
-
     private OccciAlgorithm createOccciAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         OccciAlgorithm occciAlgorithm;
         final double[] reflectance = new double[sensorContext.getNumSpectralInputBands()];
         double[] neuralNetOutput;
-        if (sensorContext.getSensor() == Sensor.MODIS) {
 
+        float waterFraction = Float.NaN;
+        // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
+        if (getGeoPos(x, y).lat > -58f) {
+            waterFraction =
+                    sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
+        }
+
+        if (sensorContext.getSensor() == Sensor.MODIS) {
+            occciAlgorithm = new OccciModisAlgorithm();
             for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
                 reflectance[i] = sourceSamples[i].getFloat();
             }
+            occciAlgorithm.setRefl(reflectance);
+            occciAlgorithm.setWaterFraction(waterFraction);
 
-            occciAlgorithm = new OccciModisAlgorithm();
             double[] modisNeuralNetInput = new double[Constants.MODIS_NN_INPUT_LENGTH];
-//            the net has 10 inputs:
-//            input  1 is sqrt_EV_250_Aggr1km_RefSB.1 in [0.020000,1.069336]            'radiance_16'
-//            input  2 is sqrt_EV_500_Aggr1km_RefSB.3 in [0.034785,1.083850]            'radiance_18'
-//            input  3 is sqrt_EV_500_Aggr1km_RefSB.4 in [0.020494,1.048575]             'radiance_19'
-//            input  4 is sqrt_EV_500_Aggr1km_RefSB.5 in [0.028983,0.913865]             'radiance_20'
-//            input  5 is sqrt_EV_500_Aggr1km_RefSB.7 in [0.013784,0.786848]             'radiance_22'
-//            input  6 is sqrt_EV_1KM_Emissive.23 in [45.585085,160.324671]              'emissivity_4'
-//            input  7 is sqrt_EV_1KM_Emissive.25 in [30.232433,154.560668]              'emissivity_6'
-//            input  8 is sqrt_EV_1KM_RefSB.26 in [0.000000,0.802733]                    'radiance_15'
-//            input  9 is sqrt_EV_1KM_Emissive.31 in [48.290786,129.417928]              'emissivity_11'
-//            input 10 is sqrt_EV_1KM_Emissive.32 in [51.623638,132.174128]              'emissivity_12'
-            modisNeuralNetInput[0] = Math.sqrt(sourceSamples[15].getFloat());
-            modisNeuralNetInput[1] = Math.sqrt(sourceSamples[17].getFloat());
-            modisNeuralNetInput[2] = Math.sqrt(sourceSamples[18].getFloat());
-            modisNeuralNetInput[3] = Math.sqrt(sourceSamples[19].getFloat());
-            modisNeuralNetInput[4] = Math.sqrt(sourceSamples[21].getFloat());
-            // todo: clarify if and how we have to convert emissive to temperature
+            modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1
+            modisNeuralNetInput[1] = Math.sqrt(sourceSamples[2].getFloat());    // EV_250_Aggr1km_RefSB.3
+            modisNeuralNetInput[2] = Math.sqrt(sourceSamples[3].getFloat());    // EV_250_Aggr1km_RefSB.4
+            modisNeuralNetInput[3] = Math.sqrt(sourceSamples[4].getFloat());    // EV_250_Aggr1km_RefSB.5
+            modisNeuralNetInput[4] = Math.sqrt(sourceSamples[6].getFloat());    // EV_250_Aggr1km_RefSB.7
             final float emissive23Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 3].getFloat();
-            modisNeuralNetInput[5] = Math.sqrt(ModisSensorContext.convertModisEmissiveRadianceToTemperature(emissive23Rad, 3));
+            modisNeuralNetInput[5] = Math.sqrt(emissive23Rad);                  // EV_1KM_Emissive.23
             final float emissive25Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 5].getFloat();
-            modisNeuralNetInput[6] = Math.sqrt(ModisSensorContext.convertModisEmissiveRadianceToTemperature(emissive25Rad, 5));
-            modisNeuralNetInput[7] = Math.sqrt(sourceSamples[14].getFloat());
+            modisNeuralNetInput[6] = Math.sqrt(emissive25Rad);                  // EV_1KM_Emissive.25
+            modisNeuralNetInput[7] = Math.sqrt(sourceSamples[21].getFloat());
             final float emissive31Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 10].getFloat();
-            modisNeuralNetInput[8] = Math.sqrt(ModisSensorContext.convertModisEmissiveRadianceToTemperature(emissive31Rad, 10));
+            modisNeuralNetInput[8] = Math.sqrt(emissive31Rad);                  // EV_1KM_Emissive.31
             final float emissive32Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 11].getFloat();
-            modisNeuralNetInput[9] = Math.sqrt(ModisSensorContext.convertModisEmissiveRadianceToTemperature(emissive32Rad, 11));
+            modisNeuralNetInput[9] = Math.sqrt(emissive32Rad);                  // EV_1KM_Emissive.32
 
             synchronized (this) {
-                neuralNetOutput = modisWaterNeuralNet.calc(modisNeuralNetInput);
+//                if (occciAlgorithm.isLand()) {
+//                    neuralNetOutput = modisLandNeuralNet.calc(modisNeuralNetInput);
+//                } else {
+//                    neuralNetOutput = modisWaterNeuralNet.calc(modisNeuralNetInput);
+//                }
+                neuralNetOutput = modisAllNeuralNet.calc(modisNeuralNetInput);
             }
         } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             occciAlgorithm = new OccciSeawifsAlgorithm();
@@ -227,6 +210,8 @@ public class OccciClassificationOp extends PixelOperator {
                 sensorContext.scaleInputSpectralDataToReflectance(reflectance, 0);
                 seawifsNeuralNetInput[i] = Math.sqrt(reflectance[i]);
             }
+            occciAlgorithm.setRefl(reflectance);
+            occciAlgorithm.setWaterFraction(waterFraction);
 
             synchronized (this) {
                 neuralNetOutput = seawifsNeuralNet.calc(seawifsNeuralNetInput);
@@ -235,22 +220,7 @@ public class OccciClassificationOp extends PixelOperator {
             throw new OperatorException("Sensor " + sensorContext.getSensor().name() + " not supported.");
         }
 
-
-        float waterFraction = Float.NaN;
-        // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
-        if (getGeoPos(x, y).lat > -58f) {
-            waterFraction =
-                    sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
-        }
-
-        occciAlgorithm.setWaterNN(null);
-        occciAlgorithm.setAccessor(null);
-
-        occciAlgorithm.setAmbiguousThresh(schillerAmbiguous);
-        occciAlgorithm.setSureThresh(schillerSure);
-        occciAlgorithm.setRefl(reflectance);
         occciAlgorithm.setNnOutput(neuralNetOutput);
-        occciAlgorithm.setWaterFraction(waterFraction);
 
         if (ocOutputDebug) {
             targetSamples[3].set(neuralNetOutput[0]);
@@ -316,7 +286,8 @@ public class OccciClassificationOp extends PixelOperator {
         classifFlagBand.setSampleCoding(flagCoding);
         getTargetProduct().getFlagCodingGroup().add(flagCoding);
 
-        getTargetProduct().setGeoCoding(reflProduct.getGeoCoding());
+        productConfigurer.copyGeoCoding();
+//        getTargetProduct().setGeoCoding(reflProduct.getGeoCoding());
         OccciUtils.setupOccciClassifBitmask(getTargetProduct());
 
         // debug bands:

@@ -8,8 +8,6 @@ package org.esa.beam.idepix.algorithms.occci;
  */
 public class OccciModisAlgorithm extends OccciAlgorithm {
 
-    private static final double GLINT_INCREMENT = 0.1;
-
     // as long as we have no Schiller, CLOUD thresholds experimentally selected just from A2009125001500.L1B_LAC:
     private static final double THRESH_BRIGHT_CLOUD_AMBIGUOUS = 0.07;
     private static final double THRESH_BRIGHT_CLOUD_SURE = 0.15;
@@ -21,14 +19,14 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     @Override
     public boolean isSnowIce() {
 
-        // for MODIS, nnOutput has one element:
+        // for MODIS ALL NN, nnOutput has one element:
         // nnOutput[0] =
-        // 0 < x < 2.1 : clear
-        // 2.1 < x < 3.55 : noncl / semitransparent cloud --> cloud ambiguous
-        // 3.55 < x < 4.1 : cloudy --> cloud sure
-        // 4.1 < x : clear snow/ice
+        // 0 < x < 2.0 : clear
+        // 2.0 < x < 3.35 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.35 < x < 4.2 : cloudy --> cloud sure
+        // 4.2 < x : clear snow/ice
         if (nnOutput != null) {
-            return nnOutput[0] > 4.1 && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
+            return nnOutput[0] > 4.2 && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
         } else {
             // fallback
             // needs ndsi and brightness
@@ -47,18 +45,18 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isCloudAmbiguous() {
-        if (isLand() || isCloudSure() || isSnowIce()) {   // this check has priority
+        if (isCloudSure() || isSnowIce()) {   // this check has priority
             return false;
         }
 
-        // for MODIS, nnOutput has one element:
+        // for MODIS ALL NN, nnOutput has one element:
         // nnOutput[0] =
-        // 0 < x < 2.1 : clear
-        // 2.1 < x < 3.55 : noncl / semitransparent cloud --> cloud ambiguous
-        // 3.55 < x < 4.1 : cloudy --> cloud sure
-        // 4.1 < x : clear snow/ice
+        // 0 < x < 2.0 : clear
+        // 2.0 < x < 3.35 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.35 < x < 4.2 : cloudy --> cloud sure
+        // 4.2 < x : clear snow/ice
         if (nnOutput != null) {
-            return nnOutput[0] > 2.1 && nnOutput[0] <= 3.55;    // separation numbers from HS, 20140923
+            return nnOutput[0] > 2.0 && nnOutput[0] <= 3.35;    // separation numbers from HS, 20140923
         } else {
             // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS);
@@ -67,17 +65,18 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public boolean isCloudSure() {
-        if (isLand() || isSnowIce()) {   // this has priority
+        if (isSnowIce()) {   // this has priority
             return false;
         }
 
+        // for MODIS ALL NN, nnOutput has one element:
         // nnOutput[0] =
-        // 0 < x < 2.1 : clear
-        // 2.1 < x < 3.55 : noncl / semitransparent cloud --> cloud ambiguous
-        // 3.55 < x < 4.1 : cloudy --> cloud sure
-        // 4.1 < x : clear snow/ice
+        // 0 < x < 2.0 : clear
+        // 2.0 < x < 3.35 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.35 < x < 4.2 : cloudy --> cloud sure
+        // 4.2 < x : clear snow/ice
         if (nnOutput != null) {
-            return nnOutput[0] > 3.55 && nnOutput[0] <= 4.1;   // separation numbers from HS, 20140923
+            return nnOutput[0] > 3.35 && nnOutput[0] <= 4.2;   // ALL NN separation numbers from HS, 20140923
         } else {
             // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_SURE);
@@ -117,13 +116,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     @Override
     public float brightValue() {
         // use EV_250_Aggr1km_RefSB_1
-        return (float) refl[15];
+        return (float) refl[0];
     }
 
     @Override
     public float ndsiValue() {
         // use EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7
-        return (float) ((refl[15] - refl[21])/(refl[15] + refl[21]));
+        return (float) ((refl[0] - refl[6])/(refl[0] + refl[6]));
     }
 
 }

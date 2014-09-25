@@ -89,7 +89,6 @@ public class OccciPostProcessingOp extends BasisOp {
                     }
 
                     if (isNearCoastline(x, y, targetTile, waterFractionTile, extendedRectangle)) {
-//                        targetTile.setSample(x, y, Constants.F_COASTLINE, true);
                         refineSnowIceFlaggingForCoastlines(x, y, classifFlagSourceTile, targetTile);
                         if (isCloud) {
                             refineCloudFlaggingForCoastlines(x, y, classifFlagSourceTile, waterFractionTile, targetTile, extendedRectangle);
@@ -233,8 +232,9 @@ public class OccciPostProcessingOp extends BasisOp {
         targetProduct = createCompatibleProduct(classifProduct, classifProduct.getName(), classifProduct.getProductType());
         ProductUtils.copyBand(Constants.CLASSIF_BAND_NAME, classifProduct, targetProduct, false);
         ProductUtils.copyFlagCodings(classifProduct, targetProduct);
-        ProductUtils.copyTiePointGrids(reflProduct, targetProduct);
-        targetProduct.setGeoCoding(reflProduct.getGeoCoding());
+//        ProductUtils.copyTiePointGrids(reflProduct, targetProduct);      todo: check if needed here
+//        targetProduct.setGeoCoding(reflProduct.getGeoCoding());
+        ProductUtils.copyGeoCoding(reflProduct, targetProduct);
 
         OccciUtils.setupOccciClassifBitmask(targetProduct);
     }

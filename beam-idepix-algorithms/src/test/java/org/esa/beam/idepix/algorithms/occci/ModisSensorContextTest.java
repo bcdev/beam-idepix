@@ -1,24 +1,14 @@
 package org.esa.beam.idepix.algorithms.occci;
 
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.junit.Before;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 27.06.2014
- * Time: 14:35
- *
  * @author olafd
  */
 public class ModisSensorContextTest {
@@ -32,12 +22,12 @@ public class ModisSensorContextTest {
 
     @Test
     public void testGetNumSpectralInputBands() {
-        assertEquals(16, modisSensorContext.getNumSpectralInputBands());
+        assertEquals(22, modisSensorContext.getNumSpectralInputBands());
     }
 
     @Test
     public void testGetNumSpectralOutputBands() {
-        assertEquals(16, modisSensorContext.getNumSpectralOutputBands());
+        assertEquals(22, modisSensorContext.getNumSpectralOutputBands());
     }
 
     @Test
@@ -68,25 +58,46 @@ public class ModisSensorContextTest {
     public void testGetSpectralInputBandNames() {
         final String[] spectralBandNames = modisSensorContext.getSpectralInputBandNames();
         assertNotNull(spectralBandNames);
-        assertEquals(16, spectralBandNames.length);
+        assertEquals(22, spectralBandNames.length);
 
-        assertEquals("EV_1KM_RefSB_8", spectralBandNames[0]);
-        assertEquals("EV_1KM_RefSB_9", spectralBandNames[1]);
-        assertEquals("EV_1KM_RefSB_10", spectralBandNames[2]);
-        assertEquals("EV_1KM_RefSB_11", spectralBandNames[3]);
-        assertEquals("EV_1KM_RefSB_12", spectralBandNames[4]);
-        assertEquals("EV_1KM_RefSB_13lo", spectralBandNames[5]);
-        assertEquals("EV_1KM_RefSB_14lo", spectralBandNames[6]);
-        assertEquals("EV_1KM_RefSB_15", spectralBandNames[7]);
-        assertEquals("EV_1KM_RefSB_16", spectralBandNames[8]);
-        assertEquals("EV_250_Aggr1km_RefSB_1", spectralBandNames[9]);
-        assertEquals("EV_250_Aggr1km_RefSB_2", spectralBandNames[10]);
-        assertEquals("EV_500_Aggr1km_RefSB_3", spectralBandNames[11]);
-        assertEquals("EV_500_Aggr1km_RefSB_4", spectralBandNames[12]);
-        assertEquals("EV_500_Aggr1km_RefSB_5", spectralBandNames[13]);
-        assertEquals("EV_500_Aggr1km_RefSB_6", spectralBandNames[14]);
-        assertEquals("EV_500_Aggr1km_RefSB_7", spectralBandNames[15]);
+        assertEquals("EV_250_Aggr1km_RefSB.1", spectralBandNames[0]);
+        assertEquals("EV_250_Aggr1km_RefSB.2", spectralBandNames[1]);
+        assertEquals("EV_500_Aggr1km_RefSB.3", spectralBandNames[2]);
+        assertEquals("EV_500_Aggr1km_RefSB.4", spectralBandNames[3]);
+        assertEquals("EV_500_Aggr1km_RefSB.5", spectralBandNames[4]);
+        assertEquals("EV_500_Aggr1km_RefSB.6", spectralBandNames[5]);
+        assertEquals("EV_500_Aggr1km_RefSB.7", spectralBandNames[6]);
+        assertEquals("EV_1KM_RefSB.8", spectralBandNames[7]);
+        assertEquals("EV_1KM_RefSB.9", spectralBandNames[8]);
+        assertEquals("EV_1KM_RefSB.10", spectralBandNames[9]);
+        assertEquals("EV_1KM_RefSB.11", spectralBandNames[10]);
+        assertEquals("EV_1KM_RefSB.12", spectralBandNames[11]);
+        assertEquals("EV_1KM_RefSB.13lo", spectralBandNames[12]);
+        assertEquals("EV_1KM_RefSB.13hi", spectralBandNames[13]);
+        assertEquals("EV_1KM_RefSB.14lo", spectralBandNames[14]);
+        assertEquals("EV_1KM_RefSB.14hi", spectralBandNames[15]);
+        assertEquals("EV_1KM_RefSB.15", spectralBandNames[16]);
+        assertEquals("EV_1KM_RefSB.16", spectralBandNames[17]);
+        assertEquals("EV_1KM_RefSB.17", spectralBandNames[18]);
+        assertEquals("EV_1KM_RefSB.18", spectralBandNames[19]);
+        assertEquals("EV_1KM_RefSB.19", spectralBandNames[20]);
+        assertEquals("EV_1KM_RefSB.26", spectralBandNames[21]);
     }
+
+    @Test
+    public void testGetEmissiveInputBandNames() {
+        final String[] emissiveBandNames = modisSensorContext.getEmissiveInputBandNames();
+        assertNotNull(emissiveBandNames);
+        assertEquals(16, emissiveBandNames.length);
+
+        for (int i=0; i<6; i++) {
+            assertEquals("EV_1KM_Emissive." + Integer.toString(20+i), emissiveBandNames[i]);
+        }
+        for (int i=6; i<emissiveBandNames.length; i++) {
+            assertEquals("EV_1KM_Emissive." + Integer.toString(20+i+1), emissiveBandNames[i]);
+        }
+    }
+
 
     @Test
     public void testGetSensorType() {
@@ -99,28 +110,39 @@ public class ModisSensorContextTest {
 
         modisSensorContext.configureSourceSamples(testSampleConfigurer);
 
-        assertEquals("SolarZenith", testSampleConfigurer.get(0));
-        assertEquals("SolarAzimuth", testSampleConfigurer.get(1));
-        assertEquals("SensorZenith", testSampleConfigurer.get(2));
-        assertEquals("SensorAzimuth", testSampleConfigurer.get(3));
+        assertEquals("EV_250_Aggr1km_RefSB.1", testSampleConfigurer.get(0));
+        assertEquals("EV_250_Aggr1km_RefSB.2", testSampleConfigurer.get(1));
+        assertEquals("EV_500_Aggr1km_RefSB.3", testSampleConfigurer.get(2));
+        assertEquals("EV_500_Aggr1km_RefSB.4", testSampleConfigurer.get(3));
+        assertEquals("EV_500_Aggr1km_RefSB.5", testSampleConfigurer.get(4));
+        assertEquals("EV_500_Aggr1km_RefSB.6", testSampleConfigurer.get(5));
+        assertEquals("EV_500_Aggr1km_RefSB.7", testSampleConfigurer.get(6));
+        assertEquals("EV_1KM_RefSB.8", testSampleConfigurer.get(7));
+        assertEquals("EV_1KM_RefSB.9", testSampleConfigurer.get(8));
+        assertEquals("EV_1KM_RefSB.10", testSampleConfigurer.get(9));
+        assertEquals("EV_1KM_RefSB.11", testSampleConfigurer.get(10));
+        assertEquals("EV_1KM_RefSB.12", testSampleConfigurer.get(11));
+        assertEquals("EV_1KM_RefSB.13lo", testSampleConfigurer.get(12));
+        assertEquals("EV_1KM_RefSB.13hi", testSampleConfigurer.get(13));
+        assertEquals("EV_1KM_RefSB.14lo", testSampleConfigurer.get(14));
+        assertEquals("EV_1KM_RefSB.14hi", testSampleConfigurer.get(15));
+        assertEquals("EV_1KM_RefSB.15", testSampleConfigurer.get(16));
+        assertEquals("EV_1KM_RefSB.16", testSampleConfigurer.get(17));
+        assertEquals("EV_1KM_RefSB.17", testSampleConfigurer.get(18));
+        assertEquals("EV_1KM_RefSB.18", testSampleConfigurer.get(19));
+        assertEquals("EV_1KM_RefSB.19", testSampleConfigurer.get(20));
+        assertEquals("EV_1KM_RefSB.26", testSampleConfigurer.get(21));
 
-        for (int i = 4; i < 8; i++) {
-            assertNull(testSampleConfigurer.get(i));
+        for (int i=0; i<6; i++) {
+            assertEquals("EV_1KM_Emissive." + Integer.toString(20+i), testSampleConfigurer.get(22+i));
         }
-
-        assertEquals("EV_1KM_RefSB_8", testSampleConfigurer.get(8));
-        assertEquals("EV_1KM_RefSB_9", testSampleConfigurer.get(9));
-        assertEquals("EV_1KM_RefSB_10", testSampleConfigurer.get(10));
-        assertEquals("EV_1KM_RefSB_11", testSampleConfigurer.get(11));
-        assertEquals("EV_1KM_RefSB_12", testSampleConfigurer.get(12));
-        assertEquals("EV_1KM_RefSB_13lo", testSampleConfigurer.get(13));
-        assertEquals("EV_1KM_RefSB_14lo", testSampleConfigurer.get(14));
-        assertEquals("EV_1KM_RefSB_15", testSampleConfigurer.get(15));
-        assertEquals("EV_1KM_RefSB_16", testSampleConfigurer.get(16));
+        for (int i=6; i<modisSensorContext.getNumEmissiveInputBands(); i++) {
+            assertEquals("EV_1KM_Emissive." + Integer.toString(20+i+1), testSampleConfigurer.get(22+i));
+        }
     }
 
     @Test
-    public void testGetSolarFluxes_noFluxesInMetadata() {
+    public void testGetSolarFluxes() {
         final double[] expectedResults = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737,
                 1882.428333, 1545.183846, 1507.529167, 1277.037,
                 945.3382727, 1601.482295, 967.137667, 2072.03625,
@@ -166,21 +188,4 @@ public class ModisSensorContextTest {
         assertEquals(-55.13 + 360.0, modisSensorContext.correctViewAzimuth(-55.13), 1e-8);
     }
 
-    private Product createProductWithSolarFluxMetadata() {
-        final Product product = new Product("test", "type", 5, 5);
-        double[] solarFluxes = new double[330];
-        int[] startPositionInProductData = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
-        for (int aStartPositionInProductData : startPositionInProductData) {
-            for (int j = 0; j < 10; j++) {
-                solarFluxes[aStartPositionInProductData + j] = aStartPositionInProductData + j;
-            }
-        }
-        final ProductData productData = ProductData.createInstance(solarFluxes);
-        final MetadataAttribute attribute = new MetadataAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi", productData, true);
-        final MetadataElement globalMetadataElement = new MetadataElement("GLOBAL_METADATA");
-        globalMetadataElement.addAttribute(attribute);
-
-        product.getMetadataRoot().addElement(globalMetadataElement);
-        return product;
-    }
 }

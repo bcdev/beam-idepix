@@ -18,7 +18,6 @@ import java.util.Map;
 
 /**
  * Idepix operator for pixel identification and classification with OC-CCI algorithm.
- * todo: implement (see GlobAlbedoOp)
  *
  * @author olafd
  */
@@ -70,11 +69,6 @@ public class OccciOp extends BasisOp {
     @Parameter(label = " Product type",
                description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
     String productTypeString;
-
-    @Parameter(label = "Schiller cloud threshold ambiguous clouds", defaultValue = "1.4")   // todo: adjust default?
-    private double ocSchillerAmbiguous;
-    @Parameter(label = "Schiller cloud threshold sure clouds", defaultValue = "1.8")
-    private double ocSchillerSure;
 
     @Parameter(defaultValue = "1", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
@@ -141,8 +135,6 @@ public class OccciOp extends BasisOp {
     private Map<String, Object> createOccciCloudClassificationParameters() {
         Map<String, Object> occciCloudClassificationParameters = new HashMap<String, Object>(1);
         occciCloudClassificationParameters.put("productTypeString", productTypeString);
-        occciCloudClassificationParameters.put("schillerAmbiguous", ocSchillerAmbiguous);
-        occciCloudClassificationParameters.put("schillerSure", ocSchillerSure);
         occciCloudClassificationParameters.put("cloudBufferWidth", cloudBufferWidth);
         occciCloudClassificationParameters.put("wmResolution", ocWaterMaskResolution);
         occciCloudClassificationParameters.put("ocOutputDebug", ocOutputDebug);
@@ -153,10 +145,10 @@ public class OccciOp extends BasisOp {
 
     private void addBandsToTargetProduct(Product targetProduct) {
         if (ocOutputRad2Refl) {
-            copySourceBands(rad2reflProduct, targetProduct, "RefSB");
+            copySourceBands(rad2reflProduct, targetProduct, "RefSB.");
         }
         if (ocOutputEmissive) {
-            copySourceBands(rad2reflProduct, targetProduct, "Emissive");
+            copySourceBands(rad2reflProduct, targetProduct, "Emissive.");
         }
         if (ocOutputSeawifsRadiance) {
             copySourceBands(rad2reflProduct, targetProduct, "L_");

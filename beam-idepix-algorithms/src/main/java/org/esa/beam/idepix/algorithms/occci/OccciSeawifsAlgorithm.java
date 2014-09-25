@@ -8,8 +8,6 @@ package org.esa.beam.idepix.algorithms.occci;
  */
 public class OccciSeawifsAlgorithm extends OccciAlgorithm {
 
-    private static final double GLINT_INCREMENT = 0.1;
-
     // as long as we have no Schiller, CLOUD thresholds experimentally selected just from A2009125001500.L1B_LAC:
     private static final double THRESH_BRIGHT_CLOUD_AMBIGUOUS = 0.07;
     private static final double THRESH_BRIGHT_CLOUD_SURE = 0.15;

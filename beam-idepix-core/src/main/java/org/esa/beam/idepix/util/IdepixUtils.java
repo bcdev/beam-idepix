@@ -11,7 +11,7 @@ import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.util.BitSetter;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,8 +82,11 @@ public class IdepixUtils {
     }
 
     public static boolean isValidModisProduct(Product product) {
-        return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
-                product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
+//        return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
+//                product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}") ||
+//                product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
+        return (product.getName().contains("MOD021KM") ||
+                product.getName().contains("L1B_LAC"));
     }
 
     public static boolean isValidSeawifsProduct(Product product) {
@@ -188,7 +191,7 @@ public class IdepixUtils {
     }
 
     public static Map<Integer, Integer> setupMerisWavelengthIndexMap() {
-        Map<Integer, Integer> merisWavelengthIndexMap = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> merisWavelengthIndexMap = new HashMap<>();
         merisWavelengthIndexMap.put(412, 0);
         merisWavelengthIndexMap.put(442, 1);
         merisWavelengthIndexMap.put(490, 2);

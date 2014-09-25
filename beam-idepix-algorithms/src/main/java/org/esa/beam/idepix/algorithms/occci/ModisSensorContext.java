@@ -1,9 +1,6 @@
 package org.esa.beam.idepix.algorithms.occci;
 
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
@@ -21,31 +18,28 @@ class ModisSensorContext implements SensorContext {
     };
     private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 8, 9, 15, 18, 21, 26};
 
-    private static final String[] EARTH_SUN_DISTANCE_NAMES = {"Earth-Sun_Distance", "Earth-Sun Distance"};
-    private static final int[] START_POSITION_IN_PRODUCT_DATA = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
-
-    private final static String MODIS_L1B_REFLECTANCE_1_BAND_NAME = "EV_1KM_RefSB_8";                    // 412
-    private final static String MODIS_L1B_REFLECTANCE_2_BAND_NAME = "EV_1KM_RefSB_9";                    // 443
-    private final static String MODIS_L1B_REFLECTANCE_3_BAND_NAME = "EV_1KM_RefSB_10";                   // 488
-    private final static String MODIS_L1B_REFLECTANCE_4_BAND_NAME = "EV_1KM_RefSB_11";                   // 531
-    private final static String MODIS_L1B_REFLECTANCE_5_BAND_NAME = "EV_1KM_RefSB_12";                   // 547
-    private final static String MODIS_L1B_REFLECTANCE_6_BAND_NAME = "EV_1KM_RefSB_13lo";                 // 667
-    private final static String MODIS_L1B_REFLECTANCE_7_BAND_NAME = "EV_1KM_RefSB_13hi";                 // 667
-    private final static String MODIS_L1B_REFLECTANCE_8_BAND_NAME = "EV_1KM_RefSB_14lo";                 // 678
-    private final static String MODIS_L1B_REFLECTANCE_9_BAND_NAME = "EV_1KM_RefSB_14hi";                 // 678
-    private final static String MODIS_L1B_REFLECTANCE_10_BAND_NAME = "EV_1KM_RefSB_15";                   // 748
-    private final static String MODIS_L1B_REFLECTANCE_11_BAND_NAME = "EV_1KM_RefSB_16";                   // 869
-    private final static String MODIS_L1B_REFLECTANCE_12_BAND_NAME = "EV_1KM_RefSB_17";                   // 869
-    private final static String MODIS_L1B_REFLECTANCE_13_BAND_NAME = "EV_1KM_RefSB_18";                   // 869
-    private final static String MODIS_L1B_REFLECTANCE_14_BAND_NAME = "EV_1KM_RefSB_19";                   // 869
-    private final static String MODIS_L1B_REFLECTANCE_15_BAND_NAME = "EV_1KM_RefSB_26";                   // 869
-    private final static String MODIS_L1B_REFLECTANCE_16_BAND_NAME = "EV_250_Aggr1km_RefSB_1";           // 645
-    private final static String MODIS_L1B_REFLECTANCE_17_BAND_NAME = "EV_250_Aggr1km_RefSB_2";           // 859
-    private final static String MODIS_L1B_REFLECTANCE_18_BAND_NAME = "EV_500_Aggr1km_RefSB_3";           // 469
-    private final static String MODIS_L1B_REFLECTANCE_19_BAND_NAME = "EV_500_Aggr1km_RefSB_4";           // 555
-    private final static String MODIS_L1B_REFLECTANCE_20_BAND_NAME = "EV_500_Aggr1km_RefSB_5";           // 1240
-    private final static String MODIS_L1B_REFLECTANCE_21_BAND_NAME = "EV_500_Aggr1km_RefSB_6";           // 1640
-    private final static String MODIS_L1B_REFLECTANCE_22_BAND_NAME = "EV_500_Aggr1km_RefSB_7";           // 2130
+    private final static String MODIS_L1B_REFLECTANCE_1_BAND_NAME = "EV_250_Aggr1km_RefSB.1";           // 645
+    private final static String MODIS_L1B_REFLECTANCE_2_BAND_NAME = "EV_250_Aggr1km_RefSB.2";           // 859
+    private final static String MODIS_L1B_REFLECTANCE_3_BAND_NAME = "EV_500_Aggr1km_RefSB.3";           // 469
+    private final static String MODIS_L1B_REFLECTANCE_4_BAND_NAME = "EV_500_Aggr1km_RefSB.4";           // 555
+    private final static String MODIS_L1B_REFLECTANCE_5_BAND_NAME = "EV_500_Aggr1km_RefSB.5";           // 1240
+    private final static String MODIS_L1B_REFLECTANCE_6_BAND_NAME = "EV_500_Aggr1km_RefSB.6";           // 1640
+    private final static String MODIS_L1B_REFLECTANCE_7_BAND_NAME = "EV_500_Aggr1km_RefSB.7";           // 2130
+    private final static String MODIS_L1B_REFLECTANCE_8_BAND_NAME = "EV_1KM_RefSB.8";                    // 412
+    private final static String MODIS_L1B_REFLECTANCE_9_BAND_NAME = "EV_1KM_RefSB.9";                    // 443
+    private final static String MODIS_L1B_REFLECTANCE_10_BAND_NAME = "EV_1KM_RefSB.10";                   // 488
+    private final static String MODIS_L1B_REFLECTANCE_11_BAND_NAME = "EV_1KM_RefSB.11";                   // 531
+    private final static String MODIS_L1B_REFLECTANCE_12_BAND_NAME = "EV_1KM_RefSB.12";                   // 547
+    private final static String MODIS_L1B_REFLECTANCE_13_BAND_NAME = "EV_1KM_RefSB.13lo";                 // 667
+    private final static String MODIS_L1B_REFLECTANCE_14_BAND_NAME = "EV_1KM_RefSB.13hi";                 // 667
+    private final static String MODIS_L1B_REFLECTANCE_15_BAND_NAME = "EV_1KM_RefSB.14lo";                 // 678
+    private final static String MODIS_L1B_REFLECTANCE_16_BAND_NAME = "EV_1KM_RefSB.14hi";                 // 678
+    private final static String MODIS_L1B_REFLECTANCE_17_BAND_NAME = "EV_1KM_RefSB.15";                   // 748
+    private final static String MODIS_L1B_REFLECTANCE_18_BAND_NAME = "EV_1KM_RefSB.16";                   // 869
+    private final static String MODIS_L1B_REFLECTANCE_19_BAND_NAME = "EV_1KM_RefSB.17";                   // 869
+    private final static String MODIS_L1B_REFLECTANCE_20_BAND_NAME = "EV_1KM_RefSB.18";                   // 869
+    private final static String MODIS_L1B_REFLECTANCE_21_BAND_NAME = "EV_1KM_RefSB.19";                   // 869
+    private final static String MODIS_L1B_REFLECTANCE_22_BAND_NAME = "EV_1KM_RefSB.26";                   // 869
 
     private final static String[] MODIS_L1B_SPECTRAL_BAND_NAMES = {
             MODIS_L1B_REFLECTANCE_1_BAND_NAME,
@@ -73,22 +67,22 @@ class ModisSensorContext implements SensorContext {
     };
     private final static int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
 
-    private final static String MODIS_L1B_EMISSIVITY_1_BAND_NAME = "EV_1KM_Emissive_20";                    // 3750
-    private final static String MODIS_L1B_EMISSIVITY_2_BAND_NAME = "EV_1KM_Emissive_21";                    // 3959
-    private final static String MODIS_L1B_EMISSIVITY_3_BAND_NAME = "EV_1KM_Emissive_22";                    // 3959
-    private final static String MODIS_L1B_EMISSIVITY_4_BAND_NAME = "EV_1KM_Emissive_23";                    // 4050
-    private final static String MODIS_L1B_EMISSIVITY_5_BAND_NAME = "EV_1KM_Emissive_24";                    // 4465
-    private final static String MODIS_L1B_EMISSIVITY_6_BAND_NAME = "EV_1KM_Emissive_25";                    // 4515
-    private final static String MODIS_L1B_EMISSIVITY_7_BAND_NAME = "EV_1KM_Emissive_27";                    // 6715
-    private final static String MODIS_L1B_EMISSIVITY_8_BAND_NAME = "EV_1KM_Emissive_28";                    // 7325
-    private final static String MODIS_L1B_EMISSIVITY_9_BAND_NAME = "EV_1KM_Emissive_29";                    // 8550
-    private final static String MODIS_L1B_EMISSIVITY_10_BAND_NAME = "EV_1KM_Emissive_30";                    // 9730
-    private final static String MODIS_L1B_EMISSIVITY_11_BAND_NAME = "EV_1KM_Emissive_31";                    // 11030
-    private final static String MODIS_L1B_EMISSIVITY_12_BAND_NAME = "EV_1KM_Emissive_32";                    // 12020
-    private final static String MODIS_L1B_EMISSIVITY_13_BAND_NAME = "EV_1KM_Emissive_33";                    // 13335
-    private final static String MODIS_L1B_EMISSIVITY_14_BAND_NAME = "EV_1KM_Emissive_34";                    // 13635
-    private final static String MODIS_L1B_EMISSIVITY_15_BAND_NAME = "EV_1KM_Emissive_35";                    // 13935
-    private final static String MODIS_L1B_EMISSIVITY_16_BAND_NAME = "EV_1KM_Emissive_36";                    // 14235
+    private final static String MODIS_L1B_EMISSIVITY_1_BAND_NAME = "EV_1KM_Emissive.20";                    // 3750
+    private final static String MODIS_L1B_EMISSIVITY_2_BAND_NAME = "EV_1KM_Emissive.21";                    // 3959
+    private final static String MODIS_L1B_EMISSIVITY_3_BAND_NAME = "EV_1KM_Emissive.22";                    // 3959
+    private final static String MODIS_L1B_EMISSIVITY_4_BAND_NAME = "EV_1KM_Emissive.23";                    // 4050
+    private final static String MODIS_L1B_EMISSIVITY_5_BAND_NAME = "EV_1KM_Emissive.24";                    // 4465
+    private final static String MODIS_L1B_EMISSIVITY_6_BAND_NAME = "EV_1KM_Emissive.25";                    // 4515
+    private final static String MODIS_L1B_EMISSIVITY_7_BAND_NAME = "EV_1KM_Emissive.27";                    // 6715
+    private final static String MODIS_L1B_EMISSIVITY_8_BAND_NAME = "EV_1KM_Emissive.28";                    // 7325
+    private final static String MODIS_L1B_EMISSIVITY_9_BAND_NAME = "EV_1KM_Emissive.29";                    // 8550
+    private final static String MODIS_L1B_EMISSIVITY_10_BAND_NAME = "EV_1KM_Emissive.30";                    // 9730
+    private final static String MODIS_L1B_EMISSIVITY_11_BAND_NAME = "EV_1KM_Emissive.31";                    // 11030
+    private final static String MODIS_L1B_EMISSIVITY_12_BAND_NAME = "EV_1KM_Emissive.32";                    // 12020
+    private final static String MODIS_L1B_EMISSIVITY_13_BAND_NAME = "EV_1KM_Emissive.33";                    // 13335
+    private final static String MODIS_L1B_EMISSIVITY_14_BAND_NAME = "EV_1KM_Emissive.34";                    // 13635
+    private final static String MODIS_L1B_EMISSIVITY_15_BAND_NAME = "EV_1KM_Emissive.35";                    // 13935
+    private final static String MODIS_L1B_EMISSIVITY_16_BAND_NAME = "EV_1KM_Emissive.36";                    // 14235
 
     private final static String[] MODIS_L1B_EMISSIVE_BAND_NAMES = {
             MODIS_L1B_EMISSIVITY_1_BAND_NAME,
@@ -133,7 +127,6 @@ class ModisSensorContext implements SensorContext {
             229.882,              // 1640
             92.5171833            // 2130
     };
-    private static final String globalMetadataName = "GLOBAL_METADATA";
 
     private double[] solarFluxes;
     private double earthSunDistance;
@@ -144,9 +137,17 @@ class ModisSensorContext implements SensorContext {
         return MODIS_L1B_NUM_SPECTRAL_BANDS;
     }
 
+    public int getNumEmissiveInputBands() {
+        return MODIS_L1B_NUM_EMISSIVE_BANDS;
+    }
+
     @Override
     public String[] getSpectralInputBandNames() {
         return MODIS_L1B_SPECTRAL_BAND_NAMES;
+    }
+
+    public String[] getEmissiveInputBandNames() {
+        return MODIS_L1B_EMISSIVE_BAND_NAMES;
     }
 
     @Override
@@ -222,13 +223,7 @@ class ModisSensorContext implements SensorContext {
 
     @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
-        // todo: check if needed for MODIS
-//        inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
-//        inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
-//        inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
-//        inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
-//        inputs[4] = surfacePressureDefaultValue;
-//        inputs[5] = ozoneDefaultValue;
+        // nothing to do for MODIS
     }
 
     @Override
@@ -255,32 +250,6 @@ class ModisSensorContext implements SensorContext {
     public void init(Product sourceProduct) {
         earthSunDistance = 1;
         solarFluxes = defaultSolarFluxes;
-        MetadataElement globalMetadataElement = sourceProduct.getMetadataRoot().getElement(globalMetadataName);
-        if (globalMetadataElement != null) {
-            final MetadataAttribute solarFluxesAttribute = globalMetadataElement.getAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi");
-            if (solarFluxesAttribute != null) {
-                final ProductData productData = solarFluxesAttribute.getData();
-                solarFluxes = new double[MODIS_L1B_NUM_SPECTRAL_BANDS];
-                for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                    for (int j = 0; j < 10; j++) {
-                        solarFluxes[i] += productData.getElemDoubleAt(START_POSITION_IN_PRODUCT_DATA[i] + j);
-                    }
-                    solarFluxes[i] /= 10;
-                    solarFluxes[i] *= Math.PI;
-                }
-            }
-        } else {
-            globalMetadataElement = sourceProduct.getMetadataRoot().getElement("Global_Attributes");
-        }
-        if (globalMetadataElement != null) {
-            for (String EARTH_SUN_DISTANCE_NAME : EARTH_SUN_DISTANCE_NAMES) {
-                final MetadataAttribute earthSunDistanceAttribute = globalMetadataElement.getAttribute(EARTH_SUN_DISTANCE_NAME);
-                if (earthSunDistanceAttribute != null) {
-                    earthSunDistance = earthSunDistanceAttribute.getData().getElemDouble();
-                    break;
-                }
-            }
-        }
     }
 
     @Override
@@ -313,24 +282,6 @@ class ModisSensorContext implements SensorContext {
             return azimuth + 360.0;
         }
         return azimuth;
-    }
-
-    public static double convertModisEmissiveRadianceToTemperature(double radiance, int emissiveBandIndex) {
-
-        final double c1 = 2.0 * Constants.PLANCK_CONSTANT *
-                Math.pow(Constants.VACUUM_LIGHT_SPEED, 2.0);
-
-        final double c2 = Constants.PLANCK_CONSTANT * Constants.VACUUM_LIGHT_SPEED /
-                Constants.BOLTZMANN_CONSTANT;
-
-        // use metres in units:
-        final double wvlMetres = Constants.MODIS_EMISSIVE_WAVELENGTHS[emissiveBandIndex] / 1.E9;  // input is in microns!
-        final double radMetres = radiance * 1.E6;
-
-        double temperature = c2 / (wvlMetres * Math.log(c1 / (radMetres * Math.pow(wvlMetres, 5.0)) + 1.0));
-        temperature = (temperature - Constants.TCI[emissiveBandIndex]) / Constants.TCS[emissiveBandIndex];
-
-        return temperature;
     }
 
 }

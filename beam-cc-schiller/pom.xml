@@ -78,13 +78,13 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
-            <version>${beamVersion}</version>
+            <version>5.0.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-ui</artifactId>
-            <version>${beamVersion}</version>
+            <version>5.0.1</version>
         </dependency>
 
         <dependency>
@@ -99,11 +99,11 @@
             <version>${beamVersion}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-netcdf</artifactId>
-            <version>${beamVersion}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.esa.beam</groupId>-->
+            <!--<artifactId>beam-netcdf</artifactId>-->
+            <!--<version>${beamVersion}</version>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>org.esa.beam</groupId>

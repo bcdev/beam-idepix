@@ -222,14 +222,21 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>5.0.1</version>
+                <!--<version>5.0.1</version>-->
+                <version>5.0.2-MOD021KM_Patch</version>
             </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
-                <artifactId>seadas-reader</artifactId>
-                <version>1.5.5</version>
+                <artifactId>beam-modis-reader</artifactId>
+                <version>5.0.1-MOD021KM_Patch</version>
             </dependency>
+
+            <!--<dependency>-->
+                <!--<groupId>org.esa.beam</groupId>-->
+                <!--<artifactId>seadas-reader</artifactId>-->
+                <!--<version>1.5.5</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
