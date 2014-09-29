@@ -105,6 +105,11 @@ public class CoastColourOp extends BasisOp {
                label = "Cloud screening 'sure' threshold")
     private double ccCloudScreeningSure = 1.8;       // Schiller
 
+    @Parameter(defaultValue = "0.1",
+               description = "Value added to cloud screening ambiguous/sure thresholds in case of glint",
+               label = "Cloud screening threshold addition in case of glint")
+    private double ccGlintCloudThresholdAddition;
+
     @Parameter(defaultValue = "true",
                label = " Apply alternative Schiller NN for cloud classification",
                description = " Apply Schiller NN for cloud classification ")
@@ -201,6 +206,7 @@ public class CoastColourOp extends BasisOp {
         Map<String, Object> cloudClassificationParameters = new HashMap<String, Object>(11);
         cloudClassificationParameters.put("cloudScreeningAmbiguous", ccCloudScreeningAmbiguous);
         cloudClassificationParameters.put("cloudScreeningSure", ccCloudScreeningSure);
+        cloudClassificationParameters.put("ccGlintCloudThresholdAddition", ccGlintCloudThresholdAddition);
         cloudClassificationParameters.put("ccOutputSeaIceClimatologyValue", ccOutputSeaIceClimatologyValue);
         cloudClassificationParameters.put("ccIgnoreSeaIceClimatology", ccIgnoreSeaIceClimatology);
         cloudClassificationParameters.put("ccOutputCloudProbabilityFeatureValue", ccOutputCloudProbabilityFeatureValue);

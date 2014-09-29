@@ -176,6 +176,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     @Parameter(label = "Cloud screening 'sure' threshold", defaultValue = "1.8")
     private double cloudScreeningSure;         // Schiller
 
+    @Parameter(defaultValue = "0.1",
+               label = "Cloud screening threshold addition in case of glint")
+    private double ccGlintCloudThresholdAddition;
+
     @Parameter(label = " Cloud Probability Feature Value", defaultValue = "true")
     private boolean ccOutputCloudProbabilityFeatureValue;    // Schiller
 
@@ -618,8 +622,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         double sureThresh = cloudScreeningSure;
         // this seems to avoid false cloud flagging in glint regions:
         if (is_glint_risk) {
-            ambiguousThresh += 0.1;
-            sureThresh += 0.1;
+            ambiguousThresh += ccGlintCloudThresholdAddition;
+            sureThresh += ccGlintCloudThresholdAddition;
         }
 
         boolean isCloudSure = false;
@@ -715,8 +719,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         double sureThresh = cloudScreeningSure;
         // this seems to avoid false cloud flagging in glint regions:
         if (glintRisk) {
-            ambiguousThresh += 0.1;
-            sureThresh += 0.1;
+            ambiguousThresh += ccGlintCloudThresholdAddition;
+            sureThresh += ccGlintCloudThresholdAddition;
         }
 
         float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
