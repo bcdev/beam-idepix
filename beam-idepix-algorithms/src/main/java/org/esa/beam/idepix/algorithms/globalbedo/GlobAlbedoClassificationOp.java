@@ -73,6 +73,11 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
     boolean gaApplyMERISAlternativeSchillerNN;
 
+    @Parameter(defaultValue = "true",
+               label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
+               description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+    boolean gaApplyMERISAlternativeSchillerNNPure;
+
     @Parameter(defaultValue = "1.1",
                label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
                description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")

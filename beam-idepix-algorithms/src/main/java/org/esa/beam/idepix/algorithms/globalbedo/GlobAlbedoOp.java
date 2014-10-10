@@ -107,6 +107,11 @@ public class GlobAlbedoOp extends BasisOp {
             description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
     private boolean gaApplyMERISAlternativeSchillerNN;
 
+    @Parameter(defaultValue = "true",
+               label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
+               description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+    boolean gaApplyMERISAlternativeSchillerNNPure;
+
     @Parameter(defaultValue = "2.0",
                label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
                description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
@@ -191,6 +196,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNN", gaApplyMERISAlternativeSchillerNN);
+        gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNNPure", gaApplyMERISAlternativeSchillerNNPure);
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue", gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue", gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue);
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudSureSnowSeparationValue", gaAlternativeSchillerNNCloudSureSnowSeparationValue);

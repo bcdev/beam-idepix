@@ -208,6 +208,11 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double ccAlternativeSchillerNNCloudSureSnowSeparationValue;
 
+    @Parameter(defaultValue = "true",
+               label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
+               description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+    boolean ccApplyMERISAlternativeSchillerNNPure;
+
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
 
@@ -654,6 +659,16 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                 if (is_snow_ice) {
                     // this would be as 'SNOW/ICE'...
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, true);
+                }
+
+                if (!ccApplyMERISAlternativeSchillerNNPure && !isCloudSure && !isCloudAmbiguous) {
+                    final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
+                    isCloudSure = cloudProbValue > ambiguousThresh;
+                    isCloudAmbiguous = cloudProbValue > ambiguousThresh && cloudProbValue < sureThresh;
+
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_SURE, isCloudSure);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, isCloudAmbiguous || isCloudSure);
                 }
             }
         } else {

@@ -120,46 +120,48 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
                         final double[] nnOutput = ((GlobAlbedoMerisAlgorithm) globAlbedoAlgorithm).getNnOutput();
 
                         // 'pure Schiller'
-                        if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {
-                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
-                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, false);
-                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
-                            cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
-                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue &&
-                                    nnOutput[0] <= gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue) {
-                                // this would be as 'CLOUD_AMBIGUOUS'...
-                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
-                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                        if (gaApplyMERISAlternativeSchillerNNPure) {
+                            if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, false);
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
+                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
+                                if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue &&
+                                        nnOutput[0] <= gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue) {
+                                    // this would be as 'CLOUD_AMBIGUOUS'...
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                                }
+                                if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
+                                        nnOutput[0] <= gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
+                                    // this would be as 'CLOUD_SURE'...
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                                }
+                                if (nnOutput[0] > gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
+                                    // this would be as 'SNOW/ICE'...
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, true);
+                                }
                             }
-                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
-                                    nnOutput[0] <= gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
-                                // this would be as 'CLOUD_SURE'...
-                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
-                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
-                            }
-                            if (nnOutput[0] > gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
-                                // this would be as 'SNOW/ICE'...
-                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, true);
+                        } else {
+                            // 'refinement with Schiller', as with old net. // todo: what do we want??
+                            if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD) &&
+                                    !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
+                                if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue &&
+                                        nnOutput[0] <= gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue) {
+                                    // this would be as 'CLOUD_AMBIGUOUS' in CC and makes many coastlines as cloud...
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                                }
+                                if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
+                                        nnOutput[0] <= gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
+                                    //   'CLOUD_SURE' as in CC (20140424, OD)
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
+                                    cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
+                                }
                             }
                         }
-
-                        // 'refinement with Schiller', as with old net. // todo: what do we want??
-//                        if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD) &&
-//                                !cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_SURE)) {
-//                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue &&
-//                                    nnOutput[0] <= gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue) {
-//                                // this would be as 'CLOUD_AMBIGUOUS' in CC and makes many coastlines as cloud...
-//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, true);
-//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
-//                            }
-//                            if (nnOutput[0] > gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
-//                                    nnOutput[0] <= gaAlternativeSchillerNNCloudSureSnowSeparationValue) {
-//                                //   'CLOUD_SURE' as in CC (20140424, OD)
-//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_SURE, true);
-//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
-//                                cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD, true);
-//                            }
-//                        }
                         nnTargetTile.setSample(x, y, nnOutput[0]);
                     } else {
                         if (landNN != null &&
