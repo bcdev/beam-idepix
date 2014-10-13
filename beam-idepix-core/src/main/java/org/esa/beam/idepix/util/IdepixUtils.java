@@ -90,7 +90,10 @@ public class IdepixUtils {
     }
 
     public static boolean isValidSeawifsProduct(Product product) {
+//        S2006131120520.L1B_LAC
+//        S2005141121515.L1B_MLAC
         return (product.getName().matches("S[0-9]{13}.(?i)(L1B_LAC)") ||
+                product.getName().matches("S[0-9]{13}.(?i)(L1B_MLAC)") ||
                 product.getName().matches("S[0-9]{13}.(?i)(L1B_HRPT)"));
     }
 

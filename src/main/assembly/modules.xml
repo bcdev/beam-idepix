@@ -37,6 +37,7 @@
                 <!--<include>*:beam-meris-radiometry*</include>-->
                 <!--<include>*:beam-unmix*</include>-->
                 <include>*:beam-watermask*</include>
+                <include>*:beam-avhrr-directory*</include>
                 <include>*:flint-processor*</include>
             </includes>
         </dependencySet>

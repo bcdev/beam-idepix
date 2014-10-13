@@ -2,9 +2,11 @@
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-core</symbolicName>
     <version>3.0-EVOLUTION-SNAPSHOT</version>
-    <name>Generic classification of pixels</name>
-    <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
+    <name>Idepix Core</name>
+    <description>
+        Idepix core module. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.
     </description>
+
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>
