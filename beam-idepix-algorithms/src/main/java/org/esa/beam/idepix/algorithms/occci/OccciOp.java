@@ -144,6 +144,8 @@ public class OccciOp extends BasisOp {
     }
 
     private void addBandsToTargetProduct(Product targetProduct) {
+        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
+
         if (ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB.");
         }
