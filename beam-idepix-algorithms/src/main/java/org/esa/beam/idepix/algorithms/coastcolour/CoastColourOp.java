@@ -80,14 +80,12 @@ public class CoastColourOp extends BasisOp {
 
     @Parameter(defaultValue = "false",
                description = "Write Sea Ice Climatology Max Value to the target product.",
-               label = "Write Sea Ice Climatology Max Value to the target product"
-    )
+               label = "Write Sea Ice Climatology Max Value to the target product")
     private boolean ccOutputSeaIceClimatologyValue;
 
     @Parameter(defaultValue = "false",
                description = "Check for sea/lake ice also outside Sea Ice Climatology area.",
-               label = "Check for sea/lake ice also outside sea ice climatology area"
-    )
+               label = "Check for sea/lake ice also outside sea ice climatology area")
     private boolean ccIgnoreSeaIceClimatology;
 
     @Parameter(defaultValue = "2", interval = "[0,100]",
@@ -259,7 +257,7 @@ public class CoastColourOp extends BasisOp {
         }
 
         if (ccApplyMERISAlternativeSchillerNN) {
-            IdepixProducts.addMERISAlternativeNNOutputBand(merisCloudProduct, targetProduct);
+            //IdepixProducts.addMERISAlternativeNNOutputBand(merisCloudProduct, targetProduct);
         }
 
         addCloudClassificationFlagBandCoastColour();

@@ -293,7 +293,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private void createTargetProduct() {
         targetProduct = createCompatibleProduct(l1bProduct, "MER", "MER_L2");
 
-        cloudFlagBand = targetProduct.addBand(CLOUD_FLAGS, ProductData.TYPE_INT32);
+        cloudFlagBand = targetProduct.addBand(CLOUD_FLAGS, ProductData.TYPE_INT16);
         FlagCoding flagCoding = createFlagCoding(CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
