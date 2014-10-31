@@ -602,6 +602,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         boolean is_snow_ice = false;
         boolean is_glint_risk = !land_coast && isGlintRisk(sd, pixelInfo);
+        boolean checkForSeaIce = false;
         if (!land_coast) {
             // over water
             final GeoPos geoPos = getGeoPos(pixelInfo);
@@ -610,7 +611,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 //            if (isPixelClassifiedAsSeaice(geoPos)) {
 //                is_snow_ice = bright_rc && high_mdsi;
 //            }
-            final boolean checkForSeaIce = ccIgnoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
+            checkForSeaIce = ccIgnoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
             if (checkForSeaIce) {
                 is_snow_ice = bright_rc && high_mdsi;
             }
@@ -648,23 +649,34 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, true);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, true);
                 }
-                isCloudSure = nnOutput[0] > ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue &&
-                        nnOutput[0] <= ccAlternativeSchillerNNCloudSureSnowSeparationValue;
+                // check for snow_ice separation below if needed, first set all to cloud
+                isCloudSure = nnOutput[0] > ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
                 if (isCloudSure) {
                     // this would be as 'CLOUD_SURE'...
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_SURE, true);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, true);
                 }
-                is_snow_ice = nnOutput[0] > ccAlternativeSchillerNNCloudSureSnowSeparationValue;
+
+                is_snow_ice = false;
+                if (checkForSeaIce) {
+                    is_snow_ice = nnOutput[0] > ccAlternativeSchillerNNCloudSureSnowSeparationValue;
+                }
                 if (is_snow_ice) {
                     // this would be as 'SNOW/ICE'...
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, true);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_SURE, false);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, false);
                 }
 
                 if (!ccApplyMERISAlternativeSchillerNNPure && !isCloudSure && !isCloudAmbiguous) {
                     final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
                     isCloudSure = cloudProbValue > ambiguousThresh;
-                    isCloudAmbiguous = cloudProbValue > ambiguousThresh && cloudProbValue < sureThresh;
+                    // special case: set very bright clouds misclassified as snow_ice from NN but
+                    // outside seaice climatology range to cloud
+                    if (!checkForSeaIce && nnOutput[0] > ccAlternativeSchillerNNCloudSureSnowSeparationValue) {
+                        isCloudSure = true;
+                    }
+                    isCloudAmbiguous = !isCloudSure && cloudProbValue > ambiguousThresh && cloudProbValue < sureThresh;
 
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_SURE, isCloudSure);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
