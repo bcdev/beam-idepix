@@ -147,10 +147,10 @@ public class OccciOp extends BasisOp {
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
 
         if (ocOutputRad2Refl) {
-            copySourceBands(rad2reflProduct, targetProduct, "RefSB.");
+            copySourceBands(rad2reflProduct, targetProduct, "RefSB");
         }
         if (ocOutputEmissive) {
-            copySourceBands(rad2reflProduct, targetProduct, "Emissive.");
+            copySourceBands(rad2reflProduct, targetProduct, "Emissive");
         }
         if (ocOutputSeawifsRadiance) {
             copySourceBands(rad2reflProduct, targetProduct, "L_");
