@@ -6,7 +6,7 @@
 
         <processorDescriptor>
             <executableName>Idepix.Water</executableName>
-            <processorName>Idepix (Water Pixel Classification)</processorName>
+            <processorName>Idepix (Water Pixel Classification for MERIS)</processorName>
             <processorVersion>${pom.version}</processorVersion>
 
             <parameterDescriptors>
@@ -76,7 +76,48 @@
                     </description>
                     <defaultValue>1.8</defaultValue>
                 </parameterDescriptor>
-
+                <parameterDescriptor>
+                    <name>ccGlintCloudThresholdAddition</name>
+                    <type>string</type>
+                    <description>Value added to cloud screening ambiguous/sure thresholds in case of glint</description>
+                    <defaultValue>0.1</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccApplyMERISAlternativeSchillerNN</name>
+                    <type>boolean</type>
+                    <description>Apply alternative Schiller NN for cloud classification</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccUseMERISAlternativeSchillerAllNN</name>
+                    <type>boolean</type>
+                    <description>Use alternative Schiller 'ALL' NN</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue</name>
+                    <type>string</type>
+                    <description>Alternative Schiller NN cloud ambiguous lower boundary</description>
+                    <defaultValue>2.0</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue</name>
+                    <type>string</type>
+                    <description>Alternative Schiller NN cloud ambiguous/sure separation value</description>
+                    <defaultValue>3.7</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccAlternativeSchillerNNCloudSureSnowSeparationValue</name>
+                    <type>string</type>
+                    <description>Alternative Schiller NN cloud sure/snow separation value</description>
+                    <defaultValue>4.05</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ccApplyMERISAlternativeSchillerNNPure</name>
+                    <type>boolean</type>
+                    <description>Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
             </parameterDescriptors>
 
             <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
