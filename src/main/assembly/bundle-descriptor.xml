@@ -54,7 +54,7 @@
      <ccCloudBufferWidth>2</ccCloudBufferWidth>
 
 </parameters>]]></defaultParameters>
-            <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+            <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
             <descriptionHtml>
                 <![CDATA[<p>Performs Idepix pixel identification with CoastColour algorithm.</p>]]>
             </descriptionHtml>
@@ -217,7 +217,7 @@
       <cloudBufferWidth>1</cloudBufferWidth>
 
  </parameters>]]></defaultParameters>
-             <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+             <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
              <descriptionHtml>
                  <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MODIS and SeaWiFS.</p>]]>
              </descriptionHtml>
@@ -244,9 +244,13 @@
                      <name>calvalus.output.compression</name>
                      <value>NONE</value>
                  </jobParameter>
+                 <jobParameter>
+                     <name>calvalus.auxdata.modis_geo</name>
+                     <value>'/calvalus/eodata/MODISA_GEO/v1/'yyyy'/'MM'/'dd'/'</value>
+                 </jobParameter>
              </jobConfig>
 
-             <outputVariables>
+            <outputVariables>
                  <outputVariable>
                      <name>schiller_cloud_value</name>
                      <defaultAggregator>AVG</defaultAggregator>
