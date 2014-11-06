@@ -176,6 +176,86 @@
 
         </processorDescriptor>
 
-    </processorDescriptors>
+        <processorDescriptor>
+             <executableName>idepix.occci</executableName>
+             <processorName>Idepix (OC-CCI Algorithm for MODIS and SeaWiFS)</processorName>
+             <processorVersion>${pom.version}</processorVersion>
+             <defaultParameters><![CDATA[
 
+      <!-- CHANGES to previous Idepix version: -->
+      <!--     - Created new branch EVOLUTION, to be used for BC internal development. -->
+      <!--       (MASTER branch will from now on be used for public releases) -->
+      <!--       Set initial version to 2.2-EVOLUTION-SNAPSHOT -->
+      <!-- This version was provided by O.Danne -->
+      <!-- **************************** -->
+
+     <parameters>
+     <!-- ***********Idepix OC Parameters start here*********** -->
+
+      <!-- Write TOA reflective solar bands (RefSB) to target product (MODIS) -->
+      <ocOutputRad2Refl>true</ocOutputRad2Refl>
+
+      <!-- Write 'Emissive' bands to target product (MODIS) -->
+      <ocOutputEmissive>false</ocOutputEmissive>
+
+      <!-- Write TOA radiance bands to target product (SeaWiFS) -->
+      <ocOutputSeawifsRadiance>false</ocOutputSeawifsRadiance>
+
+      <!-- Write TOA reflectance bands to target product (SeaWiFS) -->
+      <ocOutputSeawifsRefl>true</ocOutputSeawifsRefl>
+
+      <!-- Write geometry bands to target product (SeaWiFS) -->
+      <ocOutputGeometry>true</ocOutputGeometry>
+
+      <!-- Write further useful bands to target product -->
+      <ocOutputDebug>false</ocOutputDebug>
+
+      <!-- Resolution of used land-water mask in m/pixel -->
+      <ocWaterMaskResolution>50</ocWaterMaskResolution>
+
+      <!-- The cloud buffer width -->
+      <cloudBufferWidth>1</cloudBufferWidth>
+
+ </parameters>]]></defaultParameters>
+             <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+             <descriptionHtml>
+                 <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MODIS and SeaWiFS.</p>]]>
+             </descriptionHtml>
+             <inputProductTypes>MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+             <outputProductType>IDEPIX_L2</outputProductType>
+             <validMaskExpression></validMaskExpression>
+
+             <jobConfig>
+                 <jobParameter>
+                     <name>calvalus.hadoop.mapred.child.java.opts</name>
+                     <value>-Xmx1500M</value>
+                 </jobParameter>
+
+                 <jobParameter>
+                     <name>calvalus.system.beam.envisat.usePixelGeoCoding</name>
+                     <value>true</value>
+                 </jobParameter>
+                 <jobParameter>
+                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
+                     <value>true</value>
+                 </jobParameter>
+
+                 <jobParameter>
+                     <name>calvalus.output.compression</name>
+                     <value>NONE</value>
+                 </jobParameter>
+             </jobConfig>
+
+             <outputVariables>
+                 <outputVariable>
+                     <name>schiller_cloud_value</name>
+                     <defaultAggregator>AVG</defaultAggregator>
+                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                 </outputVariable>
+                 <outputVariable>
+                     <name>cloud_classif_flags</name>
+                 </outputVariable>
+             </outputVariables>
+         </processorDescriptor>
+    </processorDescriptors>
 </bundleDescriptor>
