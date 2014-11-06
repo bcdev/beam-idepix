@@ -120,7 +120,7 @@
                 </parameterDescriptor>
             </parameterDescriptors>
 
-            <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+            <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
             <descriptionHtml>
                 <![CDATA[
                 <p>Performs Idepix pixel identification with CoastColour/OC-CCI algorithm.</p>
@@ -316,7 +316,7 @@
 
             </parameterDescriptors>
 
-            <outputFormats>Multi-GeoTIFF,BEAM-DIMAP,NetCDF</outputFormats>
+            <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
             <descriptionHtml>
                 <![CDATA[
                 <p>Performs Idepix pixel identification with GlobAlbedo/LC-CCI algorithm.</p>
