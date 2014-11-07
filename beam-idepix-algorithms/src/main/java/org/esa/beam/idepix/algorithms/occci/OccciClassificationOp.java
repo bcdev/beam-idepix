@@ -71,6 +71,11 @@ public class OccciClassificationOp extends PixelOperator {
     NNffbpAlphaTabFast modisAllNeuralNet;
     NNffbpAlphaTabFast seawifsNeuralNet;
 
+    @Override
+    public Product getSourceProduct() {
+        // this is the source product for the ProductConfigurer
+        return reflProduct;
+    }
 
     @Override
     protected void prepareInputs() throws OperatorException {

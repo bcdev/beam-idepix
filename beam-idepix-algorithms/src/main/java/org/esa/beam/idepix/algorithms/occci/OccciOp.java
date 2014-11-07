@@ -77,7 +77,6 @@ public class OccciOp extends BasisOp {
                description = "Resolution in m/pixel")
     private int ocWaterMaskResolution;
 
-    private Map<String, Object> occciCloudClassificationParameters;
     private Product classifProduct;
     private Product waterMaskProduct;
 
@@ -89,11 +88,10 @@ public class OccciOp extends BasisOp {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
 
-        occciCloudClassificationParameters = createOccciCloudClassificationParameters();
-        processOccci();
+        processOccci(createOccciCloudClassificationParameters());
     }
 
-    private void processOccci() {
+    private void processOccci(Map<String, Object> occciCloudClassificationParameters) {
         Map<String, Product> modisClassifInput = new HashMap<String, Product>(4);
         computeAlgorithmInputProducts(modisClassifInput);
 
@@ -144,7 +142,7 @@ public class OccciOp extends BasisOp {
     }
 
     private void addBandsToTargetProduct(Product targetProduct) {
-        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
+//        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
 
         if (ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB");
