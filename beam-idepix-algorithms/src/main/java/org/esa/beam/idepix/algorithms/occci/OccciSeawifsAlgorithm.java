@@ -35,7 +35,8 @@ public class OccciSeawifsAlgorithm extends OccciAlgorithm {
         // 1 : semitransparent cloud
         // 2 : clear water
         if (nnOutput != null) {
-            return nnOutput[0] >= 0.48 && nnOutput[0] < 1.47;    // separation numbers from report HS, 20140822
+//            return nnOutput[0] >= 0.48 && nnOutput[0] < 1.47;    // separation numbers from report HS, 20140822
+            return nnOutput[0] >= 0.48 && nnOutput[0] < 0.48;      // CB: cloud sure gives enough clouds, no ambiguous needed, 20141111
         } else {
             // fallback
             return (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS);
