@@ -49,6 +49,11 @@ public class CoastColourOp extends BasisOp {
 
 
     // Coastcolour parameters
+    @Parameter(defaultValue = "false",
+               description = "Write TOA radiances to the target product.",
+               label = " Write TOA radiances to the target product")
+    private boolean ccOutputRadiance = false;
+
     @Parameter(defaultValue = "false", label = " TOA Reflectances")
     private boolean ccOutputRad2Refl = false;
 
@@ -232,6 +237,10 @@ public class CoastColourOp extends BasisOp {
     }
 
     private void addBandsToTargetProduct() {
+        if (ccOutputRadiance) {
+            IdepixProducts.addRadianceBands(sourceProduct, targetProduct);
+        }
+
         if (ccOutputRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }

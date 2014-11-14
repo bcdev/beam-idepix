@@ -14,6 +14,7 @@ import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.unmixing.SpectralUnmixingOp;
+import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -185,6 +186,14 @@ public class IdepixProducts {
         return GPF.createProduct("Meris.CloudProbability", params, input);
     }
 
+    public static void addRadianceBands(Product l1bProduct, Product targetProduct) {
+        for (String bandname : l1bProduct.getBandNames()) {
+            if (!targetProduct.containsBand(bandname) && bandname.startsWith(Rad2ReflOp.RADIANCE_BAND_PREFIX)) {
+                System.out.println("adding band: " + bandname);
+                ProductUtils.copyBand(bandname, l1bProduct, targetProduct, true);
+            }
+        }
+    }
 
     public static void addRadiance2ReflectanceBands(Product rad2reflProduct, Product targetProduct) {
         for (String bandname : rad2reflProduct.getBandNames()) {
