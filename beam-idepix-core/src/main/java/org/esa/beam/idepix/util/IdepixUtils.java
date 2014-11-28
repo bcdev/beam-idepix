@@ -13,6 +13,7 @@ import org.esa.beam.util.BitSetter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -78,7 +79,8 @@ public class IdepixUtils {
     }
 
     public static boolean isValidAvhrrProduct(Product product) {
-        return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE);
+        return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE) ||
+                product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_USGS_PRODUCT_TYPE);
     }
 
     public static boolean isValidModisProduct(Product product) {
@@ -119,10 +121,8 @@ public class IdepixUtils {
         } else if (AlgorithmSelector.Occci == algorithm) {
             return (isValidModisProduct(sourceProduct) ||
                     isValidSeawifsProduct(sourceProduct));
-        } else if (AlgorithmSelector.AvhrrAc == algorithm) {
-            return (isValidAvhrrProduct(sourceProduct));
-        }else {
-            return false;
+        } else {
+            return AlgorithmSelector.AvhrrAc == algorithm && (isValidAvhrrProduct(sourceProduct));
         }
     }
 
@@ -179,6 +179,15 @@ public class IdepixUtils {
     public static boolean areAllReflectancesValid(float[] reflectance) {
         for (float aReflectance : reflectance) {
             if (Float.isNaN(aReflectance) || aReflectance <= 0.0f) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean areAllReflectancesValid(double[] reflectance) {
+        for (double aReflectance : reflectance) {
+            if (Double.isNaN(aReflectance) || aReflectance <= 0.0f) {
                 return false;
             }
         }
@@ -357,7 +366,6 @@ public class IdepixUtils {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
                 int LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
                 int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
-//                int TOP_BORDER = ySouth - bufferWidth;
                 int TOP_BORDER = Math.max(rectangle.y, ySouth - bufferWidth);
                 if (targetTile.getSampleBit(x, ySouth, IdepixConstants.F_CLOUD)) {
                     for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
@@ -371,7 +379,6 @@ public class IdepixUtils {
             // east tile boundary...
             final int xEast = rectangle.x + rectangle.width - 1;
             for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
-//                int LEFT_BORDER = xEast - bufferWidth;
                 int LEFT_BORDER = Math.max(rectangle.x, xEast - bufferWidth);
                 int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
                 int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
@@ -413,6 +420,22 @@ public class IdepixUtils {
         }
         return true;
     }
+
+    public static int getDoyFromYYMMDD(String yymmdd) {
+        Calendar cal = Calendar.getInstance();
+        int doy = -1;
+        try {
+            final int year = Integer.parseInt(yymmdd.substring(0, 2));
+            final int month = Integer.parseInt(yymmdd.substring(2, 4)) - 1;
+            final int day = Integer.parseInt(yymmdd.substring(4, 6));
+            cal.set(year, month, day);
+            doy = cal.get(Calendar.DAY_OF_YEAR);
+        } catch (StringIndexOutOfBoundsException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return doy;
+    }
+
 
     private static Color getRandomColour(Random random) {
         int rColor = random.nextInt(256);

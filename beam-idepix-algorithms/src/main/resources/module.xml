@@ -45,9 +45,9 @@
     <dependency>
         <module>beam-envisat-reader</module>
     </dependency>
-    <dependency>
-        <module>beam-avhrr-directory-reader</module>
-    </dependency>
+    <!--<dependency>-->
+        <!--<module>beam-avhrr-directory-reader</module>-->
+    <!--</dependency>-->
     <dependency>
         <module>beam-meris-brr</module>
     </dependency>
@@ -104,8 +104,8 @@
         <action>
             <id>avhrracAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixAvhrrAcAction</class>
-            <text>Avhrr AC (AVHRR)...</text>
-            <shortDescr>Pixel classification with AVHRR AC algorithm.</shortDescr>
+            <text>LandCover (AVHRR) ...</text>
+            <shortDescr>Pixel classification with LandCover AVHRR algorithm.</shortDescr>
             <mnemonic>A</mnemonic>
             <parent>idepix</parent>
             <helpId>idepixChain</helpId>

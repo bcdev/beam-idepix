@@ -34,18 +34,43 @@ public class AvhrrAcOp extends BasisOp {
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
 
+    private Product classifProduct;
+    private Product waterMaskProduct;
+
     // AvhrrAc parameters
     @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
     private boolean aacCopyRadiances = true;
-    @Parameter(defaultValue = "false", label = " Compute only the flag band")
-    private boolean aacComputeFlagsOnly;
+
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int aacCloudBufferWidth;
+
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
                description = "Resolution in m/pixel")
     private int wmResolution;
+
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean aacUseWaterMaskFraction = true;
+
+    @Parameter(defaultValue = "false",
+               label = " Debug bands",
+               description = "Write further useful bands to target product.")
+    private boolean avhrracOutputDebug = false;
+
+    @Parameter(defaultValue = "2.15",
+               label = " Schiller NN cloud ambiguous lower boundary ",
+               description = " Schiller NN cloud ambiguous lower boundary ")
+    double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "3.45",
+               label = " Schiller NN cloud ambiguous/sure separation value ",
+               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+    double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.45",
+               label = " Schiller NN cloud sure/snow separation value ",
+               description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+    double avhrracSchillerNNCloudSureSnowSeparationValue;
+
 
     private Map<String, Object> aacCloudClassificationParameters;
 
@@ -57,36 +82,51 @@ public class AvhrrAcOp extends BasisOp {
         }
 
         aacCloudClassificationParameters = createAacCloudClassificationParameters();
-            processAvhrrAc();
-
-        renameL1bMaskNames(targetProduct);
+        processAvhrrAc();
     }
 
     private Map<String, Object> createAacCloudClassificationParameters() {
-        Map<String, Object> gaCloudClassificationParameters = new HashMap<>(1);
-        gaCloudClassificationParameters.put("gaCopyRadiances", aacCopyRadiances);
-        gaCloudClassificationParameters.put("gaComputeFlagsOnly", aacComputeFlagsOnly);
-        gaCloudClassificationParameters.put("gaCloudBufferWidth", aacCloudBufferWidth);
-        gaCloudClassificationParameters.put("wmResolution", wmResolution);
-        gaCloudClassificationParameters.put("gaUseWaterMaskFraction", aacUseWaterMaskFraction);
+        Map<String, Object> aacCloudClassificationParameters = new HashMap<>(1);
+        aacCloudClassificationParameters.put("aacCopyRadiances", aacCopyRadiances);
+        aacCloudClassificationParameters.put("aacCloudBufferWidth", aacCloudBufferWidth);
+        aacCloudClassificationParameters.put("wmResolution", wmResolution);
+        aacCloudClassificationParameters.put("aacUseWaterMaskFraction", aacUseWaterMaskFraction);
+        aacCloudClassificationParameters.put("avhrracOutputDebug", avhrracOutputDebug);
+        aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousLowerBoundaryValue",
+                                             avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
+        aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousSureSeparationValue",
+                                             avhrracSchillerNNCloudAmbiguousSureSeparationValue);
+        aacCloudClassificationParameters.put("avhrracSchillerNNCloudSureSnowSeparationValue",
+                                             avhrracSchillerNNCloudSureSnowSeparationValue);
 
-        return gaCloudClassificationParameters;
+        return aacCloudClassificationParameters;
     }
 
     private void processAvhrrAc() {
-        Product aacCloudProduct;
         Map<String, Product> aacCloudInput = new HashMap<>(4);
         computeAvhrrAcAlgorithmInputProducts(aacCloudInput);
 
-        aacCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AvhrrAcDefaultClassificationOp.class),
+        classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AvhrrAcClassificationOp.class),
                                            aacCloudClassificationParameters, aacCloudInput);
 
-        targetProduct = aacCloudProduct;
+        setTargetProduct(classifProduct);
+//        addBandsToTargetProduct(classifProduct);
     }
 
     private void computeAvhrrAcAlgorithmInputProducts(Map<String, Product> aacCloudInput) {
+        createWaterMaskProduct();
         aacCloudInput.put("aacl1b", sourceProduct);
+        aacCloudInput.put("waterMask", waterMaskProduct);
     }
+
+    private void createWaterMaskProduct() {
+        HashMap<String, Object> waterParameters = new HashMap<>();
+        waterParameters.put("resolution", wmResolution);
+        waterParameters.put("subSamplingFactorX", 3);
+        waterParameters.put("subSamplingFactorY", 3);
+        waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
+    }
+
 
     /**
      * The Service Provider Interface (SPI) for the operator.

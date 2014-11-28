@@ -32,7 +32,7 @@ public class IdepixAvhrrAcAction extends AbstractVisatAction {
         final IdepixDefaultDialog dialog =
             new IdepixDefaultDialog(OperatorSpi.getOperatorAlias(AvhrrAcOp.class),
                     getAppContext(),
-                    "IDEPIX Pixel Identification Tool - AVHRR AC Algorithm -  " + IdepixConstants.IDEPIX_VERSION,
+                    "IDEPIX Pixel Identification Tool - LandCover AVHRR Algorithm -  " + IdepixConstants.IDEPIX_VERSION,
                     "idepixChain","");
         dialog.show();
     }

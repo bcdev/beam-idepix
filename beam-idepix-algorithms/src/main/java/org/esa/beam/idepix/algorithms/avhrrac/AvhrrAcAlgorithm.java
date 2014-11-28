@@ -1,94 +1,115 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
-import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.util.math.MathUtils;
 
 /**
  * IDEPIX instrument-specific pixel identification algorithm for GlobAlbedo: abstract superclass
  *
  * @author olafd
  */
-public abstract class AvhrrAcAlgorithm extends AbstractPixelProperties {
+public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
-    static final float UNCERTAINTY_VALUE = 0.5f;
-    static final float LAND_THRESH = 0.9f;
-    static final float WATER_THRESH = 0.9f;
-
-    float[] radiance;
+    float waterFraction;
+    double[] radiance;
     boolean l1FlagLand;
+    double[] nnOutput;
+
+    double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
+    double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
+    double avhrracSchillerNNCloudSureSnowSeparationValue;
+
 
     @Override
-    public boolean isBrightWhite() {
-        return false;
+    public boolean isInvalid() {
+        return !IdepixUtils.areAllReflectancesValid(radiance);
     }
 
-    // implementations are instrument-dependent:
-    public abstract boolean isCloud();
-    public abstract boolean isSeaIce();
+    @Override
+    public boolean isCloud() {
+        return isCloudAmbiguous() || isCloudSure();
+    }
 
     @Override
-    public boolean isClearLand() {
-        if (isInvalid()) {
+    public boolean isCloudAmbiguous() {
+        if (isLand() || isCloudSure()) {   // this check has priority
             return false;
         }
-        float landValue;
 
-        if (!MathUtils.equalValues(radiometricLandValue(), UNCERTAINTY_VALUE)) {
-            landValue = radiometricLandValue();
-        } else if (aPrioriLandValue() > UNCERTAINTY_VALUE) {
-            landValue = aPrioriLandValue();
+        // for AVHRR, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 < x < 2.15 : clear
+        // 2.15 < x < 3.45 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.45 < x < 4.45 : cloudy --> cloud sure
+        // 4.45 < x : clear snow/ice
+        if (nnOutput != null) {
+            return nnOutput[0] >= avhrracSchillerNNCloudAmbiguousLowerBoundaryValue &&
+                    nnOutput[0] < avhrracSchillerNNCloudAmbiguousSureSeparationValue;    // separation numbers from report HS, 20141112 for NN Nr.2
+//            return nnOutput[0] >= 0.48 && nnOutput[0] < 0.48;      // CB: cloud sure gives enough clouds, no ambiguous needed, 20141111
         } else {
-            return false; // this means: if we have no information about land, we return isClearLand = false
-        }
-        return (!isWater && !isCloud() && landValue > LAND_THRESH);
-    }
-
-    @Override
-    public boolean isClearWater() {
-        if (isInvalid()) {
             return false;
         }
-        float waterValue;
-        if (!MathUtils.equalValues(radiometricWaterValue(), UNCERTAINTY_VALUE)) {
-            waterValue = radiometricWaterValue();
-        } else if (aPrioriWaterValue() > UNCERTAINTY_VALUE) {
-            waterValue = aPrioriWaterValue();
-        } else {
-            return false; // this means: if we have no information about water, we return isClearWater = false
+    }
+
+    @Override
+    public boolean isCloudSure() {
+        if (isLand() || isSnowIce()) {   // this check has priority
+            return false;
         }
-        return (!isCloud() && waterValue > WATER_THRESH);
+
+        // for AVHRR, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 < x < 2.15 : clear
+        // 2.15 < x < 3.45 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.45 < x < 4.45 : cloudy --> cloud sure
+        // 4.45 < x : clear snow/ice
+        if (nnOutput != null) {
+            return nnOutput[0] >= avhrracSchillerNNCloudAmbiguousSureSeparationValue &&
+                    nnOutput[0] < avhrracSchillerNNCloudSureSnowSeparationValue;   // separation numbers from report HS, 0141112 for NN Nr.2
+        } else {
+            return false;
+        }
     }
 
     @Override
-    public boolean isClearSnow() {
+    public boolean isCloudBuffer() {
+        // is applied in post processing!
         return false;
     }
 
     @Override
-    public boolean isBright() {
-        return brightValue() > getBrightThreshold();
+    public boolean isCloudShadow() {
+        // is applied in post processing!
+        return false;
     }
 
     @Override
-    public boolean isWhite() {
-        return false;
+    public boolean isSnowIce() {
+        // for AVHRR, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 < x < 2.15 : clear
+        // 2.15 < x < 3.45 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.45 < x < 4.45 : cloudy --> cloud sure
+        // 4.45 < x : clear snow/ice
+        if (nnOutput != null) {
+            return nnOutput[0] > avhrracSchillerNNCloudSureSnowSeparationValue && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
+        } else {
+            // fallback
+            // needs ndsi and brightness
+//            return (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
+            return false;  // todo later
+        }
+    }
+
+    @Override
+    public boolean isCoastline() {
+        // NOTE that this does not work if we have a PixelGeocoding. In that case, waterFraction
+        // is always 0 or 100!! (TS, OD, 20140502). If so, get a coastline in post processing approach.
+        return waterFraction < 100 && waterFraction > 0;
     }
 
     @Override
     public boolean isLand() {
-        final boolean isLand1 = !isWater;
-        return !isInvalid() && (isLand1 || (aPrioriLandValue() > LAND_THRESH));
-    }
-
-    @Override
-    public boolean isL1Water() {
-        return false;
-    }
-
-    @Override
-    public boolean isVegRisk() {
-        return false;
+        return waterFraction == 0;
     }
 
     @Override
@@ -96,47 +117,28 @@ public abstract class AvhrrAcAlgorithm extends AbstractPixelProperties {
         return false;
     }
 
-    @Override
-    public boolean isHigh() {
-        return false;
-    }
-
-    @Override
-    public boolean isInvalid() {
-        return !IdepixUtils.areAllReflectancesValid(radiance);
-    }
-
-    public abstract float brightValue();
-
-    public abstract float temperatureValue();
-
-    public abstract float spectralFlatnessValue();
-
-    public abstract float whiteValue();
-
-    public abstract float ndsiValue();
-
-    public abstract float ndviValue();
-
-    public abstract float pressureValue();
-
-    public abstract float glintRiskValue();
-
-    public abstract float aPrioriLandValue();
-
-    public abstract float aPrioriWaterValue();
-
-    public abstract float radiometricLandValue();
-
-    public abstract float radiometricWaterValue();
-
-    public abstract float getBrightThreshold();
-
-
-    public void setRadiance(float[] rad) {
+    public void setRadiance(double[] rad) {
         this.radiance = rad;
     }
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
+    }
+    public void setWaterFraction(float waterFraction) {
+        this.waterFraction = waterFraction;
+    }
+    public void setNnOutput(double[] nnOutput) {
+        this.nnOutput = nnOutput;
+    }
+
+    public void setAmbiguousLowerBoundaryValue(double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue) {
+       this.avhrracSchillerNNCloudAmbiguousLowerBoundaryValue = avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
+    }
+
+    public void setAmbiguousSureSeparationValue(double avhrracSchillerNNCloudAmbiguousSureSeparationValue) {
+       this.avhrracSchillerNNCloudAmbiguousSureSeparationValue = avhrracSchillerNNCloudAmbiguousSureSeparationValue;
+    }
+
+    public void setSureSnowSeparationValue(double avhrracSchillerNNCloudSureSnowSeparationValue) {
+       this.avhrracSchillerNNCloudSureSnowSeparationValue = avhrracSchillerNNCloudSureSnowSeparationValue;
     }
 }
