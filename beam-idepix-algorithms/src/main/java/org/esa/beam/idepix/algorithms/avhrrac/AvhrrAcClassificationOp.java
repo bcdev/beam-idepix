@@ -81,7 +81,8 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     String avhrracNeuralNetString;
     NNffbpAlphaTabFast avhrracNeuralNet;
 
-    @Override
+    AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
+
     public Product getSourceProduct() {
         // this is the source product for the ProductConfigurer
         return sourceProduct;
@@ -91,6 +92,13 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     public void prepareInputs() throws OperatorException {
         readSchillerNets();
         createTargetProduct();
+
+        try {
+            vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
+        } catch (IOException e) {
+            // todo
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -153,7 +161,9 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
         final double sza = sourceSamples[Constants.SRC_SZA].getDouble();
-        final double vza = 45.0f; // todo: vza is not in product, clarify how to determine
+        //double vza = 45.0f; // todo: vza is not in product, clarify how to determine
+        double vza = vzaTable.getVza(x);
+
         final double aziDiff = 45.0f; // todo: aziDiff is not in product, clarify how to determine
         double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
         final double albedo1 = sourceSamples[Constants.SRC_ALBEDO_1].getDouble();

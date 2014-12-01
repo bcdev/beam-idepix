@@ -7,7 +7,12 @@ import org.esa.beam.idepix.algorithms.occci.*;
 import org.esa.beam.util.BitSetter;
 
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Random;
+import java.util.StringTokenizer;
 
 /**
  * todo: add comment
@@ -105,4 +110,7 @@ public class AvhrrAcUtils {
         int bColor = random.nextInt(256);
         return new Color(rColor, gColor, bColor);
     }
+
+
+
 }
