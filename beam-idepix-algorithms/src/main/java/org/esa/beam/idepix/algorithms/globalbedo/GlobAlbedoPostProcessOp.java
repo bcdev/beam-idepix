@@ -19,7 +19,9 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.algorithms.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
+import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
 import org.esa.beam.util.ProductUtils;
@@ -137,7 +139,10 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, false);
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, false);
-                        computeCloudBuffer(x, y, sourceFlagTile, targetTile);
+
+                        CloudBuffer.simpleCloudBuffer(x, y, sourceFlagTile, targetTile, cloudBufferWidth,
+                                                      IdepixConstants.F_CLOUD,
+                                                      IdepixConstants.F_CLOUD_BUFFER);
                     }
                 }
             }
@@ -174,23 +179,6 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         int sourceFlags = sourceFlagTile.getSampleInt(x, y);
         int computedFlags = targetTile.getSampleInt(x, y);
         targetTile.setSample(x, y, sourceFlags | computedFlags);
-    }
-
-    // todo: this is currently duplicated 3 times! Improve when merging land/water parts
-    private void computeCloudBuffer(int x, int y, Tile sourceFlagTile, Tile targetTile) {
-        Rectangle rectangle = targetTile.getRectangle();
-        final int LEFT_BORDER = Math.max(x - cloudBufferWidth, rectangle.x);
-        final int RIGHT_BORDER = Math.min(x + cloudBufferWidth, rectangle.x + rectangle.width - 1);
-        final int TOP_BORDER = Math.max(y - cloudBufferWidth, rectangle.y);
-        final int BOTTOM_BORDER = Math.min(y + cloudBufferWidth, rectangle.y + rectangle.height - 1);
-        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                boolean is_already_cloud = sourceFlagTile.getSampleBit(i, j, IdepixConstants.F_CLOUD);
-                if (!is_already_cloud && rectangle.contains(i, j)) {
-                    targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
-                }
-            }
-        }
     }
 
     private boolean isCoastlinePixel(int x, int y, Tile waterFractionTile) {
