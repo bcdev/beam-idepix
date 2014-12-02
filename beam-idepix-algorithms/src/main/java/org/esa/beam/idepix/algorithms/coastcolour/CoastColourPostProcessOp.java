@@ -157,9 +157,9 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                         }
                         boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                         if (isCloudAfterRefinement) {
-                            CloudBuffer.simpleCloudBuffer(x, y, sourceFlagTile, targetTile, cloudBufferWidth,
-                                                          CoastColourClassificationOp.F_CLOUD,
-                                                          CoastColourClassificationOp.F_CLOUD_BUFFER);
+                            CloudBuffer.computeSimpleCloudBuffer(x, y, sourceFlagTile, targetTile, cloudBufferWidth,
+                                                                 CoastColourClassificationOp.F_CLOUD,
+                                                                 CoastColourClassificationOp.F_CLOUD_BUFFER);
                         }
                     }
                 }

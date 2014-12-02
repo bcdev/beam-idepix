@@ -21,7 +21,6 @@ import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
-import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
 import org.esa.beam.util.ProductUtils;
@@ -140,13 +139,16 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, false);
 
-                        CloudBuffer.simpleCloudBuffer(x, y, sourceFlagTile, targetTile, cloudBufferWidth,
-                                                      IdepixConstants.F_CLOUD,
-                                                      IdepixConstants.F_CLOUD_BUFFER);
+                        // switched to lc cloud buffer for land
+//                        CloudBuffer.computeSimpleCloudBuffer(x, y, sourceFlagTile, targetTile, cloudBufferWidth,
+//                                                             IdepixConstants.F_CLOUD,
+//                                                             IdepixConstants.F_CLOUD_BUFFER);
                     }
                 }
             }
         }
+
+        CloudBuffer.computeCloudBufferLC(targetTile, IdepixConstants.F_CLOUD, IdepixConstants.F_CLOUD_BUFFER);
 
         CloudShadowFronts cloudShadowFronts = new CloudShadowFronts(
                 IdepixConstants.F_CLOUD, IdepixConstants.F_CLOUD_SHADOW,
