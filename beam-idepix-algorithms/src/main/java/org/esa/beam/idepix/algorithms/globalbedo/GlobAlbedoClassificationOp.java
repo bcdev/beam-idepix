@@ -73,7 +73,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
     boolean gaApplyMERISAlternativeSchillerNN;
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
                label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
                description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean gaApplyMERISAlternativeSchillerNNPure;
