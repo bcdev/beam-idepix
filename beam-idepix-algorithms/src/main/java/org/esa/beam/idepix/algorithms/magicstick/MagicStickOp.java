@@ -26,6 +26,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.magicstick",
+                  internal = true,  // currently hidden
                   version = "2.2-EVOLUTION-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",

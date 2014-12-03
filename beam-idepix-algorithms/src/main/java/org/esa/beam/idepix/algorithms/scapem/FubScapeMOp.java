@@ -20,6 +20,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem",
+                  internal = true,  // currently hidden
         version = "2.2-EVOLUTION-SNAPSHOT",
         authors = "Olaf Danne, Tonio Fincke",
         copyright = "(c) 2013 by Brockmann Consult",

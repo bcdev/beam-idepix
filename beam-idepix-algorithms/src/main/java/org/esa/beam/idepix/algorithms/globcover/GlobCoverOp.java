@@ -25,6 +25,7 @@ import org.esa.beam.util.ProductUtils;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.globcover",
+                  internal = true,  // currently hidden
                   version = "2.2-EVOLUTION-SNAPSHOT",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
