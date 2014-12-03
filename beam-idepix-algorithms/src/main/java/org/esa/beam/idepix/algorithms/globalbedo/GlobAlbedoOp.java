@@ -74,33 +74,15 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaCopyFeatureValues = false;
 
     @Parameter(defaultValue = "false",
-            label = " Compute cloud shadow",
-            description = " Compute cloud shadow with a preliminary algorithm")
-    private boolean gaComputeCloudShadow = false;
-
-    @Parameter(defaultValue = "Derive from Neural Net",
-            label = " CTP value to use in MERIS cloud shadow algorithm",
-            description = " CTP value to use in MERIS cloud shadow algorithm",
-            valueSet = {
-                    IdepixConstants.ctpModeDefault,
-                    "850 hPa",
-                    "700 hPa",
-                    "500 hPa",
-                    "400 hPa",
-                    "300 hPa"
-            })
-    private String ctpMode;
-
-    @Parameter(defaultValue = "false",
-            label = " Use GETASSE30 DEM for Barometric Pressure Computation",
-            description = " If selected and installed, use GETASSE30 DEM for Barometric Pressure Computation. " +
-                    "Otherwise use tie point altitude.")
-    private boolean gaUseGetasse = false;
-
-    @Parameter(defaultValue = "false",
             label = " Write input annotation bands to the target product (VGT only)",
             description = " Write input annotation bands to the target product (has only effect for VGT L1b products)")
     private boolean gaCopyAnnotations;
+
+    @Parameter(defaultValue = "false",
+               label = " Use GETASSE30 DEM for Barometric Pressure Computation",
+               description = " If selected and installed, use GETASSE30 DEM for Barometric Pressure Computation. " +
+                       "Otherwise use tie point altitude.")
+    private boolean gaUseGetasse = false;
 
     @Parameter(defaultValue = "true",
             label = " Apply alternative Schiller NN for MERIS cloud classification",
@@ -147,10 +129,26 @@ public class GlobAlbedoOp extends BasisOp {
             description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudSureSnowSeparationValue;
 
+    @Parameter(defaultValue = "false",
+               label = " Compute cloud shadow",
+               description = " Compute cloud shadow with the algorithm from 'Fronts' project")
+    private boolean gaComputeCloudShadow = false;
+
+    @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
+    private boolean gaComputeCloudBuffer = false;
+
     @Parameter(defaultValue = "2", interval = "[0,100]",
             label = " Width of cloud buffer (# of pixels)",
             description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
     private int gaCloudBufferWidth;
+
+    @Parameter(defaultValue = "true", label = " Use the LandCover advanced cloud buffer algorithm")
+    private boolean gaLcCloudBuffer = false;
+
+    @Parameter(defaultValue = "true",
+               label = " Refine pixel classification near coastlines",
+               description = "Refine pixel classification near coastlines. ")
+    private boolean gaRefineClassificationNearCoastlines;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"},
             label = " Resolution of used land-water mask in m/pixel",
@@ -161,11 +159,6 @@ public class GlobAlbedoOp extends BasisOp {
             label = " Use land-water flag from L1b product instead",
             description = "Use land-water flag from L1b product instead of SRTM mask")
     private boolean gaUseL1bLandWaterFlag;
-
-    @Parameter(defaultValue = "true",
-            label = " Refine pixel classification near coastlines",
-            description = "Refine pixel classification near coastlines. ")
-    private boolean gaRefineClassificationNearCoastlines;
 
     private Map<String, Object> gaCloudClassificationParameters;
     private Product gaCloudProduct;
@@ -187,12 +180,11 @@ public class GlobAlbedoOp extends BasisOp {
     }
 
     private Map<String, Object> createGaCloudClassificationParameters() {
-        Map<String, Object> gaCloudClassificationParameters = new HashMap<String, Object>(1);
+        Map<String, Object> gaCloudClassificationParameters = new HashMap<>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyToaReflectances", gaCopyToaReflectances);
         gaCloudClassificationParameters.put("gaCopyFeatureValues", gaCopyFeatureValues);
         gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
-        gaCloudClassificationParameters.put("ctpMode", ctpMode);
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
         gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNN", gaApplyMERISAlternativeSchillerNN);
@@ -211,34 +203,16 @@ public class GlobAlbedoOp extends BasisOp {
     }
 
     private void processGlobAlbedoMeris() {
-        Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
+        Map<String, Product> gaCloudInput = new HashMap<>(4);
         computeMerisAlgorithmInputProducts(gaCloudInput);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
                 gaCloudClassificationParameters, gaCloudInput);
 
-        // Post Cloud Classification (i.e. coastline refinement)
-        if (gaRefineClassificationNearCoastlines) {
+        if (gaRefineClassificationNearCoastlines || gaComputeCloudShadow || gaComputeCloudBuffer) {
+            // Post Cloud Classification: coastline refinement, cloud shadow, cloud buffer
             computeGlobAlbedoPostProcessProduct();
-        } else {
-            gaPostProcessingProduct = gaCloudProduct;
-        }
 
-        if (gaComputeCloudShadow) {
-//            apply 'old' cloud shadow algorithm of limited quality
-//            todo: when available, implement improved algorithm in post-processing part
-            Map<String, Product> gaFinalCloudInput = new HashMap<String, Product>(4);
-            gaFinalCloudInput.put("l1b", sourceProduct);
-            gaFinalCloudInput.put("cloud", gaPostProcessingProduct);
-            gaFinalCloudInput.put("ctp", ctpProduct);   // may be null
-            Map<String, Object> gaFinalCloudClassificationParameters = new HashMap<String, Object>(1);
-            gaFinalCloudClassificationParameters.put("ctpMode", ctpMode);
-            gaFinalCloudClassificationParameters.put("shadowForCloudBuffer", false);
-            gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(IdepixCloudShadowOp.class),
-                    gaFinalCloudClassificationParameters, gaFinalCloudInput);
-        }
-
-        if (gaRefineClassificationNearCoastlines || gaComputeCloudShadow) {
             targetProduct = IdepixUtils.cloneProduct(gaCloudProduct);
             targetProduct.setAutoGrouping("radiance:rho_toa:brr");
             if (IdepixUtils.isValidMerisProduct(sourceProduct) && gaCopyRayleigh) {
@@ -260,7 +234,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudInput.put("pbaro", pbaroProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                false, true, false, false, true);
+                false, false, true, false, false, true);
         gaCloudInput.put("pressure", pressureLiseProduct);
         merisCloudProduct = IdepixProducts.computeMerisCloudProduct(sourceProduct, rad2reflProduct, ctpProduct,
                 pressureLiseProduct, pbaroProduct, true);
@@ -278,7 +252,7 @@ public class GlobAlbedoOp extends BasisOp {
     private void processGlobAlbedoVgt() {
         // Cloud Classification
         Product gaCloudProduct;
-        Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
+        Map<String, Product> gaCloudInput = new HashMap<>(4);
         gaCloudInput.put("gal1b", sourceProduct);
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoVgtClassificationOp.class),
@@ -305,13 +279,17 @@ public class GlobAlbedoOp extends BasisOp {
     }
 
     private void computeGlobAlbedoPostProcessProduct() {
-        HashMap<String, Product> input = new HashMap<String, Product>();
+        HashMap<String, Product> input = new HashMap<>();
         input.put("l1b", sourceProduct);
         input.put("merisCloud", gaCloudProduct);
         input.put("ctp", ctpProduct);
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put("cloudBufferWidth", gaCloudBufferWidth);
+        params.put("gaLcCloudBuffer", gaLcCloudBuffer);
+        params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
+        params.put("gaComputeCloudShadow", gaComputeCloudShadow);
+        params.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
         gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoPostProcessOp.class), params, input);
     }
 

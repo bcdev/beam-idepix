@@ -17,7 +17,6 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     static final float BRIGHT_FOR_WHITE_THRESH = 0.8f;
     static final float WHITE_THRESH = 0.9f;
     static final float NDVI_THRESH = 0.7f;
-    static final float GLINT_THRESH = 0.5f;
     static final float PRESSURE_THRESH = 0.9f;
 
     private float[] brr;
@@ -218,11 +217,6 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public float getWhiteThreshold() {
         return WHITE_THRESH;
-    }
-
-    @Override
-    public float getGlintThreshold() {
-        return GLINT_THRESH;
     }
 
     @Override

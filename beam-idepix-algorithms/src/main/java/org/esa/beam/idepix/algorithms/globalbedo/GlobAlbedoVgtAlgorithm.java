@@ -22,7 +22,6 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     private static final float NDVI_THRESH = 0.4f;
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
-    private static final float GLINT_THRESH = -3.65E-4f;
 
     private boolean smLand;
     private double[] nnOutput;
@@ -183,11 +182,6 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public float getWhiteThreshold() {
         return WHITE_THRESH;
-    }
-
-    @Override
-    public float getGlintThreshold() {
-        return GLINT_THRESH;
     }
 
     @Override

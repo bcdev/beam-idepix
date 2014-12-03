@@ -58,9 +58,6 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     @SourceProduct(alias = "sma", optional = true)
     private Product smaProduct;
 
-
-    private static final int MEAN_EARTH_RADIUS = 6372000;
-
     private Band origCloudFlagBand;
     private TiePointGrid szaTPG;
     private TiePointGrid saaTPG;
@@ -86,7 +83,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         Product postProcessedCloudProduct = createCompatibleProduct(merisCloudProduct,
                                                                     "postProcessedCloud", "postProcessedCloud");
 
-        HashMap<String, Object> waterParameters = new HashMap<String, Object>();
+        HashMap<String, Object> waterParameters = new HashMap<>();
         waterParameters.put("resolution", 50);
         waterParameters.put("subSamplingFactorX", 3);
         waterParameters.put("subSamplingFactorY", 3);
@@ -157,7 +154,7 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                         }
                         boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                         if (isCloudAfterRefinement) {
-                            CloudBuffer.computeSimpleCloudBuffer(x, y, sourceFlagTile, targetTile, cloudBufferWidth,
+                            CloudBuffer.computeSimpleCloudBuffer(x, y, targetTile, targetTile, cloudBufferWidth,
                                                                  CoastColourClassificationOp.F_CLOUD,
                                                                  CoastColourClassificationOp.F_CLOUD_BUFFER);
                         }

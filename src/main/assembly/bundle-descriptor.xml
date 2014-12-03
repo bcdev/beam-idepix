@@ -293,11 +293,41 @@
                     <defaultValue>false</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
+                    <name>gaUseGetasse</name>
+                    <type>boolean</type>
+                    <description>Use GETASSE30 DEM for Barometric Pressure Computation</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaComputeCloudShadow</name>
+                    <type>boolean</type>
+                    <description>Compute cloud shadow</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaComputeCloudBuffer</name>
+                    <type>boolean</type>
+                    <description>Compute a cloud buffer</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
                     <name>gaCloudBufferWidth</name>
                     <type>string</type>
                     <description>The width (# of pixels) of the 'safety buffer' around a pixel identified as cloudy, must be in [0,100]
                     </description>
                     <defaultValue>2</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaRefineClassificationNearCoastlines</name>
+                    <type>boolean</type>
+                    <description>Refine pixel classification near coastlines</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>gaLcCloudBuffer</name>
+                    <type>boolean</type>
+                    <description>Use the LandCover advanced cloud buffer algorithm</description>
+                    <defaultValue>true</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
                     <name>wmResolution</name>

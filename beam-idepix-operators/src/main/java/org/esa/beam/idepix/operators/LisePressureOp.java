@@ -81,9 +81,11 @@ public class LisePressureOp extends BasisOp {
     private static final String P_1_LISE = "p1_lise";
     public static final String PRESSURE_LISE_P1 = P_1_LISE;
     private static final String SURFACE_PRESS_LISE = "surface_press_lise";
-    private static final String P_2_LISE = "p2_lise";
     private static final String PSCATT_LISE = "pscatt_lise";
     public static final String PRESSURE_LISE_PSCATT = PSCATT_LISE;
+    public static final String PRESSURE_LISE_PSURF = SURFACE_PRESS_LISE;
+    private static final String P_2_LISE = "p2_lise";
+    public static final String PRESSURE_LISE_P2 = P_2_LISE;
 
     private static final String INVALID_EXPRESSION = "l1_flags.INVALID";
     private static final String INVALID_EXPRESSION_LAND = "l1_flags.INVALID or not l1_flags.LAND_OCEAN";

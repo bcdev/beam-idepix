@@ -135,8 +135,6 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
 
     public abstract float getWhiteThreshold();
 
-    public abstract float getGlintThreshold();
-
     public abstract float getPressureThreshold();
 
     public void setRefl(float[] refl) {

@@ -162,7 +162,7 @@ public class CoastColourOp extends BasisOp {
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
         pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
-                                                                        false,
+                                                                        false, false,
                                                                         true, false, false, true);
 
         computeCoastColourMerisCloudProduct();

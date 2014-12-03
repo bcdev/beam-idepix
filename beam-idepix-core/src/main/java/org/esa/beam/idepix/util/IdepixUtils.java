@@ -11,6 +11,7 @@ import org.esa.beam.util.ProductUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Calendar;
 import java.util.Random;
 
 /**
@@ -91,8 +92,13 @@ public class IdepixUtils {
 
     public static boolean isInputValid(Product inputProduct) {
         if (!isValidMerisProduct(inputProduct) &&
-                !isValidVgtProduct(inputProduct)) {
-            logErrorMessage("Input product must be either MERIS or VGT L1b!");
+                !isValidAatsrProduct(inputProduct) &&
+                !isValidVgtProduct(inputProduct) &&
+                !isValidAvhrrProduct(inputProduct) &&
+                !isValidModisProduct(inputProduct) &&
+                !isValidSeawifsProduct(inputProduct) &&
+                !isValidMerisAatsrSynergyProduct(inputProduct)) {
+            logErrorMessage("Input product must be either MERIS, AATSR, colocated MERIS/AATSR, MODIS/SeaWiFS, or VGT L1b!");
         }
         return true;
     }
@@ -103,6 +109,37 @@ public class IdepixUtils {
         final boolean merisIcolTypePatternMatches = isValidMerisIcolL1NProduct(product);
         final boolean merisCCL1PTypePatternMatches = isValidMerisCCL1PProduct(product);
         return merisL1TypePatternMatches || merisIcolTypePatternMatches || merisCCL1PTypePatternMatches;
+    }
+
+    public static boolean isValidAatsrProduct(Product product) {
+        return product.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+    }
+
+    public static boolean isValidAvhrrProduct(Product product) {
+        return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE) ||
+                product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_USGS_PRODUCT_TYPE);
+    }
+
+    public static boolean isValidModisProduct(Product product) {
+//        return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
+//                product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}") ||
+//                product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
+        return (product.getName().contains("MOD021KM") ||
+                product.getName().contains("L1B_LAC"));
+    }
+
+    public static boolean isValidSeawifsProduct(Product product) {
+//        S2006131120520.L1B_LAC
+//        S2005141121515.L1B_MLAC
+        return (product.getName().matches("S[0-9]{13}.(?i)(L1B_LAC)") ||
+                product.getName().matches("S[0-9]{13}.(?i)(L1B_MLAC)") ||
+                product.getName().matches("S[0-9]{13}.(?i)(L1B_HRPT)"));
+    }
+
+
+    public static boolean isValidMerisAatsrSynergyProduct(Product product) {
+        // todo: needs to be more strict, but for the moment we assume this is enough...
+        return product.getName().contains("COLLOC") || product.getProductType().contains("COLLOC");
     }
 
     private static boolean isValidMerisIcolL1NProduct(Product product) {
@@ -125,12 +162,23 @@ public class IdepixUtils {
     }
 
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
-        if (AlgorithmSelector.CoastColour == algorithm) {
+        if (AlgorithmSelector.IPF == algorithm ||
+                AlgorithmSelector.CoastColour == algorithm ||
+                AlgorithmSelector.GlobCover == algorithm ||
+                AlgorithmSelector.MagicStick == algorithm ||
+                AlgorithmSelector.Schiller == algorithm ||
+                AlgorithmSelector.FubScapeM == algorithm) {
             return (isValidMerisProduct(sourceProduct));
         } else if (AlgorithmSelector.GlobAlbedo == algorithm) {
-            return (isValidMerisProduct(sourceProduct) || isValidVgtProduct(sourceProduct));
+            return (isValidMerisProduct(sourceProduct) ||
+                    isValidAatsrProduct(sourceProduct) ||
+                    isValidVgtProduct(sourceProduct) ||
+                    isValidMerisAatsrSynergyProduct(sourceProduct));
+        } else if (AlgorithmSelector.Occci == algorithm) {
+            return (isValidModisProduct(sourceProduct) ||
+                    isValidSeawifsProduct(sourceProduct));
         } else {
-            return false;
+            return AlgorithmSelector.AvhrrAc == algorithm && (isValidAvhrrProduct(sourceProduct));
         }
     }
 
@@ -187,6 +235,15 @@ public class IdepixUtils {
     public static boolean areAllReflectancesValid(float[] reflectance) {
         for (float aReflectance : reflectance) {
             if (Float.isNaN(aReflectance) || aReflectance <= 0.0f) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean areAllReflectancesValid(double[] reflectance) {
+        for (double aReflectance : reflectance) {
+            if (Double.isNaN(aReflectance) || aReflectance <= 0.0f) {
                 return false;
             }
         }
@@ -353,6 +410,21 @@ public class IdepixUtils {
             }
         }
         return true;
+    }
+
+    public static int getDoyFromYYMMDD(String yymmdd) {
+        Calendar cal = Calendar.getInstance();
+        int doy = -1;
+        try {
+            final int year = Integer.parseInt(yymmdd.substring(0, 2));
+            final int month = Integer.parseInt(yymmdd.substring(2, 4)) - 1;
+            final int day = Integer.parseInt(yymmdd.substring(4, 6));
+            cal.set(year, month, day);
+            doy = cal.get(Calendar.DAY_OF_YEAR);
+        } catch (StringIndexOutOfBoundsException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return doy;
     }
 
     private static Color getRandomColour(Random random) {

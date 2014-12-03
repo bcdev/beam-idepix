@@ -10,9 +10,6 @@ import java.util.regex.Pattern;
  */
 public class IdepixConstants {
 
-    @Deprecated
-    public static final String IDEPIX_VERSION = "v2.1";
-
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
     public static final int F_CLOUD_AMBIGUOUS = 2;
@@ -33,6 +30,9 @@ public class IdepixConstants {
     public static final int F_SEAICE = 17;
 
     public static String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
+
+    public static String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
+    public static String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
 
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;

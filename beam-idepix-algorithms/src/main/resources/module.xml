@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.1.3</version>
+    <version>2.1.5</version>
     <name>Idepix Algorithms</name>
     <description>
         Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.
@@ -16,6 +16,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.1.5:</b><br/>
+        Merged latest EVOLUTION changes into master branch, i.e. algorithms for new sensors (AVHRR, MODIS, SeaWIFS).
         <b>Version 2.1.2:</b><br/>
         Uses an updated BEAM MERIS Radiometry module (bug fix in case of very bright nearly saturated pixels).<br/>
         <b>Version 2.1.1:</b><br/>
@@ -45,6 +47,9 @@
     <dependency>
         <module>beam-envisat-reader</module>
     </dependency>
+    <!--<dependency>-->
+        <!--<module>beam-avhrr-directory-reader</module>-->
+    <!--</dependency>-->
     <dependency>
         <module>beam-meris-brr</module>
     </dependency>
@@ -60,38 +65,106 @@
     <dependency>
         <module>beam-meris-radiometry</module>
     </dependency>
+    <dependency>
+        <module>beam-meris-glint</module>
+    </dependency>
 
-    <categories>Application,Processor,MERIS,AATSR,Idepix</categories>
+    <categories>Application,Processor,MERIS,AATSR</categories>
 
     <extension point="beam-ui:actions">
         <action>
             <id>idepix</id>
             <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>Idepix - Pixel Identification and Classification...</text>
-            <shortDescr>Idepix Classification of pixels (e.g. clouds, snow, ice) originating from MERIS or SPOT-VGT sensor.</shortDescr>
+            <text>IDEPIX Generic classification of pixels...</text>
+            <shortDescr>
+                IDEPIX Generic classification of pixels (cloud, snow, ice, land, water) originating from optical
+                sensors.
+            </shortDescr>
             <mnemonic/>
             <parent>processing.preProcessing</parent>
-            <helpID>IdepixPlugIn</helpID>
+            <helpID>idepixChain</helpID>
             <placeAfter/>
         </action>
+        <!--<action>-->
+            <!--<id>ipfAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixIpfAction</class>-->
+            <!--<text>IPF (MERIS)...</text>-->
+            <!--<shortDescr>Pixel classification with IPF (former MEPIX) algorithm.</shortDescr>-->
+            <!--<mnemonic>I</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
         <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
-            <text>Idepix Water (MERIS)...</text>
-            <shortDescr>Pixel classification over water (Ocean Colour CCI and CoastColour algorithm)</shortDescr>
+            <text>CoastColour (MERIS)...</text>
+            <shortDescr>Pixel classification with CoastColour algorithm.</shortDescr>
             <mnemonic>C</mnemonic>
             <parent>idepix</parent>
-            <helpId>IdepixPlugIn</helpId>
+            <helpId>idepixChain</helpId>
+        </action>
+        <action>
+            <id>avhrracAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixAvhrrAcAction</class>
+            <text>LandCover (AVHRR) ...</text>
+            <shortDescr>Pixel classification with LandCover AVHRR algorithm.</shortDescr>
+            <mnemonic>A</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
         </action>
         <action>
             <id>globalbedoAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixGlobAlbedoAction</class>
-            <text>Idepix Land (MERIS, SPOT-VGT)...</text>
-            <shortDescr>Pixel classification over land (Land Cover CCI and GlobAlbedo algorithm)</shortDescr>
+            <text>GlobAlbedo (MERIS, AATSR, VGT)...</text>
+            <shortDescr>Pixel classification with GlobAlbedo algorithm.</shortDescr>
             <mnemonic>G</mnemonic>
             <parent>idepix</parent>
-            <helpId>IdepixPlugIn</helpId>
-            <placeAfter>coastcolourAlgo</placeAfter>
+            <helpId>idepixChain</helpId>
+        </action>
+        <!--<action>-->
+            <!--<id>globcoverAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixGlobCoverAction</class>-->
+            <!--<text>GlobCover (MERIS)...</text>-->
+            <!--<shortDescr>Pixel classification with GlobCover algorithm.</shortDescr>-->
+            <!--<mnemonic>G</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
+        <!--<action>-->
+            <!--<id>magicstickAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixMagicStickAction</class>-->
+            <!--<text>Magic Stick (MERIS)...</text>-->
+            <!--<shortDescr>Pixel classification with MagicStick algorithm.</shortDescr>-->
+            <!--<mnemonic>G</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
+        <!--<action>-->
+            <!--<id>schillerAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixSchillerAction</class>-->
+            <!--<text>Schiller (MERIS)...</text>-->
+            <!--<shortDescr>Pixel classification with Schiller algorithm.</shortDescr>-->
+            <!--<mnemonic>G</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
+        <!--<action>-->
+            <!--<id>fubscapemAlgo</id>-->
+            <!--<class>org.esa.beam.idepix.ui.actions.IdepixFubScapeMAction</class>-->
+            <!--<text>ScapeM (MERIS)...</text>-->
+            <!--<shortDescr>Pixel classification with ScapeM algorithm.</shortDescr>-->
+            <!--<mnemonic>A</mnemonic>-->
+            <!--<parent>idepix</parent>-->
+            <!--<helpId>idepixChain</helpId>-->
+        <!--</action>-->
+        <action>
+            <id>modisSeawifsAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixModisSeawifsAction</class>
+            <text>OC-CCI (MODIS, SeaWiFS)...</text>
+            <shortDescr>Pixel classification with OC-CCI algorithm (Schiller NNs).</shortDescr>
+            <mnemonic>O</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
         </action>
     </extension>
 

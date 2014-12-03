@@ -74,17 +74,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String MDSI = MerisClassificationOp.MDSI;
     public static final String CLOUD_PROBABILITY_VALUE = MerisClassificationOp.CLOUD_PROBABILITY_VALUE;
 
-    //    public static final int F_LAND = 13;
-//    public static final int F_COASTLINE = 14;
-//    public static final int F_CLOUD = 0;
-//    public static final int F_CLOUD_AMBIGUOUS = 4;
-//    public static final int F_CLOUD_BUFFER = 11;
-//    public static final int F_CLOUD_SHADOW = 12;
-//    public static final int F_SNOW_ICE = 9;
-//    public static final int F_GLINTRISK = 10;
-//    public static final int F_MIXED_PIXEL = 15;
-//
-
     public static final int F_CLOUD = 0;
     public static final int F_CLOUD_AMBIGUOUS = 1;
     public static final int F_CLOUD_SURE = 2;
