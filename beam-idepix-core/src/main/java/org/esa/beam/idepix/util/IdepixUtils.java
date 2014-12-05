@@ -427,6 +427,10 @@ public class IdepixUtils {
         return doy;
     }
 
+    public static boolean isLeapYear(int year) {
+        return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
+    }
+
     private static Color getRandomColour(Random random) {
         int rColor = random.nextInt(256);
         int gColor = random.nextInt(256);

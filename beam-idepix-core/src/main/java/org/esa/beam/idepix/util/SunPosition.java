@@ -7,32 +7,32 @@ package org.esa.beam.idepix.util;
  * @author olafd
  */
 public class SunPosition {
-    private double aa;
-    private double za;
+    private double lat;
+    private double lon;
 
-    public SunPosition(final double za, final double aa) {
-        if (aa < 0.0) {
-            throw new IllegalArgumentException("aa < 0.0");
+    public SunPosition(final double lat, final double lon) {
+        if (this.lat < -90.0) {
+            throw new IllegalArgumentException("lat < -90.0");
         }
-        if (aa > 360.0) {
-            throw new IllegalArgumentException("aa > 360.0");
+        if (this.lat > 90.0) {
+            throw new IllegalArgumentException("lat > 90.0");
         }
-        if (za < 0.0) {
-            throw new IllegalArgumentException("za < 0.0");
+        if (this.lon < -180.0) {
+            throw new IllegalArgumentException("lon < -180.0");
         }
-        if (za > 180.0) {
-            throw new IllegalArgumentException("za > 180.0");
+        if (this.lon > 180.0) {
+            throw new IllegalArgumentException("lon > 180.0");
         }
 
-        this.aa = aa;
-        this.za = za;
+        this.lat = lon;
+        this.lon = lat;
     }
 
-    public final double getAzimuthAngle() {
-        return aa;
+    public double getLat() {
+        return lat;
     }
 
-    public final double getZenithAngle() {
-        return za;
+    public double getLon() {
+        return lon;
     }
 }

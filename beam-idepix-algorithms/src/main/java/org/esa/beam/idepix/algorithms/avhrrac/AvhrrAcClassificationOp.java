@@ -8,10 +8,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.idepix.algorithms.occci.OccciUtils;
-import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.idepix.util.SunPosition;
-import org.esa.beam.idepix.util.SunPositionCalculator;
+import org.esa.beam.idepix.util.*;
 import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.util.math.RsMathUtils;
@@ -88,8 +85,9 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     NNffbpAlphaTabFast avhrracNeuralNet;
 
     AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
-    private SunPosition sunPosition;
+    private SunAngles sunAngles;
     private GeoPos satPosition;
+    private SunPosition sunPosition;
 
     public Product getSourceProduct() {
         // this is the source product for the ProductConfigurer
@@ -100,8 +98,12 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     public void prepareInputs() throws OperatorException {
         readSchillerNets();
         createTargetProduct();
-        computeSatPosition();
         computeSunPosition();
+
+        // todo: we need to flip the original products horizontally and vertically!!
+        sourceProduct.setGeoCoding(
+                new TiePointGeoCoding(sourceProduct.getTiePointGrid("latitude"),
+                                      sourceProduct.getTiePointGrid("longitude")));
 
         try {
             vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
@@ -165,6 +167,9 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     private void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
+        if (x == 200 && y == 600) {
+            System.out.println("x,y = " + x + "," + y);
+        }
         final double sza = sourceSamples[Constants.SRC_SZA].getDouble();
         //double vza = 45.0f; // todo: vza is not in product, clarify how to determine
         double vza = vzaTable.getVza(x);
@@ -211,6 +216,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamples[1].set(neuralNetOutput[0]);
+//            targetSamples[1].set(relAzi);
         } else {
             targetSamples[0].set(Constants.F_INVALID, true);
             targetSamples[1].set(Float.NaN);
@@ -230,39 +236,71 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         // todo: implement following http://edc2.usgs.gov/1KM/angin_diag.php#sataz and
         //
 
-//        final GeoPos pointGeoPos = getGeoPos(x, y);
-//        final double latPoint = pointGeoPos.getLat();
-//        final double lonPoint = pointGeoPos.getLon();
-//        final double latSat = satPosition.getLat();
-//        final double lonSat = satPosition.getLon();
-//
-//        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
-//        final double greatCirclePointToSat = 0.001*RsMathUtils.MEAN_EARTH_RADIUS *
-//                Math.acos(Math.cos(latPoint)*Math.cos(latSat)*Math.cos(lonPoint-lonSat) +
-//                Math.sin(latPoint)*Math.sin(latSat));
-//
-//        final double vaa = Math.acos((Math.sin(latSat) - Math.sin(latPoint)*Math.cos(greatCirclePointToSat))/
-//                                (Math.cos(latPoint)*Math.sin(greatCirclePointToSat)));
-//        final double saa = Math.acos((Math.sin(latSun) - Math.sin(latPoint)*Math.cos(sza*MathUtils.DTOR))/
-//                                (Math.cos(latPoint)*Math.sin(sza*MathUtils.DTOR)));
-//
-//        final double relAzi = saa - vaa;
+        final GeoPos pointGeoPos = getGeoPos(x, y);
+        final double latPoint = pointGeoPos.getLat();
+        final double lonPoint = pointGeoPos.getLon();
 
-        return 45.0;
+        computeSatPosition(y);
+        final double latSat = satPosition.getLat();
+        final double lonSat = satPosition.getLon();
+
+        final double latPointRad = latPoint * MathUtils.DTOR;
+        final double lonPointRad = lonPoint * MathUtils.DTOR;
+        final double latSatRad = latSat * MathUtils.DTOR;
+        final double lonSatRad = lonSat * MathUtils.DTOR;
+
+        final double latSun = sunPosition.getLat();
+        final double lonSun = sunPosition.getLon();
+        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
+        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
+
+        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
+        final double greatCirclePointToSat = 0.001*RsMathUtils.MEAN_EARTH_RADIUS *
+                Math.acos(Math.cos(latPointRad)*Math.cos(latSatRad)*Math.cos(lonPointRad-lonSatRad) +
+                Math.sin(latPointRad)*Math.sin(latSatRad));
+
+        final double greatCirclePointToSatRad = 2.0*Math.PI*greatCirclePointToSat/(0.001*RsMathUtils.MEAN_EARTH_RADIUS);
+
+        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad)*Math.cos(greatCirclePointToSatRad))/
+                                (Math.cos(latPointRad)*Math.sin(greatCirclePointToSatRad)));
+        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad)*Math.cos(sza*MathUtils.DTOR))/
+                                (Math.cos(latPointRad)*Math.sin(sza*MathUtils.DTOR)));
+
+        computeSunAngles(latSat, lonSat);
+        final double szaFromSunPosCalculator = sunAngles.getZenithAngle(); // should be equal to sza --> check in unit test!
+        final double saaFromSunPosCalculator = sunAngles.getAzimuthAngle(); // should be equal to saa --> check in unit test!
+
+//        return saa*MathUtils.RTOD - vaa*MathUtils.RTOD;
+        return saaFromSunPosCalculator - vaa*MathUtils.RTOD;
+    }
+
+    private void computeSunAngles(double lat, double lon) {
+        final Calendar calendar = getProductDateAsCalendar();
+        sunAngles = SunAnglesCalculator.calculate(calendar, lat, lon);
+    }
+
+    private Calendar getProductDateAsCalendar() {
+        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        String ddmmyy = getProductDatestring();
+        int year = Integer.parseInt(ddmmyy.substring(4, 6));
+        if (year < 50) {
+            year = 2000 + year;
+        } else {
+            year = 1900 + year;
+        }
+        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
+        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
+        calendar.set(year, month, day, 12, 0, 0);
+        return calendar;
+    }
+
+    private void computeSatPosition(int y) {
+        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth()/2, y);    // LAC_NADIR = 1024.5
     }
 
     private void computeSunPosition() {
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        String yymmdd = getDatestring();
-        final int year = Integer.parseInt(yymmdd.substring(0, 2));
-        final int month = Integer.parseInt(yymmdd.substring(2, 4)) - 1;
-        final int day = Integer.parseInt(yymmdd.substring(4, 6));
-        calendar.set(year, month, day, 12, 0, 0);
-        sunPosition = SunPositionCalculator.calculate(calendar, 55.0, 10.00);
-    }
-
-    private void computeSatPosition() {
-        satPosition = getGeoPos(0, 0);  // todo: get from metadata?!
+        final Calendar calendar = getProductDateAsCalendar();
+        sunPosition = SunPositionCalculator.calculate(calendar);
     }
 
 
@@ -295,11 +333,11 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     }
 
     private int getDoy() {
-        return IdepixUtils.getDoyFromYYMMDD(getDatestring());
+        return IdepixUtils.getDoyFromYYMMDD(getProductDatestring());
     }
 
-    private String getDatestring() {
-        // provides datestring as YYMMDD
+    private String getProductDatestring() {
+        // provides datestring as DDMMYY !!!
         final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
         // allow names such as subset_of_ao11060992103109_120417.dim
         return sourceProduct.getName().substring(productNameStartIndex + 4, productNameStartIndex + 10);
