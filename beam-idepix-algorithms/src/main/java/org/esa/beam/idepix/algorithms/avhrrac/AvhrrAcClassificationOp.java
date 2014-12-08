@@ -1,5 +1,6 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -13,6 +14,8 @@ import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.util.math.RsMathUtils;
 
+import javax.media.jai.RenderedOp;
+import javax.media.jai.operator.TransposeDescriptor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,10 +61,10 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     boolean aacUseWaterMaskFraction = true;
 
-    @Parameter(defaultValue = "false",
-               label = " Debug bands",
-               description = "Write further useful bands to target product.")
-    private boolean avhrracOutputDebug = false;
+//    @Parameter(defaultValue = "false",
+//               label = " Debug bands",
+//               description = "Write further useful bands to target product.")
+//    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
                label = " Schiller NN cloud ambiguous lower boundary ",
@@ -79,7 +82,45 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
 
+    @Parameter(defaultValue = "20.0",
+               label = " Reflectance 1 'brightness' threshold ",
+               description = " Reflectance 1 'brightness' threshold ")
+    double reflCh1Thresh;
+
+    @Parameter(defaultValue = "20.0",
+               label = " Reflectance 2 'brightness' threshold ",
+               description = " Reflectance 2 'brightness' threshold ")
+    double reflCh2Thresh;
+
+    @Parameter(defaultValue = "1.0",
+               label = " Reflectance 2/1 ratio threshold ",
+               description = " Reflectance 2/1 ratio threshold ")
+    double r2r1RatioThresh;
+
+    @Parameter(defaultValue = "1.0",
+               label = " Reflectance 3/1 ratio threshold ",
+               description = " Reflectance 3/1 ratio threshold ")
+    double r3r1RatioThresh;
+
+    @Parameter(defaultValue = "-30.0",
+               label = " Channel 4 brightness temperature threshold (C)",
+               description = " Channel 4 brightness temperature threshold (C)")
+    double btCh4Thresh;
+
+    @Parameter(defaultValue = "-30.0",
+               label = " Channel 5 brightness temperature threshold (C)",
+               description = " Channel 5 brightness temperature threshold (C)")
+    double btCh5Thresh;
+
+
     private static final String SCHILLER_AVHRRAC_NET_NAME = "6x3_114.1.net";
+
+    private static final int ALBEDO_TO_RADIANCE = 0;
+    private static final int RADIANCE_TO_ALBEDO = 1;
+
+    private static final double NU_CH3 = 2694.0;
+    private static final double NU_CH4 = 925.0;
+    private static final double NU_CH5 = 839.0;
 
     String avhrracNeuralNetString;
     NNffbpAlphaTabFast avhrracNeuralNet;
@@ -89,6 +130,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     private GeoPos satPosition;
     private SunPosition sunPosition;
 
+
     public Product getSourceProduct() {
         // this is the source product for the ProductConfigurer
         return sourceProduct;
@@ -96,14 +138,15 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
     @Override
     public void prepareInputs() throws OperatorException {
+        flipSourceImages();
         readSchillerNets();
         createTargetProduct();
         computeSunPosition();
 
-        // todo: we need to flip the original products horizontally and vertically!!
         sourceProduct.setGeoCoding(
                 new TiePointGeoCoding(sourceProduct.getTiePointGrid("latitude"),
-                                      sourceProduct.getTiePointGrid("longitude")));
+                                      sourceProduct.getTiePointGrid("longitude"))
+        );
 
         try {
             vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
@@ -116,6 +159,22 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         runAvhrrAcAlgorithm(x, y, sourceSamples, targetSamples);
+    }
+
+    private void flipSourceImages() {
+        for (Band b : sourceProduct.getBands()) {
+            final RenderedOp flippedImage = flipImage(b.getSourceImage());
+            b.setSourceImage(flippedImage);
+        }
+        for (TiePointGrid tpg : sourceProduct.getTiePointGrids()) {
+            final RenderedOp flippedImage = flipImage(tpg.getSourceImage());
+            tpg.setSourceImage(flippedImage);
+        }
+    }
+
+    private RenderedOp flipImage(MultiLevelImage sourceImage) {
+        final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceImage, TransposeDescriptor.FLIP_VERTICAL, null);
+        return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
     }
 
     private void readSchillerNets() {
@@ -162,12 +221,19 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         targetSamples[0].set(Constants.F_GLINT_RISK, algorithm.isGlintRisk());
         targetSamples[0].set(Constants.F_COASTLINE, algorithm.isCoastline());
         targetSamples[0].set(Constants.F_LAND, algorithm.isLand());
+        // test:
+        targetSamples[0].set(Constants.F_LAND + 1, algorithm.isReflCh1Bright());
+        targetSamples[0].set(Constants.F_LAND + 2, algorithm.isReflCh2Bright());
+        targetSamples[0].set(Constants.F_LAND + 3, algorithm.isR2R1RatioAboveThresh());
+        targetSamples[0].set(Constants.F_LAND + 4, algorithm.isR3R1RatioAboveThresh());
+        targetSamples[0].set(Constants.F_LAND + 5, algorithm.isCh4BtAboveThresh());
+        targetSamples[0].set(Constants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
     }
 
     private void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
-        if (x == 200 && y == 600) {
+        if (x == 560 && y == 5) {
             System.out.println("x,y = " + x + "," + y);
         }
         final double sza = sourceSamples[Constants.SRC_SZA].getDouble();
@@ -180,8 +246,8 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
         if (albedo1 >= 0.0 && albedo2 >= 0.0) {
 
-            avhrrRadiance[0] = convertAlbedoToRadiance(albedo1, sza);
-            avhrrRadiance[1] = convertAlbedoToRadiance(albedo2, sza);
+            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE);
+            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE);
             avhrrRadiance[2] = sourceSamples[Constants.SRC_RADIANCE_3].getDouble();
             avhrrRadiance[3] = sourceSamples[Constants.SRC_RADIANCE_4].getDouble();
             avhrrRadiance[4] = sourceSamples[Constants.SRC_RADIANCE_5].getDouble();
@@ -214,20 +280,64 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
+            aacAlgorithm.setReflCh1(albedo1);
+            aacAlgorithm.setReflCh2(albedo2);
+            final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO);
+            aacAlgorithm.setReflCh3(reflCh3);
+            final double btCh4 = convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
+            aacAlgorithm.setBtCh4(btCh4);
+            final double btCh5 = convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
+            aacAlgorithm.setBtCh5(btCh5);
+
+            aacAlgorithm.setReflCh1Thresh(reflCh1Thresh);
+            aacAlgorithm.setReflCh2Thresh(reflCh2Thresh);
+            aacAlgorithm.setR2r1RatioThresh(r2r1RatioThresh);
+            aacAlgorithm.setR3r1RatioThresh(r3r1RatioThresh);
+            aacAlgorithm.setBtCh4Thresh(btCh4Thresh);
+            aacAlgorithm.setBtCh5Thresh(btCh5Thresh);
+
+
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamples[1].set(neuralNetOutput[0]);
 //            targetSamples[1].set(relAzi);
+            targetSamples[2].set(btCh4);
+            targetSamples[3].set(btCh5);
+            targetSamples[4].set(albedo1);
+            targetSamples[5].set(albedo2);
+            targetSamples[6].set(reflCh3);
+
         } else {
             targetSamples[0].set(Constants.F_INVALID, true);
             targetSamples[1].set(Float.NaN);
+            targetSamples[2].set(Float.NaN);
+            targetSamples[3].set(Float.NaN);
+            targetSamples[4].set(Float.NaN);
+            targetSamples[5].set(Float.NaN);
+            targetSamples[6].set(Float.NaN);
             avhrrRadiance[0] = Float.NaN;
             avhrrRadiance[1] = Float.NaN;
         }
 
         if (aacCopyRadiances) {
             for (int i = 0; i < Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
-                targetSamples[2 + i].set(avhrrRadiance[i]);
+                targetSamples[7 + i].set(avhrrRadiance[i]);
             }
+        }
+    }
+
+    private double convertRadianceToBt(double radiance, int channel) {
+        final double c1 = 1.1910659E-5;
+        final double c2 = 1.438833;
+
+        switch (channel) {
+            case 3:
+                return c2 * NU_CH3 / Math.log(1.0 + c1 * Math.pow(NU_CH3, 3.0) / radiance);
+            case 4:
+                return c2 * NU_CH4 / Math.log(1.0 + c1 * Math.pow(NU_CH4, 3.0) / radiance);
+            case 5:
+                return c2 * NU_CH5 / Math.log(1.0 + c1 * Math.pow(NU_CH5, 3.0) / radiance);
+            default:
+                throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
         }
     }
 
@@ -255,23 +365,23 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
 
         // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
-        final double greatCirclePointToSat = 0.001*RsMathUtils.MEAN_EARTH_RADIUS *
-                Math.acos(Math.cos(latPointRad)*Math.cos(latSatRad)*Math.cos(lonPointRad-lonSatRad) +
-                Math.sin(latPointRad)*Math.sin(latSatRad));
+        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
+                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
+                                  Math.sin(latPointRad) * Math.sin(latSatRad));
 
-        final double greatCirclePointToSatRad = 2.0*Math.PI*greatCirclePointToSat/(0.001*RsMathUtils.MEAN_EARTH_RADIUS);
+        final double greatCirclePointToSatRad = 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
 
-        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad)*Math.cos(greatCirclePointToSatRad))/
-                                (Math.cos(latPointRad)*Math.sin(greatCirclePointToSatRad)));
-        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad)*Math.cos(sza*MathUtils.DTOR))/
-                                (Math.cos(latPointRad)*Math.sin(sza*MathUtils.DTOR)));
+        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
+                                             (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad)));
+        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
+                                             (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR)));
 
         computeSunAngles(latSat, lonSat);
         final double szaFromSunPosCalculator = sunAngles.getZenithAngle(); // should be equal to sza --> check in unit test!
         final double saaFromSunPosCalculator = sunAngles.getAzimuthAngle(); // should be equal to saa --> check in unit test!
 
 //        return saa*MathUtils.RTOD - vaa*MathUtils.RTOD;
-        return saaFromSunPosCalculator - vaa*MathUtils.RTOD;
+        return saaFromSunPosCalculator - vaa * MathUtils.RTOD;
     }
 
     private void computeSunAngles(double lat, double lon) {
@@ -295,7 +405,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     }
 
     private void computeSatPosition(int y) {
-        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth()/2, y);    // LAC_NADIR = 1024.5
+        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
     }
 
     private void computeSunPosition() {
@@ -304,7 +414,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     }
 
 
-    private double convertAlbedoToRadiance(double albedo, double sza) {
+    private double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
         // follows GK formula
 //        ao11060992103109_120417.l1b
         final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
@@ -328,8 +438,17 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         }
         // GK: R=A (F/100 PI W  cos(sun_zenith)  abstandkorrektur)
 
-        return albedo * 0.01 * integrSolarSpectralIrrad * Math.PI * spectralResponseWidth *
+        final double conversionFactor = 0.01 * integrSolarSpectralIrrad * Math.PI * spectralResponseWidth *
                 Math.cos(sza * MathUtils.DTOR) * distanceCorr;
+        double result;
+        if (mode == ALBEDO_TO_RADIANCE) {
+            result = input * conversionFactor;
+        } else if (mode == RADIANCE_TO_ALBEDO) {
+            result = input / conversionFactor;
+        } else {
+            throw new IllegalArgumentException("wrong mode " + mode + " for albedo/radance converison");
+        }
+        return result;
     }
 
     private int getDoy() {
@@ -378,6 +497,11 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 //            sampleConfigurer.defineSample(index++, occci.Constants.NDSI_BAND_NAME);
 //        }
         sampleConfigurer.defineSample(index++, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        sampleConfigurer.defineSample(index++, "bt_4");
+        sampleConfigurer.defineSample(index++, "bt_5");
+        sampleConfigurer.defineSample(index++, "refl_1");
+        sampleConfigurer.defineSample(index++, "refl_2");
+        sampleConfigurer.defineSample(index++, "refl_3");
 
         // radiances:
         if (aacCopyRadiances) {
@@ -418,6 +542,37 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         nnValueBand.setUnit("dl");
         nnValueBand.setNoDataValue(Float.NaN);
         nnValueBand.setNoDataValueUsed(true);
+
+        Band bt4Band = productConfigurer.addBand("bt_4", ProductData.TYPE_FLOAT32);
+        bt4Band.setDescription("Channel 4 brightness temperature");
+        bt4Band.setUnit("C");
+        bt4Band.setNoDataValue(Float.NaN);
+        bt4Band.setNoDataValueUsed(true);
+
+        Band bt5Band = productConfigurer.addBand("bt_5", ProductData.TYPE_FLOAT32);
+        bt5Band.setDescription("Channel 5 brightness temperature");
+        bt5Band.setUnit("C");
+        bt5Band.setNoDataValue(Float.NaN);
+        bt5Band.setNoDataValueUsed(true);
+
+        Band refl1Band = productConfigurer.addBand("refl_1", ProductData.TYPE_FLOAT32);
+        refl1Band.setDescription("Channel 1 TOA reflectance");
+        refl1Band.setUnit("dl");
+        refl1Band.setNoDataValue(Float.NaN);
+        refl1Band.setNoDataValueUsed(true);
+
+        Band refl2Band = productConfigurer.addBand("refl_2", ProductData.TYPE_FLOAT32);
+        refl2Band.setDescription("Channel 2 TOA reflectance");
+        refl2Band.setUnit("dl");
+        refl2Band.setNoDataValue(Float.NaN);
+        refl2Band.setNoDataValueUsed(true);
+
+        Band refl3Band = productConfigurer.addBand("refl_3", ProductData.TYPE_FLOAT32);
+        refl3Band.setDescription("Channel 3 TOA reflectance");
+        refl3Band.setUnit("dl");
+        refl3Band.setNoDataValue(Float.NaN);
+        refl3Band.setNoDataValueUsed(true);
+
 
         // radiances:
         if (aacCopyRadiances) {

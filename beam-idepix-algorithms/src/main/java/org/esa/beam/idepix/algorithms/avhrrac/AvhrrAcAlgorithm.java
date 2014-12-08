@@ -18,6 +18,18 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
+    double reflCh1;
+    double reflCh2;
+    double reflCh3;
+    double btCh4;
+    double btCh5;
+
+    double reflCh1Thresh;
+    double reflCh2Thresh;
+    double r2r1RatioThresh;
+    double r3r1RatioThresh;
+    double btCh4Thresh;
+    double btCh5Thresh;
 
     @Override
     public boolean isInvalid() {
@@ -115,6 +127,70 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     @Override
     public boolean isGlintRisk() {
         return false;
+    }
+
+    /// test tests... :-)
+    public boolean isReflCh1Bright() {
+        return reflCh1 > reflCh1Thresh;
+    }
+    public boolean isReflCh2Bright() {
+        return reflCh2 > reflCh2Thresh;
+    }
+    public boolean isR2R1RatioAboveThresh() {
+        return reflCh2/reflCh1 > r2r1RatioThresh;
+    }
+    public boolean isR3R1RatioAboveThresh() {
+        return reflCh3/reflCh1 > r3r1RatioThresh;
+    }
+    public boolean isCh4BtAboveThresh() {
+        return btCh4 > btCh4Thresh;
+    }
+    public boolean isCh5BtAboveThresh() {
+        return btCh5 > btCh5Thresh;
+    }
+
+    public void setReflCh1(double reflCh1) {
+        this.reflCh1 = reflCh1;
+    }
+
+    public void setReflCh2(double reflCh2) {
+        this.reflCh2 = reflCh2;
+    }
+
+    public void setReflCh3(double reflCh3) {
+        this.reflCh3 = reflCh3;
+    }
+
+    public void setBtCh4(double btCh4) {
+        this.btCh4 = btCh4;
+    }
+
+    public void setBtCh5(double btCh5) {
+        this.btCh5 = btCh5;
+    }
+
+    public void setReflCh1Thresh(double reflCh1Thresh) {
+        this.reflCh1Thresh = reflCh1Thresh;
+    }
+
+    public void setReflCh2Thresh(double reflCh2Thresh) {
+        this.reflCh2Thresh = reflCh2Thresh;
+    }
+
+    public void setR2r1RatioThresh(double r2r1RatioThresh) {
+        this.r2r1RatioThresh = r2r1RatioThresh;
+    }
+
+    public void setR3r1RatioThresh(double r3r1RatioThresh) {
+        this.r3r1RatioThresh = r3r1RatioThresh;
+    }
+
+    public void setBtCh4Thresh(double btCh4Thresh) {
+        this.btCh4Thresh = btCh4Thresh;
+    }
+
+    public void setBtCh5Thresh(double btCh5Thresh) {
+        this.btCh5Thresh = btCh5Thresh;
     }
 
     public void setRadiance(double[] rad) {

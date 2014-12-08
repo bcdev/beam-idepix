@@ -38,6 +38,13 @@ public class AvhrrAcUtils {
         flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, Constants.F_GLINT_RISK), null);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, Constants.F_COASTLINE), null);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, Constants.F_LAND), null);
+        // tests:
+        flagCoding.addFlag("F_REFL1_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 1), null);
+        flagCoding.addFlag("F_REFL2_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 2), null);
+        flagCoding.addFlag("F_RATIO_REFL21_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 3), null);
+        flagCoding.addFlag("F_RATIO_REFL31_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 4), null);
+        flagCoding.addFlag("F_BT4_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 5), null);
+        flagCoding.addFlag("F_BT5_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 6), null);
 
         return flagCoding;
     }
@@ -98,6 +105,37 @@ public class AvhrrAcUtils {
 
         mask = Mask.BandMathsType.create("F_LAND", "Land pixel", w, h,
                                          "pixel_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
+        avhrracProduct.getMaskGroup().add(index++, mask);
+
+        // tests:
+        mask = Mask.BandMathsType.create("F_REFL1_ABOVE_THRESH", "TOA reflectance Channel 1 above threshold", w, h,
+                                         "pixel_classif_flags.F_REFL1_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
+        avhrracProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_REFL2_ABOVE_THRESH", "TOA reflectance Channel 2 above threshold", w, h,
+                                         "pixel_classif_flags.F_REFL2_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
+        avhrracProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_RATIO_REFL21_ABOVE_THRESH", "Ratio of TOA reflectance Channel 2/1 above threshold", w, h,
+                                         "pixel_classif_flags.F_RATIO_REFL21_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
+        avhrracProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_RATIO_REFL31_ABOVE_THRESH", "Ratio of TOA reflectance Channel 3/1 above threshold", w, h,
+                                         "pixel_classif_flags.F_RATIO_REFL31_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
+        avhrracProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_BT4_ABOVE_THRESH", "Brightness temperature Channel 4 above threshold", w, h,
+                                         "pixel_classif_flags.F_BT4_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
+        avhrracProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_BT5_ABOVE_THRESH", "Brightness temperature Channel 5 above threshold", w, h,
+                                         "pixel_classif_flags.F_BT5_ABOVE_THRESH",
                                          getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 

@@ -51,10 +51,10 @@ public class AvhrrAcOp extends BasisOp {
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean aacUseWaterMaskFraction = true;
 
-    @Parameter(defaultValue = "false",
-               label = " Debug bands",
-               description = "Write further useful bands to target product.")
-    private boolean avhrracOutputDebug = false;
+//    @Parameter(defaultValue = "false",
+//               label = " Debug bands",
+//               description = "Write further useful bands to target product.")
+//    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
                label = " Schiller NN cloud ambiguous lower boundary ",
@@ -70,6 +70,36 @@ public class AvhrrAcOp extends BasisOp {
                label = " Schiller NN cloud sure/snow separation value ",
                description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
+
+    @Parameter(defaultValue = "20.0",
+               label = " Reflectance 1 'brightness' threshold ",
+               description = " Reflectance 1 'brightness' threshold ")
+    double reflCh1Thresh;
+
+    @Parameter(defaultValue = "20.0",
+               label = " Reflectance 2 'brightness' threshold ",
+               description = " Reflectance 2 'brightness' threshold ")
+    double reflCh2Thresh;
+
+    @Parameter(defaultValue = "1.0",
+               label = " Reflectance 2/1 ratio threshold ",
+               description = " Reflectance 2/1 ratio threshold ")
+    double r2r1RatioThresh;
+
+    @Parameter(defaultValue = "1.0",
+               label = " Reflectance 3/1 ratio threshold ",
+               description = " Reflectance 3/1 ratio threshold ")
+    double r3r1RatioThresh;
+
+    @Parameter(defaultValue = "-30.0",
+               label = " Channel 4 brightness temperature threshold (C)",
+               description = " Channel 4 brightness temperature threshold (C)")
+    double btCh4Thresh;
+
+    @Parameter(defaultValue = "-30.0",
+               label = " Channel 5 brightness temperature threshold (C)",
+               description = " Channel 5 brightness temperature threshold (C)")
+    double btCh5Thresh;
 
 
     private Map<String, Object> aacCloudClassificationParameters;
@@ -91,13 +121,20 @@ public class AvhrrAcOp extends BasisOp {
         aacCloudClassificationParameters.put("aacCloudBufferWidth", aacCloudBufferWidth);
         aacCloudClassificationParameters.put("wmResolution", wmResolution);
         aacCloudClassificationParameters.put("aacUseWaterMaskFraction", aacUseWaterMaskFraction);
-        aacCloudClassificationParameters.put("avhrracOutputDebug", avhrracOutputDebug);
+//        aacCloudClassificationParameters.put("avhrracOutputDebug", avhrracOutputDebug);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousLowerBoundaryValue",
                                              avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousSureSeparationValue",
                                              avhrracSchillerNNCloudAmbiguousSureSeparationValue);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudSureSnowSeparationValue",
                                              avhrracSchillerNNCloudSureSnowSeparationValue);
+
+        aacCloudClassificationParameters.put("reflCh1Thresh", reflCh1Thresh);
+        aacCloudClassificationParameters.put("reflCh2Thresh", reflCh2Thresh);
+        aacCloudClassificationParameters.put("r2r1RatioThresh", r2r1RatioThresh);
+        aacCloudClassificationParameters.put("r3r1RatioThresh", r3r1RatioThresh);
+        aacCloudClassificationParameters.put("btCh4Thresh", btCh4Thresh);
+        aacCloudClassificationParameters.put("btCh5Thresh", btCh5Thresh);
 
         return aacCloudClassificationParameters;
     }
