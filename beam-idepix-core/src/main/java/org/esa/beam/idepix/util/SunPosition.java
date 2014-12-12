@@ -24,8 +24,8 @@ public class SunPosition {
             throw new IllegalArgumentException("lon > 180.0");
         }
 
-        this.lat = lon;
-        this.lon = lat;
+        this.lat = lat;
+        this.lon = lon;
     }
 
     public double getLat() {

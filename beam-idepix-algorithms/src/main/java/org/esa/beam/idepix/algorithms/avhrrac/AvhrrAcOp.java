@@ -15,6 +15,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Idepix operator for pixel identification and classification with AVHRR AC algorithm.
@@ -121,7 +122,6 @@ public class AvhrrAcOp extends BasisOp {
         aacCloudClassificationParameters.put("aacCloudBufferWidth", aacCloudBufferWidth);
         aacCloudClassificationParameters.put("wmResolution", wmResolution);
         aacCloudClassificationParameters.put("aacUseWaterMaskFraction", aacUseWaterMaskFraction);
-//        aacCloudClassificationParameters.put("avhrracOutputDebug", avhrracOutputDebug);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousLowerBoundaryValue",
                                              avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousSureSeparationValue",
@@ -143,11 +143,18 @@ public class AvhrrAcOp extends BasisOp {
         Map<String, Product> aacCloudInput = new HashMap<>(4);
         computeAvhrrAcAlgorithmInputProducts(aacCloudInput);
 
-        classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AvhrrAcClassificationOp.class),
-                                           aacCloudClassificationParameters, aacCloudInput);
+        AvhrrAcClassificationOp acClassificationOp = new AvhrrAcClassificationOp();
+        // test operator for older products which contain all inputs for Schiller NN:
+//        AvhrrAcClassification2Op acClassificationOp = new AvhrrAcClassification2Op();
+//        AvhrrAcClassification3Op acClassificationOp = new AvhrrAcClassification3Op();
+        acClassificationOp.setParameterDefaultValues();
+        for (String key : aacCloudClassificationParameters.keySet()) {
+            acClassificationOp.setParameter(key, aacCloudClassificationParameters.get(key));
+        }
+        acClassificationOp.setSourceProduct("aacl1b", sourceProduct);
+        acClassificationOp.setSourceProduct("waterMask", waterMaskProduct);
 
-        setTargetProduct(classifProduct);
-//        addBandsToTargetProduct(classifProduct);
+        setTargetProduct(acClassificationOp.getTargetProduct());
     }
 
     private void computeAvhrrAcAlgorithmInputProducts(Map<String, Product> aacCloudInput) {

@@ -117,6 +117,7 @@ public class IdepixUtils {
 
     public static boolean isValidAvhrrProduct(Product product) {
         return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE) ||
+                product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_AVISA_PRODUCT_TYPE) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_USGS_PRODUCT_TYPE);
     }
 

@@ -34,6 +34,36 @@ public class Constants {
             AVHRR_AC_RADIANCE_5_BAND_NAME
     };
 
+    private static final String AVHRR_AC_RADIANCE_1_OLD_BAND_NAME = "avhrr_ch1";
+    private static final String AVHRR_AC_RADIANCE_2_OLD_BAND_NAME = "avhrr_ch2";
+    private static final String AVHRR_AC_RADIANCE_3_OLD_BAND_NAME = "avhrr_ch3";
+    private static final String AVHRR_AC_RADIANCE_4_OLD_BAND_NAME = "avhrr_ch4";
+    private static final String AVHRR_AC_RADIANCE_5_OLD_BAND_NAME = "avhrr_ch5";
+
+    public static final String[] AVHRR_AC_RADIANCE_OLD_BAND_NAMES = {
+            AVHRR_AC_RADIANCE_1_OLD_BAND_NAME,
+            AVHRR_AC_RADIANCE_2_OLD_BAND_NAME,
+            AVHRR_AC_RADIANCE_3_OLD_BAND_NAME,
+            AVHRR_AC_RADIANCE_4_OLD_BAND_NAME,
+            AVHRR_AC_RADIANCE_5_OLD_BAND_NAME
+    };
+
+    private static final String AVHRR_AC_RADIANCE_1_AVISA_BAND_NAME = "radiance_1";
+    private static final String AVHRR_AC_RADIANCE_2_AVISA_BAND_NAME = "radiance_2";
+    private static final String AVHRR_AC_RADIANCE_3_AVISA_BAND_NAME = "radiance_3a";
+    private static final String AVHRR_AC_RADIANCE_4_AVISA_BAND_NAME = "radiance_4";
+    private static final String AVHRR_AC_RADIANCE_5_AVISA_BAND_NAME = "radiance_5";
+
+    public static final String[] AVHRR_AC_RADIANCE_AVISA_BAND_NAMES = {
+            AVHRR_AC_RADIANCE_1_AVISA_BAND_NAME,
+            AVHRR_AC_RADIANCE_2_AVISA_BAND_NAME,
+            AVHRR_AC_RADIANCE_3_AVISA_BAND_NAME,
+            AVHRR_AC_RADIANCE_4_AVISA_BAND_NAME,
+            AVHRR_AC_RADIANCE_5_AVISA_BAND_NAME,
+    };
+
+
+
     // debug bands:
 //    public static final String BRIGHTNESS_BAND_NAME = "brightness_value";
 //    public static final String NDSI_BAND_NAME = "ndsi_value";

@@ -22,3 +22,5 @@ org.esa.beam.idepix.algorithms.occci.OccciOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciClassificationOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciPostProcessingOp$Spi
 
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcClassification2Op$Spi
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcClassification3Op$Spi

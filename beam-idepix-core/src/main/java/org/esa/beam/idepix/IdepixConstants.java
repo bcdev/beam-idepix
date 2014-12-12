@@ -33,6 +33,7 @@ public class IdepixConstants {
 
     public static String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
     public static String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
+    public static String AVHRR_L1b_AVISA_PRODUCT_TYPE = "AVHRR_3_L1B";
 
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;

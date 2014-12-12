@@ -43,7 +43,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
     @Override
     public boolean isCloudAmbiguous() {
-        if (isLand() || isCloudSure()) {   // this check has priority
+        if (isCloudSure()) {   // this check has priority
             return false;
         }
 
@@ -64,7 +64,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
     @Override
     public boolean isCloudSure() {
-        if (isLand() || isSnowIce()) {   // this check has priority
+        if (isSnowIce()) {   // this check has priority
             return false;
         }
 

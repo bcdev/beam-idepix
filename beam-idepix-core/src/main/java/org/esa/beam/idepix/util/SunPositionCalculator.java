@@ -52,7 +52,8 @@ public class SunPositionCalculator {
         final double h = hour + minute / 60.0 + second / 3600.0;
 
         // Julian date
-        long jdate = toJulianDay(year, month, day);
+//        long jdate = toJulianDay(year, month, day);
+        long jdate = utc.get(Calendar.DAY_OF_YEAR);      // !!!!
 
         // Total seconds from midnight in UTC
         double tsec = hour * 3600.0 + minute * 60.0 + second;

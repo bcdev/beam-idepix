@@ -1,6 +1,5 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
-import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -14,8 +13,6 @@ import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.util.math.RsMathUtils;
 
-import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.TransposeDescriptor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,18 +22,19 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 /**
- * Basic operator for GlobAlbedo pixel classification
+ * Basic operator for AVHRR pixel classification
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "idepix.avhrrac.classification",
-                  version = "3.0-EVOLUTION-SNAPSHOT",
+@OperatorMetadata(alias = "idepix.avhrrac.classification2",
+                  version = "2.1.5",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2014 by Brockmann Consult",
-                  description = "Basic operator for pixel classification from AVHRR L1b data.")
-public class AvhrrAcClassificationOp extends PixelOperator {
+                  description = "Basic operator for pixel classification from AVHRR L1b data " +
+                          "(uses old AVHRR AC test data (like '95070912_pr') read by avhrr-ac-directory-reader).")
+public class AvhrrAcClassification2Op extends PixelOperator {
 
     @SourceProduct(alias = "aacl1b", description = "The source product.")
     Product sourceProduct;
@@ -127,8 +125,9 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
     AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
     private SunAngles sunAngles;
-    private GeoPos satPosition;
     private SunPosition sunPosition;
+
+    private String dateString;
 
 
     public Product getSourceProduct() {
@@ -138,15 +137,10 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
     @Override
     public void prepareInputs() throws OperatorException {
-        flipSourceImages();
         readSchillerNets();
         createTargetProduct();
-        computeSunPosition();
-
-        sourceProduct.setGeoCoding(
-                new TiePointGeoCoding(sourceProduct.getTiePointGrid("latitude"),
-                                      sourceProduct.getTiePointGrid("longitude"))
-        );
+        dateString = getProductDatestring();
+        sunPosition = computeSunPosition(dateString);
 
         try {
             vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
@@ -161,20 +155,100 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         runAvhrrAcAlgorithm(x, y, sourceSamples, targetSamples);
     }
 
-    private void flipSourceImages() {
-        for (Band b : sourceProduct.getBands()) {
-            final RenderedOp flippedImage = flipImage(b.getSourceImage());
-            b.setSourceImage(flippedImage);
-        }
-        for (TiePointGrid tpg : sourceProduct.getTiePointGrids()) {
-            final RenderedOp flippedImage = flipImage(tpg.getSourceImage());
-            tpg.setSourceImage(flippedImage);
-        }
+    // package local for testing
+    static double computeRelativeAzimuth(double sza,
+                                         GeoPos satPosition,
+                                         GeoPos pointPosition,
+                                         SunPosition sunPosition) {
+
+        final double latPoint = pointPosition.getLat();
+        final double lonPoint = pointPosition.getLon();
+
+        final double latSat = satPosition.getLat();
+        final double lonSat = satPosition.getLon();
+
+        final double latPointRad = latPoint * MathUtils.DTOR;
+        final double lonPointRad = lonPoint * MathUtils.DTOR;
+        final double latSatRad = latSat * MathUtils.DTOR;
+        final double lonSatRad = lonSat * MathUtils.DTOR;
+
+        final double latSun = sunPosition.getLat();
+        final double lonSun = sunPosition.getLon();
+        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
+        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
+        final double greatCirclePointToSatRad = computeGreatCircleFromPointToSat(latPointRad, lonPointRad, latSatRad, lonSatRad);
+
+
+        final double vaa = computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad, greatCirclePointToSatRad);
+        final double saa = computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
+
+//        double relAzimuth = saa * MathUtils.RTOD - vaa * MathUtils.RTOD;
+        double relAzimuth = correctRelAzimuthRange(vaa, saa);
+        return relAzimuth * MathUtils.RTOD;
     }
 
-    private RenderedOp flipImage(MultiLevelImage sourceImage) {
-        final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceImage, TransposeDescriptor.FLIP_VERTICAL, null);
-        return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
+    // package local for testing
+    static double correctRelAzimuthRange(double vaa, double saa) {
+        double relAzimuth = saa - vaa;
+        if (relAzimuth < -Math.PI) {
+            relAzimuth += 2.0*Math.PI;
+        } else if (relAzimuth > Math.PI) {
+            relAzimuth -= 2.0*Math.PI;
+        }
+        return relAzimuth;
+    }
+
+    // package local for testing
+    static double computeGreatCircleFromPointToSat(double latPointRad, double lonPointRad, double latSatRad, double lonSatRad) {
+        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
+        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
+                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
+                                  Math.sin(latPointRad) * Math.sin(latSatRad));
+
+        return 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
+    }
+
+    // package local for testing
+    static SunPosition computeSunPosition(String ddmmyy) {
+        final Calendar calendar = getDateAsCalendar(ddmmyy);
+        return SunPositionCalculator.calculate(calendar);
+    }
+
+    // package local for testing
+    static Calendar getDateAsCalendar(String ddmmyy) {
+        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        int year = Integer.parseInt(ddmmyy.substring(4, 6));
+        if (year < 50) {
+            year = 2000 + year;
+        } else {
+            year = 1900 + year;
+        }
+        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
+        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
+        calendar.set(year, month, day, 12, 0, 0);
+        return calendar;
+    }
+
+    // package local for testing
+    static double computeSaa(double sza, double latPointRad, double lonPointRad, double latSunRad, double lonSunRad) {
+        double saaRad = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
+                                              (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR)));
+        if (Math.sin(lonSunRad - lonPointRad) < 0.0) {
+            saaRad = 2.0*Math.PI - saaRad;
+        }
+        return saaRad * MathUtils.RTOD;
+    }
+
+    // package local for testing
+    static double computeVaa(double latPointRad, double lonPointRad, double latSatRad, double lonSatRad,
+                             double greatCirclePointToSatRad) {
+        double vaaRad = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
+                                              (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad)));
+        if (Math.sin(lonSatRad - lonPointRad) < 0.0) {
+            vaaRad = 2.0*Math.PI - vaaRad;
+        }
+
+        return vaaRad * MathUtils.RTOD;
     }
 
     private void readSchillerNets() {
@@ -233,26 +307,28 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     private void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
-        if (x == 560 && y == 5) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-        final double sza = sourceSamples[Constants.SRC_SZA].getDouble();
-        //double vza = 45.0f; // todo: vza is not in product, clarify how to determine
+        final double sza = sourceSamples[0].getDouble();
+        final double vza = sourceSamples[1].getDouble();
+        final double relAzi = sourceSamples[2].getDouble();
+        //double vza = 45.0f;
 //        double vza = vzaTable.getVza(x);
-        double vza = Math.abs(vzaTable.getVza(x));  // !!!
-        final double relAzi = computeRelativeAzimuth(x, y, sza);
-//        final double relAzi = 45.0;  // test!
-        double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
-        final double albedo1 = sourceSamples[Constants.SRC_ALBEDO_1].getDouble();
-        final double albedo2 = sourceSamples[Constants.SRC_ALBEDO_2].getDouble();
+//        final double relAzi = computeRelativeAzimuth(x, y, sza);
+        final GeoPos satPosition = computeSatPosition(y);
+        final GeoPos pointPosition = getGeoPos(x, y);
+        final double myRelAzi = computeRelativeAzimuth(sza, satPosition, pointPosition, sunPosition);
+        double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_OLD_BAND_NAMES.length];
 
-        if (albedo1 >= 0.0 && albedo2 >= 0.0) {
+        boolean compute = true;
+        for (int i = 0; i < 5; i++) {
+            avhrrRadiance[i] = sourceSamples[i + 3].getDouble();
+            if (avhrrRadiance[i] < 0.0) {
+                compute = false;
+                break;
+            }
+        }
 
-            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[2] = sourceSamples[Constants.SRC_RADIANCE_3].getDouble();
-            avhrrRadiance[3] = sourceSamples[Constants.SRC_RADIANCE_4].getDouble();
-            avhrrRadiance[4] = sourceSamples[Constants.SRC_RADIANCE_5].getDouble();
+        if (compute) {
+
             aacAlgorithm.setRadiance(avhrrRadiance);
 
             float waterFraction = Float.NaN;
@@ -263,10 +339,8 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
             double[] avhrracNeuralNetInput = new double[7];
             avhrracNeuralNetInput[0] = sza;
-//            avhrracNeuralNetInput[1] = vza;
-            avhrracNeuralNetInput[1] = -60.0;  // test
-//            avhrracNeuralNetInput[2] = relAzi;
-            avhrracNeuralNetInput[2] = 0.0;   // test
+            avhrracNeuralNetInput[1] = vza;
+            avhrracNeuralNetInput[2] = relAzi;
             avhrracNeuralNetInput[3] = Math.sqrt(avhrrRadiance[0]);
             avhrracNeuralNetInput[4] = Math.sqrt(avhrrRadiance[1]);
             avhrracNeuralNetInput[5] = Math.sqrt(avhrrRadiance[3]);
@@ -284,9 +358,11 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
-            aacAlgorithm.setReflCh1(albedo1);
-            aacAlgorithm.setReflCh2(albedo2);
+            final double reflCh1 = convertBetweenAlbedoAndRadiance(avhrrRadiance[0], sza, RADIANCE_TO_ALBEDO);
+            final double reflCh2 = convertBetweenAlbedoAndRadiance(avhrrRadiance[1], sza, RADIANCE_TO_ALBEDO);
             final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO);
+            aacAlgorithm.setReflCh1(reflCh1);
+            aacAlgorithm.setReflCh2(reflCh2);
             aacAlgorithm.setReflCh3(reflCh3);
             final double btCh4 = convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
             aacAlgorithm.setBtCh4(btCh4);
@@ -300,15 +376,14 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             aacAlgorithm.setBtCh4Thresh(btCh4Thresh);
             aacAlgorithm.setBtCh5Thresh(btCh5Thresh);
 
-
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamples[1].set(neuralNetOutput[0]);
             targetSamples[2].set(vza);
             targetSamples[3].set(relAzi);
             targetSamples[4].set(btCh4);
             targetSamples[5].set(btCh5);
-            targetSamples[6].set(albedo1);
-            targetSamples[7].set(albedo2);
+            targetSamples[6].set(reflCh1);
+            targetSamples[7].set(reflCh2);
             targetSamples[8].set(reflCh3);
 
         } else {
@@ -348,104 +423,44 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         }
     }
 
-    private double computeRelativeAzimuth(int x, int y, double sza) {
-        // todo: aziDiff is not in product, clarify how to determine
-        // todo: implement following http://edc2.usgs.gov/1KM/angin_diag.php#sataz and
-        //
-
-        final GeoPos pointGeoPos = getGeoPos(x, y);
-        final double latPoint = pointGeoPos.getLat();
-        final double lonPoint = pointGeoPos.getLon();
-
-        computeSatPosition(y);
-        final double latSat = satPosition.getLat();
-        final double lonSat = satPosition.getLon();
-
-        final double latPointRad = latPoint * MathUtils.DTOR;
-        final double lonPointRad = lonPoint * MathUtils.DTOR;
-        final double latSatRad = latSat * MathUtils.DTOR;
-        final double lonSatRad = lonSat * MathUtils.DTOR;
-
-        final double latSun = sunPosition.getLat();
-        final double lonSun = sunPosition.getLon();
-        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
-        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-
-        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
-        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
-                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
-                                  Math.sin(latPointRad) * Math.sin(latSatRad));
-
-        final double greatCirclePointToSatRad = 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
-
-        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
-                                             (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad)));
-        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
-                                             (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR)));
-
-        computeSunAngles(latSat, lonSat);
-        final double szaFromSunPosCalculator = sunAngles.getZenithAngle(); // should be equal to sza --> check in unit test!
-        final double saaFromSunPosCalculator = sunAngles.getAzimuthAngle(); // should be equal to saa --> check in unit test!
-
-//        return saa*MathUtils.RTOD - vaa*MathUtils.RTOD;
-        return saaFromSunPosCalculator - vaa * MathUtils.RTOD;
+    private SunAngles computeSunAngles(String ddmmyy, double lat, double lon) {
+        final Calendar calendar = getDateAsCalendar(ddmmyy);
+        return SunAnglesCalculator.calculate(calendar, lat, lon);
     }
 
-    private void computeSunAngles(double lat, double lon) {
-        final Calendar calendar = getProductDateAsCalendar();
-        sunAngles = SunAnglesCalculator.calculate(calendar, lat, lon);
+    private GeoPos computeSatPosition(int y) {
+        return getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
     }
-
-    private Calendar getProductDateAsCalendar() {
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        String ddmmyy = getProductDatestring();
-        int year = Integer.parseInt(ddmmyy.substring(4, 6));
-        if (year < 50) {
-            year = 2000 + year;
-        } else {
-            year = 1900 + year;
-        }
-        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
-        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
-        calendar.set(year, month, day, 12, 0, 0);
-        return calendar;
-    }
-
-    private void computeSatPosition(int y) {
-        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
-    }
-
-    private void computeSunPosition() {
-        final Calendar calendar = getProductDateAsCalendar();
-        sunPosition = SunPositionCalculator.calculate(calendar);
-    }
-
 
     private double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
         // follows GK formula
-//        ao11060992103109_120417.l1b
-        final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
-        final String noaaId = sourceProduct.getName().substring(productNameStartIndex + 2, productNameStartIndex + 4);
-        final double distanceCorr = 1.0 + 0.033 * Math.cos(2.0 * Math.PI * getDoy() / 365.0);
+//        95070912_pr
+        final String year = sourceProduct.getName().substring(0, 2);
+        final String month = sourceProduct.getName().substring(2, 4);
+        final String day = sourceProduct.getName().substring(4, 6);
+
+        final int doy = IdepixUtils.getDoyFromYYMMDD(year + month + day);
+        final double distanceCorr = 1.0 + 0.033 * Math.cos(2.0 * Math.PI * doy / 365.0);
         float integrSolarSpectralIrrad; // F
         float spectralResponseWidth; // W
-        switch (noaaId) {
-            case "11":
-                // NOAA 11
-                integrSolarSpectralIrrad = 189.02f;
-                spectralResponseWidth = 0.1130f;
-                break;
-            case "14":
-                // NOAA 14
-                integrSolarSpectralIrrad = 221.42f;
-                spectralResponseWidth = 0.1360f;
-                break;
-            default:
-                throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
-        }
-        // GK: R=A (F/(100 PI W  cos(sun_zenith)  abstandkorrektur))
-        final double conversionFactor = integrSolarSpectralIrrad /
-                (100.0 * Math.PI * spectralResponseWidth * Math.cos(sza * MathUtils.DTOR) * distanceCorr);
+//        switch (noaaId) {
+//            case "11":
+        // NOAA 11
+        integrSolarSpectralIrrad = 189.02f;
+        spectralResponseWidth = 0.1130f;
+//                break;
+//            case "14":
+//                NOAA 14
+//                integrSolarSpectralIrrad = 221.42f;
+//                spectralResponseWidth = 0.1360f;
+//                break;
+//            default:
+//                throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
+//        }
+        // GK: R=A (F/100 PI W  cos(sun_zenith)  abstandkorrektur)
+
+        final double conversionFactor = 0.01 * integrSolarSpectralIrrad * Math.PI * spectralResponseWidth *
+                Math.cos(sza * MathUtils.DTOR) * distanceCorr;
         double result;
         if (mode == ALBEDO_TO_RADIANCE) {
             result = input * conversionFactor;
@@ -457,8 +472,8 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         return result;
     }
 
-    private int getDoy() {
-        return IdepixUtils.getDoyFromYYMMDD(getProductDatestring());
+    private int getDoy(String yymmdd) {
+        return IdepixUtils.getDoyFromYYMMDD(yymmdd);
     }
 
     private String getProductDatestring() {
@@ -480,13 +495,10 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         int index = 0;
         sampleConfigurer.defineSample(index++, "sun_zenith");
-        sampleConfigurer.defineSample(index++, "latitude");
-        sampleConfigurer.defineSample(index++, "longitude");
-        for (int i = 0; i < 2; i++) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_ALBEDO_BAND_NAMES[i]);
-        }
-        for (int i = 0; i < 3; i++) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_RADIANCE_BAND_NAMES[i + 2]);
+        sampleConfigurer.defineSample(index++, "sat_zenith");
+        sampleConfigurer.defineSample(index++, "rel_azimuth");
+        for (int i = 0; i < 5; i++) {
+            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_RADIANCE_OLD_BAND_NAMES[i]);
         }
         sampleConfigurer.defineSample(index, Constants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
     }
@@ -613,7 +625,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AvhrrAcClassificationOp.class);
+            super(AvhrrAcClassification2Op.class);
         }
     }
 }

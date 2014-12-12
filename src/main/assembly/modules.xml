@@ -34,6 +34,7 @@
                 <include>*:beam-meris-sdr*</include>
                 <include>*:beam-meris-l2auxdata*</include>
                 <include>*:beam-meris-radiometry*</include>
+                <include>*:beam-avhrr-directory-reader*</include>
                 <include>*:beam-unmix*</include>
                 <include>*:beam-watermask*</include>
             </includes>

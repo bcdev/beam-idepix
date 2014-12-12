@@ -24,6 +24,13 @@
             <groupId>org.esa.beam.idepix</groupId>
             <artifactId>beam-idepix-core</artifactId>
         </dependency>
+
+        <!-- needed for testing AvhrrAcClassification2Op: -->
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-avhrr-directory-reader</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>
