@@ -15,8 +15,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beamVersion>5.0</beamVersion>
-        <ceresVersion>0.14</ceresVersion>
+        <ceresVersion>[0.14,0.15-SNAPSHOT)</ceresVersion>
+        <beamVersion>[5.0,5.1-SNAPSHOT)</beamVersion>
     </properties>
 
     <distributionManagement>
@@ -191,13 +191,13 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>5.0.2</version>
+                <version>${beamVersion}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-ui</artifactId>
-                <version>5.0.1</version>
+                <version>${beamVersion}</version>
             </dependency>
 
             <dependency>
@@ -215,7 +215,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>5.0.1</version>
+                <version>${beamVersion}</version>
             </dependency>
 
             <dependency>
@@ -233,8 +233,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-radiometry</artifactId>
-                <!--<version>${beamVersion}</version>-->
-                <version>5.0.2</version>
+                <version>${beamVersion}</version>
             </dependency>
 
             <dependency>
