@@ -260,7 +260,7 @@ public class SurfacePressureFubOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(SurfacePressureFubOp.class, "idepix.operators.SurfacePressureFub");
+            super(SurfacePressureFubOp.class);
         }
     }
 }

@@ -108,7 +108,7 @@ public class MerisBrrCorrectionOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MerisBrrCorrectionOp.class, "idepix.operators.MerisBrrCorrection");
+            super(MerisBrrCorrectionOp.class);
         }
     }
 }

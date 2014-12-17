@@ -111,7 +111,7 @@ public class GlobCoverClassificationOp extends SampleOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobCoverClassificationOp.class, "idepix.globcover.classification");
+            super(GlobCoverClassificationOp.class);
         }
     }
 

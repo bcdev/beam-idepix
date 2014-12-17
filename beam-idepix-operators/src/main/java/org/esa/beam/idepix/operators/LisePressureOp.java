@@ -1115,7 +1115,7 @@ public class LisePressureOp extends BasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(LisePressureOp.class, "idepix.operators.LisePressure");
+            super(LisePressureOp.class);
         }
     }
 }
