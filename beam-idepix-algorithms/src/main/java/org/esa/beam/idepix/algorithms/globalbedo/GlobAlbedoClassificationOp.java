@@ -15,7 +15,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.pixel.AbstractPixelProperties;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.nn.NNffbpAlphaTabFast;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
@@ -129,12 +129,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaUseL1bLandWaterFlag;
 
     public static final String SCHILLER_VGT_NET_NAME = "3x2x2_341.8.net";
-    String vgtNeuralNetString;
-    NNffbpAlphaTabFast vgtNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> vgtNeuralNet;
 
     public static final String SCHILLER_MERIS_LAND_NET_NAME = "11x8x5x3_1062.5_land.net";
-    String merisLandNeuralNetString;
-    NNffbpAlphaTabFast merisLandNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisLandNeuralNet;
 
     WatermaskClassifier classifier;
 
@@ -171,39 +169,12 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     abstract void extendTargetProduct();
 
     private void readSchillerNeuralNets() {
-        final InputStream vgtNeuralNetStream = getClass().getResourceAsStream(SCHILLER_VGT_NET_NAME);
-        vgtNeuralNetString = readNeuralNetFromStream(vgtNeuralNetStream);
-
-        final InputStream merisLandNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MERIS_LAND_NET_NAME);
-        merisLandNeuralNetString = readNeuralNetFromStream(merisLandNeuralNetStream);
-
-        try {
-            merisLandNeuralNet = new NNffbpAlphaTabFast(merisLandNeuralNetString);
-            vgtNeuralNet = new NNffbpAlphaTabFast(vgtNeuralNetString);
+        try (InputStream merisLandIS = getClass().getResourceAsStream(SCHILLER_MERIS_LAND_NET_NAME);
+             InputStream vgtLandIS = getClass().getResourceAsStream(SCHILLER_VGT_NET_NAME)) {
+            merisLandNeuralNet = SchillerNeuralNetWrapper.create(merisLandIS);
+            vgtNeuralNet = SchillerNeuralNetWrapper.create(vgtLandIS);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
-        }
-    }
-
-    private String readNeuralNetFromStream(InputStream neuralNetStream) {
-        // todo: move method to a util place!
-        BufferedReader reader = new BufferedReader(new InputStreamReader(neuralNetStream));
-        try {
-            String line = reader.readLine();
-            final StringBuilder sb = new StringBuilder();
-            while (line != null) {
-                // have to append line terminator, cause it's not included in line
-                sb.append(line).append('\n');
-                line = reader.readLine();
-            }
-            return sb.toString();
-        } catch (IOException ioe) {
-            throw new OperatorException("Could not initialize neural net", ioe);
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException ignore) {
-            }
         }
     }
 

@@ -1,21 +1,27 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.nn.NNffbpAlphaTabFast;
-import org.esa.beam.util.math.MathUtils;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 /**
  * Basic operator for AVHRR pixel classification
@@ -116,8 +122,7 @@ public class AvhrrAcClassification3Op extends PixelOperator {
     private static final double NU_CH4 = 925.0;
     private static final double NU_CH5 = 839.0;
 
-    String avhrracNeuralNetString;
-    NNffbpAlphaTabFast avhrracNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> avhrracNeuralNet;
 
     AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
 
@@ -146,35 +151,10 @@ public class AvhrrAcClassification3Op extends PixelOperator {
     }
 
     private void readSchillerNets() {
-        final InputStream seawifsNeuralNetStream = getClass().getResourceAsStream(SCHILLER_AVHRRAC_NET_NAME);
-        avhrracNeuralNetString = readNeuralNetFromStream(seawifsNeuralNetStream);
-
-        try {
-            avhrracNeuralNet = new NNffbpAlphaTabFast(avhrracNeuralNetString);
+        try (InputStream is = getClass().getResourceAsStream(SCHILLER_AVHRRAC_NET_NAME)) {
+            avhrracNeuralNet = SchillerNeuralNetWrapper.create(is);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller seaice neural nets: " + e.getMessage());
-        }
-    }
-
-    private String readNeuralNetFromStream(InputStream neuralNetStream) {
-        // todo: method occurs multiple times --> move to core
-        BufferedReader reader = new BufferedReader(new InputStreamReader(neuralNetStream));
-        try {
-            String line = reader.readLine();
-            final StringBuilder sb = new StringBuilder();
-            while (line != null) {
-                // have to append line terminator, cause it's not included in line
-                sb.append(line).append('\n');
-                line = reader.readLine();
-            }
-            return sb.toString();
-        } catch (IOException ioe) {
-            throw new OperatorException("Could not initialize neural net", ioe);
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException ignore) {
-            }
+            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
         }
     }
 
@@ -228,29 +208,27 @@ public class AvhrrAcClassification3Op extends PixelOperator {
                 waterFraction = sourceSamples[Constants.SRC_WATERFRACTION].getFloat();
             }
 
-            double[] avhrracNeuralNetInput = new double[7];
-            avhrracNeuralNetInput[0] = sza;
-            avhrracNeuralNetInput[1] = vza;
-            avhrracNeuralNetInput[2] = relAzi;
-            avhrracNeuralNetInput[3] = Math.sqrt(avhrrRadiance[0]);
-            avhrracNeuralNetInput[4] = Math.sqrt(avhrrRadiance[1]);
-            avhrracNeuralNetInput[5] = Math.sqrt(avhrrRadiance[3]);
-            avhrracNeuralNetInput[6] = Math.sqrt(avhrrRadiance[4]);
+            SchillerNeuralNetWrapper nnWrapper = avhrracNeuralNet.get();
+            double[] inputVector = nnWrapper.getInputVector();
+            inputVector[0] = sza;
+            inputVector[1] = vza;
+            inputVector[2] = relAzi;
+            inputVector[3] = Math.sqrt(avhrrRadiance[0]);
+            inputVector[4] = Math.sqrt(avhrrRadiance[1]);
+            inputVector[5] = Math.sqrt(avhrrRadiance[3]);
+            inputVector[6] = Math.sqrt(avhrrRadiance[4]);
             aacAlgorithm.setRadiance(avhrrRadiance);
             aacAlgorithm.setWaterFraction(waterFraction);
 
-            double[] neuralNetOutput;
-            synchronized (this) {
-                neuralNetOutput = avhrracNeuralNet.calc(avhrracNeuralNetInput);
-            }
+            double[] nnOutput = nnWrapper.getNeuralNet().calc(inputVector);
 
-            aacAlgorithm.setNnOutput(neuralNetOutput);
+            aacAlgorithm.setNnOutput(nnOutput);
             aacAlgorithm.setAmbiguousLowerBoundaryValue(avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
             setClassifFlag(targetSamples, aacAlgorithm);
-            targetSamples[1].set(neuralNetOutput[0]);
+            targetSamples[1].set(nnOutput[0]);
 
         } else {
             targetSamples[0].set(Constants.F_INVALID, true);

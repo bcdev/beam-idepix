@@ -27,13 +27,14 @@ import java.io.InputStreamReader;
 
 /**
  * A wrapper around a neural net together with its input and output vector.
+ * This wrapper support 'NNA' nets.
  *
  */
 public class NeuralNetWrapper {
 
-    final JnnNet neuralNet;
-    final double[] nnIn;
-    final double[] nnOut;
+    private final JnnNet neuralNet;
+    private final double[] nnIn;
+    private final double[] nnOut;
 
     private NeuralNetWrapper(JnnNet neuralNet, int in, int out) {
         this.neuralNet = neuralNet;
@@ -64,19 +65,11 @@ public class NeuralNetWrapper {
     }
 
     private static JnnNet loadNeuralNet(InputStream inputStream) {
-        try {
-            final InputStreamReader reader = new InputStreamReader(inputStream);
-
-            try {
-                Jnn.setOptimizing(true);
-                return Jnn.readNna(reader);
-            } finally {
-                reader.close();
-            }
-        } catch (JnnException jnne) {
+        try (InputStreamReader reader = new InputStreamReader(inputStream)) {
+            Jnn.setOptimizing(true);
+            return Jnn.readNna(reader);
+        } catch (JnnException | IOException jnne) {
             throw new OperatorException(jnne);
-        } catch (IOException ioe) {
-            throw new OperatorException(ioe);
         }
     }
 

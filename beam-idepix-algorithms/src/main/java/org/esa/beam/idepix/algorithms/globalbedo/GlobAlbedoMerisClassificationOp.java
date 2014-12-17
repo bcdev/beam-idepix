@@ -13,6 +13,7 @@ import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.idepix.operators.BarometricPressureOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
@@ -279,15 +280,13 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
             merisBrr[i] = merisBrrTiles[i].getSampleFloat(x, y);
         }
 
-        double[] merisNeuralNetInput = new double[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            merisNeuralNetInput[i] = Math.sqrt(merisReflectance[i]);
+        SchillerNeuralNetWrapper nnWrapper = merisLandNeuralNet.get();
+        double[] inputVector = nnWrapper.getInputVector();
+        for (int i = 0; i < inputVector.length; i++) {
+            inputVector[i] = Math.sqrt(merisReflectance[i]);
         }
 
-        synchronized (this) {
-            double[] merisNeuralNetOutput = merisLandNeuralNet.calc(merisNeuralNetInput);
-            gaAlgorithm.setNnOutput(merisNeuralNetOutput);
-        }
+        gaAlgorithm.setNnOutput(nnWrapper.getNeuralNet().calc(inputVector));
 
         gaAlgorithm.setBrr(merisBrr);
         gaAlgorithm.setBrr442(brr442Tile.getSampleFloat(x, y));

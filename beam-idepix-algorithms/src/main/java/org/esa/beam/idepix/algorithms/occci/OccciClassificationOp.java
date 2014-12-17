@@ -1,19 +1,27 @@
 package org.esa.beam.idepix.algorithms.occci;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.nn.NNffbpAlphaTabFast;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.util.StringUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 /**
  * Operator for OC-CCI MODIS cloud screening
@@ -62,14 +70,10 @@ public class OccciClassificationOp extends PixelOperator {
     public static final String SCHILLER_MODIS_ALL_NET_NAME = "9x7x5x3_319.7_all.net";
     public static final String SCHILLER_SEAWIFS_NET_NAME = "6x3_166.0.net";
 
-    String modisWaterNeuralNetString;
-    String modisLandNeuralNetString;
-    String modisAllNeuralNetString;
-    String seawifsNeuralNetString;
-    NNffbpAlphaTabFast modisWaterNeuralNet;
-    NNffbpAlphaTabFast modisLandNeuralNet;
-    NNffbpAlphaTabFast modisAllNeuralNet;
-    NNffbpAlphaTabFast seawifsNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> modisWaterNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> modisLandNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> modisAllNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> seawifsNeuralNet;
 
     @Override
     public Product getSourceProduct() {
@@ -102,44 +106,18 @@ public class OccciClassificationOp extends PixelOperator {
     }
 
     private void readSchillerNets() {
-        final InputStream modisWaterNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_WATER_NET_NAME);
-        modisWaterNeuralNetString = readNeuralNetFromStream(modisWaterNeuralNetStream);
-        final InputStream modisLandNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_LAND_NET_NAME);
-        modisLandNeuralNetString = readNeuralNetFromStream(modisLandNeuralNetStream);
-        final InputStream modisAllNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MODIS_ALL_NET_NAME);
-        modisAllNeuralNetString = readNeuralNetFromStream(modisAllNeuralNetStream);
-        final InputStream seawifsNeuralNetStream = getClass().getResourceAsStream(SCHILLER_SEAWIFS_NET_NAME);
-        seawifsNeuralNetString = readNeuralNetFromStream(seawifsNeuralNetStream);
-
-        try {
-            modisWaterNeuralNet = new NNffbpAlphaTabFast(modisWaterNeuralNetString);
-            modisLandNeuralNet = new NNffbpAlphaTabFast(modisLandNeuralNetString);
-            modisAllNeuralNet = new NNffbpAlphaTabFast(modisAllNeuralNetString);
-            seawifsNeuralNet = new NNffbpAlphaTabFast(seawifsNeuralNetString);
+        try (
+                InputStream isMW = getClass().getResourceAsStream(SCHILLER_MODIS_WATER_NET_NAME);
+                InputStream isML = getClass().getResourceAsStream(SCHILLER_MODIS_LAND_NET_NAME);
+                InputStream isMA = getClass().getResourceAsStream(SCHILLER_MODIS_ALL_NET_NAME);
+                InputStream isS = getClass().getResourceAsStream(SCHILLER_SEAWIFS_NET_NAME)
+        ) {
+            modisWaterNeuralNet = SchillerNeuralNetWrapper.create(isMW);
+            modisLandNeuralNet = SchillerNeuralNetWrapper.create(isML);
+            modisAllNeuralNet = SchillerNeuralNetWrapper.create(isMA);
+            seawifsNeuralNet = SchillerNeuralNetWrapper.create(isS);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller seaice neural nets: " + e.getMessage());
-        }
-    }
-
-    private String readNeuralNetFromStream(InputStream neuralNetStream) {
-        // todo: method occurs multiple times --> move to core
-        BufferedReader reader = new BufferedReader(new InputStreamReader(neuralNetStream));
-        try {
-            String line = reader.readLine();
-            final StringBuilder sb = new StringBuilder();
-            while (line != null) {
-                // have to append line terminator, cause it's not included in line
-                sb.append(line).append('\n');
-                line = reader.readLine();
-            }
-            return sb.toString();
-        } catch (IOException ioe) {
-            throw new OperatorException("Could not initialize neural net", ioe);
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException ignore) {
-            }
+            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
         }
     }
 
@@ -182,7 +160,7 @@ public class OccciClassificationOp extends PixelOperator {
             }
             occciAlgorithm.setWaterFraction(waterFraction);
 
-            double[] modisNeuralNetInput = new double[Constants.MODIS_NN_INPUT_LENGTH];
+            double[] modisNeuralNetInput = modisAllNeuralNet.get().getInputVector();
             modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1
             modisNeuralNetInput[1] = Math.sqrt(sourceSamples[2].getFloat());    // EV_250_Aggr1km_RefSB.3
             modisNeuralNetInput[2] = Math.sqrt(sourceSamples[3].getFloat());    // EV_250_Aggr1km_RefSB.4
@@ -198,17 +176,18 @@ public class OccciClassificationOp extends PixelOperator {
             final float emissive32Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 11].getFloat();
             modisNeuralNetInput[9] = Math.sqrt(emissive32Rad);                  // EV_1KM_Emissive.32
 
+
             synchronized (this) {
 //                if (occciAlgorithm.isLand()) {
-//                    neuralNetOutput = modisLandNeuralNet.calc(modisNeuralNetInput);
+//                    neuralNetOutput = modisLandNeuralNet.get().getNeuralNet().calc(modisNeuralNetInput);
 //                } else {
-//                    neuralNetOutput = modisWaterNeuralNet.calc(modisNeuralNetInput);
+//                    neuralNetOutput = modisWaterNeuralNet.get().getNeuralNet().calc(modisNeuralNetInput);
 //                }
-                neuralNetOutput = modisAllNeuralNet.calc(modisNeuralNetInput);
+                neuralNetOutput = modisAllNeuralNet.get().getNeuralNet().calc(modisNeuralNetInput);
             }
         } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             occciAlgorithm = new OccciSeawifsAlgorithm();
-            double[] seawifsNeuralNetInput = new double[sensorContext.getNumSpectralInputBands()];
+            double[] seawifsNeuralNetInput = seawifsNeuralNet.get().getInputVector();
             for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
                 reflectance[i] = sourceSamples[Constants.SEAWIFS_SRC_RAD_OFFSET + i].getFloat();
                 sensorContext.scaleInputSpectralDataToReflectance(reflectance, 0);
@@ -222,9 +201,7 @@ public class OccciClassificationOp extends PixelOperator {
             }
             occciAlgorithm.setWaterFraction(waterFraction);
 
-            synchronized (this) {
-                neuralNetOutput = seawifsNeuralNet.calc(seawifsNeuralNetInput);
-            }
+            neuralNetOutput = seawifsNeuralNet.get().getNeuralNet().calc(seawifsNeuralNetInput);
         } else {
             throw new OperatorException("Sensor " + sensorContext.getSensor().name() + " not supported.");
         }

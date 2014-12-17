@@ -33,6 +33,7 @@ import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.seaice.SeaIceClassification;
 import org.esa.beam.idepix.seaice.SeaIceClassifier;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.meris.brr.HelperFunctions;
 import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
@@ -41,17 +42,14 @@ import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
-import org.esa.beam.nn.NNffbpAlphaTabFast;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.*;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Calendar;
 
 
@@ -205,10 +203,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
 
-    String merisWaterNeuralNetString;
-    String merisAllNeuralNetString;
-    NNffbpAlphaTabFast merisWaterNeuralNet;
-    NNffbpAlphaTabFast merisAllNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
 
     @Override
     public void initialize() throws OperatorException {
@@ -234,38 +230,12 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     }
 
     private void readSchillerNets() {
-        final InputStream merisWaterNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
-        merisWaterNeuralNetString = readNeuralNetFromStream(merisWaterNeuralNetStream);
-        final InputStream merisAllNeuralNetStream = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME);
-        merisAllNeuralNetString = readNeuralNetFromStream(merisAllNeuralNetStream);
-
-        try {
-            merisWaterNeuralNet = new NNffbpAlphaTabFast(merisWaterNeuralNetString);
-            merisAllNeuralNet = new NNffbpAlphaTabFast(merisAllNeuralNetString);
+        try (InputStream isWater = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
+             InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME)) {
+            merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
+            merisAllNeuralNet = SchillerNeuralNetWrapper.create(isAll);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller seaice neural nets: " + e.getMessage());
-        }
-    }
-
-    private String readNeuralNetFromStream(InputStream neuralNetStream) {
-        // todo: method occurs multiple times --> move to core
-        BufferedReader reader = new BufferedReader(new InputStreamReader(neuralNetStream));
-        try {
-            String line = reader.readLine();
-            final StringBuilder sb = new StringBuilder();
-            while (line != null) {
-                // have to append line terminator, cause it's not included in line
-                sb.append(line).append('\n');
-                line = reader.readLine();
-            }
-            return sb.toString();
-        } catch (IOException ioe) {
-            throw new OperatorException("Could not initialize neural net", ioe);
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException ignore) {
-            }
+            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
         }
     }
 
@@ -687,21 +657,19 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     }
 
     private double[] getMerisAlternativeNNOutput(SourceData sd, PixelInfo pixelInfo) {
-        double[] nnOutput;
-        double[] merisNeuralNetInput = new double[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            merisNeuralNetInput[i] = Math.sqrt(sd.rhoToa[i][pixelInfo.index]);
-        }
-
-        synchronized (this) {
-            // the NNffbpAlphaTabFast instance is obviously not thread safe! todo: fix
             if (ccUseMERISAlternativeSchillerAllNN) {
-                nnOutput = merisAllNeuralNet.calc(merisNeuralNetInput);
+                return getMerisAlternativeNNOutputImpl(sd, pixelInfo, merisAllNeuralNet.get());
             } else {
-                nnOutput = merisWaterNeuralNet.calc(merisNeuralNetInput);
+                return getMerisAlternativeNNOutputImpl(sd, pixelInfo, merisWaterNeuralNet.get());
             }
+    }
+
+    private double[] getMerisAlternativeNNOutputImpl(SourceData sd, PixelInfo pixelInfo, SchillerNeuralNetWrapper nnWrapper) {
+        double[] nnInput = nnWrapper.getInputVector();
+        for (int i = 0; i < nnInput.length; i++) {
+            nnInput[i] = Math.sqrt(sd.rhoToa[i][pixelInfo.index]);
         }
-        return nnOutput;
+        return nnWrapper.getNeuralNet().calc(nnInput);
     }
 
     private boolean isPixelClassifiedAsSeaice(GeoPos geoPos) {

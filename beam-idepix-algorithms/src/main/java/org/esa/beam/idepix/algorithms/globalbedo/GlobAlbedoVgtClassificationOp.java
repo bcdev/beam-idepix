@@ -8,6 +8,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
@@ -176,15 +177,12 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
         gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);
 
-        double[] vgtNeuralNetInput = new double[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
-        for (int i = 0; i < vgtReflectanceSaturationCorrected.length; i++) {
-            vgtNeuralNetInput[i] = Math.sqrt(vgtReflectanceSaturationCorrected[i]);
+        SchillerNeuralNetWrapper nnWrapper = vgtNeuralNet.get();
+        double[] inputVector = nnWrapper.getInputVector();
+        for (int i = 0; i < inputVector.length; i++) {
+            inputVector[i] = Math.sqrt(vgtReflectanceSaturationCorrected[i]);
         }
-
-        synchronized (this) {
-            double[] vgtNeuralNetOutput = vgtNeuralNet.calc(vgtNeuralNetInput);
-            gaAlgorithm.setNnOutput(vgtNeuralNetOutput);
-        }
+        gaAlgorithm.setNnOutput(nnWrapper.getNeuralNet().calc(inputVector));
 
         if (gaUseL1bLandWaterFlag) {
             final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND);
