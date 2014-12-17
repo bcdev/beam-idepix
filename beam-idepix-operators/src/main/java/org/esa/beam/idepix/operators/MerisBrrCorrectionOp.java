@@ -3,6 +3,7 @@ package org.esa.beam.idepix.operators;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -60,7 +61,13 @@ public class MerisBrrCorrectionOp extends Operator {
         }
         ProductUtils.copyFlagBands(brrProduct, targetProduct, true);
 
-        BandMathsOp bandArithmeticOp = BandMathsOp.createBooleanExpressionBand("l1_flags.INVALID", l1bProduct);
+        BandMathsOp.BandDescriptor bandDescriptor = new BandMathsOp.BandDescriptor();
+        bandDescriptor.name = "l1_invalid_mask";
+        bandDescriptor.expression = "l1_flags.INVALID";
+        bandDescriptor.type = ProductData.TYPESTRING_INT8;
+        BandMathsOp bandArithmeticOp = new BandMathsOp();
+        bandArithmeticOp.setSourceProduct(l1bProduct);
+        bandArithmeticOp.setTargetBandDescriptors(bandDescriptor);
         invalidBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
 
     }

@@ -89,9 +89,15 @@ public class MagicStickClassificationOp extends Operator {
         } catch (IOException e) {
             throw new OperatorException("Failed to init water mask", e);
         }
-        BandMathsOp cloudOp = BandMathsOp.createBooleanExpressionBand(cloudExpression, sourceProduct);
-        Product cloudMaskProduct = cloudOp.getTargetProduct();
-        cloudMaskBand = cloudMaskProduct.getBandAt(0);
+
+        BandMathsOp.BandDescriptor bandDescriptor = new BandMathsOp.BandDescriptor();
+        bandDescriptor.name = "cloud_mask";
+        bandDescriptor.expression = cloudExpression;
+        bandDescriptor.type = ProductData.TYPESTRING_INT8;
+        BandMathsOp bandArithmeticOp = new BandMathsOp();
+        bandArithmeticOp.setSourceProduct(sourceProduct);
+        bandArithmeticOp.setTargetBandDescriptors(bandDescriptor);
+        cloudMaskBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
 
         setTargetProduct(targetProduct);
     }

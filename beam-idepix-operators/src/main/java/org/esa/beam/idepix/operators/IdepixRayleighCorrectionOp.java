@@ -115,8 +115,15 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
             tauRBands = addBandGroup("tauR", "");
             sphAlbRBands = addBandGroup("sphAlbR", "");
         }
-        BandMathsOp bandArithmeticOp =
-                BandMathsOp.createBooleanExpressionBand(landExpression, landProduct);
+
+        BandMathsOp.BandDescriptor bandDescriptor = new BandMathsOp.BandDescriptor();
+        bandDescriptor.name = "land_mask";
+        bandDescriptor.expression = landExpression;
+        bandDescriptor.type = ProductData.TYPESTRING_INT8;
+        BandMathsOp bandArithmeticOp = new BandMathsOp();
+        bandArithmeticOp.setSourceProduct(landProduct);
+        bandArithmeticOp.setTargetBandDescriptors(bandDescriptor);
+
         isLandBand = bandArithmeticOp.getTargetProduct().getBandAt(0);
         if (l1bProduct.getPreferredTileSize() != null) {
             targetProduct.setPreferredTileSize(l1bProduct.getPreferredTileSize());
