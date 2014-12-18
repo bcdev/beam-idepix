@@ -177,14 +177,13 @@ public class OccciClassificationOp extends PixelOperator {
             modisNeuralNetInput[9] = Math.sqrt(emissive32Rad);                  // EV_1KM_Emissive.32
 
 
-            synchronized (this) {
 //                if (occciAlgorithm.isLand()) {
 //                    neuralNetOutput = modisLandNeuralNet.get().getNeuralNet().calc(modisNeuralNetInput);
 //                } else {
 //                    neuralNetOutput = modisWaterNeuralNet.get().getNeuralNet().calc(modisNeuralNetInput);
 //                }
                 neuralNetOutput = modisAllNeuralNet.get().getNeuralNet().calc(modisNeuralNetInput);
-            }
+
         } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             occciAlgorithm = new OccciSeawifsAlgorithm();
             double[] seawifsNeuralNetInput = seawifsNeuralNet.get().getInputVector();
