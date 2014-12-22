@@ -18,6 +18,7 @@ import org.esa.beam.idepix.operators.IdepixCloudShadowOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
+import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +68,11 @@ public class GlobAlbedoOp extends BasisOp {
             label = " Write Rayleigh Corrected Reflectances to the target product",
             description = " Write Rayleigh Corrected Reflectances to the target product")
     private boolean gaCopyRayleigh = false;
+
+    @Parameter(defaultValue = "false",
+                label = " Write CTP (cloud-top-pressure) to the target product",
+                description = " Write CTP (cloud-top-pressure) to the target product")
+    private boolean gaCopyCTP;
 
     @Parameter(defaultValue = "false",
             label = " Write Feature Values to the target product",
@@ -223,6 +229,9 @@ public class GlobAlbedoOp extends BasisOp {
             cloudFlagBand.setSourceImage(gaPostProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
         } else {
             targetProduct = gaCloudProduct;
+        }
+        if (gaCopyCTP) {
+            ProductUtils.copyBand("cloud_top_press", ctpProduct, targetProduct, true);
         }
     }
 
