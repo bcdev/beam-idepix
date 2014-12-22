@@ -52,15 +52,15 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
     private int cloudBufferWidth;
 
     @Parameter(defaultValue = "true", label = " Use the LandCover advanced cloud buffer algorithm")
-    private boolean gaLcCloudBuffer = false;
+    private boolean gaLcCloudBuffer;
 
     @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
-    private boolean gaComputeCloudBuffer = false;
+    private boolean gaComputeCloudBuffer;
 
     @Parameter(defaultValue = "false",
                label = " Compute cloud shadow",
                description = " Compute cloud shadow with a preliminary algorithm")
-    private boolean gaComputeCloudShadow = false;
+    private boolean gaComputeCloudShadow;
 
     @Parameter(defaultValue = "true",
                label = " Refine pixel classification near coastlines",
@@ -126,29 +126,29 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
     @Override
     public void computeTile(Band targetBand, final Tile targetTile, ProgressMonitor pm) throws OperatorException {
         Rectangle targetRectangle = targetTile.getRectangle();
-        final Rectangle extendedRectangle = rectCalculator.extend(targetRectangle);
+        final Rectangle srcRectangle = rectCalculator.extend(targetRectangle);
 
-        final Tile sourceFlagTile = getSourceTile(origCloudFlagBand, extendedRectangle);
-        Tile szaTile = getSourceTile(szaTPG, extendedRectangle);
-        Tile saaTile = getSourceTile(saaTPG, extendedRectangle);
-        Tile ctpTile = getSourceTile(ctpBand, extendedRectangle);
+        final Tile sourceFlagTile = getSourceTile(origCloudFlagBand, srcRectangle);
+        Tile szaTile = getSourceTile(szaTPG, srcRectangle);
+        Tile saaTile = getSourceTile(saaTPG, srcRectangle);
+        Tile ctpTile = getSourceTile(ctpBand, srcRectangle);
         Tile altTile = getSourceTile(altTPG, targetRectangle);
-        final Tile waterFractionTile = getSourceTile(waterFractionBand, extendedRectangle);
+        final Tile waterFractionTile = getSourceTile(waterFractionBand, srcRectangle);
 
-        for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
+        for (int y = srcRectangle.y; y < srcRectangle.y + srcRectangle.height; y++) {
             checkForCancellation();
-            for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
+            for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
                     boolean isCloud = sourceFlagTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                     combineFlags(x, y, sourceFlagTile, targetTile);
 
                     if (gaRefineClassificationNearCoastlines) {
-                        if (isNearCoastline(x, y, waterFractionTile, extendedRectangle)) {
+                        if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
                             targetTile.setSample(x, y, IdepixConstants.F_COASTLINE, true);
                             refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                             if (isCloud) {
-                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, extendedRectangle);
+                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
                             }
                         }
                     }
@@ -178,10 +178,9 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
 
         if (gaComputeCloudShadow) {
             CloudShadowFronts cloudShadowFronts = new CloudShadowFronts(
-                    IdepixConstants.F_CLOUD, IdepixConstants.F_CLOUD_SHADOW,
                     geoCoding,
-                    targetTile,
-                    extendedRectangle,
+                    srcRectangle,
+                    targetRectangle,
                     szaTile, saaTile, ctpTile, altTile) {
 
                 @Override
@@ -193,12 +192,27 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
                         is_cloud_current = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                     }
                     if (is_cloud_current) {
-                        final boolean isNearCoastline = isNearCoastline(x, y, waterFractionTile, extendedRectangle);
+                        final boolean isNearCoastline = isNearCoastline(x, y, waterFractionTile, srcRectangle);
                         if (!isNearCoastline) {
                             return true;
                         }
                     }
                     return false;
+                }
+
+                @Override
+                protected boolean isCloudFree(int x, int y) {
+                    return !sourceFlagTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
+                }
+
+                @Override
+                protected boolean isSurroundedByCloud(int x, int y) {
+                    return isPixelSurrounded(x, y, sourceFlagTile, IdepixConstants.F_CLOUD);
+                }
+
+                @Override
+                protected void setCloudShadow(int x, int y) {
+                    targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, true);
                 }
             };
             cloudShadowFronts.computeCloudShadow();
@@ -259,21 +273,21 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
         return false;
     }
 
-    private void refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile, Rectangle rectangle) {
+    private void refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile, Rectangle srcRectangle) {
         final int windowWidth = 1;
-        final int LEFT_BORDER = Math.max(x - windowWidth, rectangle.x);
-        final int RIGHT_BORDER = Math.min(x + windowWidth, rectangle.x + rectangle.width - 1);
-        final int TOP_BORDER = Math.max(y - windowWidth, rectangle.y);
-        final int BOTTOM_BORDER = Math.min(y + windowWidth, rectangle.y + rectangle.height - 1);
+        final int LEFT_BORDER = Math.max(x - windowWidth, srcRectangle.x);
+        final int RIGHT_BORDER = Math.min(x + windowWidth, srcRectangle.x + srcRectangle.width - 1);
+        final int TOP_BORDER = Math.max(y - windowWidth, srcRectangle.y);
+        final int BOTTOM_BORDER = Math.min(y + windowWidth, srcRectangle.y + srcRectangle.height - 1);
         boolean removeCloudFlag = true;
-        if (CloudShadowFronts.isPixelSurrounded(x, y, sourceFlagTile, rectangle, IdepixConstants.F_CLOUD)) {
+        if (CloudShadowFronts.isPixelSurrounded(x, y, sourceFlagTile, IdepixConstants.F_CLOUD)) {
             removeCloudFlag = false;
         } else {
             Rectangle targetTileRectangle = targetTile.getRectangle();
             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                     boolean is_cloud = sourceFlagTile.getSampleBit(i, j, IdepixConstants.F_CLOUD);
-                    if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, waterFractionTile, rectangle)) {
+                    if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, waterFractionTile, srcRectangle)) {
                         removeCloudFlag = false;
                         break;
                     }

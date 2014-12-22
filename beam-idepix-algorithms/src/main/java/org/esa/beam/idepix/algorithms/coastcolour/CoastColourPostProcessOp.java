@@ -129,27 +129,27 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
     @Override
     public void computeTile(Band targetBand, final Tile targetTile, ProgressMonitor pm) throws OperatorException {
         final Rectangle targetRectangle = targetTile.getRectangle();
-        final Rectangle extendedRectangle = rectCalculator.extend(targetRectangle);
+        final Rectangle srcRectangle = rectCalculator.extend(targetRectangle);
 
-        final Tile sourceFlagTile = getSourceTile(origCloudFlagBand, extendedRectangle);
-        Tile szaTile = getSourceTile(szaTPG, extendedRectangle);
-        Tile saaTile = getSourceTile(saaTPG, extendedRectangle);
-        Tile ctpTile = getSourceTile(ctpBand, extendedRectangle);
-        final Tile waterFractionTile = getSourceTile(landWaterBand, extendedRectangle);
+        final Tile sourceFlagTile = getSourceTile(origCloudFlagBand, srcRectangle);
+        Tile szaTile = getSourceTile(szaTPG, srcRectangle);
+        Tile saaTile = getSourceTile(saaTPG, srcRectangle);
+        Tile ctpTile = getSourceTile(ctpBand, srcRectangle);
+        final Tile waterFractionTile = getSourceTile(landWaterBand, srcRectangle);
 
-        for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
+        for (int y = srcRectangle.y; y < srcRectangle.y + srcRectangle.height; y++) {
             checkForCancellation();
-            for (int x = extendedRectangle.x; x < extendedRectangle.x + extendedRectangle.width; x++) {
+            for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
                 if (targetRectangle.contains(x, y)) {
                     if (targetRectangle.contains(x, y)) {
                         boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                         combineFlags(x, y, sourceFlagTile, targetTile);
 
-                        if (isNearCoastline(x, y, sourceFlagTile, waterFractionTile, extendedRectangle)) {
+                        if (isNearCoastline(x, y, sourceFlagTile, waterFractionTile, srcRectangle)) {
                             targetTile.setSample(x, y, CoastColourClassificationOp.F_COASTLINE, true);
                             refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
                             if (isCloud) {
-                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, extendedRectangle);
+                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
                             }
                         }
                         boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
@@ -184,11 +184,9 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         }
 
         final CloudShadowFronts cloudShadowFronts = new CloudShadowFronts(
-                CoastColourClassificationOp.F_CLOUD,
-                CoastColourClassificationOp.F_CLOUD_SHADOW,
                 geoCoding,
-                targetTile,
-                extendedRectangle,
+                srcRectangle,
+                targetRectangle,
                 szaTile, saaTile, ctpTile, null) {
 
             @Override
@@ -201,12 +199,27 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
                 }
                 if (is_cloud_current) {
                     final boolean is_mixed_current = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_MIXED_PIXEL);
-                    final boolean isNearCoastline = isNearCoastline(x, y, sourceFlagTile, waterFractionTile, extendedRectangle);
+                    final boolean isNearCoastline = isNearCoastline(x, y, sourceFlagTile, waterFractionTile, srcRectangle);
                     if (!is_mixed_current && !isNearCoastline) {
                         return true;
                     }
                 }
                 return false;
+            }
+
+            @Override
+            protected boolean isCloudFree(int x, int y) {
+                return !sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+            }
+
+            @Override
+            protected boolean isSurroundedByCloud(int x, int y) {
+                return isPixelSurrounded(x, y, sourceFlagTile, CoastColourClassificationOp.F_CLOUD);
+            }
+
+            @Override
+            protected void setCloudShadow(int x, int y) {
+                targetTile.setSample(x, y, CoastColourClassificationOp.F_CLOUD_SHADOW, true);
             }
         };
         cloudShadowFronts.computeCloudShadow();
@@ -248,21 +261,21 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
         return false;
     }
 
-    private boolean refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile, Rectangle rectangle) {
+    private boolean refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile, Rectangle srcRectangle) {
         final int windowWidth = 1;
-        final int LEFT_BORDER = Math.max(x - windowWidth, rectangle.x);
-        final int RIGHT_BORDER = Math.min(x + windowWidth, rectangle.x + rectangle.width - 1);
-        final int TOP_BORDER = Math.max(y - windowWidth, rectangle.y);
-        final int BOTTOM_BORDER = Math.min(y + windowWidth, rectangle.y + rectangle.height - 1);
+        final int LEFT_BORDER = Math.max(x - windowWidth, srcRectangle.x);
+        final int RIGHT_BORDER = Math.min(x + windowWidth, srcRectangle.x + srcRectangle.width - 1);
+        final int TOP_BORDER = Math.max(y - windowWidth, srcRectangle.y);
+        final int BOTTOM_BORDER = Math.min(y + windowWidth, srcRectangle.y + srcRectangle.height - 1);
         boolean removeCloudFlag = true;
-        if (CloudShadowFronts.isPixelSurrounded(x, y, sourceFlagTile, rectangle, CoastColourClassificationOp.F_CLOUD)) {
+        if (CloudShadowFronts.isPixelSurrounded(x, y, sourceFlagTile, CoastColourClassificationOp.F_CLOUD)) {
             removeCloudFlag = false;
         } else {
             Rectangle targetTileRectangle = targetTile.getRectangle();
             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
                     boolean is_cloud = sourceFlagTile.getSampleBit(i, j, CoastColourClassificationOp.F_CLOUD);
-                    if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, sourceFlagTile, waterFractionTile, rectangle)) {
+                    if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, sourceFlagTile, waterFractionTile, srcRectangle)) {
                         removeCloudFlag = false;
                         break;
                     }

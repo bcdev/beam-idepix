@@ -132,10 +132,10 @@ public class GlobAlbedoOp extends BasisOp {
     @Parameter(defaultValue = "false",
                label = " Compute cloud shadow",
                description = " Compute cloud shadow with the algorithm from 'Fronts' project")
-    private boolean gaComputeCloudShadow = false;
+    private boolean gaComputeCloudShadow;
 
     @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
-    private boolean gaComputeCloudBuffer = false;
+    private boolean gaComputeCloudBuffer;
 
     @Parameter(defaultValue = "2", interval = "[0,100]",
             label = " Width of cloud buffer (# of pixels)",
@@ -143,7 +143,7 @@ public class GlobAlbedoOp extends BasisOp {
     private int gaCloudBufferWidth;
 
     @Parameter(defaultValue = "true", label = " Use the LandCover advanced cloud buffer algorithm")
-    private boolean gaLcCloudBuffer = false;
+    private boolean gaLcCloudBuffer;
 
     @Parameter(defaultValue = "true",
                label = " Refine pixel classification near coastlines",
