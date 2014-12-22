@@ -68,7 +68,6 @@ public abstract class CloudShadowFronts {
         final int w = targetRectangle.width;
         final int x0 = targetRectangle.x;
         final int y0 = targetRectangle.y;
-        long t1 = System.currentTimeMillis();
         boolean[][] isCloudShadow = new boolean[w][h];
         for (int y = y0; y < y0 + h; y++) {
             for (int x = x0; x < x0 + w; x++) {
@@ -80,7 +79,6 @@ public abstract class CloudShadowFronts {
                 }
             }
         }
-        long t2 = System.currentTimeMillis();
         // first 'post-correction': fill gaps surrounded by other cloud or cloud shadow pixels
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
@@ -94,7 +92,6 @@ public abstract class CloudShadowFronts {
                 }
             }
         }
-        long t3 = System.currentTimeMillis();
         // second post-correction, called 'belt' (why??): flag a pixel as cloud shadow if neighbour pixel is shadow
         for (int y = y0; y < y0 + h; y++) {
             for (int x = x0; x < x0 + w; x++) {
@@ -103,11 +100,6 @@ public abstract class CloudShadowFronts {
                 }
             }
         }
-        long t4 = System.currentTimeMillis();
-        long delta1 = t2 - t1;
-                long delta2 = t3 - t2;
-                long delta3 = t4 - t3;
-                System.out.println("shadow = " + delta1+"    "+delta2+"     "+delta3);
     }
 
     private boolean isPixelSurroundedByCloudShadow(int x, int y, boolean[][] isCloudShadow) {
