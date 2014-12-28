@@ -65,6 +65,7 @@ public class AvhrrAcClassificationOpTest {
     }
 
     @Test
+//    @Ignore
     public void testSunPositionCalculation() {
         final SunPosition sunPosition = AvhrrAcClassification2Op.computeSunPosition("210697");
         assertEquals(23.5, sunPosition.getLat(), 1.E-1);
@@ -83,13 +84,13 @@ public class AvhrrAcClassificationOpTest {
         final SunPosition sunPosition = AvhrrAcClassification2Op.computeSunPosition(ddmmyy);
         final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
         final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-        final double saa = AvhrrAcClassification2Op.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
+        final double saaRad = AvhrrAcClassification2Op.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
 
-        assertEquals(saa, sunAngles.getAzimuthAngle(), 1.0);
-}
+        assertEquals(saaRad*MathUtils.RTOD, sunAngles.getAzimuthAngle(), 1.0);
+    }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testRelativeAzimuthAngleCalculation() {
         // todo: further investigate
         final double latPointRad = latPoint * MathUtils.DTOR;
@@ -97,17 +98,17 @@ public class AvhrrAcClassificationOpTest {
         final SunPosition sunPosition = AvhrrAcClassification2Op.computeSunPosition(ddmmyy);  // this is the unknown we have to fix!!!
         final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
         final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-        final double saa = AvhrrAcClassification2Op.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
+        final double saaRad = AvhrrAcClassification2Op.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
 
         final double latSatRad = latSat * MathUtils.DTOR;
         final double lonSatRad = lonSat * MathUtils.DTOR;
         final double greatCirclePointToSatRad =
                 AvhrrAcClassification2Op.computeGreatCircleFromPointToSat(latPointRad, lonPointRad, latSatRad, lonSatRad);
-        final double vaa = AvhrrAcClassification2Op.computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad,
-                                                               greatCirclePointToSatRad);
+        final double vaaRad = AvhrrAcClassification2Op.computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad,
+                greatCirclePointToSatRad);
 
-        final double relAziDeg = AvhrrAcClassification2Op.correctRelAzimuthRange(vaa, saa);
+        final double relAziRad = AvhrrAcClassification2Op.correctRelAzimuthRange(vaaRad, saaRad);
+        final double relAziDeg = relAziRad * MathUtils.RTOD;
         assertEquals(relAziExpected, relAziDeg, 1.E-1);
     }
-
 }

@@ -15,7 +15,6 @@ import org.esa.beam.idepix.util.IdepixUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Idepix operator for pixel identification and classification with AVHRR AC algorithm.
@@ -24,9 +23,9 @@ import java.util.Set;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.avhrrac",
-                  version = "3.0-EVOLUTION-SNAPSHOT",
-                  copyright = "(c) 2014 by Brockmann Consult",
-                  description = "Pixel identification and classification with AVHRR AC algorithm.")
+        version = "3.0-EVOLUTION-SNAPSHOT",
+        copyright = "(c) 2014 by Brockmann Consult",
+        description = "Pixel identification and classification with AVHRR AC algorithm.")
 public class AvhrrAcOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (AVHRR AC L1b product)", description = "The source product.")
@@ -46,11 +45,14 @@ public class AvhrrAcOp extends BasisOp {
     private int aacCloudBufferWidth;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+            description = "Resolution in m/pixel")
     private int wmResolution;
 
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     private boolean aacUseWaterMaskFraction = true;
+
+    @Parameter(defaultValue = "false", label = " Flip source images (check before if needed!)")
+    private boolean flipSourceImages = false;
 
 //    @Parameter(defaultValue = "false",
 //               label = " Debug bands",
@@ -58,48 +60,48 @@ public class AvhrrAcOp extends BasisOp {
 //    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
-               label = " Schiller NN cloud ambiguous lower boundary ",
-               description = " Schiller NN cloud ambiguous lower boundary ")
+            label = " Schiller NN cloud ambiguous lower boundary ",
+            description = " Schiller NN cloud ambiguous lower boundary ")
     double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.45",
-               label = " Schiller NN cloud ambiguous/sure separation value ",
-               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+            label = " Schiller NN cloud ambiguous/sure separation value ",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
     double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.45",
-               label = " Schiller NN cloud sure/snow separation value ",
-               description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+            label = " Schiller NN cloud sure/snow separation value ",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "20.0",
-               label = " Reflectance 1 'brightness' threshold ",
-               description = " Reflectance 1 'brightness' threshold ")
+            label = " Reflectance 1 'brightness' threshold ",
+            description = " Reflectance 1 'brightness' threshold ")
     double reflCh1Thresh;
 
     @Parameter(defaultValue = "20.0",
-               label = " Reflectance 2 'brightness' threshold ",
-               description = " Reflectance 2 'brightness' threshold ")
+            label = " Reflectance 2 'brightness' threshold ",
+            description = " Reflectance 2 'brightness' threshold ")
     double reflCh2Thresh;
 
     @Parameter(defaultValue = "1.0",
-               label = " Reflectance 2/1 ratio threshold ",
-               description = " Reflectance 2/1 ratio threshold ")
+            label = " Reflectance 2/1 ratio threshold ",
+            description = " Reflectance 2/1 ratio threshold ")
     double r2r1RatioThresh;
 
     @Parameter(defaultValue = "1.0",
-               label = " Reflectance 3/1 ratio threshold ",
-               description = " Reflectance 3/1 ratio threshold ")
+            label = " Reflectance 3/1 ratio threshold ",
+            description = " Reflectance 3/1 ratio threshold ")
     double r3r1RatioThresh;
 
     @Parameter(defaultValue = "-30.0",
-               label = " Channel 4 brightness temperature threshold (C)",
-               description = " Channel 4 brightness temperature threshold (C)")
+            label = " Channel 4 brightness temperature threshold (C)",
+            description = " Channel 4 brightness temperature threshold (C)")
     double btCh4Thresh;
 
     @Parameter(defaultValue = "-30.0",
-               label = " Channel 5 brightness temperature threshold (C)",
-               description = " Channel 5 brightness temperature threshold (C)")
+            label = " Channel 5 brightness temperature threshold (C)",
+            description = " Channel 5 brightness temperature threshold (C)")
     double btCh5Thresh;
 
 
@@ -122,12 +124,13 @@ public class AvhrrAcOp extends BasisOp {
         aacCloudClassificationParameters.put("aacCloudBufferWidth", aacCloudBufferWidth);
         aacCloudClassificationParameters.put("wmResolution", wmResolution);
         aacCloudClassificationParameters.put("aacUseWaterMaskFraction", aacUseWaterMaskFraction);
+        aacCloudClassificationParameters.put("flipSourceImages", flipSourceImages);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousLowerBoundaryValue",
-                                             avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
+                avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudAmbiguousSureSeparationValue",
-                                             avhrracSchillerNNCloudAmbiguousSureSeparationValue);
+                avhrracSchillerNNCloudAmbiguousSureSeparationValue);
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudSureSnowSeparationValue",
-                                             avhrracSchillerNNCloudSureSnowSeparationValue);
+                avhrracSchillerNNCloudSureSnowSeparationValue);
 
         aacCloudClassificationParameters.put("reflCh1Thresh", reflCh1Thresh);
         aacCloudClassificationParameters.put("reflCh2Thresh", reflCh2Thresh);
@@ -143,10 +146,10 @@ public class AvhrrAcOp extends BasisOp {
         Map<String, Product> aacCloudInput = new HashMap<>(4);
         computeAvhrrAcAlgorithmInputProducts(aacCloudInput);
 
-        AvhrrAcClassificationOp acClassificationOp = new AvhrrAcClassificationOp();
+//        AvhrrAcClassificationOp acClassificationOp = new AvhrrAcClassificationOp();
         // test operator for older products which contain all inputs for Schiller NN:
 //        AvhrrAcClassification2Op acClassificationOp = new AvhrrAcClassification2Op();
-//        AvhrrAcClassification3Op acClassificationOp = new AvhrrAcClassification3Op();
+        AvhrrAcClassification3Op acClassificationOp = new AvhrrAcClassification3Op();
         acClassificationOp.setParameterDefaultValues();
         for (String key : aacCloudClassificationParameters.keySet()) {
             acClassificationOp.setParameter(key, aacCloudClassificationParameters.get(key));

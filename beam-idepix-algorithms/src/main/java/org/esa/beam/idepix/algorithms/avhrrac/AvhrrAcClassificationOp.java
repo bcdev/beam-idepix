@@ -1,32 +1,15 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
 import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
-import org.esa.beam.idepix.util.SunAngles;
-import org.esa.beam.idepix.util.SunAnglesCalculator;
-import org.esa.beam.idepix.util.SunPosition;
-import org.esa.beam.idepix.util.SunPositionCalculator;
+import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.idepix.util.*;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.util.math.RsMathUtils;
 
@@ -45,11 +28,11 @@ import java.util.TimeZone;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.avhrrac.classification",
-                  version = "3.0-EVOLUTION-SNAPSHOT",
-                  internal = true,
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2014 by Brockmann Consult",
-                  description = "Basic operator for pixel classification from AVHRR L1b data.")
+        version = "3.0-EVOLUTION-SNAPSHOT",
+        internal = true,
+        authors = "Olaf Danne",
+        copyright = "(c) 2014 by Brockmann Consult",
+        description = "Basic operator for pixel classification from AVHRR L1b data.")
 public class AvhrrAcClassificationOp extends PixelOperator {
 
     @SourceProduct(alias = "aacl1b", description = "The source product.")
@@ -69,11 +52,14 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     int aacCloudBufferWidth;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+            description = "Resolution in m/pixel")
     int wmResolution;
 
     @Parameter(defaultValue = "true", label = " Consider water mask fraction")
     boolean aacUseWaterMaskFraction = true;
+
+    @Parameter(defaultValue = "false", label = " Flip source images (check before if needed!)")
+    private boolean flipSourceImages;
 
 //    @Parameter(defaultValue = "false",
 //               label = " Debug bands",
@@ -81,49 +67,49 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 //    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
-               label = " Schiller NN cloud ambiguous lower boundary ",
-               description = " Schiller NN cloud ambiguous lower boundary ")
+            label = " Schiller NN cloud ambiguous lower boundary ",
+            description = " Schiller NN cloud ambiguous lower boundary ")
     double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.45",
-               label = " Schiller NN cloud ambiguous/sure separation value ",
-               description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+            label = " Schiller NN cloud ambiguous/sure separation value ",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
     double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.45",
-               label = " Schiller NN cloud sure/snow separation value ",
-               description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+            label = " Schiller NN cloud sure/snow separation value ",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
 
     @Parameter(defaultValue = "20.0",
-               label = " Reflectance 1 'brightness' threshold ",
-               description = " Reflectance 1 'brightness' threshold ")
+            label = " Reflectance 1 'brightness' threshold ",
+            description = " Reflectance 1 'brightness' threshold ")
     double reflCh1Thresh;
 
     @Parameter(defaultValue = "20.0",
-               label = " Reflectance 2 'brightness' threshold ",
-               description = " Reflectance 2 'brightness' threshold ")
+            label = " Reflectance 2 'brightness' threshold ",
+            description = " Reflectance 2 'brightness' threshold ")
     double reflCh2Thresh;
 
     @Parameter(defaultValue = "1.0",
-               label = " Reflectance 2/1 ratio threshold ",
-               description = " Reflectance 2/1 ratio threshold ")
+            label = " Reflectance 2/1 ratio threshold ",
+            description = " Reflectance 2/1 ratio threshold ")
     double r2r1RatioThresh;
 
     @Parameter(defaultValue = "1.0",
-               label = " Reflectance 3/1 ratio threshold ",
-               description = " Reflectance 3/1 ratio threshold ")
+            label = " Reflectance 3/1 ratio threshold ",
+            description = " Reflectance 3/1 ratio threshold ")
     double r3r1RatioThresh;
 
     @Parameter(defaultValue = "-30.0",
-               label = " Channel 4 brightness temperature threshold (C)",
-               description = " Channel 4 brightness temperature threshold (C)")
+            label = " Channel 4 brightness temperature threshold (C)",
+            description = " Channel 4 brightness temperature threshold (C)")
     double btCh4Thresh;
 
     @Parameter(defaultValue = "-30.0",
-               label = " Channel 5 brightness temperature threshold (C)",
-               description = " Channel 5 brightness temperature threshold (C)")
+            label = " Channel 5 brightness temperature threshold (C)",
+            description = " Channel 5 brightness temperature threshold (C)")
     double btCh5Thresh;
 
 
@@ -142,6 +128,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     private SunAngles sunAngles;
     private GeoPos satPosition;
     private SunPosition sunPosition;
+    private String dateString;
 
 
     public Product getSourceProduct() {
@@ -151,15 +138,22 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
     @Override
     public void prepareInputs() throws OperatorException {
-        flipSourceImages();
+        if (flipSourceImages) {
+            flipSourceImages();
+        }
         readSchillerNets();
         createTargetProduct();
         computeSunPosition();
 
-        sourceProduct.setGeoCoding(
-                new TiePointGeoCoding(sourceProduct.getTiePointGrid("latitude"),
-                                      sourceProduct.getTiePointGrid("longitude"))
-        );
+        dateString = getProductDatestring();
+        sunPosition = computeSunPosition(dateString);
+
+        if (sourceProduct.getGeoCoding() == null) {
+            sourceProduct.setGeoCoding(
+                    new TiePointGeoCoding(sourceProduct.getTiePointGrid("latitude"),
+                            sourceProduct.getTiePointGrid("longitude"))
+            );
+        }
 
         try {
             vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
@@ -189,6 +183,107 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceImage, TransposeDescriptor.FLIP_VERTICAL, null);
         return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
     }
+
+    // package local for testing
+    static double computeRelativeAzimuth(double vaaRad, double saaRad) {
+        return correctRelAzimuthRange(vaaRad, saaRad);
+    }
+
+    static double[] computeAzimuthAngles(double sza,
+                                         GeoPos satPosition,
+                                         GeoPos pointPosition,
+                                         SunPosition sunPosition) {
+
+        final double latPoint = pointPosition.getLat();
+        final double lonPoint = pointPosition.getLon();
+
+        final double latSat = satPosition.getLat();
+        final double lonSat = satPosition.getLon();
+
+        final double latPointRad = latPoint * MathUtils.DTOR;
+        final double lonPointRad = lonPoint * MathUtils.DTOR;
+        final double latSatRad = latSat * MathUtils.DTOR;
+        final double lonSatRad = lonSat * MathUtils.DTOR;
+
+        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
+        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
+        final double greatCirclePointToSatRad = computeGreatCircleFromPointToSat(latPointRad, lonPointRad, latSatRad, lonSatRad);
+
+        final double vaaRad = computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad, greatCirclePointToSatRad);
+        final double saaRad = computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
+
+        return new double[]{saaRad, vaaRad, greatCirclePointToSatRad};
+    }
+
+    // package local for testing
+    static double correctRelAzimuthRange(double vaaRad, double saaRad) {
+        double relAzimuth = saaRad - vaaRad;      // todo: check sign!!
+        if (relAzimuth < -Math.PI) {
+            relAzimuth += 2.0 * Math.PI;
+        } else if (relAzimuth > Math.PI) {
+            relAzimuth -= 2.0 * Math.PI;
+        }
+        return Math.abs(relAzimuth);
+    }
+
+    // package local for testing
+    static double computeGreatCircleFromPointToSat(double latPointRad, double lonPointRad, double latSatRad, double lonSatRad) {
+        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
+        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
+                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
+                        Math.sin(latPointRad) * Math.sin(latSatRad));
+
+        //        return 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
+        return greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
+    }
+
+    // package local for testing
+    static SunPosition computeSunPosition(String ddmmyy) {
+        final Calendar calendar = getDateAsCalendar(ddmmyy);
+        return SunPositionCalculator.calculate(calendar);
+    }
+
+    // package local for testing
+    static Calendar getDateAsCalendar(String ddmmyy) {
+        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        int year = Integer.parseInt(ddmmyy.substring(4, 6));
+        if (year < 50) {
+            year = 2000 + year;
+        } else {
+            year = 1900 + year;
+        }
+        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
+        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
+        calendar.set(year, month, day, 12, 0, 0);
+        return calendar;
+    }
+
+    // package local for testing
+    static double computeSaa(double sza, double latPointRad, double lonPointRad, double latSunRad, double lonSunRad) {
+        double arg = (Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
+                (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR));
+        arg = Math.min(Math.max(arg, -1.0), 1.0);    // keep in range [-1.0, 1.0]
+        double saaRad = Math.acos(arg);
+        if (Math.sin(lonSunRad - lonPointRad) < 0.0) {  // todo: do we need this??
+            saaRad = 2.0 * Math.PI - saaRad;
+        }
+        return saaRad;
+    }
+
+    // package local for testing
+    static double computeVaa(double latPointRad, double lonPointRad, double latSatRad, double lonSatRad,
+                             double greatCirclePointToSatRad) {
+        double arg = (Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
+                (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad));
+        arg = Math.min(Math.max(arg, -1.0), 1.0);    // keep in range [-1.0, 1.0]
+        double vaaRad = Math.acos(arg);
+        if (Math.sin(lonSatRad - lonPointRad) < 0.0) {
+            vaaRad = 2.0 * Math.PI - vaaRad;
+        }
+
+        return vaaRad;
+    }
+
 
     private void readSchillerNets() {
         try (InputStream is = getClass().getResourceAsStream(SCHILLER_AVHRRAC_NET_NAME)) {
@@ -221,15 +316,25 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     private void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
-        if (x == 560 && y == 5) {
-            System.out.println("x,y = " + x + "," + y);
-        }
         final double sza = sourceSamples[Constants.SRC_SZA].getDouble();
-        //double vza = 45.0f; // todo: vza is not in product, clarify how to determine
-//        double vza = vzaTable.getVza(x);
         double vza = Math.abs(vzaTable.getVza(x));  // !!!
-        final double relAzi = computeRelativeAzimuth(x, y, sza);
-//        final double relAzi = 45.0;  // test!
+
+        final GeoPos satPosition = computeSatPosition(y);
+        final GeoPos pointPosition = getGeoPos(x, y);
+
+        if (x == 140 && y == 1668) {
+            System.out.println("pointPosition = " + pointPosition);
+        }
+        if (x == 140 && y == 1669) {
+            System.out.println("pointPosition = " + pointPosition);
+        }
+
+        final double[] azimuthAngles = computeAzimuthAngles(sza, satPosition, pointPosition, sunPosition);
+        final double saaRad = azimuthAngles[0];
+        final double vaaRad = azimuthAngles[1];
+        final double greatCircleRad = azimuthAngles[2];
+        final double relAzi = computeRelativeAzimuth(saaRad, vaaRad) * MathUtils.RTOD;
+
         double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
         final double albedo1 = sourceSamples[Constants.SRC_ALBEDO_1].getDouble();
         final double albedo2 = sourceSamples[Constants.SRC_ALBEDO_2].getDouble();
@@ -252,10 +357,8 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             SchillerNeuralNetWrapper nnWrapper = avhrracNeuralNet.get();
             double[] inputVector = nnWrapper.getInputVector();
             inputVector[0] = sza;
-//            inputVector[1] = vza;
-            inputVector[1] = -60.0;  // test
-//            inputVector[2] = relAzi;
-            inputVector[2] = 0.0;   // test
+            inputVector[1] = vza;
+            inputVector[2] = relAzi;
             inputVector[3] = Math.sqrt(avhrrRadiance[0]);
             inputVector[4] = Math.sqrt(avhrrRadiance[1]);
             inputVector[5] = Math.sqrt(avhrrRadiance[3]);
@@ -290,12 +393,16 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamples[1].set(nnOutput[0]);
             targetSamples[2].set(vza);
-            targetSamples[3].set(relAzi);
-            targetSamples[4].set(btCh4);
-            targetSamples[5].set(btCh5);
-            targetSamples[6].set(albedo1);
-            targetSamples[7].set(albedo2);
-            targetSamples[8].set(reflCh3);
+            targetSamples[3].set(sza);
+            targetSamples[4].set(vaaRad * MathUtils.RTOD);
+            targetSamples[5].set(saaRad * MathUtils.RTOD);
+            targetSamples[6].set(greatCircleRad * MathUtils.RTOD);
+            targetSamples[7].set(relAzi);
+            targetSamples[8].set(btCh4);
+            targetSamples[9].set(btCh5);
+            targetSamples[10].set(albedo1);
+            targetSamples[11].set(albedo2);
+            targetSamples[12].set(reflCh3);
 
         } else {
             targetSamples[0].set(Constants.F_INVALID, true);
@@ -307,13 +414,17 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             targetSamples[6].set(Float.NaN);
             targetSamples[7].set(Float.NaN);
             targetSamples[8].set(Float.NaN);
+            targetSamples[9].set(Float.NaN);
+            targetSamples[10].set(Float.NaN);
+            targetSamples[11].set(Float.NaN);
+            targetSamples[12].set(Float.NaN);
             avhrrRadiance[0] = Float.NaN;
             avhrrRadiance[1] = Float.NaN;
         }
 
         if (aacCopyRadiances) {
             for (int i = 0; i < Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
-                targetSamples[9 + i].set(avhrrRadiance[i]);
+                targetSamples[13 + i].set(avhrrRadiance[i]);
             }
         }
     }
@@ -334,53 +445,53 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         }
     }
 
-    private double computeRelativeAzimuth(int x, int y, double sza) {
-        // todo: aziDiff is not in product, clarify how to determine
-        // todo: implement following http://edc2.usgs.gov/1KM/angin_diag.php#sataz and
-        //
+//    private double computeRelativeAzimuth(int x, int y, double sza) {
+//        // todo: aziDiff is not in product, clarify how to determine
+//        // todo: implement following http://edc2.usgs.gov/1KM/angin_diag.php#sataz and
+//        //
+//
+//        final GeoPos pointGeoPos = getGeoPos(x, y);
+//        final double latPoint = pointGeoPos.getLat();
+//        final double lonPoint = pointGeoPos.getLon();
+//
+//        computeSatPosition(y);
+//        final double latSat = satPosition.getLat();
+//        final double lonSat = satPosition.getLon();
+//
+//        final double latPointRad = latPoint * MathUtils.DTOR;
+//        final double lonPointRad = lonPoint * MathUtils.DTOR;
+//        final double latSatRad = latSat * MathUtils.DTOR;
+//        final double lonSatRad = lonSat * MathUtils.DTOR;
+//
+//        final double latSun = sunPosition.getLat();
+//        final double lonSun = sunPosition.getLon();
+//        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
+//        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
+//
+//        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
+//        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
+//                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
+//                        Math.sin(latPointRad) * Math.sin(latSatRad));
+//
+//        final double greatCirclePointToSatRad = 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
+//
+//        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
+//                (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad)));
+//        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
+//                (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR)));
+//
+//        computeSunAngles(latSat, lonSat);
+//        final double szaFromSunPosCalculator = sunAngles.getZenithAngle(); // should be equal to sza --> check in unit test!
+//        final double saaFromSunPosCalculator = sunAngles.getAzimuthAngle(); // should be equal to saa --> check in unit test!
+//
+////        return saa*MathUtils.RTOD - vaa*MathUtils.RTOD;
+//        return saaFromSunPosCalculator - vaa * MathUtils.RTOD;
+//    }
 
-        final GeoPos pointGeoPos = getGeoPos(x, y);
-        final double latPoint = pointGeoPos.getLat();
-        final double lonPoint = pointGeoPos.getLon();
-
-        computeSatPosition(y);
-        final double latSat = satPosition.getLat();
-        final double lonSat = satPosition.getLon();
-
-        final double latPointRad = latPoint * MathUtils.DTOR;
-        final double lonPointRad = lonPoint * MathUtils.DTOR;
-        final double latSatRad = latSat * MathUtils.DTOR;
-        final double lonSatRad = lonSat * MathUtils.DTOR;
-
-        final double latSun = sunPosition.getLat();
-        final double lonSun = sunPosition.getLon();
-        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
-        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-
-        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
-        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
-                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
-                                  Math.sin(latPointRad) * Math.sin(latSatRad));
-
-        final double greatCirclePointToSatRad = 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
-
-        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
-                                             (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad)));
-        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
-                                             (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR)));
-
-        computeSunAngles(latSat, lonSat);
-        final double szaFromSunPosCalculator = sunAngles.getZenithAngle(); // should be equal to sza --> check in unit test!
-        final double saaFromSunPosCalculator = sunAngles.getAzimuthAngle(); // should be equal to saa --> check in unit test!
-
-//        return saa*MathUtils.RTOD - vaa*MathUtils.RTOD;
-        return saaFromSunPosCalculator - vaa * MathUtils.RTOD;
-    }
-
-    private void computeSunAngles(double lat, double lon) {
-        final Calendar calendar = getProductDateAsCalendar();
-        sunAngles = SunAnglesCalculator.calculate(calendar, lat, lon);
-    }
+//    private void computeSunAngles(double lat, double lon) {
+//        final Calendar calendar = getProductDateAsCalendar();
+//        sunAngles = SunAnglesCalculator.calculate(calendar, lat, lon);
+//    }
 
     private Calendar getProductDateAsCalendar() {
         final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
@@ -397,13 +508,17 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         return calendar;
     }
 
-    private void computeSatPosition(int y) {
-        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
-    }
+//    private void computeSatPosition(int y) {
+//        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
+//    }
 
     private void computeSunPosition() {
         final Calendar calendar = getProductDateAsCalendar();
         sunPosition = SunPositionCalculator.calculate(calendar);
+    }
+
+    private GeoPos computeSatPosition(int y) {
+        return getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
     }
 
 
@@ -490,6 +605,10 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 //        }
         sampleConfigurer.defineSample(index++, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
         sampleConfigurer.defineSample(index++, "vza");
+        sampleConfigurer.defineSample(index++, "sza");
+        sampleConfigurer.defineSample(index++, "vaa");
+        sampleConfigurer.defineSample(index++, "saa");
+        sampleConfigurer.defineSample(index++, "great_circle");
         sampleConfigurer.defineSample(index++, "rel_azimuth");
         sampleConfigurer.defineSample(index++, "bt_4");
         sampleConfigurer.defineSample(index++, "bt_5");
@@ -542,6 +661,30 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         vzaBand.setUnit("dl");
         vzaBand.setNoDataValue(Float.NaN);
         vzaBand.setNoDataValueUsed(true);
+
+        Band szaBand = productConfigurer.addBand("sza", ProductData.TYPE_FLOAT32);
+        szaBand.setDescription("sun zenith angle");
+        szaBand.setUnit("dl");
+        szaBand.setNoDataValue(Float.NaN);
+        szaBand.setNoDataValueUsed(true);
+
+        Band vaaBand = productConfigurer.addBand("vaa", ProductData.TYPE_FLOAT32);
+        vaaBand.setDescription("view azimuth angle");
+        vaaBand.setUnit("dl");
+        vaaBand.setNoDataValue(Float.NaN);
+        vaaBand.setNoDataValueUsed(true);
+
+        Band saaBand = productConfigurer.addBand("saa", ProductData.TYPE_FLOAT32);
+        saaBand.setDescription("sun azimuth angle");
+        saaBand.setUnit("dl");
+        saaBand.setNoDataValue(Float.NaN);
+        saaBand.setNoDataValueUsed(true);
+
+        Band greatCircleBand = productConfigurer.addBand("great_circle", ProductData.TYPE_FLOAT32);
+        greatCircleBand.setDescription("greatcircle");
+        greatCircleBand.setUnit("dl");
+        greatCircleBand.setNoDataValue(Float.NaN);
+        greatCircleBand.setNoDataValueUsed(true);
 
         Band relaziBand = productConfigurer.addBand("rel_azimuth", ProductData.TYPE_FLOAT32);
         relaziBand.setDescription("relative azimuth");
