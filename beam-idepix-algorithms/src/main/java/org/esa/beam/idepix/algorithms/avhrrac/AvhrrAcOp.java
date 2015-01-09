@@ -146,10 +146,10 @@ public class AvhrrAcOp extends BasisOp {
         Map<String, Product> aacCloudInput = new HashMap<>(4);
         computeAvhrrAcAlgorithmInputProducts(aacCloudInput);
 
-//        AvhrrAcClassificationOp acClassificationOp = new AvhrrAcClassificationOp();
+        AvhrrAcClassificationOp acClassificationOp = new AvhrrAcClassificationOp();
         // test operator for older products which contain all inputs for Schiller NN:
 //        AvhrrAcClassification2Op acClassificationOp = new AvhrrAcClassification2Op();
-        AvhrrAcClassification3Op acClassificationOp = new AvhrrAcClassification3Op();
+//        AvhrrAcClassification3Op acClassificationOp = new AvhrrAcClassification3Op();
         acClassificationOp.setParameterDefaultValues();
         for (String key : aacCloudClassificationParameters.keySet()) {
             acClassificationOp.setParameter(key, aacCloudClassificationParameters.get(key));
