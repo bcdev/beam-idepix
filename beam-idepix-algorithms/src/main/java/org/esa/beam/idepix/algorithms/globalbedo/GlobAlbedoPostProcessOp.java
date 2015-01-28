@@ -41,7 +41,7 @@ import java.util.HashMap;
  * @since Idepix 2.1
  */
 @OperatorMetadata(alias = "idepix.globalbedo.postprocess",
-                  version = "2.1",
+                  version = "2.2",
                   internal = true,
                   authors = "Marco Peters",
                   copyright = "(c) 2011 by Brockmann Consult",

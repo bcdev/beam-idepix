@@ -57,7 +57,7 @@ import java.util.Calendar;
  * This class provides the Mepix QWG cloud classification.
  */
 @OperatorMetadata(alias = "idepix.coastcolour.classification",
-                  version = "2.1",
+                  version = "2.2",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",

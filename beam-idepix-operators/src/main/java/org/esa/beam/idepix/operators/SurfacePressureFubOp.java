@@ -50,7 +50,7 @@ import java.io.InputStreamReader;
  * @version $Revision: 6676 $ $Date: 2009-10-27 16:57:46 +0100 (Di, 27 Okt 2009) $
  */
 @OperatorMetadata(alias = "idepix.operators.SurfacePressureFub",
-                  version = "2.2-EVOLUTION-SNAPSHOT",
+                  version = "2.2",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",

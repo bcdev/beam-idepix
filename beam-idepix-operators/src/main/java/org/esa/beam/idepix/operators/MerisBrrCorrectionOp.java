@@ -23,7 +23,7 @@ import java.awt.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.operators.MerisBrrCorrection",
-                  version = "2.2-EVOLUTION-SNAPSHOT",
+                  version = "2.2",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",

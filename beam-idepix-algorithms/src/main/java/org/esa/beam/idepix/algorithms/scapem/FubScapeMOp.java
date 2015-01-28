@@ -21,7 +21,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem",
                   internal = true,  // currently hidden
-        version = "2.2-EVOLUTION-SNAPSHOT",
+        version = "2.2",
         authors = "Olaf Danne, Tonio Fincke",
         copyright = "(c) 2013 by Brockmann Consult",
         description = "Pixel identification and classification with Scape-M cloud mask from L. Guanter, FUB.")
