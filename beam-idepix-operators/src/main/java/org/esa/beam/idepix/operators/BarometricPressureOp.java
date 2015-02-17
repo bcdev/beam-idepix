@@ -37,7 +37,7 @@ import java.util.StringTokenizer;
  * @version $Revision: 6824 $ $Date: 2009-11-03 16:02:02 +0100 (Di, 03 Nov 2009) $
  */
 @OperatorMetadata(alias = "idepix.operators.BarometricPressure",
-                  version = "2.1",
+                  version = "2.2",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008 by Brockmann Consult",

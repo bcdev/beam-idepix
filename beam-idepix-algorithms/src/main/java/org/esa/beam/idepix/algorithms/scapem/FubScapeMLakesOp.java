@@ -34,7 +34,7 @@ import java.util.Map;
 
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.scapem.lakes",
-                  version = "2.2-EVOLUTION-SNAPSHOT",
+                  version = "2.2",
                   internal = true,
                   authors = "Tonio Fincke",
                   copyright = "(c) 2013 by Brockmann Consult",

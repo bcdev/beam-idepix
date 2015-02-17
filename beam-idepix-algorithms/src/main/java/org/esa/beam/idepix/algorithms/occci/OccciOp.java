@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.occci",
-                  version = "3.0-EVOLUTION-SNAPSHOT",
+                  version = "2.2",
                   copyright = "(c) 2014 by Brockmann Consult",
                   description = "Pixel identification and classification with OC-CCI algorithm.")
 public class OccciOp extends BasisOp {

@@ -25,7 +25,7 @@ import org.esa.beam.util.ProductUtils;
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.ipf",
                   internal = true,  // currently hidden
-                  version = "2.2-EVOLUTION-SNAPSHOT",
+                  version = "2.2",
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",
                   description = "Pixel identification and classification with IPF (former MEPIX) algorithm.")

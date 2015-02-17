@@ -9,7 +9,7 @@ import org.esa.beam.util.ProductUtils;
 
 @SuppressWarnings("JavaDoc")
 @OperatorMetadata(alias = "idepix.operators.Basis",
-                  version = "2.1",
+                  version = "2.2",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2012 by Brockmann Consult",

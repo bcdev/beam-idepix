@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "Idepix.Land",
-        version = "2.1",
+        version = "2.2",
         authors = "C.Brockmann, O. Danne",
         copyright = "(c) 2010-2012 by Brockmann Consult",
         description = "Pixel identification and classification over land with an algorithm developed " +

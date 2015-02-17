@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "Idepix.Water",
-                  version = "2.1",
+                  version = "2.2",
                   authors = "R. Doerffer, H. Schiller, C. Brockmann, O. Danne, M.Peters",
                   copyright = "(c) 2010-2013 Brockmann Consult",
                   description = "Pixel identification and classification over water with an algorithm developed " +

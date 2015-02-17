@@ -29,7 +29,7 @@ import java.util.TimeZone;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.avhrrac.classification3",
-        version = "2.1.5",
+        version = "2.2",
         internal = true,
         authors = "Olaf Danne",
         copyright = "(c) 2014 by Brockmann Consult",

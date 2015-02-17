@@ -30,7 +30,7 @@ import java.io.InputStream;
  * @author olafd
  */
 @OperatorMetadata(alias = "idepix.occci.classification",
-                  version = "3.0-EVOLUTION-SNAPSHOT",
+                  version = "2.2",
                   copyright = "(c) 2014 by Brockmann Consult",
                   description = "OC-CCI pixel classification operator.",
                   internal = true)
