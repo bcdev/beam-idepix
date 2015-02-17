@@ -45,8 +45,8 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     Product targetProduct;
 
     // AvhrrAc parameters
-    @Parameter(defaultValue = "true", label = " Copy input radiance bands (with albedo1/2 converted)")
-    boolean aacCopyRadiances = true;
+    @Parameter(defaultValue = "false", label = " Copy input radiance bands (with albedo1/2 converted)")
+    boolean aacCopyRadiances = false;
 
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     int aacCloudBufferWidth;
@@ -339,7 +339,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         final double albedo1 = sourceSamples[Constants.SRC_ALBEDO_1].getDouble();
         final double albedo2 = sourceSamples[Constants.SRC_ALBEDO_2].getDouble();
 
-        if (albedo1 >= 0.0 && albedo2 >= 0.0) {
+        if (albedo1 >= 0.0 && albedo2 >= 0.0 && !szaInvalid(sza)) {
 
             avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE);
             avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE);
@@ -733,6 +733,12 @@ public class AvhrrAcClassificationOp extends PixelOperator {
                 radianceBand.setNoDataValueUsed(true);
             }
         }
+    }
+
+    private boolean szaInvalid(double sza) {
+        // todo: we have a discontinuity in angle retrieval at sza=90deg. Check!
+        final double eps = 1.E-6;
+        return (sza < 90.0 + eps && sza > 90.0 - eps);
     }
 
     /**

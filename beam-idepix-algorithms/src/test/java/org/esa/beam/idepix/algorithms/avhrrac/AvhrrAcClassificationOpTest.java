@@ -25,6 +25,7 @@ import org.junit.*;
 import java.util.Calendar;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AvhrrAcClassificationOpTest {
 
@@ -36,6 +37,7 @@ public class AvhrrAcClassificationOpTest {
     private double latSat;
     private double lonSat;
     private double relAziExpected;
+    private LaplaceTestObj laplaceTestObj;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -110,5 +112,82 @@ public class AvhrrAcClassificationOpTest {
         final double relAziRad = AvhrrAcClassification2Op.correctRelAzimuthRange(vaaRad, saaRad);
         final double relAziDeg = relAziRad * MathUtils.RTOD;
         assertEquals(relAziExpected, relAziDeg, 1.E-1);
+    }
+
+
+    @Test
+    public void testLaplaceEquationPerformance() {
+        int nPoints=50;
+        float[][] u = new float[nPoints][nPoints];
+        final float dx = (float) (Math.PI/(nPoints-1));
+        final float dy = (float) (Math.PI/(nPoints-1));
+        for (int i=0; i<nPoints; i++) {
+            for (int j=0; j<nPoints; j++) {
+                u[i][j] = (float) (Math.sin(i*dx)*Math.sin(j*dy));
+            }
+        }
+        LaplaceTestObj laplaceTestObj = new LaplaceTestObj(u, 2);
+
+        int iter =0;
+        final long t1 = System.currentTimeMillis();
+        while (iter < 5000) {
+            computeLaplace(laplaceTestObj, dx, dy);
+            iter++;
+        }
+        final long t2 = System.currentTimeMillis();
+        System.out.println("time java (ms) = " + (t2-t1));
+        System.out.println("iter = " + iter);
+        System.out.println("err = " + laplaceTestObj.err);
+
+        assertTrue(laplaceTestObj.getErr() < 1.E-6);
+    }
+
+    private LaplaceTestObj computeLaplace(LaplaceTestObj laplaceTestObj, float dx, float dy) {
+        final float dx2 = dx * dx;
+        final float dy2 = dy * dy;
+
+        final float dnrInv = 0.5f/(dx2 + dy2);
+        float[][] u = laplaceTestObj.getU();
+
+        float err = 0.0f;
+        for (int i=1; i<u[0].length-1; i++) {
+            for (int j=1; j<u[0].length-1; j++) {
+                final float tmp = u[i][j];
+                u[i][j] = ((u[i-1][j] +  u[i+1][j]) * dx2 +
+                           (u[i][j-1] +  u[i][j+1]) * dy2) * dnrInv;
+                final float diff = u[i][j] - tmp;
+                err += diff*diff;
+            }
+        }
+        laplaceTestObj.setU(u);
+        laplaceTestObj.setErr(err);
+
+        return laplaceTestObj;
+    }
+
+    private class LaplaceTestObj {
+        float[][] u;
+        float err;
+
+        LaplaceTestObj(float[][] u, float err) {
+            this.u = u;
+            this.err = err;
+        }
+
+        public float[][] getU() {
+            return u;
+        }
+
+        public void setU(float[][] u) {
+            this.u = u;
+        }
+
+        public float getErr() {
+            return err;
+        }
+
+        public void setErr(float err) {
+            this.err = err;
+        }
     }
 }

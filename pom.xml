@@ -203,6 +203,12 @@
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
+                <artifactId>beam-dataio</artifactId>
+                <version>${beamVersion}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam</groupId>
                 <artifactId>beam-visat</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
@@ -228,6 +234,12 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
+                <version>${beamVersion}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-avhrr-reader</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
 

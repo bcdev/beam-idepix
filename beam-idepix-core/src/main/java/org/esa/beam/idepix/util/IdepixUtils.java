@@ -98,7 +98,7 @@ public class IdepixUtils {
                 !isValidModisProduct(inputProduct) &&
                 !isValidSeawifsProduct(inputProduct) &&
                 !isValidMerisAatsrSynergyProduct(inputProduct)) {
-            logErrorMessage("Input product must be either MERIS, AATSR, colocated MERIS/AATSR, MODIS/SeaWiFS, or VGT L1b!");
+            logErrorMessage("Input product must be either MERIS, AATSR, AVHRR, colocated MERIS/AATSR, MODIS/SeaWiFS, or VGT L1b!");
         }
         return true;
     }

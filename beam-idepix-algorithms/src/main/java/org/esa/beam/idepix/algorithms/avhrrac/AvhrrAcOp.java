@@ -38,8 +38,8 @@ public class AvhrrAcOp extends BasisOp {
     private Product waterMaskProduct;
 
     // AvhrrAc parameters
-    @Parameter(defaultValue = "true", label = " Copy input radiance/reflectance bands")
-    private boolean aacCopyRadiances = true;
+    @Parameter(defaultValue = "false", label = " Copy input radiance/reflectance bands")
+    private boolean aacCopyRadiances = false;
 
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int aacCloudBufferWidth;

@@ -205,6 +205,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
+    private double ambiguousThresh;
 
     @Override
     public void initialize() throws OperatorException {
@@ -583,7 +584,6 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             is_snow_ice = (high_mdsi && bright_f);
         }
 
-        double ambiguousThresh = cloudScreeningAmbiguous;
         double sureThresh = cloudScreeningSure;
         // this seems to avoid false cloud flagging in glint regions:
         if (is_glint_risk) {
