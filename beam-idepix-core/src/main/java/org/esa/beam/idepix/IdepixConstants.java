@@ -34,6 +34,7 @@ public class IdepixConstants {
     public static String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
     public static String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
     public static String AVHRR_L1b_AVISA_PRODUCT_TYPE = "AVHRR_3_L1B";
+    public static String AVHRR_L1b_UNIDATA_PRODUCT_TYPE = "CF-1.6, Unidata Observation Dataset v1.1";
 
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;
@@ -93,10 +94,7 @@ public class IdepixConstants {
 
     public static final String inputconsistencyErrorMessage =
             "Selected cloud screening algorithm cannot be used with given input product. \n\n" +
-                    "Valid are: \n" +
-                    " - MERIS and VGT products over land \n" +
-                    " - MERIS products over water ";
-
+                    "Valid are: MERIS, VGT, AATSR, AVHRR, MODIS, SeaWIFS, colocated MERIS/AATSR L1b products.";
 
     public static final String ctpModeDefault = "Derive from Neural Net";
 

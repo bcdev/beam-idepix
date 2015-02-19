@@ -317,7 +317,7 @@ public class AvhrrAcClassification2Op extends PixelOperator {
             float waterFraction = Float.NaN;
             // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
             if (getGeoPos(x, y).lat > -58f) {
-                waterFraction = sourceSamples[Constants.SRC_WATERFRACTION].getFloat();
+                waterFraction = sourceSamples[Constants.SRC_USGS_WATERFRACTION].getFloat();
             }
 
             SchillerNeuralNetWrapper nnWrapper = avhrracNeuralNet.get();

@@ -1,6 +1,5 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
-import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -13,8 +12,6 @@ import org.esa.beam.idepix.util.*;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.util.math.RsMathUtils;
 
-import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.TransposeDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -33,7 +30,7 @@ import java.util.TimeZone;
         authors = "Olaf Danne",
         copyright = "(c) 2014 by Brockmann Consult",
         description = "Basic operator for pixel classification from AVHRR L1b data.")
-public class AvhrrAcClassificationOp extends PixelOperator {
+public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
 
     @SourceProduct(alias = "aacl1b", description = "The source product.")
     Product sourceProduct;
@@ -60,11 +57,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
 
     @Parameter(defaultValue = "false", label = " Flip source images (check before if needed!)")
     private boolean flipSourceImages;
-
-//    @Parameter(defaultValue = "false",
-//               label = " Debug bands",
-//               description = "Write further useful bands to target product.")
-//    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
             label = " Schiller NN cloud ambiguous lower boundary ",
@@ -112,29 +104,9 @@ public class AvhrrAcClassificationOp extends PixelOperator {
             description = " Channel 5 brightness temperature threshold (C)")
     double btCh5Thresh;
 
-
-    private static final String SCHILLER_AVHRRAC_NET_NAME = "6x3_114.1.net";
-
-    private static final int ALBEDO_TO_RADIANCE = 0;
-    private static final int RADIANCE_TO_ALBEDO = 1;
-
     private static final double NU_CH3 = 2694.0;
     private static final double NU_CH4 = 925.0;
     private static final double NU_CH5 = 839.0;
-
-    ThreadLocal<SchillerNeuralNetWrapper> avhrracNeuralNet;
-
-    AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
-    private SunAngles sunAngles;
-    private GeoPos satPosition;
-    private SunPosition sunPosition;
-    private String dateString;
-
-
-    public Product getSourceProduct() {
-        // this is the source product for the ProductConfigurer
-        return sourceProduct;
-    }
 
     @Override
     public void prepareInputs() throws OperatorException {
@@ -144,9 +116,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         readSchillerNets();
         createTargetProduct();
         computeSunPosition();
-
-        dateString = getProductDatestring();
-        sunPosition = computeSunPosition(dateString);
 
         if (sourceProduct.getGeoCoding() == null) {
             sourceProduct.setGeoCoding(
@@ -163,28 +132,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         }
     }
 
-    @Override
-    protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        runAvhrrAcAlgorithm(x, y, sourceSamples, targetSamples);
-    }
-
-    private void flipSourceImages() {
-        for (Band b : sourceProduct.getBands()) {
-            final RenderedOp flippedImage = flipImage(b.getSourceImage());
-            b.setSourceImage(flippedImage);
-        }
-        for (TiePointGrid tpg : sourceProduct.getTiePointGrids()) {
-            final RenderedOp flippedImage = flipImage(tpg.getSourceImage());
-            tpg.setSourceImage(flippedImage);
-        }
-    }
-
-    private RenderedOp flipImage(MultiLevelImage sourceImage) {
-        final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceImage, TransposeDescriptor.FLIP_VERTICAL, null);
-        return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
-    }
-
-    // package local for testing
     static double computeRelativeAzimuth(double vaaRad, double saaRad) {
         return correctRelAzimuthRange(vaaRad, saaRad);
     }
@@ -238,12 +185,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
     }
 
     // package local for testing
-    static SunPosition computeSunPosition(String ddmmyy) {
-        final Calendar calendar = getDateAsCalendar(ddmmyy);
-        return SunPositionCalculator.calculate(calendar);
-    }
-
-    // package local for testing
     static Calendar getDateAsCalendar(String ddmmyy) {
         final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         int year = Integer.parseInt(ddmmyy.substring(4, 6));
@@ -284,8 +225,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         return vaaRad;
     }
 
-
-    private void readSchillerNets() {
+    void readSchillerNets() {
         try (InputStream is = getClass().getResourceAsStream(SCHILLER_AVHRRAC_NET_NAME)) {
             avhrracNeuralNet = SchillerNeuralNetWrapper.create(is);
         } catch (IOException e) {
@@ -293,7 +233,7 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         }
     }
 
-    private void setClassifFlag(WritableSample[] targetSamples, AvhrrAcAlgorithm algorithm) {
+    void setClassifFlag(WritableSample[] targetSamples, AvhrrAcAlgorithm algorithm) {
         targetSamples[0].set(Constants.F_INVALID, algorithm.isInvalid());
         targetSamples[0].set(Constants.F_CLOUD, algorithm.isCloud());
         targetSamples[0].set(Constants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
@@ -313,21 +253,14 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         targetSamples[0].set(Constants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
     }
 
-    private void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+    void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
-        final double sza = sourceSamples[Constants.SRC_SZA].getDouble();
+        final double sza = sourceSamples[Constants.SRC_USGS_SZA].getDouble();
         double vza = Math.abs(vzaTable.getVza(x));  // !!!
 
         final GeoPos satPosition = computeSatPosition(y);
         final GeoPos pointPosition = getGeoPos(x, y);
-
-        if (x == 140 && y == 1668) {
-            System.out.println("pointPosition = " + pointPosition);
-        }
-        if (x == 140 && y == 1669) {
-            System.out.println("pointPosition = " + pointPosition);
-        }
 
         final double[] azimuthAngles = computeAzimuthAngles(sza, satPosition, pointPosition, sunPosition);
         final double saaRad = azimuthAngles[0];
@@ -336,22 +269,22 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         final double relAzi = computeRelativeAzimuth(saaRad, vaaRad) * MathUtils.RTOD;
 
         double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
-        final double albedo1 = sourceSamples[Constants.SRC_ALBEDO_1].getDouble();
-        final double albedo2 = sourceSamples[Constants.SRC_ALBEDO_2].getDouble();
+        final double albedo1 = sourceSamples[Constants.SRC_USGS_ALBEDO_1].getDouble();
+        final double albedo2 = sourceSamples[Constants.SRC_USGS_ALBEDO_2].getDouble();
 
         if (albedo1 >= 0.0 && albedo2 >= 0.0 && !szaInvalid(sza)) {
 
             avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE);
             avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[2] = sourceSamples[Constants.SRC_RADIANCE_3].getDouble();
-            avhrrRadiance[3] = sourceSamples[Constants.SRC_RADIANCE_4].getDouble();
-            avhrrRadiance[4] = sourceSamples[Constants.SRC_RADIANCE_5].getDouble();
+            avhrrRadiance[2] = sourceSamples[Constants.SRC_USGS_RADIANCE_3].getDouble();
+            avhrrRadiance[3] = sourceSamples[Constants.SRC_USGS_RADIANCE_4].getDouble();
+            avhrrRadiance[4] = sourceSamples[Constants.SRC_USGS_RADIANCE_5].getDouble();
             aacAlgorithm.setRadiance(avhrrRadiance);
 
             float waterFraction = Float.NaN;
             // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
             if (getGeoPos(x, y).lat > -58f) {
-                waterFraction = sourceSamples[Constants.SRC_WATERFRACTION].getFloat();
+                waterFraction = sourceSamples[Constants.SRC_USGS_WATERFRACTION].getFloat();
             }
 
             SchillerNeuralNetWrapper nnWrapper = avhrracNeuralNet.get();
@@ -445,84 +378,11 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         }
     }
 
-//    private double computeRelativeAzimuth(int x, int y, double sza) {
-//        // todo: aziDiff is not in product, clarify how to determine
-//        // todo: implement following http://edc2.usgs.gov/1KM/angin_diag.php#sataz and
-//        //
-//
-//        final GeoPos pointGeoPos = getGeoPos(x, y);
-//        final double latPoint = pointGeoPos.getLat();
-//        final double lonPoint = pointGeoPos.getLon();
-//
-//        computeSatPosition(y);
-//        final double latSat = satPosition.getLat();
-//        final double lonSat = satPosition.getLon();
-//
-//        final double latPointRad = latPoint * MathUtils.DTOR;
-//        final double lonPointRad = lonPoint * MathUtils.DTOR;
-//        final double latSatRad = latSat * MathUtils.DTOR;
-//        final double lonSatRad = lonSat * MathUtils.DTOR;
-//
-//        final double latSun = sunPosition.getLat();
-//        final double lonSun = sunPosition.getLon();
-//        final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
-//        final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-//
-//        // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
-//        final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
-//                Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
-//                        Math.sin(latPointRad) * Math.sin(latSatRad));
-//
-//        final double greatCirclePointToSatRad = 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
-//
-//        final double vaa = Math.acos((Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
-//                (Math.cos(latPointRad) * Math.sin(greatCirclePointToSatRad)));
-//        final double saa = Math.acos((Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
-//                (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR)));
-//
-//        computeSunAngles(latSat, lonSat);
-//        final double szaFromSunPosCalculator = sunAngles.getZenithAngle(); // should be equal to sza --> check in unit test!
-//        final double saaFromSunPosCalculator = sunAngles.getAzimuthAngle(); // should be equal to saa --> check in unit test!
-//
-////        return saa*MathUtils.RTOD - vaa*MathUtils.RTOD;
-//        return saaFromSunPosCalculator - vaa * MathUtils.RTOD;
-//    }
-
-//    private void computeSunAngles(double lat, double lon) {
-//        final Calendar calendar = getProductDateAsCalendar();
-//        sunAngles = SunAnglesCalculator.calculate(calendar, lat, lon);
-//    }
-
-    private Calendar getProductDateAsCalendar() {
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        String ddmmyy = getProductDatestring();
-        int year = Integer.parseInt(ddmmyy.substring(4, 6));
-        if (year < 50) {
-            year = 2000 + year;
-        } else {
-            year = 1900 + year;
-        }
-        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
-        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
-        calendar.set(year, month, day, 12, 0, 0);
-        return calendar;
-    }
-
-//    private void computeSatPosition(int y) {
-//        satPosition = getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
-//    }
-
-    private void computeSunPosition() {
-        final Calendar calendar = getProductDateAsCalendar();
-        sunPosition = SunPositionCalculator.calculate(calendar);
-    }
-
-    private GeoPos computeSatPosition(int y) {
+    GeoPos computeSatPosition(int y) {
         return getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
     }
 
-
-    private double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
+    double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
         // follows GK formula
 //        ao11060992103109_120417.l1b
         final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
@@ -558,23 +418,11 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         return result;
     }
 
-    private int getDoy() {
-        return IdepixUtils.getDoyFromYYMMDD(getProductDatestring());
-    }
-
-    private String getProductDatestring() {
+    String getProductDatestring() {
         // provides datestring as DDMMYY !!!
         final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
         // allow names such as subset_of_ao11060992103109_120417.dim
         return sourceProduct.getName().substring(productNameStartIndex + 4, productNameStartIndex + 10);
-    }
-
-    private GeoPos getGeoPos(int x, int y) {
-        final GeoPos geoPos = new GeoPos();
-        final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-        final PixelPos pixelPos = new PixelPos(x, y);
-        geoCoding.getGeoPos(pixelPos, geoPos);
-        return geoPos;
     }
 
     @Override
@@ -598,11 +446,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         // the only standard band:
         sampleConfigurer.defineSample(index++, Constants.CLASSIF_BAND_NAME);
 
-        // debug bands:
-//        if (ocOutputDebug) {
-//            sampleConfigurer.defineSample(index++, Constants.BRIGHTNESS_BAND_NAME);
-//            sampleConfigurer.defineSample(index++, occci.Constants.NDSI_BAND_NAME);
-//        }
         sampleConfigurer.defineSample(index++, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
         sampleConfigurer.defineSample(index++, "vza");
         sampleConfigurer.defineSample(index++, "sza");
@@ -639,17 +482,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
         productConfigurer.copyGeoCoding();
         AvhrrAcUtils.setupAvhrrAcClassifBitmask(getTargetProduct());
 
-        // debug bands:
-//        if (avhrracOutputDebug) {
-//            Band brightnessValueBand = productConfigurer.addBand(Constants.BRIGHTNESS_BAND_NAME, ProductData.TYPE_FLOAT32);
-//            brightnessValueBand.setDescription("Brightness value (uses EV_250_Aggr1km_RefSB_1) ");
-//            brightnessValueBand.setUnit("dl");
-//
-//            Band ndsiValueBand = productConfigurer.addBand(Constants.NDSI_BAND_NAME, ProductData.TYPE_FLOAT32);
-//            ndsiValueBand.setDescription("NDSI value (uses EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7)");
-//            ndsiValueBand.setUnit("dl");
-//
-//        }
         Band nnValueBand = productConfigurer.addBand(Constants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
         nnValueBand.setDescription("Schiller NN output value");
         nnValueBand.setUnit("dl");
@@ -733,12 +565,6 @@ public class AvhrrAcClassificationOp extends PixelOperator {
                 radianceBand.setNoDataValueUsed(true);
             }
         }
-    }
-
-    private boolean szaInvalid(double sza) {
-        // todo: we have a discontinuity in angle retrieval at sza=90deg. Check!
-        final double eps = 1.E-6;
-        return (sza < 90.0 + eps && sza > 90.0 - eps);
     }
 
     /**

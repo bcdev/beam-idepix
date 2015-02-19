@@ -118,7 +118,19 @@ public class IdepixUtils {
     public static boolean isValidAvhrrProduct(Product product) {
         return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_AVISA_PRODUCT_TYPE) ||
+                product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_UNIDATA_PRODUCT_TYPE) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_USGS_PRODUCT_TYPE);
+    }
+
+    public static boolean isAvhrrTimelineProduct(Product product) {
+        final MetadataElement globalAttributes = product.getMetadataRoot().getElement("Global_Attributes");
+        if (globalAttributes != null) {
+            final MetadataAttribute projectAttr = globalAttributes.getAttribute("project");
+            if (projectAttr != null) {
+                return (projectAttr.getDisplayName() != null && projectAttr.getDisplayName().toUpperCase().equals("TIMELINE"));
+            }
+        }
+        return false;
     }
 
     public static boolean isValidModisProduct(Product product) {

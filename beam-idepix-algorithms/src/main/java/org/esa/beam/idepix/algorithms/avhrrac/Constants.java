@@ -69,17 +69,28 @@ public class Constants {
 //    public static final String NDSI_BAND_NAME = "ndsi_value";
     public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "schiller_nn_value";
 
-    static final int SRC_SZA = 0;
+    static final int SRC_USGS_SZA = 0;
 //    static final int SRC_LAT = 1;
 //    static final int SRC_LON = 2;
+    static final int SRC_USGS_ALBEDO_1 = 3;
+    static final int SRC_USGS_ALBEDO_2 = 4;
+    static final int SRC_USGS_RADIANCE_3 = 5;
+    static final int SRC_USGS_RADIANCE_4 = 6;
+    static final int SRC_USGS_RADIANCE_5 = 7;
+    static final int SRC_USGS_WATERFRACTION = 8;
 
-    static final int SRC_ALBEDO_1 = 3;
-    static final int SRC_ALBEDO_2 = 4;
-    static final int SRC_RADIANCE_3 = 5;
-    static final int SRC_RADIANCE_4 = 6;
-    static final int SRC_RADIANCE_5 = 7;
-
-    static final int SRC_WATERFRACTION = 8;
+    static final int SRC_TL_SZA = 0;
+    static final int SRC_TL_VZA = 1;
+    static final int SRC_TL_SAA = 2;
+    static final int SRC_TL_VAA = 3;
+//    static final int SRC_TL_LAT = 4;
+//    static final int SRC_TL_LON = 5;
+    static final int SRC_TL_REFL_1 = 6;
+    static final int SRC_TL_REFL_2 = 7;
+    static final int SRC_TL_REFL_3 = 8;
+    static final int SRC_TL_REFL_4 = 9;
+    static final int SRC_TL_REFL_5 = 10;
+    static final int SRC_TL_WATERFRACTION = 11;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
