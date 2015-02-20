@@ -149,13 +149,19 @@ public class AvhrrAcOp extends BasisOp {
         AbstractAvhrrAcClassificationOp acClassificationOp = null;
         if (IdepixUtils.isAvhrrTimelineProduct(sourceProduct)) {
             acClassificationOp = new AvhrrAcTimelineClassificationOp();
+        } else if (IdepixUtils.isAvhrrAvisaProduct(sourceProduct)) {
+//            acClassificationOp = new AvhrrAcTestClassificationOp();
+        } else if (IdepixUtils.isAvhrrUsgsProduct(sourceProduct)) {
+            acClassificationOp = new AvhrrAcTestClassificationOp();
+        } else if (IdepixUtils.isAvhrrOldTestProduct(sourceProduct)) {
+            acClassificationOp = new AvhrrAcTestClassificationOp();
         } else {
-            acClassificationOp = new AvhrrAcClassificationOp();
+            throw new OperatorException("Input product is not a valid AVHRR product.");
         }
 
-        // test operator for older products which contain all inputs for Schiller NN:
-//        AvhrrAcClassification2Op acClassificationOp = new AvhrrAcClassification2Op();
-//        AvhrrAcClassification3Op acClassificationOp = new AvhrrAcClassification3Op();
+        // test operator for Avisa products which contain all inputs for Schiller NN:
+//        AvhrrAcAvisaClassificationOp acClassificationOp = new AvhrrAcAvisaClassificationOp();
+
         acClassificationOp.setParameterDefaultValues();
         for (String key : aacCloudClassificationParameters.keySet()) {
             acClassificationOp.setParameter(key, aacCloudClassificationParameters.get(key));

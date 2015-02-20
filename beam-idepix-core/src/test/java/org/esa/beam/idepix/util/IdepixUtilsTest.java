@@ -1,11 +1,8 @@
-package org.esa.beam.idepix.operators;
+package org.esa.beam.idepix.util;
 
 import junit.framework.TestCase;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.idepix.util.IdepixUtils;
-
-import java.util.Map;
 
 /**
  * Tests for class {@link org.esa.beam.idepix.util.IdepixUtils}.
@@ -134,4 +131,9 @@ public class IdepixUtilsTest extends TestCase {
         geoAngle = IdepixUtils.convertGeophysicalToMathematicalAngle(3100.0);
         assertTrue(Double.isNaN(geoAngle));
     }
+
+    public void testIsAvhrrTimelineProduct() {
+        // todo
+    }
+
 }

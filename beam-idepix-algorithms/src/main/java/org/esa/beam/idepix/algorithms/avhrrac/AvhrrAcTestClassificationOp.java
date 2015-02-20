@@ -19,18 +19,21 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 /**
- * Basic operator for GlobAlbedo pixel classification
+ * Basic operator for AVHRR pixel classification
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "idepix.avhrrac.classification",
+@OperatorMetadata(alias = "idepix.avhrrac.test.classification",
         version = "2.2",
         internal = true,
         authors = "Olaf Danne",
         copyright = "(c) 2014 by Brockmann Consult",
-        description = "Basic operator for pixel classification from AVHRR L1b data.")
-public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
+        description = "Basic operator for pixel classification from AVHRR L1b data " +
+                "(uses old AVHRR AC test data (like '95070912_pr') read by avhrr-ac-directory-reader).")
+public class AvhrrAcTestClassificationOp extends AbstractAvhrrAcClassificationOp {
+
+    // TODO: cloud mask does currently not work, radiance units are weird if compared with USGS data. Check!! - OD, 20150220
 
     @SourceProduct(alias = "aacl1b", description = "The source product.")
     Product sourceProduct;
@@ -42,8 +45,8 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
     Product targetProduct;
 
     // AvhrrAc parameters
-    @Parameter(defaultValue = "false", label = " Copy input radiance bands (with albedo1/2 converted)")
-    boolean aacCopyRadiances = false;
+    @Parameter(defaultValue = "true", label = " Copy input radiance bands (with albedo1/2 converted)")
+    boolean aacCopyRadiances = true;
 
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     int aacCloudBufferWidth;
@@ -57,6 +60,11 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
 
     @Parameter(defaultValue = "false", label = " Flip source images (check before if needed!)")
     private boolean flipSourceImages;
+
+//    @Parameter(defaultValue = "false",
+//               label = " Debug bands",
+//               description = "Write further useful bands to target product.")
+//    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
             label = " Schiller NN cloud ambiguous lower boundary ",
@@ -104,39 +112,38 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
             description = " Channel 5 brightness temperature threshold (C)")
     double btCh5Thresh;
 
-    private static final double NU_CH3 = 2694.0;
-    private static final double NU_CH4 = 925.0;
-    private static final double NU_CH5 = 839.0;
+    private String dateString;
+
+
+    public Product getSourceProduct() {
+        // this is the source product for the ProductConfigurer
+        return sourceProduct;
+    }
 
     @Override
     public void prepareInputs() throws OperatorException {
-        if (flipSourceImages) {
-            flipSourceImages();
-        }
+        setNoaaId();
         readSchillerNets();
         createTargetProduct();
         computeSunPosition();
 
-        if (sourceProduct.getGeoCoding() == null) {
-            sourceProduct.setGeoCoding(
-                    new TiePointGeoCoding(sourceProduct.getTiePointGrid("latitude"),
-                            sourceProduct.getTiePointGrid("longitude"))
-            );
-        }
-
         try {
             vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
         } catch (IOException e) {
-            // todo
-            e.printStackTrace();
+            throw new OperatorException("Failed to get VZA from auxdata - cannot proceed: ", e);
         }
     }
 
-    static double computeRelativeAzimuth(double vaaRad, double saaRad) {
+    @Override
+    protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        runAvhrrAcAlgorithm(x, y, sourceSamples, targetSamples);
+    }
+
+    private static double computeRelativeAzimuth(double vaaRad, double saaRad) {
         return correctRelAzimuthRange(vaaRad, saaRad);
     }
 
-    static double[] computeAzimuthAngles(double sza,
+    private static double[] computeAzimuthAngles(double sza,
                                          GeoPos satPosition,
                                          GeoPos pointPosition,
                                          SunPosition sunPosition) {
@@ -159,12 +166,11 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
         final double vaaRad = computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad, greatCirclePointToSatRad);
         final double saaRad = computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
 
-        return new double[]{saaRad, vaaRad, greatCirclePointToSatRad};
+        return new double[]{saaRad, vaaRad};
     }
 
-    // package local for testing
     static double correctRelAzimuthRange(double vaaRad, double saaRad) {
-        double relAzimuth = saaRad - vaaRad;      // todo: check sign!!
+        double relAzimuth = saaRad - vaaRad;
         if (relAzimuth < -Math.PI) {
             relAzimuth += 2.0 * Math.PI;
         } else if (relAzimuth > Math.PI) {
@@ -173,45 +179,32 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
         return Math.abs(relAzimuth);
     }
 
-    // package local for testing
     static double computeGreatCircleFromPointToSat(double latPointRad, double lonPointRad, double latSatRad, double lonSatRad) {
         // http://mathworld.wolfram.com/GreatCircle.html, eq. (5):
         final double greatCirclePointToSat = 0.001 * RsMathUtils.MEAN_EARTH_RADIUS *
                 Math.acos(Math.cos(latPointRad) * Math.cos(latSatRad) * Math.cos(lonPointRad - lonSatRad) +
                         Math.sin(latPointRad) * Math.sin(latSatRad));
 
-        //        return 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
+//        return 2.0 * Math.PI * greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
         return greatCirclePointToSat / (0.001 * RsMathUtils.MEAN_EARTH_RADIUS);
     }
 
-    // package local for testing
-    static Calendar getDateAsCalendar(String ddmmyy) {
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        int year = Integer.parseInt(ddmmyy.substring(4, 6));
-        if (year < 50) {
-            year = 2000 + year;
-        } else {
-            year = 1900 + year;
-        }
-        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
-        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
-        calendar.set(year, month, day, 12, 0, 0);
-        return calendar;
+    static SunPosition computeSunPosition(String ddmmyy) {
+        final Calendar calendar = AvhrrAcUtils.getProductDateAsCalendar(ddmmyy);
+        return SunPositionCalculator.calculate(calendar);
     }
 
-    // package local for testing
     static double computeSaa(double sza, double latPointRad, double lonPointRad, double latSunRad, double lonSunRad) {
         double arg = (Math.sin(latSunRad) - Math.sin(latPointRad) * Math.cos(sza * MathUtils.DTOR)) /
                 (Math.cos(latPointRad) * Math.sin(sza * MathUtils.DTOR));
         arg = Math.min(Math.max(arg, -1.0), 1.0);    // keep in range [-1.0, 1.0]
         double saaRad = Math.acos(arg);
-        if (Math.sin(lonSunRad - lonPointRad) < 0.0) {  // todo: do we need this??
+        if (Math.sin(lonSunRad - lonPointRad) < 0.0) {
             saaRad = 2.0 * Math.PI - saaRad;
         }
         return saaRad;
     }
 
-    // package local for testing
     static double computeVaa(double latPointRad, double lonPointRad, double latSatRad, double lonSatRad,
                              double greatCirclePointToSatRad) {
         double arg = (Math.sin(latSatRad) - Math.sin(latPointRad) * Math.cos(greatCirclePointToSatRad)) /
@@ -225,14 +218,7 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
         return vaaRad;
     }
 
-    void readSchillerNets() {
-        try (InputStream is = getClass().getResourceAsStream(SCHILLER_AVHRRAC_NET_NAME)) {
-            avhrracNeuralNet = SchillerNeuralNetWrapper.create(is);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
-        }
-    }
-
+    @Override
     void setClassifFlag(WritableSample[] targetSamples, AvhrrAcAlgorithm algorithm) {
         targetSamples[0].set(Constants.F_INVALID, algorithm.isInvalid());
         targetSamples[0].set(Constants.F_CLOUD, algorithm.isCloud());
@@ -253,32 +239,38 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
         targetSamples[0].set(Constants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
     }
 
+    @Override
     void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
-        final double sza = sourceSamples[Constants.SRC_USGS_SZA].getDouble();
-        double vza = Math.abs(vzaTable.getVza(x));  // !!!
-
+        final double sza = sourceSamples[0].getDouble();
+        final double vza = sourceSamples[1].getDouble();
+        final double relAzi = sourceSamples[2].getDouble();
         final GeoPos satPosition = computeSatPosition(y);
         final GeoPos pointPosition = getGeoPos(x, y);
 
         final double[] azimuthAngles = computeAzimuthAngles(sza, satPosition, pointPosition, sunPosition);
         final double saaRad = azimuthAngles[0];
         final double vaaRad = azimuthAngles[1];
-        final double greatCircleRad = azimuthAngles[2];
-        final double relAzi = computeRelativeAzimuth(saaRad, vaaRad) * MathUtils.RTOD;
+        final double myRelAzi = computeRelativeAzimuth(saaRad, vaaRad) * MathUtils.RTOD;
 
-        double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
-        final double albedo1 = sourceSamples[Constants.SRC_USGS_ALBEDO_1].getDouble();
-        final double albedo2 = sourceSamples[Constants.SRC_USGS_ALBEDO_2].getDouble();
+        double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_OLD_BAND_NAMES.length];
 
-        if (albedo1 >= 0.0 && albedo2 >= 0.0 && !szaInvalid(sza)) {
+        boolean compute = true;
+        for (int i = 0; i < 5; i++) {
+            avhrrRadiance[i] = sourceSamples[i + 3].getDouble();
+            if (avhrrRadiance[i] < 0.0) {
+                compute = false;
+                break;
+            }
+        }
 
-            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[2] = sourceSamples[Constants.SRC_USGS_RADIANCE_3].getDouble();
-            avhrrRadiance[3] = sourceSamples[Constants.SRC_USGS_RADIANCE_4].getDouble();
-            avhrrRadiance[4] = sourceSamples[Constants.SRC_USGS_RADIANCE_5].getDouble();
+        if (x == 400 && y == 700) {
+            System.out.println("x, y = " + x + "," + y);
+        }
+
+        if (compute) {
+
             aacAlgorithm.setRadiance(avhrrRadiance);
 
             float waterFraction = Float.NaN;
@@ -296,23 +288,24 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
             inputVector[4] = Math.sqrt(avhrrRadiance[1]);
             inputVector[5] = Math.sqrt(avhrrRadiance[3]);
             inputVector[6] = Math.sqrt(avhrrRadiance[4]);
-            aacAlgorithm.setRadiance(avhrrRadiance);
-            aacAlgorithm.setWaterFraction(waterFraction);
 
             double[] nnOutput = nnWrapper.getNeuralNet().calc(inputVector);
-
             aacAlgorithm.setNnOutput(nnOutput);
+            aacAlgorithm.setRadiance(avhrrRadiance);
+            aacAlgorithm.setWaterFraction(waterFraction);
             aacAlgorithm.setAmbiguousLowerBoundaryValue(avhrracSchillerNNCloudAmbiguousLowerBoundaryValue);
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
-            aacAlgorithm.setReflCh1(albedo1);
-            aacAlgorithm.setReflCh2(albedo2);
+            final double reflCh1 = convertBetweenAlbedoAndRadiance(avhrrRadiance[0], sza, RADIANCE_TO_ALBEDO);
+            final double reflCh2 = convertBetweenAlbedoAndRadiance(avhrrRadiance[1], sza, RADIANCE_TO_ALBEDO);
             final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO);
+            aacAlgorithm.setReflCh1(reflCh1);
+            aacAlgorithm.setReflCh2(reflCh2);
             aacAlgorithm.setReflCh3(reflCh3);
-            final double btCh4 = convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
+            final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
             aacAlgorithm.setBtCh4(btCh4);
-            final double btCh5 = convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
+            final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
             aacAlgorithm.setBtCh5(btCh5);
 
             aacAlgorithm.setReflCh1Thresh(reflCh1Thresh);
@@ -322,20 +315,18 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
             aacAlgorithm.setBtCh4Thresh(btCh4Thresh);
             aacAlgorithm.setBtCh5Thresh(btCh5Thresh);
 
-
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamples[1].set(nnOutput[0]);
             targetSamples[2].set(vza);
-            targetSamples[3].set(sza);
-            targetSamples[4].set(vaaRad * MathUtils.RTOD);
+            targetSamples[3].set(relAzi);
+            targetSamples[4].set(myRelAzi);
             targetSamples[5].set(saaRad * MathUtils.RTOD);
-            targetSamples[6].set(greatCircleRad * MathUtils.RTOD);
-            targetSamples[7].set(relAzi);
-            targetSamples[8].set(btCh4);
-            targetSamples[9].set(btCh5);
-            targetSamples[10].set(albedo1);
-            targetSamples[11].set(albedo2);
-            targetSamples[12].set(reflCh3);
+            targetSamples[6].set(vaaRad * MathUtils.RTOD);
+            targetSamples[7].set(btCh4);
+            targetSamples[8].set(btCh5);
+            targetSamples[9].set(reflCh1);
+            targetSamples[10].set(reflCh2);
+            targetSamples[11].set(reflCh3);
 
         } else {
             targetSamples[0].set(Constants.F_INVALID, true);
@@ -350,92 +341,43 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
             targetSamples[9].set(Float.NaN);
             targetSamples[10].set(Float.NaN);
             targetSamples[11].set(Float.NaN);
-            targetSamples[12].set(Float.NaN);
             avhrrRadiance[0] = Float.NaN;
             avhrrRadiance[1] = Float.NaN;
         }
 
         if (aacCopyRadiances) {
             for (int i = 0; i < Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
-                targetSamples[13 + i].set(avhrrRadiance[i]);
+                targetSamples[12 + i].set(avhrrRadiance[i]);
             }
         }
     }
 
-    private double convertRadianceToBt(double radiance, int channel) {
-        final double c1 = 1.1910659E-5;
-        final double c2 = 1.438833;
-
-        switch (channel) {
-            case 3:
-                return c2 * NU_CH3 / Math.log(1.0 + c1 * Math.pow(NU_CH3, 3.0) / radiance);
-            case 4:
-                return c2 * NU_CH4 / Math.log(1.0 + c1 * Math.pow(NU_CH4, 3.0) / radiance);
-            case 5:
-                return c2 * NU_CH5 / Math.log(1.0 + c1 * Math.pow(NU_CH5, 3.0) / radiance);
-            default:
-                throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
-        }
-    }
-
-    GeoPos computeSatPosition(int y) {
-        return getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);    // LAC_NADIR = 1024.5
-    }
-
-    double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
-        // follows GK formula
-//        ao11060992103109_120417.l1b
-        final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
-        final String noaaId = sourceProduct.getName().substring(productNameStartIndex + 2, productNameStartIndex + 4);
-        final double distanceCorr = 1.0 + 0.033 * Math.cos(2.0 * Math.PI * getDoy() / 365.0);
-        float integrSolarSpectralIrrad; // F
-        float spectralResponseWidth; // W
-        switch (noaaId) {
-            case "11":
-                // NOAA 11
-                integrSolarSpectralIrrad = 189.02f;
-                spectralResponseWidth = 0.1130f;
-                break;
-            case "14":
-                // NOAA 14
-                integrSolarSpectralIrrad = 221.42f;
-                spectralResponseWidth = 0.1360f;
-                break;
-            default:
-                throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
-        }
-        // GK: R=A (F/(100 PI W  cos(sun_zenith)  abstandkorrektur))
-        final double conversionFactor = integrSolarSpectralIrrad /
-                (100.0 * Math.PI * spectralResponseWidth * Math.cos(sza * MathUtils.DTOR) * distanceCorr);
-        double result;
-        if (mode == ALBEDO_TO_RADIANCE) {
-            result = input * conversionFactor;
-        } else if (mode == RADIANCE_TO_ALBEDO) {
-            result = input / conversionFactor;
-        } else {
-            throw new IllegalArgumentException("wrong mode " + mode + " for albedo/radance converison");
-        }
-        return result;
-    }
-
+    @Override
     String getProductDatestring() {
+        // 95070912_pr.zip
         // provides datestring as DDMMYY !!!
-        final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
+        final int startIndex = sourceProduct.getName().indexOf("_pr");
         // allow names such as subset_of_ao11060992103109_120417.dim
-        return sourceProduct.getName().substring(productNameStartIndex + 4, productNameStartIndex + 10);
+        final String yy = sourceProduct.getName().substring(startIndex - 8, startIndex - 6);
+        final String mm = sourceProduct.getName().substring(startIndex - 6, startIndex - 4);
+        final String dd = sourceProduct.getName().substring(startIndex - 4, startIndex - 2);
+        return dd + mm + yy;
+    }
+
+    @Override
+    void setNoaaId() {
+        noaaId = "14";
+        // todo: identify from product metadata
     }
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         int index = 0;
         sampleConfigurer.defineSample(index++, "sun_zenith");
-        sampleConfigurer.defineSample(index++, "latitude");
-        sampleConfigurer.defineSample(index++, "longitude");
-        for (int i = 0; i < 2; i++) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_ALBEDO_BAND_NAMES[i]);
-        }
-        for (int i = 0; i < 3; i++) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_RADIANCE_BAND_NAMES[i + 2]);
+        sampleConfigurer.defineSample(index++, "sat_zenith");
+        sampleConfigurer.defineSample(index++, "rel_azimuth");
+        for (int i = 0; i < 5; i++) {
+            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_RADIANCE_OLD_BAND_NAMES[i]);
         }
         sampleConfigurer.defineSample(index, Constants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
     }
@@ -448,11 +390,10 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
 
         sampleConfigurer.defineSample(index++, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
         sampleConfigurer.defineSample(index++, "vza");
-        sampleConfigurer.defineSample(index++, "sza");
-        sampleConfigurer.defineSample(index++, "vaa");
-        sampleConfigurer.defineSample(index++, "saa");
-        sampleConfigurer.defineSample(index++, "great_circle");
         sampleConfigurer.defineSample(index++, "rel_azimuth");
+        sampleConfigurer.defineSample(index++, "rel_azimuth_computed");
+        sampleConfigurer.defineSample(index++, "saa_computed");
+        sampleConfigurer.defineSample(index++, "vaa_computed");
         sampleConfigurer.defineSample(index++, "bt_4");
         sampleConfigurer.defineSample(index++, "bt_5");
         sampleConfigurer.defineSample(index++, "refl_1");
@@ -494,35 +435,29 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
         vzaBand.setNoDataValue(Float.NaN);
         vzaBand.setNoDataValueUsed(true);
 
-        Band szaBand = productConfigurer.addBand("sza", ProductData.TYPE_FLOAT32);
-        szaBand.setDescription("sun zenith angle");
-        szaBand.setUnit("dl");
-        szaBand.setNoDataValue(Float.NaN);
-        szaBand.setNoDataValueUsed(true);
-
-        Band vaaBand = productConfigurer.addBand("vaa", ProductData.TYPE_FLOAT32);
-        vaaBand.setDescription("view azimuth angle");
-        vaaBand.setUnit("dl");
-        vaaBand.setNoDataValue(Float.NaN);
-        vaaBand.setNoDataValueUsed(true);
-
-        Band saaBand = productConfigurer.addBand("saa", ProductData.TYPE_FLOAT32);
-        saaBand.setDescription("sun azimuth angle");
-        saaBand.setUnit("dl");
-        saaBand.setNoDataValue(Float.NaN);
-        saaBand.setNoDataValueUsed(true);
-
-        Band greatCircleBand = productConfigurer.addBand("great_circle", ProductData.TYPE_FLOAT32);
-        greatCircleBand.setDescription("greatcircle");
-        greatCircleBand.setUnit("dl");
-        greatCircleBand.setNoDataValue(Float.NaN);
-        greatCircleBand.setNoDataValueUsed(true);
-
         Band relaziBand = productConfigurer.addBand("rel_azimuth", ProductData.TYPE_FLOAT32);
         relaziBand.setDescription("relative azimuth");
         relaziBand.setUnit("deg");
         relaziBand.setNoDataValue(Float.NaN);
         relaziBand.setNoDataValueUsed(true);
+
+        Band relaziComputedBand = productConfigurer.addBand("rel_azimuth_computed", ProductData.TYPE_FLOAT32);
+        relaziComputedBand.setDescription("relative azimuth computed");
+        relaziComputedBand.setUnit("deg");
+        relaziComputedBand.setNoDataValue(Float.NaN);
+        relaziComputedBand.setNoDataValueUsed(true);
+
+        Band saaComputedBand = productConfigurer.addBand("saa_computed", ProductData.TYPE_FLOAT32);
+        saaComputedBand.setDescription("saa computed");
+        saaComputedBand.setUnit("deg");
+        saaComputedBand.setNoDataValue(Float.NaN);
+        saaComputedBand.setNoDataValueUsed(true);
+
+        Band vaaComputedBand = productConfigurer.addBand("vaa_computed", ProductData.TYPE_FLOAT32);
+        vaaComputedBand.setDescription("vaa computed");
+        vaaComputedBand.setUnit("deg");
+        vaaComputedBand.setNoDataValue(Float.NaN);
+        vaaComputedBand.setNoDataValueUsed(true);
 
         Band bt4Band = productConfigurer.addBand("bt_4", ProductData.TYPE_FLOAT32);
         bt4Band.setDescription("Channel 4 brightness temperature");
@@ -574,7 +509,7 @@ public class AvhrrAcClassificationOp extends AbstractAvhrrAcClassificationOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AvhrrAcClassificationOp.class);
+            super(AvhrrAcTestClassificationOp.class);
         }
     }
 }

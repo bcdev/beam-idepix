@@ -27,7 +27,7 @@ import java.util.Calendar;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class AvhrrAcClassificationOpTest {
+public class AvhrrAcUSGSClassificationOpTest {
 
 
     private double latPoint;
@@ -37,7 +37,6 @@ public class AvhrrAcClassificationOpTest {
     private double latSat;
     private double lonSat;
     private double relAziExpected;
-    private LaplaceTestObj laplaceTestObj;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -61,7 +60,7 @@ public class AvhrrAcClassificationOpTest {
     @Test
 //    @Ignore
     public void testSaaFromSunAnglesCalculation() {
-        final Calendar dateAsCalendar = AvhrrAcClassification2Op.getDateAsCalendar(ddmmyy);
+        final Calendar dateAsCalendar = AvhrrAcUtils.getProductDateAsCalendar(ddmmyy);
         final SunAngles sunAngles = SunAnglesCalculator.calculate(dateAsCalendar, latPoint, lonPoint);
         assertEquals(sza, sunAngles.getZenithAngle(), 2.E-1);
     }
@@ -69,7 +68,7 @@ public class AvhrrAcClassificationOpTest {
     @Test
 //    @Ignore
     public void testSunPositionCalculation() {
-        final SunPosition sunPosition = AvhrrAcClassification2Op.computeSunPosition("210697");
+        final SunPosition sunPosition = AvhrrAcTestClassificationOp.computeSunPosition("210697");
         assertEquals(23.5, sunPosition.getLat(), 1.E-1);
         assertEquals(0.5, sunPosition.getLon(), 1.E-1);
     }
@@ -78,15 +77,15 @@ public class AvhrrAcClassificationOpTest {
     @Test
 //    @Ignore
     public void testSunAzimuthAngleCalculation() {
-        final Calendar dateAsCalendar = AvhrrAcClassification2Op.getDateAsCalendar(ddmmyy);
+        final Calendar dateAsCalendar = AvhrrAcUtils.getProductDateAsCalendar(ddmmyy);
         final SunAngles sunAngles = SunAnglesCalculator.calculate(dateAsCalendar, latPoint, lonPoint);
 
         final double latPointRad = latPoint * MathUtils.DTOR;
         final double lonPointRad = lonPoint * MathUtils.DTOR;
-        final SunPosition sunPosition = AvhrrAcClassification2Op.computeSunPosition(ddmmyy);
+        final SunPosition sunPosition = AvhrrAcTestClassificationOp.computeSunPosition(ddmmyy);
         final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
         final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-        final double saaRad = AvhrrAcClassification2Op.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
+        final double saaRad = AvhrrAcTestClassificationOp.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
 
         assertEquals(saaRad*MathUtils.RTOD, sunAngles.getAzimuthAngle(), 1.0);
     }
@@ -97,23 +96,22 @@ public class AvhrrAcClassificationOpTest {
         // todo: further investigate
         final double latPointRad = latPoint * MathUtils.DTOR;
         final double lonPointRad = lonPoint * MathUtils.DTOR;
-        final SunPosition sunPosition = AvhrrAcClassification2Op.computeSunPosition(ddmmyy);  // this is the unknown we have to fix!!!
+        final SunPosition sunPosition = AvhrrAcTestClassificationOp.computeSunPosition(ddmmyy);  // this is the unknown we have to fix!!!
         final double latSunRad = sunPosition.getLat() * MathUtils.DTOR;
         final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
-        final double saaRad = AvhrrAcClassification2Op.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
+        final double saaRad = AvhrrAcTestClassificationOp.computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
 
         final double latSatRad = latSat * MathUtils.DTOR;
         final double lonSatRad = lonSat * MathUtils.DTOR;
         final double greatCirclePointToSatRad =
-                AvhrrAcClassification2Op.computeGreatCircleFromPointToSat(latPointRad, lonPointRad, latSatRad, lonSatRad);
-        final double vaaRad = AvhrrAcClassification2Op.computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad,
-                greatCirclePointToSatRad);
+                AvhrrAcTestClassificationOp.computeGreatCircleFromPointToSat(latPointRad, lonPointRad, latSatRad, lonSatRad);
+        final double vaaRad = AvhrrAcTestClassificationOp.computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad,
+                                                                     greatCirclePointToSatRad);
 
-        final double relAziRad = AvhrrAcClassification2Op.correctRelAzimuthRange(vaaRad, saaRad);
+        final double relAziRad = AvhrrAcTestClassificationOp.correctRelAzimuthRange(vaaRad, saaRad);
         final double relAziDeg = relAziRad * MathUtils.RTOD;
         assertEquals(relAziExpected, relAziDeg, 1.E-1);
     }
-
 
     @Test
     public void testLaplaceEquationPerformance() {

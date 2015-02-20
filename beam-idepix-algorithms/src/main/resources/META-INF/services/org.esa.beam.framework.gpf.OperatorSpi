@@ -6,8 +6,6 @@ org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoVgtClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp$Spi
-org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcOp$Spi
-org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcClassificationOp$Spi
 org.esa.beam.idepix.algorithms.ipf.IpfOp$Spi
 org.esa.beam.idepix.algorithms.globcover.GlobCoverOp$Spi
 org.esa.beam.idepix.algorithms.globcover.GlobCoverClassificationOp$Spi
@@ -22,5 +20,8 @@ org.esa.beam.idepix.algorithms.occci.OccciOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciClassificationOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciPostProcessingOp$Spi
 
-org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcClassification2Op$Spi
-org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcClassification3Op$Spi
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcOp$Spi
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcUSGSClassificationOp$Spi
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcTimelineClassificationOp$Spi
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcTestClassificationOp$Spi
+org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcAvisaClassificationOp$Spi

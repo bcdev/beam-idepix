@@ -62,16 +62,36 @@ public class Constants {
             AVHRR_AC_RADIANCE_5_AVISA_BAND_NAME,
     };
 
+    public static final String AVHRR_AC_SZA_TL_BAND_NAME = "sun_zenith";
+    public static final String AVHRR_AC_SAA_TL_BAND_NAME = "sun_azimuth";
+    public static final String AVHRR_AC_VZA_TL_BAND_NAME = "sat_zenith";
+    public static final String AVHRR_AC_VAA_TL_BAND_NAME = "satellite_azimuth";
+    public static final String AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME = "ground_height";
+
+    private static final String AVHRR_AC_REFL_1_TL_BAND_NAME = "avhrr_b1";
+    private static final String AVHRR_AC_REFL_2_TL_BAND_NAME = "avhrr_b2";
+    private static final String AVHRR_AC_REFL_3_TL_BAND_NAME = "avhrr_b3b";
+    private static final String AVHRR_AC_RAD_3_TL_BAND_NAME  = "avhrr_b3b_radiance";
+    private static final String AVHRR_AC_REFL_4_TL_BAND_NAME = "avhrr_b4";
+    private static final String AVHRR_AC_REFL_5_TL_BAND_NAME = "avhrr_b5";
+
+    public static final String[] AVHRR_AC_REFL_TL_BAND_NAMES = {
+            AVHRR_AC_REFL_1_TL_BAND_NAME,
+            AVHRR_AC_REFL_2_TL_BAND_NAME,
+            AVHRR_AC_REFL_3_TL_BAND_NAME,
+            AVHRR_AC_RAD_3_TL_BAND_NAME,
+            AVHRR_AC_REFL_4_TL_BAND_NAME,
+            AVHRR_AC_REFL_5_TL_BAND_NAME
+    };
+
 
 
     // debug bands:
-//    public static final String BRIGHTNESS_BAND_NAME = "brightness_value";
-//    public static final String NDSI_BAND_NAME = "ndsi_value";
     public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "schiller_nn_value";
 
     static final int SRC_USGS_SZA = 0;
-//    static final int SRC_LAT = 1;
-//    static final int SRC_LON = 2;
+//    static final int SRC_USGS_LAT = 1;
+//    static final int SRC_USGS_LON = 2;
     static final int SRC_USGS_ALBEDO_1 = 3;
     static final int SRC_USGS_ALBEDO_2 = 4;
     static final int SRC_USGS_RADIANCE_3 = 5;
@@ -79,18 +99,20 @@ public class Constants {
     static final int SRC_USGS_RADIANCE_5 = 7;
     static final int SRC_USGS_WATERFRACTION = 8;
 
-    static final int SRC_TL_SZA = 0;
-    static final int SRC_TL_VZA = 1;
-    static final int SRC_TL_SAA = 2;
-    static final int SRC_TL_VAA = 3;
-//    static final int SRC_TL_LAT = 4;
-//    static final int SRC_TL_LON = 5;
-    static final int SRC_TL_REFL_1 = 6;
-    static final int SRC_TL_REFL_2 = 7;
-    static final int SRC_TL_REFL_3 = 8;
-    static final int SRC_TL_REFL_4 = 9;
-    static final int SRC_TL_REFL_5 = 10;
-    static final int SRC_TL_WATERFRACTION = 11;
+    static final int SRC_TL_LAT = 0;
+    static final int SRC_TL_LON = 1;
+    static final int SRC_TL_SZA = 2;
+    static final int SRC_TL_VZA = 3;
+    static final int SRC_TL_SAA = 4;
+    static final int SRC_TL_VAA = 5;
+    static final int SRC_TL_GROUND_HEIGHT = 6;
+    static final int SRC_TL_REFL_1 = 7;
+    static final int SRC_TL_REFL_2 = 8;
+    static final int SRC_TL_REFL_3 = 9;
+    static final int SRC_TL_RAD_3 = 10;
+    static final int SRC_TL_REFL_4 = 11;
+    static final int SRC_TL_REFL_5 = 12;
+    static final int SRC_TL_WATERFRACTION = 13;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;

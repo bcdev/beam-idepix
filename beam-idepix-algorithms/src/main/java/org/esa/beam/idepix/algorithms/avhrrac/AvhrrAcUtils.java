@@ -3,16 +3,13 @@ package org.esa.beam.idepix.algorithms.avhrrac;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.idepix.algorithms.occci.*;
 import org.esa.beam.util.BitSetter;
 
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Random;
-import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 /**
  * todo: add comment
@@ -23,6 +20,11 @@ import java.util.StringTokenizer;
  * @author olafd
  */
 public class AvhrrAcUtils {
+
+    private static final double NU_CH3 = 2694.0;
+    private static final double NU_CH4 = 925.0;
+    private static final double NU_CH5 = 839.0;
+
     public static FlagCoding createAvhrrAcFlagCoding(String flagIdentifier) {
 
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
@@ -142,13 +144,69 @@ public class AvhrrAcUtils {
         return index;
     }
 
+    public static Calendar getProductDateAsCalendar(String ddmmyy) {
+        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        int year = Integer.parseInt(ddmmyy.substring(4, 6));
+        if (year < 50) {
+            year = 2000 + year;
+        } else {
+            year = 1900 + year;
+        }
+        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
+        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
+        calendar.set(year, month, day, 12, 0, 0);
+        return calendar;
+    }
+
+    public static boolean anglesInvalid(double sza, double vza, double saa, double vaa) {
+        // todo: we have a discontinuity in angle retrieval at sza=90deg. Check!
+        final double eps = 1.E-6;
+        final boolean szaInvalid = sza < 90.0 + eps && sza > 90.0 - eps;
+
+        final boolean vzaInvalid = Double.isNaN(vza);
+        final boolean saaInvalid = Double.isNaN(saa);
+        final boolean vaaInvalid = Double.isNaN(vaa);
+
+        return szaInvalid || saaInvalid || vzaInvalid || vaaInvalid;
+    }
+
+    public static double convertRadianceToBt(double radiance, int channel) {
+        final double c1 = 1.1910659E-5;
+        final double c2 = 1.438833;
+
+        switch (channel) {
+            case 3:
+                return c2 * NU_CH3 / Math.log(1.0 + c1 * Math.pow(NU_CH3, 3.0) / radiance);
+            case 4:
+                return c2 * NU_CH4 / Math.log(1.0 + c1 * Math.pow(NU_CH4, 3.0) / radiance);
+            case 5:
+                return c2 * NU_CH5 / Math.log(1.0 + c1 * Math.pow(NU_CH5, 3.0) / radiance);
+            default:
+                throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
+        }
+    }
+
+    public static double convertBtToRadiance(double bt, int channel) {
+        final double c1 = 1.1910659E-5;
+        final double c2 = 1.438833;
+
+        switch (channel) {
+            case 3:
+                return c1 * Math.pow(NU_CH3, 3.0) / Math.exp(c2 * NU_CH3 / bt);
+            case 4:
+                return c1 * Math.pow(NU_CH4, 3.0) / Math.exp(c2 * NU_CH4 / bt);
+            case 5:
+                return c1 * Math.pow(NU_CH5, 3.0) / Math.exp(c2 * NU_CH5 / bt);
+            default:
+                throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
+        }
+    }
+
     private static Color getRandomColour(Random random) {
         int rColor = random.nextInt(256);
         int gColor = random.nextInt(256);
         int bColor = random.nextInt(256);
         return new Color(rColor, gColor, bColor);
     }
-
-
 
 }

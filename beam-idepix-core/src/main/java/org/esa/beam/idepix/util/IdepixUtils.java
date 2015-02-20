@@ -127,7 +127,36 @@ public class IdepixUtils {
         if (globalAttributes != null) {
             final MetadataAttribute projectAttr = globalAttributes.getAttribute("project");
             if (projectAttr != null) {
-                return (projectAttr.getDisplayName() != null && projectAttr.getDisplayName().toUpperCase().equals("TIMELINE"));
+                return (projectAttr.getData() != null && projectAttr.getData().toString().equals("TIMELINE"));
+            }
+        }
+        return false;
+    }
+
+    public static boolean isAvhrrAvisaProduct(Product product) {
+        final MetadataElement headerRecordAttributes = product.getMetadataRoot().getElement("HeaderRecord");
+        if (headerRecordAttributes != null) {
+            final MetadataElement dataSetQualityIndicatorsAttributes = product.getMetadataRoot().getElement("DATA_SET_QUALITY_INDICATORS");
+            if (dataSetQualityIndicatorsAttributes != null) {
+                final MetadataAttribute noaa17Attr = headerRecordAttributes.getAttribute("NOAA_SPACECRAFT_IDENTIFICATION_CODE");
+                if (noaa17Attr != null) {
+                    return (noaa17Attr.getData() != null && noaa17Attr.getData().toString().equals("NOAA-17 (NOAA-M)"));
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isAvhrrUsgsProduct(Product product) {
+        return true;  // todo
+    }
+
+    public static boolean isAvhrrOldTestProduct(Product product) {
+        final MetadataElement globalAttributes = product.getMetadataRoot().getElement("Header");
+        if (globalAttributes != null) {
+            final MetadataAttribute descriptionAttr = globalAttributes.getAttribute("description");
+            if (descriptionAttr != null) {
+                return (descriptionAttr.getData() != null && descriptionAttr.getData().toString().equals("noaa-14 L1B"));
             }
         }
         return false;

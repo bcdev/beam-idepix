@@ -109,17 +109,20 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
             description = " Channel 5 brightness temperature threshold (C)")
     double btCh5Thresh;
 
-    static final String SCHILLER_AVHRRAC_NET_NAME = "6x3_114.1.net";
 
     static final int ALBEDO_TO_RADIANCE = 0;
     static final int RADIANCE_TO_ALBEDO = 1;
+
+    static final String SCHILLER_AVHRRAC_NET_NAME = "6x3_114.1.net";
 
     ThreadLocal<SchillerNeuralNetWrapper> avhrracNeuralNet;
 
     AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
 
     SunPosition sunPosition;
-    String dateString;
+
+    String noaaId;
+
 
     public Product getSourceProduct() {
         return sourceProduct;
@@ -154,26 +157,12 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         }
     }
 
-    Calendar getProductDateAsCalendar(String ddmmyy) {
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        int year = Integer.parseInt(ddmmyy.substring(4, 6));
-        if (year < 50) {
-            year = 2000 + year;
-        } else {
-            year = 1900 + year;
-        }
-        final int month = Integer.parseInt(ddmmyy.substring(2, 4)) - 1;
-        final int day = Integer.parseInt(ddmmyy.substring(0, 2));
-        calendar.set(year, month, day, 12, 0, 0);
-        return calendar;
-    }
-
     GeoPos computeSatPosition(int y) {
         return getGeoPos(sourceProduct.getSceneRasterWidth() / 2, y);
     }
 
     void computeSunPosition() {
-        final Calendar calendar = getProductDateAsCalendar(getProductDatestring());
+        final Calendar calendar = AvhrrAcUtils.getProductDateAsCalendar(getProductDatestring());
         sunPosition = SunPositionCalculator.calculate(calendar);
     }
 
@@ -189,17 +178,45 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         return geoPos;
     }
 
-    boolean szaInvalid(double sza) {
-        // todo: we have a discontinuity in angle retrieval at sza=90deg. Check!
-        final double eps = 1.E-6;
-        return (sza < 90.0 + eps && sza > 90.0 - eps);
+    double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
+        // follows GK formula
+        final double distanceCorr = 1.0 + 0.033 * Math.cos(2.0 * Math.PI * getDoy() / 365.0);
+        float integrSolarSpectralIrrad; // F
+        float spectralResponseWidth; // W
+        switch (noaaId) {
+            case "11":
+                // NOAA 11
+                integrSolarSpectralIrrad = 189.02f;
+                spectralResponseWidth = 0.1130f;
+                break;
+            case "14":
+                // NOAA 14
+                integrSolarSpectralIrrad = 221.42f;
+                spectralResponseWidth = 0.1360f;
+                break;
+            default:
+                throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
+        }
+        // GK: R=A (F/(100 PI W  cos(sun_zenith)  abstandkorrektur))
+        final double conversionFactor = integrSolarSpectralIrrad /
+                (100.0 * Math.PI * spectralResponseWidth * Math.cos(sza * MathUtils.DTOR) * distanceCorr);
+        double result;
+        if (mode == ALBEDO_TO_RADIANCE) {
+            result = input * conversionFactor;
+        } else if (mode == RADIANCE_TO_ALBEDO) {
+            result = input / conversionFactor;
+        } else {
+            throw new IllegalArgumentException("wrong mode " + mode + " for albedo/radance converison");
+        }
+        return result;
     }
+
 
     abstract void setClassifFlag(WritableSample[] targetSamples, AvhrrAcAlgorithm algorithm);
 
     abstract void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples);
 
-    abstract double convertBetweenAlbedoAndRadiance(double input, double sza, int mode);
+    abstract void setNoaaId();
 
     abstract String getProductDatestring();
 
