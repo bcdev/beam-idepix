@@ -10,6 +10,7 @@ public enum AlgorithmSelector {
     IPF,
     GlobAlbedo,
     AvhrrAc,
+    Cawa,
     GlobCover,
     CoastColour,
     MagicStick,

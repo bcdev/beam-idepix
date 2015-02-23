@@ -212,6 +212,8 @@ public class IdepixUtils {
                 AlgorithmSelector.Schiller == algorithm ||
                 AlgorithmSelector.FubScapeM == algorithm) {
             return (isValidMerisProduct(sourceProduct));
+        }  else if (AlgorithmSelector.Cawa == algorithm) {
+            return (isValidMerisProduct(sourceProduct));
         } else if (AlgorithmSelector.GlobAlbedo == algorithm) {
             return (isValidMerisProduct(sourceProduct) ||
                     isValidAatsrProduct(sourceProduct) ||
