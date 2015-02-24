@@ -11,10 +11,9 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
-import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
-import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisClassificationOp;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,34 +67,24 @@ public class CawaOp extends BasisOp {
     private double cloudScreeningSure = 1.8;       // Schiller
 
     @Parameter(defaultValue = "true",
-            label = " Apply alternative Schiller NN for cloud classification",
-            description = " Apply Schiller NN for cloud classification ")
-    private boolean applyMERISAlternativeSchillerNN;
-
-    @Parameter(defaultValue = "true",
-            label = " Use alternative Schiller 'ALL' NN ",
-            description = " Use Schiller 'ALL' NN (instead of 'WATER' NN) ")
-    private boolean useMERISAlternativeSchillerAllNN;
+            label = " Write Schiller NN value to the target product.",
+            description = " If applied, write Schiller NN value to the target product ")
+    private boolean outputSchillerNNValue;
 
     @Parameter(defaultValue = "2.0",
-            label = " Alternative Schiller NN cloud ambiguous lower boundary ",
-            description = " Alternative Schiller NN cloud ambiguous lower boundary ")
-    double alternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
+            label = " Schiller NN cloud ambiguous lower boundary ",
+            description = " Schiller NN cloud ambiguous lower boundary ")
+    double schillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
-            label = " Alternative Schiller NN cloud ambiguous/sure separation value ",
-            description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
-    double alternativeSchillerNNCloudAmbiguousSureSeparationValue;
+            label = " Schiller NN cloud ambiguous/sure separation value ",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+    double schillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
-            label = " Alternative Schiller NN cloud sure/snow separation value ",
-            description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value ")
-    double alternativeSchillerNNCloudSureSnowSeparationValue;
-
-    @Parameter(defaultValue = "true",
-            label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
-            description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
-    boolean applyMERISAlternativeSchillerNNPure;
+            label = " Schiller NN cloud sure/snow separation value ",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+    double schillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "false",
             label = " Use GETASSE30 DEM for Barometric Pressure Computation",
@@ -114,21 +103,19 @@ public class CawaOp extends BasisOp {
 
     private Product waterClassificationProduct;
     private Product landClassificationProduct;
+    private Product mergedClassificationProduct;
     private Product postProcessingClassificationProduct;
 
-    private Product gasProduct;
-    private Product rayleighProduct;
     private Product pressureLiseProduct;
     private Product rad2reflProduct;
     private Product ctpProduct;
     private Product pbaroProduct;
     private Product waterMaskProduct;
+
     private Map<String, Product> classificationInputProducts;
 
     @Override
     public void initialize() throws OperatorException {
-        // todo: for MERIS, we need a 'merge' operator using Globalbedo algorithm over land, and Coastcolour algorithm over water
-
         System.out.println("Running IDEPIX - source product: " + sourceProduct.getName());
 
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.Cawa);
@@ -140,15 +127,41 @@ public class CawaOp extends BasisOp {
         computeWaterCloudProduct();
         computeLandCloudProduct();
         mergeLandWater();
+        postProcess();
+
+        targetProduct = postProcessingClassificationProduct;
+//        CawaUtils.setupCawaBitmasks(landClassificationProduct);
+//        CawaUtils.setupCawaBitmasks(waterClassificationProduct);
+//        targetProduct = waterClassificationProduct;
+//        targetProduct = landClassificationProduct;
         copyOutputBands();
     }
 
     private void copyOutputBands() {
-        // todo
+        ProductUtils.copyMetadata(sourceProduct, targetProduct);
+        ProductUtils.copyFlagCodings(sourceProduct, targetProduct);
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+        CawaUtils.setupCawaBitmasks(targetProduct);
+        if (outputRadiance) {
+            IdepixProducts.addRadianceBands(sourceProduct, targetProduct);
+        }
+        if (outputRad2Refl) {
+            IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
+        }
+    }
+
+    private void postProcess() {
+        postProcessingClassificationProduct = mergedClassificationProduct;
+        // todo!
     }
 
     private void mergeLandWater() {
-        // todo
+        Map<String, Product> mergeInputProducts = new HashMap<>();
+        mergeInputProducts.put("landClassif", landClassificationProduct);
+        mergeInputProducts.put("waterClassif", waterClassificationProduct);
+
+        mergedClassificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaMergeLandWaterOp.class),
+                                                       GPF.NO_PARAMS, mergeInputProducts);
     }
 
     private void preProcess() {
@@ -169,8 +182,8 @@ public class CawaOp extends BasisOp {
         classificationInputProducts = new HashMap<>();
         classificationInputProducts.put("l1b", sourceProduct);
         classificationInputProducts.put("rhotoa", rad2reflProduct);
-        classificationInputProducts.put("ctp", ctpProduct);
-        classificationInputProducts.put("pressureOutputLise", pressureLiseProduct);
+        classificationInputProducts.put("pressure", ctpProduct);
+        classificationInputProducts.put("pressureLise", pressureLiseProduct);
         classificationInputProducts.put("waterMask", waterMaskProduct);
 
         Map<String, Object> waterClassificationParameters = new HashMap<String, Object>(11);
@@ -180,50 +193,45 @@ public class CawaOp extends BasisOp {
                                           cloudScreeningSure);
         waterClassificationParameters.put("ccGlintCloudThresholdAddition",
                                                CC_GLINT_THRESHOLD_ADDITION);
-        waterClassificationParameters.put("ccApplyMERISAlternativeSchillerNN",
-                                          applyMERISAlternativeSchillerNN);
-        waterClassificationParameters.put("ccUseMERISAlternativeSchillerAllNN",
-                                               useMERISAlternativeSchillerAllNN);
-        waterClassificationParameters.put("ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue",
-                                          alternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
-        waterClassificationParameters.put("ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue",
-                                          alternativeSchillerNNCloudAmbiguousSureSeparationValue);
-        waterClassificationParameters.put("ccAlternativeSchillerNNCloudSureSnowSeparationValue",
-                                          alternativeSchillerNNCloudSureSnowSeparationValue);
-        waterClassificationParameters.put("ccApplyMERISAlternativeSchillerNNPure",
-                                          applyMERISAlternativeSchillerNNPure);
+        waterClassificationParameters.put("outputSchillerNNValue",
+                                          outputSchillerNNValue);
+        waterClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
+                                          schillerNNCloudAmbiguousLowerBoundaryValue);
+        waterClassificationParameters.put("ccSchillerNNCloudAmbiguousSureSeparationValue",
+                                          schillerNNCloudAmbiguousSureSeparationValue);
+        waterClassificationParameters.put("ccSchillerNNCloudSureSnowSeparationValue",
+                                          schillerNNCloudSureSnowSeparationValue);
 
-        waterClassificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
+        waterClassificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaWaterClassificationOp.class),
                                               waterClassificationParameters, classificationInputProducts);
     }
 
     private void computeLandCloudProduct() {
         Map<String, Object> landClassificationParameters = new HashMap<>(1);
-        landClassificationParameters.put("gaCopyRadiances", false);         // todo: remove from Cawa land op
-        landClassificationParameters.put("gaCopyToaReflectances", false);
-        landClassificationParameters.put("gaUseGetasse", useGetasse);
-        landClassificationParameters.put("gaApplyMERISAlternativeSchillerNN",
-                                         applyMERISAlternativeSchillerNN);
-        landClassificationParameters.put("gaApplyMERISAlternativeSchillerNNPure",
-                                         applyMERISAlternativeSchillerNNPure);
-        landClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue",
-                                         alternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
-        landClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue",
-                                         alternativeSchillerNNCloudAmbiguousSureSeparationValue);
-        landClassificationParameters.put("gaAlternativeSchillerNNCloudSureSnowSeparationValue",
-                                         alternativeSchillerNNCloudSureSnowSeparationValue);
+        landClassificationParameters.put("outputSchillerNNValue",
+                                          outputSchillerNNValue);
         landClassificationParameters.put("gaSchillerNNCloudAmbiguousLowerBoundaryValue",
-                                         alternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
+                                         schillerNNCloudAmbiguousLowerBoundaryValue);
         landClassificationParameters.put("gaSchillerNNCloudAmbiguousSureSeparationValue",
-                                         alternativeSchillerNNCloudAmbiguousSureSeparationValue);
+                                         schillerNNCloudAmbiguousSureSeparationValue);
         landClassificationParameters.put("gaSchillerNNCloudSureSnowSeparationValue",
-                                         alternativeSchillerNNCloudSureSnowSeparationValue);
+                                         schillerNNCloudSureSnowSeparationValue);
         landClassificationParameters.put("gaCloudBufferWidth",
                                          cloudBufferWidth);
 
-        classificationInputProducts.put("pbaro", pbaroProduct);
-        landClassificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
+        classificationInputProducts.put("pressure", pbaroProduct);
+        landClassificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaLandClassificationOp.class),
                                                       landClassificationParameters, classificationInputProducts);
     }
 
+    /**
+     * The Service Provider Interface (SPI) for the operator.
+     * It provides operator meta-data and is a factory for new operator instances.
+     */
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(CawaOp.class);
+        }
+    }
 }

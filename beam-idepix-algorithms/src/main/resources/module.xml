@@ -92,6 +92,15 @@
             <!--<helpId>idepixChain</helpId>-->
         <!--</action>-->
         <action>
+            <id>cawaAlgo</id>
+            <class>org.esa.beam.idepix.ui.actions.IdepixCawaAction</class>
+            <text>CAWA (MERIS)...</text>
+            <shortDescr>Pixel classification with CAWA algorithm.</shortDescr>
+            <mnemonic>W</mnemonic>
+            <parent>idepix</parent>
+            <helpId>idepixChain</helpId>
+        </action>
+        <action>
             <id>coastcolourAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixCoastColourAction</class>
             <text>CoastColour (MERIS)...</text>

@@ -25,3 +25,8 @@ org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcUSGSClassificationOp$Spi
 org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcTimelineClassificationOp$Spi
 org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcTestClassificationOp$Spi
 org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcAvisaClassificationOp$Spi
+
+org.esa.beam.idepix.algorithms.cawa.CawaOp$Spi
+org.esa.beam.idepix.algorithms.cawa.CawaLandClassificationOp$Spi
+org.esa.beam.idepix.algorithms.cawa.CawaWaterClassificationOp$Spi
+org.esa.beam.idepix.algorithms.cawa.CawaMergeLandWaterOp$Spi
