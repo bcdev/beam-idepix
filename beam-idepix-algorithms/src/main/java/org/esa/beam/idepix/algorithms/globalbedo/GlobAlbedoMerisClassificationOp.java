@@ -7,6 +7,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
@@ -45,6 +46,22 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private Product pressureProduct;
     @SourceProduct(alias = "pbaro", optional = true)
     private Product pbaroProduct;
+
+    @Parameter(defaultValue = "1.1",
+            label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
+            description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
+    private double gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "2.7",
+            label = " Alternative Schiller NN cloud ambiguous/sure separation value (MERIS only)",
+            description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
+    private double gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.6",
+            label = " Alternative Schiller NN cloud sure/snow separation value (MERIS only)",
+            description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
+    private double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
+
 
     private Band[] merisReflBands;
     private Band[] merisBrrBands;

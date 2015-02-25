@@ -178,28 +178,36 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         return geoPos;
     }
 
-    double convertBetweenAlbedoAndRadiance(double input, double sza, int mode) {
+    double convertBetweenAlbedoAndRadiance(double input, double sza, int mode, int bandIndex) {
         // follows GK formula
         final double distanceCorr = 1.0 + 0.033 * Math.cos(2.0 * Math.PI * getDoy() / 365.0);
-        float integrSolarSpectralIrrad; // F
-        float spectralResponseWidth; // W
+        float[] integrSolarSpectralIrrad = new float[3];     // F
+        float[] spectralResponseWidth = new float[3];        // W
         switch (noaaId) {
             case "11":
                 // NOAA 11
-                integrSolarSpectralIrrad = 189.02f;
-                spectralResponseWidth = 0.1130f;
+                integrSolarSpectralIrrad[0] = 184.1f;
+                integrSolarSpectralIrrad[1] = 241.1f;
+                integrSolarSpectralIrrad[2] = 241.1f;  // todo: we don't have this for band 3, might be useless
+                spectralResponseWidth[0] = 0.1130f;
+                spectralResponseWidth[1] = 0.229f;
+                spectralResponseWidth[2] = 0.229f;     // s.a.
                 break;
             case "14":
                 // NOAA 14
-                integrSolarSpectralIrrad = 221.42f;
-                spectralResponseWidth = 0.1360f;
+                integrSolarSpectralIrrad[0] = 221.42f;
+                integrSolarSpectralIrrad[1] = 252.29f;
+                integrSolarSpectralIrrad[2] = 252.29f;  // s.a.
+                spectralResponseWidth[0] = 0.136f;
+                spectralResponseWidth[1] = 0.245f;
+                spectralResponseWidth[2] = 0.245f;      // s.a.
                 break;
             default:
                 throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
         }
         // GK: R=A (F/(100 PI W  cos(sun_zenith)  abstandkorrektur))
-        final double conversionFactor = integrSolarSpectralIrrad /
-                (100.0 * Math.PI * spectralResponseWidth * Math.cos(sza * MathUtils.DTOR) * distanceCorr);
+        final double conversionFactor = integrSolarSpectralIrrad[bandIndex] /
+                (100.0 * Math.PI * spectralResponseWidth[bandIndex] * Math.cos(sza * MathUtils.DTOR) * distanceCorr);
         double result;
         if (mode == ALBEDO_TO_RADIANCE) {
             result = input * conversionFactor;

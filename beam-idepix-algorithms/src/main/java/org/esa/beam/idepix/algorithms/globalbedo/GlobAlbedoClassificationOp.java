@@ -78,40 +78,10 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
                description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean gaApplyMERISAlternativeSchillerNNPure;
 
-    @Parameter(defaultValue = "1.1",
-               label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
-               description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
-    double gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
-
-    @Parameter(defaultValue = "2.7",
-               label = " Alternative Schiller NN cloud ambiguous/sure separation value (MERIS only)",
-               description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
-    double gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
-
-    @Parameter(defaultValue = "4.6",
-               label = " Alternative Schiller NN cloud sure/snow separation value (MERIS only)",
-               description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
-    double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
-
     @Parameter(defaultValue = "false",
             label = " Apply Schiller NN for VGT cloud classification",
             description = " Apply Schiller NN for VGT cloud classification (has only effect for VGT L1b products)")
     boolean gaApplyVGTSchillerNN;
-
-    @Parameter(defaultValue = "1.1",
-            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
-            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
-    double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
-
-    @Parameter(defaultValue = "2.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
-    double gaSchillerNNCloudAmbiguousSureSeparationValue;
-
-    @Parameter(defaultValue = "4.6",
-            label = " Schiller NN cloud sure/snow separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
-    double gaSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "2",
             label = " Width of cloud buffer (# of pixels)",

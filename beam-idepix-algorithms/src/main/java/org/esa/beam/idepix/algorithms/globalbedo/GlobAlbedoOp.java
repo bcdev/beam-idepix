@@ -176,7 +176,6 @@ public class GlobAlbedoOp extends BasisOp {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
 
-        gaCloudClassificationParameters = createGaCloudClassificationParameters();
         if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
             processGlobAlbedoMeris();
         } else if (IdepixUtils.isValidVgtProduct(sourceProduct)) {
@@ -185,7 +184,25 @@ public class GlobAlbedoOp extends BasisOp {
         renameL1bMaskNames(targetProduct);
     }
 
-    private Map<String, Object> createGaCloudClassificationParameters() {
+    private Map<String, Object> createGaVgtCloudClassificationParameters() {
+        Map<String, Object> gaCloudClassificationParameters = new HashMap<>(1);
+        gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
+        gaCloudClassificationParameters.put("gaCopyToaReflectances", gaCopyToaReflectances);
+        gaCloudClassificationParameters.put("gaCopyFeatureValues", gaCopyFeatureValues);
+        gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+        gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
+        gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
+        gaCloudClassificationParameters.put("gaApplyVGTSchillerNN", gaApplyVGTSchillerNN);
+        gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousLowerBoundaryValue", gaSchillerNNCloudAmbiguousLowerBoundaryValue);
+        gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousSureSeparationValue", gaSchillerNNCloudAmbiguousSureSeparationValue);
+        gaCloudClassificationParameters.put("gaSchillerNNCloudSureSnowSeparationValue", gaSchillerNNCloudSureSnowSeparationValue);
+        gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
+        gaCloudClassificationParameters.put("wmResolution", wmResolution);
+
+        return gaCloudClassificationParameters;
+    }
+
+    private Map<String, Object> createGaMerisCloudClassificationParameters() {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyToaReflectances", gaCopyToaReflectances);
@@ -198,10 +215,6 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue", gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue", gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue);
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudSureSnowSeparationValue", gaAlternativeSchillerNNCloudSureSnowSeparationValue);
-        gaCloudClassificationParameters.put("gaApplyVGTSchillerNN", gaApplyVGTSchillerNN);
-        gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousLowerBoundaryValue", gaSchillerNNCloudAmbiguousLowerBoundaryValue);
-        gaCloudClassificationParameters.put("gaSchillerNNCloudAmbiguousSureSeparationValue", gaSchillerNNCloudAmbiguousSureSeparationValue);
-        gaCloudClassificationParameters.put("gaSchillerNNCloudSureSnowSeparationValue", gaSchillerNNCloudSureSnowSeparationValue);
         gaCloudClassificationParameters.put("gaCloudBufferWidth", gaCloudBufferWidth);
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
 
@@ -211,6 +224,8 @@ public class GlobAlbedoOp extends BasisOp {
     private void processGlobAlbedoMeris() {
         Map<String, Product> gaCloudInput = new HashMap<>(4);
         computeMerisAlgorithmInputProducts(gaCloudInput);
+
+        gaCloudClassificationParameters = createGaMerisCloudClassificationParameters();
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
                 gaCloudClassificationParameters, gaCloudInput);
@@ -263,6 +278,8 @@ public class GlobAlbedoOp extends BasisOp {
         Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<>(4);
         gaCloudInput.put("gal1b", sourceProduct);
+
+        gaCloudClassificationParameters = createGaVgtCloudClassificationParameters();
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoVgtClassificationOp.class),
                 gaCloudClassificationParameters, gaCloudInput);

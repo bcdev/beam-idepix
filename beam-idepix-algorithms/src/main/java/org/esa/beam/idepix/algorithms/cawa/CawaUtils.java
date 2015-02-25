@@ -57,7 +57,7 @@ public class CawaUtils {
         cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("cawa_snow_ice",
                                          CawaConstants.F_SNOW_ICE_DESCR_TEXT, w, h,
-                                         "cloud_classif_flags.F_CLEAR_SNOW",
+                                         "cloud_classif_flags.F_SNOW_ICE",
                                          Color.cyan, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("cawa_glint_risk",

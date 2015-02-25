@@ -51,38 +51,32 @@ public class CawaLandClassificationOp extends Operator {
 //    @Parameter(defaultValue = "true",
 //            label = " Apply Schiller NN for MERIS cloud classification",
 //            description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
-    boolean gaApplyMERISSchillerNN = true;
+    boolean applyMERISSchillerNN = true;
 
 //    @Parameter(defaultValue = "false",
 //            label = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
 //            description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
-    boolean gaApplyMERISSchillerNNPure = false;    // combined approach improves 'cloud sure' detection
+    boolean applyMERISSchillerNNPure = false;    // combined approach improves 'cloud sure' detection
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             label = " Write Schiller NN value to the target product.",
             description = " If applied, write Schiller NN value to the target product ")
     private boolean outputSchillerNNValue;
 
-    @Parameter(defaultValue = "1.1",
+    @Parameter(defaultValue = "2.0",
             label = " Schiller NN cloud ambiguous lower boundary (MERIS only)",
             description = " Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
-    double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
+    double schillerNNCloudAmbiguousLowerBoundaryValue;
 
-    @Parameter(defaultValue = "2.7",
+    @Parameter(defaultValue = "3.7",
             label = " Schiller NN cloud ambiguous/sure separation value (MERIS only)",
             description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
-    double gaSchillerNNCloudAmbiguousSureSeparationValue;
+    double schillerNNCloudAmbiguousSureSeparationValue;
 
-    @Parameter(defaultValue = "4.6",
+    @Parameter(defaultValue = "4.05",
             label = " Schiller NN cloud sure/snow separation value (MERIS only)",
             description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
-    double gaSchillerNNCloudSureSnowSeparationValue;
-
-    @Parameter(defaultValue = "2",
-            label = " Width of cloud buffer (# of pixels)",
-            description = " The width of the 'safety buffer' around a pixel identified as cloudy.")
-    int gaCloudBufferWidth;
-
+    double schillerNNCloudSureSnowSeparationValue;
 
     @SourceProduct(alias = "l1b", description = "The source product.")
     Product sourceProduct;
@@ -170,7 +164,7 @@ public class CawaLandClassificationOp extends Operator {
         targetProduct.setEndTime(sourceProduct.getEndTime());
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
 
-        if (outputSchillerNNValue && gaApplyMERISSchillerNN) {
+        if (outputSchillerNNValue && applyMERISSchillerNN) {
             targetProduct.addBand(CawaConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
         }
     }
@@ -245,29 +239,29 @@ public class CawaLandClassificationOp extends Operator {
                         setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
                         // apply improvement from Schiller NN approach...
-                        if (gaApplyMERISSchillerNN) {
+                        if (applyMERISSchillerNN) {
                             final double[] nnOutput = ((GlobAlbedoMerisAlgorithm) globAlbedoAlgorithm).getNnOutput();
 
                             // 'pure Schiller'
-                            if (gaApplyMERISSchillerNNPure) {
+                            if (applyMERISSchillerNNPure) {
                                 if (!cloudFlagTargetTile.getSampleBit(x, y, CawaConstants.F_INVALID)) {
                                     cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
                                     cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_SURE, false);
                                     cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD, false);
                                     cloudFlagTargetTile.setSample(x, y, CawaConstants.F_SNOW_ICE, false);
-                                    if (nnOutput[0] > gaSchillerNNCloudAmbiguousLowerBoundaryValue &&
-                                            nnOutput[0] <= gaSchillerNNCloudAmbiguousSureSeparationValue) {
+                                    if (nnOutput[0] > schillerNNCloudAmbiguousLowerBoundaryValue &&
+                                            nnOutput[0] <= schillerNNCloudAmbiguousSureSeparationValue) {
                                         // this would be as 'CLOUD_AMBIGUOUS'...
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, true);
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD, true);
                                     }
-                                    if (nnOutput[0] > gaSchillerNNCloudAmbiguousSureSeparationValue &&
-                                            nnOutput[0] <= gaSchillerNNCloudSureSnowSeparationValue) {
+                                    if (nnOutput[0] > schillerNNCloudAmbiguousSureSeparationValue &&
+                                            nnOutput[0] <= schillerNNCloudSureSnowSeparationValue) {
                                         // this would be as 'CLOUD_SURE'...
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_SURE, true);
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD, true);
                                     }
-                                    if (nnOutput[0] > gaSchillerNNCloudSureSnowSeparationValue) {
+                                    if (nnOutput[0] > schillerNNCloudSureSnowSeparationValue) {
                                         // this would be as 'SNOW/ICE'...
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_SNOW_ICE, true);
                                     }
@@ -276,18 +270,22 @@ public class CawaLandClassificationOp extends Operator {
                                 // only 'refinement with Schiller' // todo: what do we want??
                                 if (!cloudFlagTargetTile.getSampleBit(x, y, CawaConstants.F_CLOUD) &&
                                         !cloudFlagTargetTile.getSampleBit(x, y, CawaConstants.F_CLOUD_SURE)) {
-                                    if (nnOutput[0] > gaSchillerNNCloudAmbiguousLowerBoundaryValue &&
-                                            nnOutput[0] <= gaSchillerNNCloudAmbiguousSureSeparationValue) {
+                                    if (nnOutput[0] > schillerNNCloudAmbiguousLowerBoundaryValue &&
+                                            nnOutput[0] <= schillerNNCloudAmbiguousSureSeparationValue) {
                                         // this would be as 'CLOUD_AMBIGUOUS' in CC and makes many coastlines as cloud...
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, true);
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD, true);
                                     }
-                                    if (nnOutput[0] > gaSchillerNNCloudAmbiguousSureSeparationValue &&
-                                            nnOutput[0] <= gaSchillerNNCloudSureSnowSeparationValue) {
+                                    if (nnOutput[0] > schillerNNCloudAmbiguousSureSeparationValue &&
+                                            nnOutput[0] <= schillerNNCloudSureSnowSeparationValue) {
                                         //   'CLOUD_SURE' as in CC (20140424, OD)
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_SURE, true);
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
                                         cloudFlagTargetTile.setSample(x, y, CawaConstants.F_CLOUD, true);
+                                    }
+                                    if (nnOutput[0] > schillerNNCloudSureSnowSeparationValue) {
+                                        // this would be as 'SNOW/ICE'...
+                                        cloudFlagTargetTile.setSample(x, y, CawaConstants.F_SNOW_ICE, true);
                                     }
                                 }
                             }
@@ -385,9 +383,9 @@ public class CawaLandClassificationOp extends Operator {
         targetTile.setSample(x, y, CawaConstants.F_CLOUD, landAlgorithm.isCloud());
         targetTile.setSample(x, y, CawaConstants.F_CLOUD_SURE, landAlgorithm.isCloud());   // not distinguished here
         targetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, landAlgorithm.isCloud());  // not distinguished here
+        targetTile.setSample(x, y, CawaConstants.F_SNOW_ICE, landAlgorithm.isClearSnow());
         targetTile.setSample(x, y, CawaConstants.F_CLOUD_BUFFER, false); // not computed here
         targetTile.setSample(x, y, CawaConstants.F_CLOUD_SHADOW, false); // not computed here
-        targetTile.setSample(x, y, CawaConstants.F_SNOW_ICE, false);     // not computed here
         targetTile.setSample(x, y, CawaConstants.F_GLINTRISK, false);   // never
         targetTile.setSample(x, y, CawaConstants.F_COASTLINE, false);   // never
         targetTile.setSample(x, y, CawaConstants.F_LAND, true);         // was already checked

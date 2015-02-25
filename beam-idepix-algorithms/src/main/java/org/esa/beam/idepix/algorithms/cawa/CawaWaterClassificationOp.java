@@ -101,36 +101,36 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
     @Parameter(label = " Sea Ice Climatology Value", defaultValue = "false")
     private boolean ccOutputSeaIceClimatologyValue;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             description = "Check for sea/lake ice also outside Sea Ice Climatology area.",
             label = "Check for sea/lake ice also outside Sea Ice Climatology area"
     )
-    private boolean ccIgnoreSeaIceClimatology;
+    private boolean ignoreSeaIceClimatology;
 
     @Parameter(label = "Cloud screening 'ambiguous' threshold", defaultValue = "1.4")
-    private double cloudScreeningAmbiguous;     // Schiller
+    private double cloudScreeningAmbiguous;     // Schiller, used in previous approach only
 
     @Parameter(label = "Cloud screening 'sure' threshold", defaultValue = "1.8")
-    private double cloudScreeningSure;         // Schiller
+    private double cloudScreeningSure;         // Schiller, used in previous approach only
 
     @Parameter(defaultValue = "0.1",
             label = "Cloud screening threshold addition in case of glint")
-    private double ccGlintCloudThresholdAddition;
+    private double glintCloudThresholdAddition;
 
-    @Parameter(label = " Cloud Probability Feature Value", defaultValue = "true")
-    private boolean ccOutputCloudProbabilityFeatureValue;    // Schiller
+    @Parameter(label = " Cloud Probability Feature Value", defaultValue = "false")
+    private boolean outputCloudProbabilityFeatureValue;    // Schiller
 
 //    @Parameter(defaultValue = "true",
 //            label = " Apply Schiller NN for cloud classification",
 //            description = " Apply Schiller NN for cloud classification ")
-    private boolean ccApplyMERISSchillerNN = true;
+    private boolean applyMERISSchillerNN = true;   // seems actually the best we have
 
 //    @Parameter(defaultValue = "true",
 //            label = " Use Schiller 'ALL' NN ",
 //            description = " Use Schiller 'ALL' NN (instead of 'WATER' NN) ")
-    private boolean ccUseMERISSchillerAllNN = true;
+    private boolean useMERISSchillerAllNN = true;   // seems actually the best we have
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             label = " Write Schiller NN value to the target product.",
             description = " If applied, write Schiller NN value to the target product ")
     private boolean outputSchillerNNValue;
@@ -138,22 +138,22 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
     @Parameter(defaultValue = "2.0",
             label = " Schiller NN cloud ambiguous lower boundary ",
             description = " Schiller NN cloud ambiguous lower boundary ")
-    double ccSchillerNNCloudAmbiguousLowerBoundaryValue;
+    double schillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
             label = " Schiller NN cloud ambiguous/sure separation value ",
             description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
-    double ccSchillerNNCloudAmbiguousSureSeparationValue;
+    double schillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
             label = " Schiller NN cloud sure/snow separation value ",
             description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
-    double ccSchillerNNCloudSureSnowSeparationValue;
+    double schillerNNCloudSureSnowSeparationValue;
 
 //    @Parameter(defaultValue = "true",
 //            label = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
 //            description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
-    boolean ccApplyMERISSchillerNNPure = true;     // previous approach flags many coastlines and thin cloud edges as 'cloud sure'
+    boolean applyMERISSchillerNNPure = true;     // previous approach flags many coastlines and thin cloud edges as 'cloud sure'
 
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
@@ -213,7 +213,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
-        if (outputSchillerNNValue && ccApplyMERISSchillerNN) {
+        if (outputSchillerNNValue && applyMERISSchillerNN) {
             nnOutputBand = targetProduct.addBand(CawaConstants.SCHILLER_NN_OUTPUT_BAND_NAME,
                                                  ProductData.TYPE_FLOAT32);
         }
@@ -321,7 +321,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
                             if (band == cloudFlagBand) {
                                 classifyCloud(sd, pixelInfo, targetTile, waterFraction);
                             }
-                            if (outputSchillerNNValue && ccApplyMERISSchillerNN && band == nnOutputBand) {
+                            if (outputSchillerNNValue && applyMERISSchillerNN && band == nnOutputBand) {
                                 final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
                             }
@@ -405,7 +405,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
         if (!isCoastline) {
             // over water
             final GeoPos geoPos = getGeoPos(pixelInfo);
-            checkForSeaIce = ccIgnoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
+            checkForSeaIce = ignoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
             if (checkForSeaIce) {
                 is_snow_ice = bright_rc && high_mdsi;
             }
@@ -421,28 +421,28 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
         double sureThresh = cloudScreeningSure;
         // this seems to avoid false cloud flagging in glint regions:
         if (is_glint_risk) {
-            sureThresh += ccGlintCloudThresholdAddition;
+            sureThresh += glintCloudThresholdAddition;
         }
 
         boolean isCloudSure = false;
         boolean isCloudAmbiguous;
 
-        if (ccApplyMERISSchillerNN) {
+        if (applyMERISSchillerNN) {
             double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
             if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, false);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, false);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_SNOW_ICE, false);
-                isCloudAmbiguous = nnOutput[0] > ccSchillerNNCloudAmbiguousLowerBoundaryValue &&
-                        nnOutput[0] <= ccSchillerNNCloudAmbiguousSureSeparationValue;
+                isCloudAmbiguous = nnOutput[0] > schillerNNCloudAmbiguousLowerBoundaryValue &&
+                        nnOutput[0] <= schillerNNCloudAmbiguousSureSeparationValue;
                 if (isCloudAmbiguous) {
                     // this would be as 'CLOUD_AMBIGUOUS'...
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, true);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, true);
                 }
                 // check for snow_ice separation below if needed, first set all to cloud
-                isCloudSure = nnOutput[0] > ccSchillerNNCloudAmbiguousSureSeparationValue;
+                isCloudSure = nnOutput[0] > schillerNNCloudAmbiguousSureSeparationValue;
                 if (isCloudSure) {
                     // this would be as 'CLOUD_SURE'...
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, true);
@@ -451,7 +451,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
 
                 is_snow_ice = false;
                 if (checkForSeaIce) {
-                    is_snow_ice = nnOutput[0] > ccSchillerNNCloudSureSnowSeparationValue;
+                    is_snow_ice = nnOutput[0] > schillerNNCloudSureSnowSeparationValue;
                 }
                 if (is_snow_ice) {
                     // this would be as 'SNOW/ICE'...
@@ -460,12 +460,12 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, false);
                 }
 
-                if (!ccApplyMERISSchillerNNPure && !isCloudSure && !isCloudAmbiguous) {
+                if (!applyMERISSchillerNNPure && !isCloudSure && !isCloudAmbiguous) {
                     final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
                     isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
                     // special case: set very bright clouds misclassified as snow_ice from NN but
                     // outside seaice climatology range to cloud
-                    if (!checkForSeaIce && nnOutput[0] > ccSchillerNNCloudSureSnowSeparationValue) {
+                    if (!checkForSeaIce && nnOutput[0] > schillerNNCloudSureSnowSeparationValue) {
                         isCloudSure = true;
                     }
                     isCloudAmbiguous = !isCloudSure && cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
@@ -490,7 +490,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
     }
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
-        if (ccUseMERISSchillerAllNN) {
+        if (useMERISSchillerAllNN) {
             return getMerisNNOutputImpl(sd, pixelInfo, merisAllNeuralNet.get());
         } else {
             return getMerisNNOutputImpl(sd, pixelInfo, merisWaterNeuralNet.get());

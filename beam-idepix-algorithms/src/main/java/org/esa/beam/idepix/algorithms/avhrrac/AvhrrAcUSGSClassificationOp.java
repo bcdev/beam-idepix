@@ -237,8 +237,8 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         if (albedo1 >= 0.0 && albedo2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, azimuthAngles[0], azimuthAngles[1])) {
 
-            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE);
+            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE, 0);
+            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE, 1);
             avhrrRadiance[2] = sourceSamples[Constants.SRC_USGS_RADIANCE_3].getDouble();           // mW*cm/(m^2*sr)
             avhrrRadiance[3] = sourceSamples[Constants.SRC_USGS_RADIANCE_4].getDouble();           // mW*cm/(m^2*sr)
             avhrrRadiance[4] = sourceSamples[Constants.SRC_USGS_RADIANCE_5].getDouble();           // mW*cm/(m^2*sr)
@@ -271,7 +271,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
             aacAlgorithm.setReflCh1(albedo1);
             aacAlgorithm.setReflCh2(albedo2);
-            final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO);
+            final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO, 2);
             aacAlgorithm.setReflCh3(reflCh3);
             final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
             aacAlgorithm.setBtCh4(btCh4);

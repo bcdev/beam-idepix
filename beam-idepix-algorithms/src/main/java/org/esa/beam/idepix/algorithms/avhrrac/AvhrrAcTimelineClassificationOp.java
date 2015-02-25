@@ -152,8 +152,8 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
 
         if (refl1 >= 0.0 && refl2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, saa, vaa)) {
 
-            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(refl1, sza, ALBEDO_TO_RADIANCE);
-            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(refl2, sza, ALBEDO_TO_RADIANCE);
+            avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(refl1, sza, ALBEDO_TO_RADIANCE,0);
+            avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(refl2, sza, ALBEDO_TO_RADIANCE, 1);
             avhrrRadiance[2] = rad3;
             avhrrRadiance[3] = AvhrrAcUtils.convertBtToRadiance(refl4, 4);
             avhrrRadiance[4] = AvhrrAcUtils.convertBtToRadiance(refl5, 5);

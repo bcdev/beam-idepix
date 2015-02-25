@@ -6,6 +6,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
@@ -28,6 +29,21 @@ import java.util.Map;
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
                   description = "This operator provides cloud screening from SPOT VGT data.")
 public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
+
+    @Parameter(defaultValue = "1.1",
+            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
+            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+    private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "2.7",
+            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+    private double gaSchillerNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.6",
+            label = " Schiller NN cloud sure/snow separation value (VGT only)",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+    private double gaSchillerNNCloudSureSnowSeparationValue;
 
     // VGT bands:
     private Band[] vgtReflectanceBands;

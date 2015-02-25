@@ -297,9 +297,9 @@ public class AvhrrAcTestClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
-            final double reflCh1 = convertBetweenAlbedoAndRadiance(avhrrRadiance[0], sza, RADIANCE_TO_ALBEDO);
-            final double reflCh2 = convertBetweenAlbedoAndRadiance(avhrrRadiance[1], sza, RADIANCE_TO_ALBEDO);
-            final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO);
+            final double reflCh1 = convertBetweenAlbedoAndRadiance(avhrrRadiance[0], sza, RADIANCE_TO_ALBEDO, 0);
+            final double reflCh2 = convertBetweenAlbedoAndRadiance(avhrrRadiance[1], sza, RADIANCE_TO_ALBEDO, 1);
+            final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO, 2);
             aacAlgorithm.setReflCh1(reflCh1);
             aacAlgorithm.setReflCh2(reflCh2);
             aacAlgorithm.setReflCh3(reflCh3);
