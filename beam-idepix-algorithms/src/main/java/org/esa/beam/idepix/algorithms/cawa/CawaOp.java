@@ -42,10 +42,10 @@ public class CawaOp extends BasisOp {
 
     // overall parameters
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             description = "Write TOA radiances to the target product.",
             label = " Write TOA radiances to the target product")
-    private boolean outputRadiance = true;
+    private boolean outputRadiance = false;
 
     @Parameter(defaultValue = "false",
             description = "Write TOA reflectances to the target product.",
@@ -230,8 +230,8 @@ public class CawaOp extends BasisOp {
 
     private void copyOutputBands() {
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
-        ProductUtils.copyFlagCodings(sourceProduct, targetProduct);
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+//        ProductUtils.copyFlagCodings(sourceProduct, targetProduct);
+//        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         CawaUtils.setupCawaBitmasks(targetProduct);
         if (outputRadiance) {
             IdepixProducts.addRadianceBands(sourceProduct, targetProduct);

@@ -32,19 +32,19 @@ public class CawaUtils {
         cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("cawa_cloud",
                                          CawaConstants.F_CLOUD_DESCR_TEXT, w, h,
-                                         "cloud_classif_flags.F_CLOUD_SURE or cloud_classif_flags.F_CLOUD_AMBIGUOUS",
+                                         "cloud_classif_flags.F_CLOUD",
                                          Color.magenta, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("cawa_cloud_ambiguous",
-                                         CawaConstants.F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
-                                         "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
-                                         Color.yellow, 0.5f);
-        cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("cawa_cloud_sure",
-                                         CawaConstants.F_CLOUD_SURE_DESCR_TEXT, w, h,
-                                         "cloud_classif_flags.F_CLOUD_SURE",
-                                         Color.red, 0.5f);
-        cloudProduct.getMaskGroup().add(index++, mask);
+//        mask = Mask.BandMathsType.create("cawa_cloud_ambiguous",
+//                                         CawaConstants.F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
+//                                         "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
+//                                         Color.yellow, 0.5f);
+//        cloudProduct.getMaskGroup().add(index++, mask);
+//        mask = Mask.BandMathsType.create("cawa_cloud_sure",
+//                                         CawaConstants.F_CLOUD_SURE_DESCR_TEXT, w, h,
+//                                         "cloud_classif_flags.F_CLOUD_SURE",
+//                                         Color.red, 0.5f);
+//        cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("cawa_cloud_buffer",
                                          CawaConstants.F_CLOUD_BUFFER_DESCR_TEXT, w, h,
                                          "cloud_classif_flags.F_CLOUD_BUFFER",
@@ -83,8 +83,8 @@ public class CawaUtils {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, CawaConstants.F_INVALID), CawaConstants.F_INVALID_DESCR_TEXT);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, CawaConstants.F_CLOUD), CawaConstants.F_CLOUD_DESCR_TEXT);
-        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, CawaConstants.F_CLOUD_AMBIGUOUS), CawaConstants.F_CLOUD_AMBIGUOUS_DESCR_TEXT);
-        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, CawaConstants.F_CLOUD_SURE), CawaConstants.F_CLOUD_SURE_DESCR_TEXT);
+//        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, CawaConstants.F_CLOUD_AMBIGUOUS), CawaConstants.F_CLOUD_AMBIGUOUS_DESCR_TEXT);
+//        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, CawaConstants.F_CLOUD_SURE), CawaConstants.F_CLOUD_SURE_DESCR_TEXT);
         flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, CawaConstants.F_CLOUD_BUFFER), CawaConstants.F_CLOUD_BUFFER_DESCR_TEXT);
         flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, CawaConstants.F_CLOUD_SHADOW), CawaConstants.F_CLOUD_SHADOW_DESCR_TEXT);
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, CawaConstants.F_SNOW_ICE), CawaConstants.F_SNOW_ICE_DESCR_TEXT);

@@ -133,6 +133,22 @@ public class IdepixUtils {
         return false;
     }
 
+    public static String getAvhrrTimelineNoaaId(Product product) {
+        if (isAvhrrTimelineProduct(product)) {
+            final MetadataElement globalAttributes = product.getMetadataRoot().getElement("Global_Attributes");
+            if (globalAttributes != null) {
+                final MetadataAttribute platformAttr = globalAttributes.getAttribute("platform");
+                if (platformAttr != null && platformAttr.getData() != null) {
+                    final String platform = platformAttr.getData().toString();
+                    if ((platform.length() == 6 || platform.length() == 7) && platform.startsWith("NOAA_")) {
+                        return platform.substring(5, platform.length());
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public static boolean isAvhrrAvisaProduct(Product product) {
         final MetadataElement headerRecordAttributes = product.getMetadataRoot().getElement("HeaderRecord");
         if (headerRecordAttributes != null) {

@@ -2,6 +2,8 @@ package org.esa.beam.idepix.util;
 
 import junit.framework.TestCase;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
 /**
@@ -133,7 +135,35 @@ public class IdepixUtilsTest extends TestCase {
     }
 
     public void testIsAvhrrTimelineProduct() {
-        // todo
+        final Product product = new Product("tl", "tl", 1, 1);
+        final MetadataElement globalAttrElem = new MetadataElement("Global_Attributes");
+        product.getMetadataRoot().addElement(globalAttrElem);
+        globalAttrElem.setAttributeString("project", "TIMELINE");
+        assertTrue(IdepixUtils.isAvhrrTimelineProduct(product));
+
+        globalAttrElem.setAttributeString("project", "blubb");
+        assertFalse(IdepixUtils.isAvhrrTimelineProduct(product));
     }
 
+    public void testGetAvhrrTimelineNoaaId() {
+        final Product product = new Product("tl", "tl", 1, 1);
+        final MetadataElement globalAttrElem = new MetadataElement("Global_Attributes");
+        globalAttrElem.setAttributeString("project", "TIMELINE");
+        globalAttrElem.setAttributeString("platform", "NOAA_14");
+        product.getMetadataRoot().addElement(globalAttrElem);
+        String noaaId = IdepixUtils.getAvhrrTimelineNoaaId(product);
+        assertNotNull(noaaId);
+        assertTrue(noaaId.equals("14"));
+
+        globalAttrElem.setAttributeString("platform", "NOAA_8");
+        product.getMetadataRoot().addElement(globalAttrElem);
+        noaaId = IdepixUtils.getAvhrrTimelineNoaaId(product);
+        assertNotNull(noaaId);
+        assertTrue(noaaId.equals("8"));
+
+        globalAttrElem.setAttributeString("platform", "blabla");
+        product.getMetadataRoot().addElement(globalAttrElem);
+        noaaId = IdepixUtils.getAvhrrTimelineNoaaId(product);
+        assertNull(noaaId);
+    }
 }
