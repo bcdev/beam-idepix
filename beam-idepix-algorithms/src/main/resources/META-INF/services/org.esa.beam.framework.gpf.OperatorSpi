@@ -38,3 +38,7 @@ org.esa.beam.idepix.algorithms.cawa.CawaLandClassificationOp$Spi
 org.esa.beam.idepix.algorithms.cawa.CawaWaterClassificationOp$Spi
 org.esa.beam.idepix.algorithms.cawa.CawaMergeLandWaterOp$Spi
 org.esa.beam.idepix.algorithms.cawa.CawaPostProcessOp$Spi
+
+org.esa.beam.idepix.algorithms.landsat8.Landsat8Op$Spi
+org.esa.beam.idepix.algorithms.landsat8.Landsat8ClassificationOp$Spi
+org.esa.beam.idepix.algorithms.landsat8.Landsat8PostProcessOp$Spi

@@ -2,7 +2,6 @@ package org.esa.beam.idepix.util;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
@@ -95,6 +94,7 @@ public class IdepixUtils {
                 !isValidAatsrProduct(inputProduct) &&
                 !isValidVgtProduct(inputProduct) &&
                 !isValidAvhrrProduct(inputProduct) &&
+                !isValidLandsat8Product(inputProduct) &&
                 !isValidModisProduct(inputProduct) &&
                 !isValidSeawifsProduct(inputProduct) &&
                 !isValidMerisAatsrSynergyProduct(inputProduct)) {
@@ -178,12 +178,16 @@ public class IdepixUtils {
         return false;
     }
 
+    public static boolean isValidLandsat8Product(Product product) {
+        return true; // todo!!
+    }
+
     public static boolean isValidModisProduct(Product product) {
-//        return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
-//                product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}") ||
-//                product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
+        //        return (product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)") ||
+        //                product.getName().matches("MOD021KM.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}") ||
+        //                product.getName().matches("A[0-9]{13}.(?i)(L1B_LAC)"));
         return (product.getName().contains("MOD021KM") ||
-//                product.getName().contains("L1B_LAC"));
+                //                product.getName().contains("L1B_LAC"));
                 product.getName().contains("L1B_"));  // seems that we have various extensions :-(
     }
 
@@ -228,8 +232,10 @@ public class IdepixUtils {
                 AlgorithmSelector.Schiller == algorithm ||
                 AlgorithmSelector.FubScapeM == algorithm) {
             return (isValidMerisProduct(sourceProduct));
-        }  else if (AlgorithmSelector.Cawa == algorithm) {
+        } else if (AlgorithmSelector.Cawa == algorithm) {
             return (isValidMerisProduct(sourceProduct));
+        } else if (AlgorithmSelector.Landsat8== algorithm) {
+            return (isValidLandsat8Product(sourceProduct));
         } else if (AlgorithmSelector.GlobAlbedo == algorithm) {
             return (isValidMerisProduct(sourceProduct) ||
                     isValidAatsrProduct(sourceProduct) ||

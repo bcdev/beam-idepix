@@ -16,5 +16,5 @@ public enum AlgorithmSelector {
     MagicStick,
     Schiller,
     Occci,
-    FubScapeM
+    Landsat8, FubScapeM
 }

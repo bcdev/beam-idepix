@@ -5,7 +5,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.math.MathUtils;
 
 /**
- * IDEPIX instrument-specific pixel identification algorithm for GlobAlbedo: abstract superclass
+ *  GlobAlbedo: abstract superclass
  *
  * @author olafd
  */
