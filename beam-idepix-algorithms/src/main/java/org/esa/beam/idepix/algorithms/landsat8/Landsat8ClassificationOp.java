@@ -29,37 +29,77 @@ import java.util.Map;
         description = "Landsat 8 water pixel classification operator.")
 public class Landsat8ClassificationOp extends Operator {
 
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength for brightness computation br = R(wvl) over land.",
+            label = "Wavelength for brightness computation over land")
+    private int brightnessBandLand;
+
     @Parameter(defaultValue = "100.0",
-            description = "Brightness threshold at 865nm.",
-            label = "Brightness threshold at 865nm")
-    private float brightnessThresh;
+            description = "Threshold T for brightness classification over land: bright if br > T.",
+            label = "Threshold for brightness classification over land")
+    private float brightnessThreshLand;
 
-    @Parameter(defaultValue = "1.0",  // todo: find sth. reasonable
-            description = "Brightness coefficient for band 4 (865nm).",
-            label = "Brightness coefficient for band 4 (865nm)")
-    private float brightnessCoeffBand4;
+    @Parameter(defaultValue = "655",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 1 for brightness computation over water.",
+            label = "Wavelength 1 for brightness computation over water")
+    private int brightnessBand1Water;
 
-    @Parameter(defaultValue = "1.0",  // todo: find sth. reasonable
-            description = "Brightness coefficient for band 5 (1610nm).",
-            label = "Brightness coefficient for band 5 (1610nm)")
-    private float brightnessCoeffBand5;
+    @Parameter(defaultValue = "1.0",
+            description = "Weight A for wavelength 1 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
+            label = "Weight A for wavelength 1 for brightness computation over water")
+    private float brightnessWeightBand1Water;
 
-    @Parameter(defaultValue = "100.0",  // todo: find reasonable default value
-            description = "Whiteness threshold.",
-            label = "Whiteness threshold")
-    private float whitenessThresh;
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for brightness computation over water.",
+            label = "Wavelength 1 for brightness computation over water")
+    private int brightnessBand2Water;
 
-    @Parameter(defaultValue = "4",   // todo: find reasonable default value
-            interval = "[0,10]",
-            description = "Index of numerator band for whiteness computation.",
-            label = "Index of numerator band for whiteness computation")
-    private int whitenessNumeratorBandIndex;
+    @Parameter(defaultValue = "1.0",
+            description = "Weight B for wavelength 2 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
+            label = "Weight B for wavelength 2 for brightness computation over water")
+    private float brightnessWeightBand2Water;
 
-    @Parameter(defaultValue = "4",  // todo: find reasonable default value
-            interval = "[0,10]",
-            description = "Index of denominator band for whiteness computation.",
-            label = "Index of denominator band for whiteness computation")
-    private int whitenessDenominatorBandIndex;
+    @Parameter(defaultValue = "100.0",
+            description = "Threshold T for brightness classification over water: bright if br > T.",
+            label = "Threshold for brightness classification over water")
+    private float brightnessThreshWater;
+
+    @Parameter(defaultValue = "655",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
+            label = "Wavelength 1 for whiteness computation over land")
+    private int whitenessBand1Land;
+
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
+            label = "Wavelength 2 for whiteness computation over land")
+    private int whitenessBand2Land;
+
+    @Parameter(defaultValue = "2.0",
+            description = "Threshold T for whiteness classification over land: white if wh < T.",
+            label = "Threshold for whiteness classification over land")
+    private float whitenessThreshLand;
+
+    @Parameter(defaultValue = "655",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength 1 for whiteness computation over water")
+    private int whitenessBand1Water;
+
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength 2 for whiteness computation over water")
+    private int whitenessBand2Water;
+
+    @Parameter(defaultValue = "2.0",
+            description = "Threshold T for whiteness classification over water: white if wh < T.",
+            label = "Threshold for whiteness classification over water")
+    private float whitenessThreshWater;
 
 
     @SourceProduct(alias = "l8source", description = "The source product.")
@@ -75,7 +115,8 @@ public class Landsat8ClassificationOp extends Operator {
     private Band[] l8RadianceBands;
     private Band landWaterBand;
 
-    static final int L1B_F_WATER_CONFIDENCE_HIGH = 0;  // todo
+    static final int L8_F_DESIGNATED_FILL = 0;
+    static final int L8_F_WATER_CONFIDENCE_HIGH = 5;  // todo: do we need this?
 
     @Override
     public void initialize() throws OperatorException {
@@ -119,11 +160,10 @@ public class Landsat8ClassificationOp extends Operator {
         // MERIS variables
         final Tile waterFractionTile = getSourceTile(landWaterBand, rectangle);
 
-        final Band l8FlagBand = sourceProduct.getBand(Landsat8Constants.L1B_FLAGS_NAME);
+        final Band l8FlagBand = sourceProduct.getBand(Landsat8Constants.Landsat8_FLAGS_NAME);
         final Tile l8FlagTile = getSourceTile(l8FlagBand, rectangle);
 
         Tile[] l8RadianceTiles = new Tile[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
-        float[] l8Radiance = new float[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
             l8RadianceTiles[i] = getSourceTile(l8RadianceBands[i], rectangle);
         }
@@ -138,9 +178,8 @@ public class Landsat8ClassificationOp extends Operator {
                     // set up pixel properties for given instruments...
                     Landsat8Algorithm landsat8Algorithm = createLandsat8Algorithm(
                             l8RadianceTiles,
-                            l8Radiance,
-                            waterFractionTile,
                             l8FlagTile,
+                            waterFractionTile,
                             y,
                             x);
 
@@ -161,10 +200,10 @@ public class Landsat8ClassificationOp extends Operator {
                 // is always 0 or 100!! (TS, OD, 20140502)
                 return waterFraction == 0;
             } else {
-                return !l8FlagTile.getSampleBit(x, y, L1B_F_WATER_CONFIDENCE_HIGH); // todo: check!
+                return !l8FlagTile.getSampleBit(x, y, L8_F_WATER_CONFIDENCE_HIGH); // todo: check!
             }
         } else {
-            return !l8FlagTile.getSampleBit(x, y, L1B_F_WATER_CONFIDENCE_HIGH);  // todo
+            return !l8FlagTile.getSampleBit(x, y, L8_F_WATER_CONFIDENCE_HIGH);  // todo
         }
     }
 
@@ -183,37 +222,52 @@ public class Landsat8ClassificationOp extends Operator {
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SURE, l8Algorithm.isCloud());   // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_AMBIGUOUS, l8Algorithm.isCloud());  // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, l8Algorithm.isSnowIce()); // todo
+        targetTile.setSample(x, y, Landsat8Constants.F_BRIGHT, l8Algorithm.isBright());
+        targetTile.setSample(x, y, Landsat8Constants.F_WHITE, l8Algorithm.isWhite());
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_BUFFER, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHADOW, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_GLINTRISK, false);   // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, false);   // TODO
-        targetTile.setSample(x, y, Landsat8Constants.F_LAND, true);         // TODO
+        targetTile.setSample(x, y, Landsat8Constants.F_LAND, l8Algorithm.isLand);         // TODO
     }
 
     private Landsat8Algorithm createLandsat8Algorithm(Tile[] l8RadianceTiles,
-                                                      float[] l8Radiance,
                                                       Tile l8FlagTile,
                                                       Tile waterFractionTile,
                                                       int y,
                                                       int x) {
         Landsat8Algorithm l8Algorithm = new Landsat8Algorithm();
 
+
         final int waterFraction = waterFractionTile.getSampleInt(x, y);
         final boolean isLand = isLandPixel(x, y, l8FlagTile, waterFraction);
 
-
+        float[] l8Radiance = new float[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
             l8Radiance[i] = l8RadianceTiles[i].getSampleFloat(x, y);
         }
 
+        if (x == 200 && y == 400) {
+            System.out.println("x,y = " + x + "," + y);
+        }
+
+        l8Algorithm.setInvalid(l8FlagTile.getSampleBit(x, y, L8_F_DESIGNATED_FILL));
         l8Algorithm.setL8Radiance(l8Radiance);
-        l8Algorithm.setIsWater(!isLand);
-        l8Algorithm.setBrightnessThresh(brightnessThresh);
-        l8Algorithm.setBrightnessCoeffBand4(brightnessCoeffBand4);
-        l8Algorithm.setBrightnessCoeffBand5(brightnessCoeffBand5);
-        l8Algorithm.setWhitenessThresh(whitenessThresh);
-        l8Algorithm.setWhitenessNumeratorBandIndex(whitenessNumeratorBandIndex);
-        l8Algorithm.setWhitenessDenominatorBandIndex(whitenessDenominatorBandIndex);
+        l8Algorithm.setIsLand(isLand);
+
+        l8Algorithm.setBrightnessBandLand(brightnessBandLand);
+        l8Algorithm.setBrightnessThreshLand(brightnessThreshLand);
+        l8Algorithm.setBrightnessBand1Water(brightnessBand1Water);
+        l8Algorithm.setBrightnessWeightBand1Water(brightnessWeightBand1Water);
+        l8Algorithm.setBrightnessBand2Water(brightnessBand2Water);
+        l8Algorithm.setBrightnessWeightBand2Water(brightnessWeightBand2Water);
+        l8Algorithm.setBrightnessThreshWater(brightnessThreshWater);
+        l8Algorithm.setWhitenessBand1Land(whitenessBand1Land);
+        l8Algorithm.setWhitenessBand2Land(whitenessBand2Land);
+        l8Algorithm.setWhitenessThreshLand(whitenessThreshLand);
+        l8Algorithm.setWhitenessBand1Water(whitenessBand1Water);
+        l8Algorithm.setWhitenessBand2Water(whitenessBand2Water);
+        l8Algorithm.setWhitenessThreshWater(whitenessThreshWater);
 
         return l8Algorithm;
     }

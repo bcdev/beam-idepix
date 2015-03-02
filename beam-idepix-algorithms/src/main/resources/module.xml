@@ -109,7 +109,7 @@
         <action>
             <id>avhrracAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixAvhrrAcAction</class>
-            <text>LandCover (AVHRR) ...</text>
+            <text>LandCover (AVHRR)...</text>
             <shortDescr>Pixel classification with LandCover AVHRR algorithm.</shortDescr>
             <mnemonic>A</mnemonic>
             <parent>idepix</parent>
@@ -127,7 +127,7 @@
         <action>
             <id>landsat8Algo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixLandsat8Action</class>
-            <text>Landsat 8 ...</text>
+            <text>HighRoc (Landsat 8)...</text>
             <shortDescr>Pixel classification with Landsat 8 algorithm.</shortDescr>
             <mnemonic>L</mnemonic>
             <parent>idepix</parent>

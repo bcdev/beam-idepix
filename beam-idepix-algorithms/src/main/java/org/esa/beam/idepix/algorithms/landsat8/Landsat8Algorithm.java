@@ -1,7 +1,7 @@
 package org.esa.beam.idepix.algorithms.landsat8;
 
 /**
- * IDEPIX instrument-specific pixel identification algorithm for Landsat
+ * IDEPIX instrument-specific pixel identification algorithm for Landsat 8
  *
  * @author olafd
  */
@@ -9,35 +9,41 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     float[] l8Radiance;
 
-    float brightnessThresh;
-    float brightnessCoeffBand4;
-    float brightnessCoeffBand5;
+    int brightnessBandLand;
+    float brightnessThreshLand;
+    int brightnessBand1Water;
+    float brightnessWeightBand1Water;
+    int brightnessBand2Water;
+    float brightnessWeightBand2Water;
+    float brightnessThreshWater;
+    int whitenessBand1Land;
+    int whitenessBand2Land;
+    float whitenessThreshLand;
+    int whitenessBand1Water;
+    int whitenessBand2Water;
+    float whitenessThreshWater;
 
-    float whitenessThresh;
-    int whitenessNumeratorBandIndex;
-    int whitenessDenominatorBandIndex;
-
-    boolean isWater;
+    boolean isLand;
+    boolean isInvalid;
 
     @Override
     public boolean isInvalid() {
-        return false;
+        return isInvalid;
     }
 
     @Override
     public boolean isCloud() {
-        return isBright();  // start with this
-//        return isBright() && isWhite();  // todo: play with whiteness parameters first
+        return !isInvalid() && (isCloudSure() || isCloudAmbiguous());
     }
 
     @Override
     public boolean isCloudAmbiguous() {
-        return isCloud(); // todo: define if needed
+        return !isInvalid() && isCloudSure(); // todo: define if needed
     }
 
     @Override
     public boolean isCloudSure() {
-        return isCloud(); // todo: define if needed
+        return !isInvalid() && isBright() && isWhite();
     }
 
     @Override
@@ -67,25 +73,36 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isLand() {
-        return !isWater;
-    }     // todo: this is weird
+        return isLand;
+    }
 
     @Override
     public boolean isBright() {
         if (isLand()) {
-            return l8Radiance[4] > brightnessThresh;
+            final Integer landBandIndex = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(brightnessBandLand);
+            return !isInvalid() && (l8Radiance[landBandIndex] > brightnessThreshLand);
         } else {
-            final float brightnessWaterValue =
-                    brightnessCoeffBand4 * l8Radiance[4] + brightnessCoeffBand5 * l8Radiance[5];
-            return brightnessWaterValue > brightnessThresh;
+            final Integer waterBand1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(brightnessBand1Water);
+            final Integer waterBand2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(brightnessBand2Water);
+            final float brightnessWaterValue = brightnessWeightBand1Water* l8Radiance[waterBand1Index] +
+                    brightnessWeightBand2Water* l8Radiance[waterBand2Index];
+            return !isInvalid() && (brightnessWaterValue > brightnessThreshWater);
         }
     }
 
     @Override
     public boolean isWhite() {
-        final float whiteness =
-                l8Radiance[whitenessNumeratorBandIndex] / l8Radiance[whitenessDenominatorBandIndex];
-        return whiteness > whitenessThresh;
+        if (isLand()) {
+            final Integer whitenessBand1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand1Land);
+            final Integer whitenessBand2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand2Land);
+            final float whiteness = l8Radiance[whitenessBand1Index] / l8Radiance[whitenessBand2Index];
+            return !isInvalid() && (whiteness < whitenessThreshLand);
+        } else {
+            final Integer whitenessBand1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand1Water);
+            final Integer whitenessBand2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand2Water);
+            final float whiteness = l8Radiance[whitenessBand1Index] / l8Radiance[whitenessBand2Index];
+            return !isInvalid() && (whiteness < whitenessThreshWater);
+        }
     }
 
     // setter methods
@@ -94,31 +111,64 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         this.l8Radiance = l8Radiance;
     }
 
-    public void setIsWater(boolean isWater) {
-        this.isWater = isWater;
+    public void setIsLand(boolean isLand) {
+        this.isLand = isLand;
     }
 
-    public void setBrightnessThresh(float brightnessThresh) {
-        this.brightnessThresh= brightnessThresh;
+    public void setInvalid(boolean isInvalid) {
+        this.isInvalid = isInvalid;
     }
 
-    public void setBrightnessCoeffBand4(float brightnessCoeffBand4) {
-        this.brightnessCoeffBand4 = brightnessCoeffBand4;
+    public void setBrightnessBandLand(int brightnessBandLand) {
+        this.brightnessBandLand = brightnessBandLand;
     }
 
-    public void setBrightnessCoeffBand5(float brightnessCoeffBand5) {
-        this.brightnessCoeffBand5 = brightnessCoeffBand5;
+    public void setBrightnessThreshLand(float brightnessThreshLand) {
+        this.brightnessThreshLand = brightnessThreshLand;
     }
 
-    public void setWhitenessThresh(float whitenessThresh) {
-        this.whitenessThresh = whitenessThresh;
+    public void setBrightnessBand1Water(int brightnessBand1Water) {
+        this.brightnessBand1Water = brightnessBand1Water;
     }
 
-    public void setWhitenessNumeratorBandIndex(int whitenessNumeratorBandIndex) {
-        this.whitenessNumeratorBandIndex = whitenessNumeratorBandIndex;
+    public void setBrightnessWeightBand1Water(float brightnessWeightBand1Water) {
+        this.brightnessWeightBand1Water = brightnessWeightBand1Water;
     }
 
-    public void setWhitenessDenominatorBandIndex(int whitenessDenominatorBandIndex) {
-        this.whitenessDenominatorBandIndex = whitenessDenominatorBandIndex;
+    public void setBrightnessBand2Water(int brightnessBand2Water) {
+        this.brightnessBand2Water = brightnessBand2Water;
     }
+
+    public void setBrightnessWeightBand2Water(float brightnessWeightBand2Water) {
+        this.brightnessWeightBand2Water = brightnessWeightBand2Water;
+    }
+
+    public void setBrightnessThreshWater(float brightnessThreshWater) {
+        this.brightnessThreshWater = brightnessThreshWater;
+    }
+
+    public void setWhitenessBand1Land(int whitenessBand1Land) {
+        this.whitenessBand1Land = whitenessBand1Land;
+    }
+
+    public void setWhitenessBand2Land(int whitenessBand2Land) {
+        this.whitenessBand2Land = whitenessBand2Land;
+    }
+
+    public void setWhitenessThreshLand(float whitenessThreshLand) {
+        this.whitenessThreshLand = whitenessThreshLand;
+    }
+
+    public void setWhitenessThreshWater(float whitenessThreshWater) {
+        this.whitenessThreshWater = whitenessThreshWater;
+    }
+
+    public void setWhitenessBand1Water(int whitenessBand1Water) {
+        this.whitenessBand1Water = whitenessBand1Water;
+    }
+
+    public void setWhitenessBand2Water(int whitenessBand2Water) {
+        this.whitenessBand2Water = whitenessBand2Water;
+    }
+
 }

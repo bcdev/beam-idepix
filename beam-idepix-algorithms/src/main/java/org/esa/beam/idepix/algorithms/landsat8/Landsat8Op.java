@@ -27,7 +27,7 @@ import java.util.Map;
 @OperatorMetadata(alias = "idepix.landsat8",
         version = "2.2",
         copyright = "(c) 2014 by Brockmann Consult",
-        description = "Pixel identification for Landsat .")
+        description = "Pixel identification for Landsat 8.")
 public class Landsat8Op extends Operator {
 
     @SourceProduct(alias = "sourceProduct",
@@ -48,7 +48,7 @@ public class Landsat8Op extends Operator {
     //    @Parameter(defaultValue = "true",
 //            label = " Compute cloud shadow",
 //            description = " Compute cloud shadow with the algorithm from 'Fronts' project")
-    private boolean computeCloudShadow = false;  // todo: later when specified how to compute
+    private boolean computeCloudShadow = false;  // todo: later if we find a way how to compute
 
     @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
     private boolean computeCloudBuffer;
@@ -59,37 +59,78 @@ public class Landsat8Op extends Operator {
             label = "Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength for brightness computation br = R(wvl) over land.",
+            label = "Wavelength for brightness computation over land")
+    private int brightnessBandLand;
+
     @Parameter(defaultValue = "100.0",
-            description = "Brightness threshold at 865nm.",
-            label = "Brightness threshold at 865nm")
-    private float brightnessThresh;
+            description = "Threshold T for brightness classification over land: bright if br > T.",
+            label = "Threshold for brightness classification over land")
+    private float brightnessThreshLand;
 
-    @Parameter(defaultValue = "1.0",  // todo: find reasonable default value
-            description = "Brightness coefficient for band 4 (865nm).",
-            label = "Brightness coefficient for band 4 (865nm)")
-    private float brightnessCoeffBand4;
+    @Parameter(defaultValue = "655",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 1 for brightness computation over water.",
+            label = "Wavelength 1 for brightness computation over water")
+    private int brightnessBand1Water;
 
-    @Parameter(defaultValue = "1.0",  // todo: find reasonable default value
-            description = "Brightness coefficient for band 5 (1610nm).",
-            label = "Brightness coefficient for band 5 (1610nm)")
-    private float brightnessCoeffBand5;
+    @Parameter(defaultValue = "1.0",
+            description = "Weight A for wavelength 1 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
+            label = "Weight A for wavelength 1 for brightness computation over water")
+    private float brightnessWeightBand1Water;
 
-    @Parameter(defaultValue = "100.0",  // todo: find reasonable default value
-            description = "Whiteness threshold.",
-            label = "Whiteness threshold")
-    private float whitenessThresh;
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for brightness computation over water.",
+            label = "Wavelength 1 for brightness computation over water")
+    private int brightnessBand2Water;
 
-    @Parameter(defaultValue = "4",   // todo: find reasonable default value
-            interval = "[0,10]",
-            description = "Index of numerator band for whiteness computation.",
-            label = "Index of numerator band for whiteness computation")
-    private int whitenessNumeratorBandIndex;
+    @Parameter(defaultValue = "1.0",
+            description = "Weight B for wavelength 2 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
+            label = "Weight B for wavelength 2 for brightness computation over water")
+    private float brightnessWeightBand2Water;
 
-    @Parameter(defaultValue = "5",  // todo: find reasonable default value
-            interval = "[0,10]",
-            description = "Index of denominator band for whiteness computation.",
-            label = "Index of denominator band for whiteness computation")
-    private int whitenessDenominatorBandIndex;
+    @Parameter(defaultValue = "100.0",
+            description = "Threshold T for brightness classification over water: bright if br > T.",
+            label = "Threshold for brightness classification over water")
+    private float brightnessThreshWater;
+
+    @Parameter(defaultValue = "655",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
+            label = "Wavelength 1 for whiteness computation over land")
+    private int whitenessBand1Land;
+
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
+            label = "Wavelength 2 for whiteness computation over land")
+    private int whitenessBand2Land;
+
+    @Parameter(defaultValue = "2.0",
+            description = "Threshold T for whiteness classification over land: white if wh < T.",
+            label = "Threshold for whiteness classification over land")
+    private float whitenessThreshLand;
+
+    @Parameter(defaultValue = "655",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength 1 for whiteness computation over water")
+    private int whitenessBand1Water;
+
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength 2 for whiteness computation over water")
+    private int whitenessBand2Water;
+
+    @Parameter(defaultValue = "2.0",
+            description = "Threshold T for whiteness classification over water: white if wh < T.",
+            label = "Threshold for whiteness classification over water")
+    private float whitenessThreshWater;
+
 
 
     private static final int LAND_WATER_MASK_RESOLUTION = 50;
@@ -117,10 +158,7 @@ public class Landsat8Op extends Operator {
         computeCloudProduct();
         postProcess();
 
-        targetProduct = postProcessingProduct;
-
         targetProduct = IdepixUtils.cloneProduct(classificationProduct);
-        targetProduct.setAutoGrouping("radiance:rho_toa");
 
         Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         cloudFlagBand.setSourceImage(postProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
@@ -138,12 +176,20 @@ public class Landsat8Op extends Operator {
 
     private void setClassificationParameters() {
         classificationParameters = new HashMap<>();
-        classificationParameters.put("brightnessThresh", brightnessThresh);
-        classificationParameters.put("brightnessCoeffBand4", brightnessCoeffBand4);
-        classificationParameters.put("brightnessCoeffBand5", brightnessCoeffBand5);
-        classificationParameters.put("whitenessThresh", whitenessThresh);
-        classificationParameters.put("whitenessNumeratorBandIndex", whitenessNumeratorBandIndex);
-        classificationParameters.put("whitenessDenominatorBandIndex", whitenessDenominatorBandIndex);
+        classificationParameters.put("brightnessThreshLand", brightnessThreshLand);
+        classificationParameters.put("brightnessBandLand", brightnessBandLand);
+        classificationParameters.put("brightnessThreshWater", brightnessThreshWater);
+        classificationParameters.put("brightnessBand1Water", brightnessBand1Water);
+        classificationParameters.put("brightnessBand2Water", brightnessBand2Water);
+        classificationParameters.put("brightnessWeightBand1Water", brightnessWeightBand1Water);
+        classificationParameters.put("brightnessWeightBand2Water", brightnessWeightBand2Water);
+
+        classificationParameters.put("whitenessThreshLand", whitenessThreshLand);
+        classificationParameters.put("whitenessBand1Land", whitenessBand1Land);
+        classificationParameters.put("whitenessBand2Land", whitenessBand2Land);
+        classificationParameters.put("whitenessThreshWater", whitenessThreshWater);
+        classificationParameters.put("whitenessBand1Water", whitenessBand1Water);
+        classificationParameters.put("whitenessBand2Water", whitenessBand2Water);
     }
 
     private void computeCloudProduct() {
