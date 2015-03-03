@@ -223,7 +223,7 @@ public class CawaOp extends BasisOp {
         Map<String, Object> params = new HashMap<>();
         params.put("cloudBufferWidth", cloudBufferWidth);
         params.put("computeCloudBuffer", computeCloudBuffer);
-        params.put("gaComputeCloudShadow", computeCloudShadow);
+        params.put("computeCloudShadow", computeCloudShadow);
         params.put("refineClassificationNearCoastlines", true);  // always an improvement
         postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaPostProcessOp.class), params, input);
     }
