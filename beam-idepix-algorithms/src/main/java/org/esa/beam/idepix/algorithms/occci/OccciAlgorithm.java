@@ -19,6 +19,7 @@ public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
     public abstract boolean isGlintRisk();
 
     public abstract float brightValue();
+    public abstract float whiteValue(int numeratorIndex, int denominatorIndex);
     public abstract float ndsiValue();
 
     float waterFraction;

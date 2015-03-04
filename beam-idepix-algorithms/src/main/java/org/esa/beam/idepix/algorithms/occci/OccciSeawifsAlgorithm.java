@@ -96,6 +96,12 @@ public class OccciSeawifsAlgorithm extends OccciAlgorithm {
     }
 
     @Override
+    public float whiteValue(int numeratorIndex, int denominatorIndex) {
+        // not used yet
+        return 0.0f;
+    }
+
+    @Override
     public float ndsiValue() {
         return 0;
     }
