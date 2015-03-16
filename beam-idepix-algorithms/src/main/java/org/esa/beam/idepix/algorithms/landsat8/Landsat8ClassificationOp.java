@@ -104,7 +104,7 @@ public class Landsat8ClassificationOp extends Operator {
 
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
-    @SourceProduct(alias = "waterMask")
+    @SourceProduct(alias = "waterMask", optional=true)
     private Product waterMaskProduct;
 
     @TargetProduct(description = "The target product.")
@@ -124,7 +124,9 @@ public class Landsat8ClassificationOp extends Operator {
 
         createTargetProduct();
 
-        landWaterBand = waterMaskProduct.getBand("land_water_fraction");
+        if (waterMaskProduct != null) {
+            landWaterBand = waterMaskProduct.getBand("land_water_fraction");
+        }
     }
 
     public void setBands() {
@@ -158,7 +160,10 @@ public class Landsat8ClassificationOp extends Operator {
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
         // MERIS variables
-        final Tile waterFractionTile = getSourceTile(landWaterBand, rectangle);
+        Tile waterFractionTile = null;
+        if (waterMaskProduct != null) {
+            waterFractionTile = getSourceTile(landWaterBand, rectangle);
+        }
 
         final Band l8FlagBand = sourceProduct.getBand(Landsat8Constants.Landsat8_FLAGS_NAME);
         final Tile l8FlagTile = getSourceTile(l8FlagBand, rectangle);
@@ -238,17 +243,15 @@ public class Landsat8ClassificationOp extends Operator {
                                                       int x) {
         Landsat8Algorithm l8Algorithm = new Landsat8Algorithm();
 
-
-        final int waterFraction = waterFractionTile.getSampleInt(x, y);
-        final boolean isLand = isLandPixel(x, y, l8FlagTile, waterFraction);
+        boolean isLand = false;
+        if (waterMaskProduct != null) {
+            final int waterFraction = waterFractionTile.getSampleInt(x, y);
+            isLand = isLandPixel(x, y, l8FlagTile, waterFraction);
+        }
 
         float[] l8Radiance = new float[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
             l8Radiance[i] = l8RadianceTiles[i].getSampleFloat(x, y);
-        }
-
-        if (x == 200 && y == 400) {
-            System.out.println("x,y = " + x + "," + y);
         }
 
         l8Algorithm.setInvalid(l8FlagTile.getSampleBit(x, y, L8_F_DESIGNATED_FILL));
