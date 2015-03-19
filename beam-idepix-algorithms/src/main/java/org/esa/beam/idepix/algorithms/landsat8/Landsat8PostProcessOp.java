@@ -57,6 +57,8 @@ public class Landsat8PostProcessOp extends Operator {
     private Product l1bProduct;
     @SourceProduct(alias = "landsatCloud")
     private Product landsatCloudProduct;
+    @SourceProduct(alias = "waterMask", optional=true)
+    private Product waterMaskProduct;
 
     private Band waterFractionBand;
     private Band origCloudFlagBand;
@@ -66,30 +68,35 @@ public class Landsat8PostProcessOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        Product postProcessedCloudProduct = createTargetProduct(landsatCloudProduct,
-                "postProcessedCloud", "postProcessedCloud");
 
-        HashMap<String, Object> waterParameters = new HashMap<>();
-        waterParameters.put("resolution", 50);
-        waterParameters.put("subSamplingFactorX", 3);
-        waterParameters.put("subSamplingFactorY", 3);
-        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, l1bProduct);
-        waterFractionBand = waterMaskProduct.getBand("land_water_fraction");
+        if (!computeCloudBuffer && !computeCloudShadow && !refineClassificationNearCoastlines) {
+            setTargetProduct(landsatCloudProduct);
+        } else {
+            Product postProcessedCloudProduct = createTargetProduct(landsatCloudProduct,
+                                                                    "postProcessedCloud", "postProcessedCloud");
 
-        geoCoding = l1bProduct.getGeoCoding();
+//        HashMap<String, Object> waterParameters = new HashMap<>();
+//        waterParameters.put("resolution", 50);
+//        waterParameters.put("subSamplingFactorX", 3);
+//        waterParameters.put("subSamplingFactorY", 3);
+//        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, l1bProduct);
+            waterFractionBand = waterMaskProduct.getBand("land_water_fraction");
 
-        origCloudFlagBand = landsatCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
-        int extendedWidth = 64;
-        int extendedHeight = 64; // todo: what do we need?
+            geoCoding = l1bProduct.getGeoCoding();
 
-        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                l1bProduct.getSceneRasterHeight()),
-                extendedWidth, extendedHeight
-        );
+            origCloudFlagBand = landsatCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+            int extendedWidth = 64;
+            int extendedHeight = 64; // todo: what do we need?
+
+            rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
+                                                                 l1bProduct.getSceneRasterHeight()),
+                                                   extendedWidth, extendedHeight
+            );
 
 
-        ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, landsatCloudProduct, postProcessedCloudProduct, false);
-        setTargetProduct(postProcessedCloudProduct);
+            ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, landsatCloudProduct, postProcessedCloudProduct, false);
+            setTargetProduct(postProcessedCloudProduct);
+        }
     }
 
     private Product createTargetProduct(Product sourceProduct, String name, String type) {
@@ -132,11 +139,13 @@ public class Landsat8PostProcessOp extends Operator {
                     boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
                     if (isCloudAfterRefinement) {
                         targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, false);
-                        CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                targetTile, targetTile,
-                                cloudBufferWidth,
-                                Landsat8Constants.F_CLOUD,
-                                Landsat8Constants.F_CLOUD_BUFFER);
+                        if ((computeCloudBuffer)) {
+                            CloudBuffer.computeSimpleCloudBuffer(x, y,
+                                                                 targetTile, targetTile,
+                                                                 cloudBufferWidth,
+                                                                 Landsat8Constants.F_CLOUD,
+                                                                 Landsat8Constants.F_CLOUD_BUFFER);
+                        }
                     }
 
                 }

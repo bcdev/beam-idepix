@@ -50,8 +50,14 @@ public class Landsat8Op extends Operator {
 //            description = " Compute cloud shadow with the algorithm from 'Fronts' project")
     private boolean computeCloudShadow = false;  // todo: later if we find a way how to compute
 
-    @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
+    @Parameter(defaultValue = "true",
+            label = " Compute a cloud buffer")
     private boolean computeCloudBuffer;
+
+    @Parameter(defaultValue = "true",
+            label = " Refine pixel classification near coastlines",
+            description = "Refine pixel classification near coastlines. ")
+    private boolean refineClassificationNearCoastlines;
 
     @Parameter(defaultValue = "2",
             interval = "[0,100]",
@@ -205,12 +211,13 @@ public class Landsat8Op extends Operator {
         HashMap<String, Product> input = new HashMap<>();
         input.put("l1b", sourceProduct);
         input.put("landsatCloud", classificationProduct);
+        input.put("waterMask", waterMaskProduct);
 
         Map<String, Object> params = new HashMap<>();
         params.put("cloudBufferWidth", cloudBufferWidth);
         params.put("computeCloudBuffer", computeCloudBuffer);
-        params.put("computeCloudShadow", false);
-        params.put("refineClassificationNearCoastlines", true);  // always an improvement
+        params.put("computeCloudShadow", false);     // todo: we need algo
+        params.put("refineClassificationNearCoastlines", refineClassificationNearCoastlines);  // always an improvement, but time consuming
         postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Landsat8PostProcessOp.class), params, input);
     }
 

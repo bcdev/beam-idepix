@@ -74,35 +74,35 @@ public class AvhrrAcOp extends BasisOp {
             description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
-    @Parameter(defaultValue = "20.0",
-            label = " Reflectance 1 'brightness' threshold ",
-            description = " Reflectance 1 'brightness' threshold ")
-    double reflCh1Thresh;
-
-    @Parameter(defaultValue = "20.0",
-            label = " Reflectance 2 'brightness' threshold ",
-            description = " Reflectance 2 'brightness' threshold ")
-    double reflCh2Thresh;
-
-    @Parameter(defaultValue = "1.0",
-            label = " Reflectance 2/1 ratio threshold ",
-            description = " Reflectance 2/1 ratio threshold ")
-    double r2r1RatioThresh;
-
-    @Parameter(defaultValue = "1.0",
-            label = " Reflectance 3/1 ratio threshold ",
-            description = " Reflectance 3/1 ratio threshold ")
-    double r3r1RatioThresh;
-
-    @Parameter(defaultValue = "-30.0",
-            label = " Channel 4 brightness temperature threshold (C)",
-            description = " Channel 4 brightness temperature threshold (C)")
-    double btCh4Thresh;
-
-    @Parameter(defaultValue = "-30.0",
-            label = " Channel 5 brightness temperature threshold (C)",
-            description = " Channel 5 brightness temperature threshold (C)")
-    double btCh5Thresh;
+//    @Parameter(defaultValue = "0.2",
+//            label = " Reflectance 1 'brightness' threshold ",
+//            description = " Reflectance 1 'brightness' threshold ")
+//    double reflCh1Thresh;
+//
+//    @Parameter(defaultValue = "0.2",
+//            label = " Reflectance 2 'brightness' threshold ",
+//            description = " Reflectance 2 'brightness' threshold ")
+//    double reflCh2Thresh;
+//
+//    @Parameter(defaultValue = "1.0",
+//            label = " Reflectance 2/1 ratio threshold ",
+//            description = " Reflectance 2/1 ratio threshold ")
+//    double r2r1RatioThresh;
+//
+//    @Parameter(defaultValue = "1.0",
+//            label = " Reflectance 3/1 ratio threshold ",
+//            description = " Reflectance 3/1 ratio threshold ")
+//    double r3r1RatioThresh;
+//
+//    @Parameter(defaultValue = "-30.0",
+//            label = " Channel 4 brightness temperature threshold (C)",
+//            description = " Channel 4 brightness temperature threshold (C)")
+//    double btCh4Thresh;
+//
+//    @Parameter(defaultValue = "-30.0",
+//            label = " Channel 5 brightness temperature threshold (C)",
+//            description = " Channel 5 brightness temperature threshold (C)")
+//    double btCh5Thresh;
 
 
     private Map<String, Object> aacCloudClassificationParameters;
@@ -132,12 +132,12 @@ public class AvhrrAcOp extends BasisOp {
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudSureSnowSeparationValue",
                 avhrracSchillerNNCloudSureSnowSeparationValue);
 
-        aacCloudClassificationParameters.put("reflCh1Thresh", reflCh1Thresh);
-        aacCloudClassificationParameters.put("reflCh2Thresh", reflCh2Thresh);
-        aacCloudClassificationParameters.put("r2r1RatioThresh", r2r1RatioThresh);
-        aacCloudClassificationParameters.put("r3r1RatioThresh", r3r1RatioThresh);
-        aacCloudClassificationParameters.put("btCh4Thresh", btCh4Thresh);
-        aacCloudClassificationParameters.put("btCh5Thresh", btCh5Thresh);
+//        aacCloudClassificationParameters.put("reflCh1Thresh", reflCh1Thresh);
+//        aacCloudClassificationParameters.put("reflCh2Thresh", reflCh2Thresh);
+//        aacCloudClassificationParameters.put("r2r1RatioThresh", r2r1RatioThresh);
+//        aacCloudClassificationParameters.put("r3r1RatioThresh", r3r1RatioThresh);
+//        aacCloudClassificationParameters.put("btCh4Thresh", btCh4Thresh);
+//        aacCloudClassificationParameters.put("btCh5Thresh", btCh5Thresh);
 
         return aacCloudClassificationParameters;
     }
@@ -152,7 +152,7 @@ public class AvhrrAcOp extends BasisOp {
         } else if (IdepixUtils.isAvhrrAvisaProduct(sourceProduct)) {
 //            acClassificationOp = new AvhrrAcTestClassificationOp();
         } else if (IdepixUtils.isAvhrrUsgsProduct(sourceProduct)) {
-            acClassificationOp = new AvhrrAcTestClassificationOp();
+            acClassificationOp = new AvhrrAcUSGSClassificationOp();
         } else if (IdepixUtils.isAvhrrOldTestProduct(sourceProduct)) {
             acClassificationOp = new AvhrrAcTestClassificationOp();
         } else {

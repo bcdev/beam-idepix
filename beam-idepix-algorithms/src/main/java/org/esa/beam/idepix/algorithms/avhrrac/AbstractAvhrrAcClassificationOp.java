@@ -170,6 +170,10 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         return IdepixUtils.getDoyFromYYMMDD(getProductDatestring());
     }
 
+    double getDistanceCorr() {
+        return 1.0 + 0.033 * Math.cos(2.0 * Math.PI * getDoy() / 365.0);
+    }
+
     GeoPos getGeoPos(int x, int y) {
         final GeoPos geoPos = new GeoPos();
         final GeoCoding geoCoding = sourceProduct.getGeoCoding();
@@ -180,7 +184,6 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
 
     double convertBetweenAlbedoAndRadiance(double input, double sza, int mode, int bandIndex) {
         // follows GK formula
-        final double distanceCorr = 1.0 + 0.033 * Math.cos(2.0 * Math.PI * getDoy() / 365.0);
         float[] integrSolarSpectralIrrad = new float[3];     // F
         float[] spectralResponseWidth = new float[3];        // W
         switch (noaaId) {
@@ -207,7 +210,7 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         }
         // GK: R=A (F/(100 PI W  cos(sun_zenith)  abstandkorrektur))
         final double conversionFactor = integrSolarSpectralIrrad[bandIndex] /
-                (100.0 * Math.PI * spectralResponseWidth[bandIndex] * Math.cos(sza * MathUtils.DTOR) * distanceCorr);
+                (100.0 * Math.PI * spectralResponseWidth[bandIndex] * Math.cos(sza * MathUtils.DTOR) * getDistanceCorr());
         double result;
         if (mode == ALBEDO_TO_RADIANCE) {
             result = input * conversionFactor;

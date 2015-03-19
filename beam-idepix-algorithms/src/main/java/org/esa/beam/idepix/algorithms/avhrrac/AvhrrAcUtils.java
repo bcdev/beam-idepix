@@ -21,32 +21,28 @@ import java.util.TimeZone;
  */
 public class AvhrrAcUtils {
 
-    private static final double NU_CH3 = 2694.0;
-    private static final double NU_CH4 = 925.0;
-    private static final double NU_CH5 = 839.0;
-
     public static FlagCoding createAvhrrAcFlagCoding(String flagIdentifier) {
 
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
 
-        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, Constants.F_INVALID), null);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, Constants.F_CLOUD), null);
-        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, Constants.F_CLOUD_AMBIGUOUS), null);
-        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, Constants.F_CLOUD_SURE), null);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, Constants.F_CLOUD_BUFFER), null);
-        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, Constants.F_CLOUD_SHADOW), null);
-        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, Constants.F_SNOW_ICE), null);
-        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, Constants.F_MIXED_PIXEL), null);
-        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, Constants.F_GLINT_RISK), null);
-        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, Constants.F_COASTLINE), null);
-        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, Constants.F_LAND), null);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, AvhrrAcConstants.F_INVALID), null);
+        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, AvhrrAcConstants.F_CLOUD), null);
+        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, AvhrrAcConstants.F_CLOUD_AMBIGUOUS), null);
+        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, AvhrrAcConstants.F_CLOUD_SURE), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, AvhrrAcConstants.F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, AvhrrAcConstants.F_CLOUD_SHADOW), null);
+        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, AvhrrAcConstants.F_SNOW_ICE), null);
+        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, AvhrrAcConstants.F_MIXED_PIXEL), null);
+        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, AvhrrAcConstants.F_GLINT_RISK), null);
+        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, AvhrrAcConstants.F_COASTLINE), null);
+        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND), null);
         // tests:
-        flagCoding.addFlag("F_REFL1_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 1), null);
-        flagCoding.addFlag("F_REFL2_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 2), null);
-        flagCoding.addFlag("F_RATIO_REFL21_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 3), null);
-        flagCoding.addFlag("F_RATIO_REFL31_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 4), null);
-        flagCoding.addFlag("F_BT4_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 5), null);
-        flagCoding.addFlag("F_BT5_ABOVE_THRESH", BitSetter.setFlag(0, Constants.F_LAND + 6), null);
+        flagCoding.addFlag("F_REFL1_ABOVE_THRESH", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND + 1), null);
+        flagCoding.addFlag("F_REFL2_ABOVE_THRESH", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND + 2), null);
+        flagCoding.addFlag("F_RATIO_REFL21_ABOVE_THRESH", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND + 3), null);
+        flagCoding.addFlag("F_RATIO_REFL31_ABOVE_THRESH", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND + 4), null);
+        flagCoding.addFlag("F_BT4_ABOVE_THRESH", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND + 5), null);
+        flagCoding.addFlag("F_BT5_ABOVE_THRESH", BitSetter.setFlag(0, AvhrrAcConstants.F_LAND + 6), null);
 
         return flagCoding;
     }
@@ -176,11 +172,11 @@ public class AvhrrAcUtils {
 
         switch (channel) {
             case 3:
-                return c2 * NU_CH3 / Math.log(1.0 + c1 * Math.pow(NU_CH3, 3.0) / radiance);
+                return c2 * AvhrrAcConstants.NU_CH3 / Math.log(1.0 + c1 * Math.pow(AvhrrAcConstants.NU_CH3, 3.0) / radiance);
             case 4:
-                return c2 * NU_CH4 / Math.log(1.0 + c1 * Math.pow(NU_CH4, 3.0) / radiance);
+                return c2 * AvhrrAcConstants.NU_CH4 / Math.log(1.0 + c1 * Math.pow(AvhrrAcConstants.NU_CH4, 3.0) / radiance);
             case 5:
-                return c2 * NU_CH5 / Math.log(1.0 + c1 * Math.pow(NU_CH5, 3.0) / radiance);
+                return c2 * AvhrrAcConstants.NU_CH5 / Math.log(1.0 + c1 * Math.pow(AvhrrAcConstants.NU_CH5, 3.0) / radiance);
             default:
                 throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
         }
@@ -192,11 +188,11 @@ public class AvhrrAcUtils {
 
         switch (channel) {
             case 3:
-                return c1 * Math.pow(NU_CH3, 3.0) / Math.exp(c2 * NU_CH3 / bt);
+                return c1 * Math.pow(AvhrrAcConstants.NU_CH3, 3.0) / Math.exp(c2 * AvhrrAcConstants.NU_CH3 / bt);
             case 4:
-                return c1 * Math.pow(NU_CH4, 3.0) / Math.exp(c2 * NU_CH4 / bt);
+                return c1 * Math.pow(AvhrrAcConstants.NU_CH4, 3.0) / Math.exp(c2 * AvhrrAcConstants.NU_CH4 / bt);
             case 5:
-                return c1 * Math.pow(NU_CH5, 3.0) / Math.exp(c2 * NU_CH5 / bt);
+                return c1 * Math.pow(AvhrrAcConstants.NU_CH5, 3.0) / Math.exp(c2 * AvhrrAcConstants.NU_CH5 / bt);
             default:
                 throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
         }

@@ -12,7 +12,6 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
-import org.esa.beam.util.math.MathUtils;
 
 import java.io.IOException;
 
@@ -134,21 +133,21 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
     void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         AvhrrAcAlgorithm aacAlgorithm = new AvhrrAcAlgorithm();
 
-        final double sza = sourceSamples[Constants.SRC_TL_SZA].getDouble();
-        final double vza = sourceSamples[Constants.SRC_TL_VZA].getDouble();
-        final double saa = sourceSamples[Constants.SRC_TL_SAA].getDouble();
-        final double vaa = sourceSamples[Constants.SRC_TL_VAA].getDouble();
-        final double groundHeight = sourceSamples[Constants.SRC_TL_GROUND_HEIGHT].getDouble();
+        final double sza = sourceSamples[AvhrrAcConstants.SRC_TL_SZA].getDouble();
+        final double vza = sourceSamples[AvhrrAcConstants.SRC_TL_VZA].getDouble();
+        final double saa = sourceSamples[AvhrrAcConstants.SRC_TL_SAA].getDouble();
+        final double vaa = sourceSamples[AvhrrAcConstants.SRC_TL_VAA].getDouble();
+        final double groundHeight = sourceSamples[AvhrrAcConstants.SRC_TL_GROUND_HEIGHT].getDouble();
 
         final double relAzi = saa - vaa;
 
-        double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
-        final double refl1 = sourceSamples[Constants.SRC_TL_REFL_1].getDouble();            // %
-        final double refl2 = sourceSamples[Constants.SRC_TL_REFL_2].getDouble();            // %
-        final double refl3 = sourceSamples[Constants.SRC_TL_REFL_3].getDouble();            // K
-        final double rad3 = sourceSamples[Constants.SRC_TL_RAD_3].getDouble();              // mW*cm/(m^2*sr)
-        final double refl4 = sourceSamples[Constants.SRC_TL_REFL_4].getDouble();            // K
-        final double refl5 = sourceSamples[Constants.SRC_TL_REFL_5].getDouble();            // K
+        double[] avhrrRadiance = new double[AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
+        final double refl1 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_1].getDouble();            // %
+        final double refl2 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_2].getDouble();            // %
+        final double refl3 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_3].getDouble();            // K
+        final double rad3 = sourceSamples[AvhrrAcConstants.SRC_TL_RAD_3].getDouble();              // mW*cm/(m^2*sr)
+        final double refl4 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_4].getDouble();            // K
+        final double refl5 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_5].getDouble();            // K
 
         if (refl1 >= 0.0 && refl2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, saa, vaa)) {
 
@@ -162,7 +161,7 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
             float waterFraction = Float.NaN;
             // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
             if (getGeoPos(x, y).lat > -58f) {
-                waterFraction = sourceSamples[Constants.SRC_TL_WATERFRACTION].getFloat();
+                waterFraction = sourceSamples[AvhrrAcConstants.SRC_TL_WATERFRACTION].getFloat();
             }
 
             SchillerNeuralNetWrapper nnWrapper = avhrracNeuralNet.get();
@@ -192,17 +191,17 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
             final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
             aacAlgorithm.setBtCh5(btCh5);
 
-            aacAlgorithm.setReflCh1Thresh(reflCh1Thresh);
-            aacAlgorithm.setReflCh2Thresh(reflCh2Thresh);
-            aacAlgorithm.setR2r1RatioThresh(r2r1RatioThresh);
-            aacAlgorithm.setR3r1RatioThresh(r3r1RatioThresh);
-            aacAlgorithm.setBtCh4Thresh(btCh4Thresh);
-            aacAlgorithm.setBtCh5Thresh(btCh5Thresh);
+//            aacAlgorithm.setReflCh1Thresh(reflCh1Thresh);
+//            aacAlgorithm.setReflCh2Thresh(reflCh2Thresh);
+//            aacAlgorithm.setR2r1RatioThresh(r2r1RatioThresh);
+//            aacAlgorithm.setR3r1RatioThresh(r3r1RatioThresh);
+//            aacAlgorithm.setBtCh4Thresh(btCh4Thresh);
+//            aacAlgorithm.setBtCh5Thresh(btCh5Thresh);
 
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamples[1].set(nnOutput[0]);
         } else {
-            targetSamples[0].set(Constants.F_INVALID, true);
+            targetSamples[0].set(AvhrrAcConstants.F_INVALID, true);
             targetSamples[1].set(Float.NaN);
         }
 
@@ -212,7 +211,7 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
             targetSamples[4].set(vza);
             targetSamples[5].set(vaa);
             targetSamples[6].set(groundHeight);
-            for (int i = 0; i < Constants.AVHRR_AC_REFL_TL_BAND_NAMES.length; i++) {
+            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_REFL_TL_BAND_NAMES.length; i++) {
                 targetSamples[7 + i].set(sourceSamples[7 + i].getDouble());
             }
         }
@@ -220,23 +219,23 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
 
     @Override
     void setClassifFlag(WritableSample[] targetSamples, AvhrrAcAlgorithm algorithm) {
-        targetSamples[0].set(Constants.F_INVALID, algorithm.isInvalid());
-        targetSamples[0].set(Constants.F_CLOUD, algorithm.isCloud());
-        targetSamples[0].set(Constants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
-        targetSamples[0].set(Constants.F_CLOUD_SURE, algorithm.isCloudSure());
-        targetSamples[0].set(Constants.F_CLOUD_BUFFER, algorithm.isCloudBuffer());
-        targetSamples[0].set(Constants.F_CLOUD_SHADOW, algorithm.isCloudShadow());
-        targetSamples[0].set(Constants.F_SNOW_ICE, algorithm.isSnowIce());
-        targetSamples[0].set(Constants.F_GLINT_RISK, algorithm.isGlintRisk());
-        targetSamples[0].set(Constants.F_COASTLINE, algorithm.isCoastline());
-        targetSamples[0].set(Constants.F_LAND, algorithm.isLand());
+        targetSamples[0].set(AvhrrAcConstants.F_INVALID, algorithm.isInvalid());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD, algorithm.isCloud());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_SURE, algorithm.isCloudSure());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_BUFFER, algorithm.isCloudBuffer());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_SHADOW, algorithm.isCloudShadow());
+        targetSamples[0].set(AvhrrAcConstants.F_SNOW_ICE, algorithm.isSnowIce());
+        targetSamples[0].set(AvhrrAcConstants.F_GLINT_RISK, algorithm.isGlintRisk());
+        targetSamples[0].set(AvhrrAcConstants.F_COASTLINE, algorithm.isCoastline());
+        targetSamples[0].set(AvhrrAcConstants.F_LAND, algorithm.isLand());
         // test:
-        targetSamples[0].set(Constants.F_LAND + 1, algorithm.isReflCh1Bright());
-        targetSamples[0].set(Constants.F_LAND + 2, algorithm.isReflCh2Bright());
-        targetSamples[0].set(Constants.F_LAND + 3, algorithm.isR2R1RatioAboveThresh());
-        targetSamples[0].set(Constants.F_LAND + 4, algorithm.isR3R1RatioAboveThresh());
-        targetSamples[0].set(Constants.F_LAND + 5, algorithm.isCh4BtAboveThresh());
-        targetSamples[0].set(Constants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 1, algorithm.isReflCh1Bright());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 2, algorithm.isReflCh2Bright());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 3, algorithm.isR2R1RatioAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 4, algorithm.isR3R1RatioAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 5, algorithm.isCh4BtAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
     }
 
     @Override
@@ -262,33 +261,33 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
         int index = 0;
         sampleConfigurer.defineSample(index++, "latitude");
         sampleConfigurer.defineSample(index++, "longitude");
-        sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_SZA_TL_BAND_NAME);
-        sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_VZA_TL_BAND_NAME);
-        sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_SAA_TL_BAND_NAME);
-        sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_VAA_TL_BAND_NAME);
-        sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_SZA_TL_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_VZA_TL_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_SAA_TL_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_VAA_TL_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME);
         for (int i = 0; i < 6; i++) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_REFL_TL_BAND_NAMES[i]);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_REFL_TL_BAND_NAMES[i]);
         }
-        sampleConfigurer.defineSample(index, Constants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
+        sampleConfigurer.defineSample(index, AvhrrAcConstants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
     }
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         int index = 0;
         // the only standard band:
-        sampleConfigurer.defineSample(index++, Constants.CLASSIF_BAND_NAME);
-        sampleConfigurer.defineSample(index++, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.CLASSIF_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
 
         // radiances:
         if (aacCopyRadiances) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_SZA_TL_BAND_NAME);
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_VZA_TL_BAND_NAME);
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_SAA_TL_BAND_NAME);
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_VAA_TL_BAND_NAME);
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_SZA_TL_BAND_NAME);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_VZA_TL_BAND_NAME);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_SAA_TL_BAND_NAME);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_VAA_TL_BAND_NAME);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME);
             for (int i = 0; i < 6; i++) {
-                sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_REFL_TL_BAND_NAMES[i]);
+                sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_REFL_TL_BAND_NAMES[i]);
             }
         }
     }
@@ -297,17 +296,17 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         productConfigurer.copyTimeCoding();
         productConfigurer.copyTiePointGrids();
-        Band classifFlagBand = productConfigurer.addBand(Constants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
+        Band classifFlagBand = productConfigurer.addBand(AvhrrAcConstants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
 
         classifFlagBand.setDescription("Pixel classification flag");
         classifFlagBand.setUnit("dl");
-        FlagCoding flagCoding = AvhrrAcUtils.createAvhrrAcFlagCoding(Constants.CLASSIF_BAND_NAME);
+        FlagCoding flagCoding = AvhrrAcUtils.createAvhrrAcFlagCoding(AvhrrAcConstants.CLASSIF_BAND_NAME);
         classifFlagBand.setSampleCoding(flagCoding);
         getTargetProduct().getFlagCodingGroup().add(flagCoding);
 
         productConfigurer.copyGeoCoding();
         AvhrrAcUtils.setupAvhrrAcClassifBitmask(getTargetProduct());
-        Band nnValueBand = productConfigurer.addBand(Constants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
+        Band nnValueBand = productConfigurer.addBand(AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
         nnValueBand.setDescription("Schiller NN output value");
         nnValueBand.setUnit("dl");
         nnValueBand.setNoDataValue(Float.NaN);
@@ -315,38 +314,38 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
 
         // reflectances and other source variables:
         if (aacCopyRadiances) {
-            Band szaBand = productConfigurer.addBand(Constants.AVHRR_AC_SZA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band szaBand = productConfigurer.addBand(AvhrrAcConstants.AVHRR_AC_SZA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
             szaBand.setDescription("sun zenith angle");
             szaBand.setUnit("deg");
             szaBand.setNoDataValue(Float.NaN);
             szaBand.setNoDataValueUsed(true);
 
-            Band saaBand = productConfigurer.addBand(Constants.AVHRR_AC_SAA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band saaBand = productConfigurer.addBand(AvhrrAcConstants.AVHRR_AC_SAA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
             saaBand.setDescription("sun azimuth angle");
             saaBand.setUnit("deg");
             saaBand.setNoDataValue(Float.NaN);
             saaBand.setNoDataValueUsed(true);
 
-            Band vzaBand = productConfigurer.addBand(Constants.AVHRR_AC_VZA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band vzaBand = productConfigurer.addBand(AvhrrAcConstants.AVHRR_AC_VZA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
             vzaBand.setDescription("view zenith angle");
             vzaBand.setUnit("deg");
             vzaBand.setNoDataValue(Float.NaN);
             vzaBand.setNoDataValueUsed(true);
 
-            Band vaaBand = productConfigurer.addBand(Constants.AVHRR_AC_VAA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band vaaBand = productConfigurer.addBand(AvhrrAcConstants.AVHRR_AC_VAA_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
             vaaBand.setDescription("view azimuth angle");
             vaaBand.setUnit("deg");
             vaaBand.setNoDataValue(Float.NaN);
             vaaBand.setNoDataValueUsed(true);
 
-            Band groundHeightBand = productConfigurer.addBand(Constants.AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band groundHeightBand = productConfigurer.addBand(AvhrrAcConstants.AVHRR_AC_GROUND_HEIGHT_TL_BAND_NAME, ProductData.TYPE_FLOAT32);
             groundHeightBand.setDescription("ground height");
             groundHeightBand.setUnit("m");
             groundHeightBand.setNoDataValue(Float.NaN);
             groundHeightBand.setNoDataValueUsed(true);
 
-            for (int i = 0; i < Constants.AVHRR_AC_REFL_TL_BAND_NAMES.length; i++) {
-                Band radianceBand = productConfigurer.addBand(Constants.AVHRR_AC_REFL_TL_BAND_NAMES[i], ProductData.TYPE_FLOAT32);
+            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_REFL_TL_BAND_NAMES.length; i++) {
+                Band radianceBand = productConfigurer.addBand(AvhrrAcConstants.AVHRR_AC_REFL_TL_BAND_NAMES[i], ProductData.TYPE_FLOAT32);
 
                 radianceBand.setNoDataValue(Float.NaN);
                 radianceBand.setNoDataValueUsed(true);

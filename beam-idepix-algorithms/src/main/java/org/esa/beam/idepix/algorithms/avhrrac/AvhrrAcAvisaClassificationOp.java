@@ -269,23 +269,23 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
     }
 
     private void setClassifFlag(WritableSample[] targetSamples, AvhrrAcAlgorithm algorithm) {
-        targetSamples[0].set(Constants.F_INVALID, algorithm.isInvalid());
-        targetSamples[0].set(Constants.F_CLOUD, algorithm.isCloud());
-        targetSamples[0].set(Constants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
-        targetSamples[0].set(Constants.F_CLOUD_SURE, algorithm.isCloudSure());
-        targetSamples[0].set(Constants.F_CLOUD_BUFFER, algorithm.isCloudBuffer());
-        targetSamples[0].set(Constants.F_CLOUD_SHADOW, algorithm.isCloudShadow());
-        targetSamples[0].set(Constants.F_SNOW_ICE, algorithm.isSnowIce());
-        targetSamples[0].set(Constants.F_GLINT_RISK, algorithm.isGlintRisk());
-        targetSamples[0].set(Constants.F_COASTLINE, algorithm.isCoastline());
-        targetSamples[0].set(Constants.F_LAND, algorithm.isLand());
+        targetSamples[0].set(AvhrrAcConstants.F_INVALID, algorithm.isInvalid());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD, algorithm.isCloud());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_SURE, algorithm.isCloudSure());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_BUFFER, algorithm.isCloudBuffer());
+        targetSamples[0].set(AvhrrAcConstants.F_CLOUD_SHADOW, algorithm.isCloudShadow());
+        targetSamples[0].set(AvhrrAcConstants.F_SNOW_ICE, algorithm.isSnowIce());
+        targetSamples[0].set(AvhrrAcConstants.F_GLINT_RISK, algorithm.isGlintRisk());
+        targetSamples[0].set(AvhrrAcConstants.F_COASTLINE, algorithm.isCoastline());
+        targetSamples[0].set(AvhrrAcConstants.F_LAND, algorithm.isLand());
         // test:
-        targetSamples[0].set(Constants.F_LAND + 1, algorithm.isReflCh1Bright());
-        targetSamples[0].set(Constants.F_LAND + 2, algorithm.isReflCh2Bright());
-        targetSamples[0].set(Constants.F_LAND + 3, algorithm.isR2R1RatioAboveThresh());
-        targetSamples[0].set(Constants.F_LAND + 4, algorithm.isR3R1RatioAboveThresh());
-        targetSamples[0].set(Constants.F_LAND + 5, algorithm.isCh4BtAboveThresh());
-        targetSamples[0].set(Constants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 1, algorithm.isReflCh1Bright());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 2, algorithm.isReflCh2Bright());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 3, algorithm.isR2R1RatioAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 4, algorithm.isR3R1RatioAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 5, algorithm.isCh4BtAboveThresh());
+//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
     }
 
     private void runAvhrrAcAlgorithm(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -306,7 +306,7 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
         final double vaaRad = azimuthAngles[1];
         final double myRelAzi = computeRelativeAzimuth(saaRad, vaaRad) * MathUtils.RTOD;
 
-        double[] avhrrRadiance = new double[Constants.AVHRR_AC_RADIANCE_AVISA_BAND_NAMES.length];
+        double[] avhrrRadiance = new double[AvhrrAcConstants.AVHRR_AC_RADIANCE_AVISA_BAND_NAMES.length];
 
         boolean compute = true;
         for (int i = 0; i < 5; i++) {
@@ -324,7 +324,7 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
             float waterFraction = Float.NaN;
             // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
             if (getGeoPos(x, y).lat > -58f) {
-                waterFraction = sourceSamples[Constants.SRC_USGS_WATERFRACTION].getFloat();
+                waterFraction = sourceSamples[AvhrrAcConstants.SRC_USGS_WATERFRACTION].getFloat();
             }
 
             SchillerNeuralNetWrapper nnWrapper = avhrracNeuralNet.get();
@@ -354,7 +354,7 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
             targetSamples[5].set(vaaRad * MathUtils.RTOD);
 
         } else {
-            targetSamples[0].set(Constants.F_INVALID, true);
+            targetSamples[0].set(AvhrrAcConstants.F_INVALID, true);
             targetSamples[1].set(Float.NaN);
             targetSamples[2].set(Float.NaN);
             targetSamples[3].set(Float.NaN);
@@ -365,7 +365,7 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
         }
 
         if (aacCopyRadiances) {
-            for (int i = 0; i < Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 targetSamples[6 + i].set(avhrrRadiance[i]);
             }
         }
@@ -418,18 +418,18 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
         sampleConfigurer.defineSample(index++, "view_zenith");
         sampleConfigurer.defineSample(index++, "delta_azimuth");
         for (int i = 0; i < 5; i++) {
-            sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_RADIANCE_AVISA_BAND_NAMES[i]);
+            sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_RADIANCE_AVISA_BAND_NAMES[i]);
         }
-        sampleConfigurer.defineSample(index, Constants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
+        sampleConfigurer.defineSample(index, AvhrrAcConstants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
     }
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         int index = 0;
         // the only standard band:
-        sampleConfigurer.defineSample(index++, Constants.CLASSIF_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.CLASSIF_BAND_NAME);
 
-        sampleConfigurer.defineSample(index++, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        sampleConfigurer.defineSample(index++, AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
 
         sampleConfigurer.defineSample(index++, "rel_azimuth");
         sampleConfigurer.defineSample(index++, "rel_azimuth_computed");
@@ -438,8 +438,8 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
 
         // radiances:
         if (aacCopyRadiances) {
-            for (int i = 0; i < Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
-                sampleConfigurer.defineSample(index++, Constants.AVHRR_AC_RADIANCE_BAND_NAMES[i]);
+            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+                sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES[i]);
             }
         }
     }
@@ -448,18 +448,18 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         productConfigurer.copyTimeCoding();
         productConfigurer.copyTiePointGrids();
-        Band classifFlagBand = productConfigurer.addBand(Constants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
+        Band classifFlagBand = productConfigurer.addBand(AvhrrAcConstants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
 
         classifFlagBand.setDescription("Pixel classification flag");
         classifFlagBand.setUnit("dl");
-        FlagCoding flagCoding = AvhrrAcUtils.createAvhrrAcFlagCoding(Constants.CLASSIF_BAND_NAME);
+        FlagCoding flagCoding = AvhrrAcUtils.createAvhrrAcFlagCoding(AvhrrAcConstants.CLASSIF_BAND_NAME);
         classifFlagBand.setSampleCoding(flagCoding);
         getTargetProduct().getFlagCodingGroup().add(flagCoding);
 
         productConfigurer.copyGeoCoding();
         AvhrrAcUtils.setupAvhrrAcClassifBitmask(getTargetProduct());
 
-        Band nnValueBand = productConfigurer.addBand(Constants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
+        Band nnValueBand = productConfigurer.addBand(AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
         nnValueBand.setDescription("Schiller NN output value");
         nnValueBand.setUnit("dl");
         nnValueBand.setNoDataValue(Float.NaN);
@@ -491,7 +491,7 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
 
         // radiances:
         if (aacCopyRadiances) {
-            for (int i = 0; i < Constants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 Band radianceBand = productConfigurer.addBand("radiance_" + (i + 1), ProductData.TYPE_FLOAT32);
                 radianceBand.setDescription("TOA radiance band " + (i + 1));
                 radianceBand.setUnit("mW/(m^2 sr cm^-1)");
