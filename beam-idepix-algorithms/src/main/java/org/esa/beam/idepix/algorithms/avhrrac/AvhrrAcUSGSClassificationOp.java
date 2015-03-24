@@ -130,7 +130,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         return correctRelAzimuthRange(vaaRad, saaRad);
     }
 
-    static double[] computeAzimuthAngles(double sza,
+    static double[] computeAzimuthAngles(double sza, double vza,
                                          GeoPos satPosition,
                                          GeoPos pointPosition,
                                          SunPosition sunPosition) {
@@ -150,7 +150,13 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         final double lonSunRad = sunPosition.getLon() * MathUtils.DTOR;
         final double greatCirclePointToSatRad = computeGreatCircleFromPointToSat(latPointRad, lonPointRad, latSatRad, lonSatRad);
 
-        final double vaaRad = computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad, greatCirclePointToSatRad);
+        double vaaRad;
+        if (Math.abs(vza) >= 0.09 && greatCirclePointToSatRad > 0.0) {
+            vaaRad = computeVaa(latPointRad, lonPointRad, latSatRad, lonSatRad, greatCirclePointToSatRad);
+        } else {
+            vaaRad = 0.0;
+        }
+
         final double saaRad = computeSaa(sza, latPointRad, lonPointRad, latSunRad, lonSunRad);
 
         return new double[]{saaRad, vaaRad, greatCirclePointToSatRad};
@@ -228,8 +234,11 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         final GeoPos satPosition = computeSatPosition(y);
         final GeoPos pointPosition = getGeoPos(x, y);
+        if (x == 560 && y == 49) {
+            System.out.println("albedo2 = ");
+        }
 
-        final double[] azimuthAngles = computeAzimuthAngles(sza, satPosition, pointPosition, sunPosition);
+        final double[] azimuthAngles = computeAzimuthAngles(sza, vza, satPosition, pointPosition, sunPosition);
         final double saaRad = azimuthAngles[0];
         final double vaaRad = azimuthAngles[1];
         final double greatCircleRad = azimuthAngles[2];
@@ -239,9 +248,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         final double albedo1 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_1].getDouble();             // %
         final double albedo2 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_2].getDouble();             // %
 
-        if (x == 900 && y == 850) {
-            System.out.println("albedo2 = " + albedo2);
-        }
         int targetSamplesIndex;
         if (albedo1 >= 0.0 && albedo2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, azimuthAngles[0], azimuthAngles[1])) {
 
