@@ -323,6 +323,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             targetSamples[targetSamplesIndex++].set(saaRad * MathUtils.RTOD);
             targetSamples[targetSamplesIndex++].set(greatCircleRad * MathUtils.RTOD);
             targetSamples[targetSamplesIndex++].set(relAzi);
+            targetSamples[targetSamplesIndex++].set(btCh3);
             targetSamples[targetSamplesIndex++].set(btCh4);
             targetSamples[targetSamplesIndex++].set(btCh5);
             targetSamples[targetSamplesIndex++].set(albedo1);
@@ -331,6 +332,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         } else {
             targetSamplesIndex = 0;
             targetSamples[targetSamplesIndex++].set(AvhrrAcConstants.F_INVALID, true);
+            targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
@@ -423,11 +425,11 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         sampleConfigurer.defineSample(index++, "saa");
         sampleConfigurer.defineSample(index++, "great_circle");
         sampleConfigurer.defineSample(index++, "rel_azimuth");
+        sampleConfigurer.defineSample(index++, "bt_3");
         sampleConfigurer.defineSample(index++, "bt_4");
         sampleConfigurer.defineSample(index++, "bt_5");
         sampleConfigurer.defineSample(index++, "refl_1");
         sampleConfigurer.defineSample(index++, "refl_2");
-        sampleConfigurer.defineSample(index++, "refl_3");
 
         // radiances:
         if (aacCopyRadiances) {
@@ -512,6 +514,12 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         relaziBand.setNoDataValue(Float.NaN);
         relaziBand.setNoDataValueUsed(true);
 
+        Band bt3Band = productConfigurer.addBand("bt_3", ProductData.TYPE_FLOAT32);
+        bt3Band.setDescription("Channel 3 brightness temperature");
+        bt3Band.setUnit("C");
+        bt3Band.setNoDataValue(Float.NaN);
+        bt3Band.setNoDataValueUsed(true);
+
         Band bt4Band = productConfigurer.addBand("bt_4", ProductData.TYPE_FLOAT32);
         bt4Band.setDescription("Channel 4 brightness temperature");
         bt4Band.setUnit("C");
@@ -535,13 +543,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         refl2Band.setUnit("dl");
         refl2Band.setNoDataValue(Float.NaN);
         refl2Band.setNoDataValueUsed(true);
-
-        Band refl3Band = productConfigurer.addBand("refl_3", ProductData.TYPE_FLOAT32);
-        refl3Band.setDescription("Channel 3 TOA reflectance");
-        refl3Band.setUnit("dl");
-        refl3Band.setNoDataValue(Float.NaN);
-        refl3Band.setNoDataValueUsed(true);
-
 
         // radiances:
         if (aacCopyRadiances) {
