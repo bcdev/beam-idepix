@@ -7,7 +7,7 @@ package org.esa.beam.idepix.algorithms.landsat8;
  */
 public class Landsat8Algorithm implements Landsat8PixelProperties {
 
-    float[] l8Radiance;
+    float[] l8SpectralBandData;
 
     int brightnessBandLand;
     float brightnessThreshLand;
@@ -25,6 +25,11 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     boolean isLand;
     boolean isInvalid;
+    private boolean applyShimezCloudTest;
+    private float shimezDiffThresh;
+    private float shimezMeanThresh;
+    private boolean applyHotCloudTest;
+    private float hotThresh;
 
     @Override
     public boolean isInvalid() {
@@ -43,7 +48,35 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isCloudSure() {
-        return !isInvalid() && isBright() && isWhite();
+        final boolean isCloudShimez = applyShimezCloudTest ? isCloudShimez() : true;
+        final boolean isCloudHot = applyHotCloudTest ? isCloudHot() : true;
+//        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);   // todo: discuss logic
+        return !isInvalid() && (isCloudShimez || isCloudHot);
+    }
+
+    private boolean isCloudShimez() {
+        // make sure we have reflectances here!!
+        final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
+        final double diff = Math.abs((l8SpectralBandData[1] - mean) / mean) +
+                Math.abs((l8SpectralBandData[2] - mean) / mean) +
+                Math.abs((l8SpectralBandData[3] - mean) / mean);
+
+        return diff < shimezDiffThresh && mean > shimezMeanThresh;
+    }
+
+    private boolean isCloudClost() {
+        // todo
+        return false;
+    }
+
+    private boolean isCloudHot() {
+        final double hot = l8SpectralBandData[1] - 0.5*l8SpectralBandData[3];
+        return hot > hotThresh;
+    }
+
+    private boolean isCloudOtsu() {
+        // todo
+        return false;
     }
 
     @Override
@@ -80,12 +113,12 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     public boolean isBright() {
         if (isLand()) {
             final Integer landBandIndex = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(brightnessBandLand);
-            return !isInvalid() && (l8Radiance[landBandIndex] > brightnessThreshLand);
+            return !isInvalid() && (l8SpectralBandData[landBandIndex] > brightnessThreshLand);
         } else {
             final Integer waterBand1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(brightnessBand1Water);
             final Integer waterBand2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(brightnessBand2Water);
-            final float brightnessWaterValue = brightnessWeightBand1Water* l8Radiance[waterBand1Index] +
-                    brightnessWeightBand2Water* l8Radiance[waterBand2Index];
+            final float brightnessWaterValue = brightnessWeightBand1Water * l8SpectralBandData[waterBand1Index] +
+                    brightnessWeightBand2Water * l8SpectralBandData[waterBand2Index];
             return !isInvalid() && (brightnessWaterValue > brightnessThreshWater);
         }
     }
@@ -95,20 +128,20 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         if (isLand()) {
             final Integer whitenessBand1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand1Land);
             final Integer whitenessBand2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand2Land);
-            final float whiteness = l8Radiance[whitenessBand1Index] / l8Radiance[whitenessBand2Index];
+            final float whiteness = l8SpectralBandData[whitenessBand1Index] / l8SpectralBandData[whitenessBand2Index];
             return !isInvalid() && (whiteness < whitenessThreshLand);
         } else {
             final Integer whitenessBand1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand1Water);
             final Integer whitenessBand2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(whitenessBand2Water);
-            final float whiteness = l8Radiance[whitenessBand1Index] / l8Radiance[whitenessBand2Index];
+            final float whiteness = l8SpectralBandData[whitenessBand1Index] / l8SpectralBandData[whitenessBand2Index];
             return !isInvalid() && (whiteness < whitenessThreshWater);
         }
     }
 
     // setter methods
 
-    public void setL8Radiance(float[] l8Radiance) {
-        this.l8Radiance = l8Radiance;
+    public void setL8SpectralBandData(float[] l8SpectralBandData) {
+        this.l8SpectralBandData = l8SpectralBandData;
     }
 
     public void setIsLand(boolean isLand) {
@@ -171,4 +204,24 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         this.whitenessBand2Water = whitenessBand2Water;
     }
 
+
+    public void setApplyShimezCloudTest(boolean applyShimezCloudTest) {
+        this.applyShimezCloudTest = applyShimezCloudTest;
+    }
+
+    public void setShimezDiffThresh(float shimezDiffThresh) {
+        this.shimezDiffThresh = shimezDiffThresh;
+    }
+
+    public void setShimezMeanThresh(float shimezMeanThresh) {
+        this.shimezMeanThresh = shimezMeanThresh;
+    }
+
+    public void setApplyHotCloudTest(boolean applyHotCloudTest) {
+        this.applyHotCloudTest = applyHotCloudTest;
+    }
+
+    public void setHotThresh(float hotThresh) {
+        this.hotThresh = hotThresh;
+    }
 }

@@ -39,7 +39,9 @@ public class IdepixUtils {
     public static final String F_SEAICE_DESCR_TEXT = "Sea ice pixels";
 
     private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger("idepix");
+
     public static final String IDEPIX_CLOUD_FLAGS = "cloud_classif_flags";
+    public static final String IDEPIX_PIXEL_CLASSIF_FLAGS = "pixel_classif_flags";
 
     private IdepixUtils() {
     }

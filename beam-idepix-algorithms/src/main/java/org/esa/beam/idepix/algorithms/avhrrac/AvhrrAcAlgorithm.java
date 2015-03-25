@@ -56,8 +56,9 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     @Override
     public boolean isSnowIce() {
 
-        boolean isSnowIce = isCloudSureSchiller() && emissivity3b < AvhrrAcConstants.EMISSIVITY_THRESH;
+//        boolean isSnowIce = isCloudSureSchiller() && emissivity3b < AvhrrAcConstants.EMISSIVITY_THRESH;
         // todo: also consider NDSI?!
+        boolean isSnowIce = !isCloudTgct() && ndsi > 0.8;
 
         // for AVHRR, nnOutput has one element:
         // nnOutput[0] =
@@ -75,23 +76,24 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
     @Override
     public boolean isCloudAmbiguous() {
-        if (isCloudSure()) {   // this check has priority
-            return false;
-        }
-
-        // for AVHRR, nnOutput has one element:
-        // nnOutput[0] =
-        // 0 < x < 2.15 : clear
-        // 2.15 < x < 3.45 : noncl / semitransparent cloud --> cloud ambiguous
-        // 3.45 < x < 4.45 : cloudy --> cloud sure
-        // 4.45 < x : clear snow/ice
-        if (nnOutput != null) {
-            return nnOutput[0] >= avhrracSchillerNNCloudAmbiguousLowerBoundaryValue &&
-                    nnOutput[0] < avhrracSchillerNNCloudAmbiguousSureSeparationValue;    // separation numbers from report HS, 20141112 for NN Nr.2
-//            return nnOutput[0] >= 0.48 && nnOutput[0] < 0.48;      // CB: cloud sure gives enough clouds, no ambiguous needed, 20141111
-        } else {
-            return false;
-        }
+        return isCloudSure(); // todo: discuss
+//        if (isCloudSure()) {   // this check has priority
+//            return false;
+//        }
+//
+//        // for AVHRR, nnOutput has one element:
+//        // nnOutput[0] =
+//        // 0 < x < 2.15 : clear
+//        // 2.15 < x < 3.45 : noncl / semitransparent cloud --> cloud ambiguous
+//        // 3.45 < x < 4.45 : cloudy --> cloud sure
+//        // 4.45 < x : clear snow/ice
+//        if (nnOutput != null) {
+//            return nnOutput[0] >= avhrracSchillerNNCloudAmbiguousLowerBoundaryValue &&
+//                    nnOutput[0] < avhrracSchillerNNCloudAmbiguousSureSeparationValue;    // separation numbers from report HS, 20141112 for NN Nr.2
+////            return nnOutput[0] >= 0.48 && nnOutput[0] < 0.48;      // CB: cloud sure gives enough clouds, no ambiguous needed, 20141111
+//        } else {
+//            return false;
+//        }
     }
 
     @Override
@@ -132,7 +134,8 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         // 1. RGCT test:
         final double ndvi = (reflCh2 - reflCh1)/(reflCh2 + reflCh1);
         final double rgctThresh = getRgctThreshold(ndvi);
-        final boolean isCloudRGCT = isLand() && reflCh1/100.0 > rgctThresh;
+//        final boolean isCloudRGCT = isLand() && reflCh1/100.0 > rgctThresh;
+        final boolean isCloudRGCT = isLand() && reflCh1 > rgctThresh;  // reflCh1 should not be divided by 100?!
 
         // 2. RRCT test:
         final double rrctThresh = 1.1;
@@ -143,8 +146,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         final boolean isCloudC3AT = isLand() && !isDesertArea() && rho3b > c3atThresh;
 
         // 4. TGCT test
-        final double tgctThresh = 244.0;
-        final boolean isCloudTGCT = btCh4 < tgctThresh;
+        final boolean isCloudTGCT = btCh4 < AvhrrAcConstants.TGCT_THRESH;
 
         // 5. FMFT test
         final double fmftThresh = getFmftThreshold();
@@ -157,9 +159,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         final boolean isClearTMFT = bt34 > tmftMinThresh && bt34 < tmftMaxThresh;
 
         // 7. Emissivity test
-//        final double emissivityThresh = 0.022; // or 2.2?
-        final double emissivityThresh = 2.2; // or 2.2?
-        final boolean isCloudEmissivity = emissivity3b > emissivityThresh;
+        final boolean isCloudEmissivity = emissivity3b > AvhrrAcConstants.EMISSIVITY_THRESH;
 
         // now use combinations:
         //
@@ -180,11 +180,16 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             // second branch of condition tree:
             if ((isDesertArea() && (isCloudFMFT || Math.abs(latitude) < AvhrrAcConstants.LAT_MAX_THRESH)) ||
                         (isCloudRRCT && isCloudFMFT) ||
+                        (isCloudRRCT && isCloudTGCT) ||
                         (isCloudRRCT && isCloudC3AT)) {
                 isCloudAdditional = true;
             }
         }
         return isCloudAdditional;
+    }
+
+    private boolean isCloudTgct() {
+        return btCh4 < AvhrrAcConstants.TGCT_THRESH;
     }
 
     private double getTmftMinThreshold(double bt34) {
@@ -402,11 +407,14 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         final double R3bem = btCh4Celsius > 0.0 ? c1*Math.pow(AvhrrAcConstants.NU_CH3, 3.0)/(expTerm - 1.0) : 0.0;
         final double B03b = 1000.0*solar3b/ew3b;
 
-        emissivity3b = btCh4Celsius > 0.0 ? radiance[2]/R3bem : 0.0;
+//        emissivity3b = btCh4Celsius > 0.0 ? radiance[2]/R3bem : 0.0;
+        emissivity3b = btCh4Celsius > 0.0 ? R3bem/radiance[2] : 0.0;       // BT4 in K should always be > 0 !!
+        emissivity3b = Math.max(Math.min(emissivity3b, 1.0), 0.0);
 
         if (sza < 90.0 && R3bem > 0.0 && radiance[2] > 0.0) {
             rho3b = Math.PI * (radiance[2] - R3bem) /
                     ((B03b * Math.cos(sza * MathUtils.DTOR) / distanceCorr) - Math.PI * R3bem);
+            rho3b = Math.max(Math.min(rho3b, 1.0), 0.0);
         } else if (sza > 90.0 && emissivity3b > 0.0) {
             rho3b = 1.0 - emissivity3b;
         } else {

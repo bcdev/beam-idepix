@@ -7,8 +7,12 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.idepix.util.*;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
+import org.esa.beam.idepix.util.SunPosition;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.util.math.RsMathUtils;
 
@@ -39,7 +43,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
     Product targetProduct;
 
     // AvhrrAc parameters
-    @Parameter(defaultValue = "false", label = " Copy input radiance bands (with albedo1/2 converted)")
+//    @Parameter(defaultValue = "false", label = " Copy input radiance bands (with albedo1/2 converted)")
     boolean aacCopyRadiances = false;
 
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
@@ -248,6 +252,12 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         final double albedo1 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_1].getDouble();             // %
         final double albedo2 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_2].getDouble();             // %
 
+        // convert albedo1,2 to 'normalized' albedo:
+        // norm_albedo_i = albedo_i * d^2_sun/cos(theta_sun)    , effect is a few % only
+        final double d = getDistanceCorr()/Math.cos(sza * MathUtils.DTOR);
+        final double albedo1Norm = albedo1 * d;
+        final double albedo2Norm = albedo2 * d;
+
         int targetSamplesIndex;
         if (albedo1 >= 0.0 && albedo2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, azimuthAngles[0], azimuthAngles[1])) {
 
@@ -283,10 +293,8 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
-            aacAlgorithm.setReflCh1(albedo1/100.0); // on [0,1]
-            aacAlgorithm.setReflCh2(albedo2/100.0); // on [0,1]
-            final double reflCh3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO, 2);
-            aacAlgorithm.setReflCh3(reflCh3);    // this is already on [0,1], not in % !
+            aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> todo: put here albedo_norm now!!
+            aacAlgorithm.setReflCh2(albedo2Norm / 100.0); // on [0,1]
             final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
             aacAlgorithm.setBtCh3(btCh3 + 273.15);
             final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
@@ -319,12 +327,10 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             targetSamples[targetSamplesIndex++].set(btCh5);
             targetSamples[targetSamplesIndex++].set(albedo1);
             targetSamples[targetSamplesIndex++].set(albedo2);
-            targetSamples[targetSamplesIndex++].set(reflCh3);
 
         } else {
             targetSamplesIndex = 0;
             targetSamples[targetSamplesIndex++].set(AvhrrAcConstants.F_INVALID, true);
-            targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);

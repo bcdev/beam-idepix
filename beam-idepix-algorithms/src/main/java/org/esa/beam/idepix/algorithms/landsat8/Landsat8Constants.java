@@ -41,7 +41,7 @@ public class Landsat8Constants {
     public static final Map<Integer, Integer> LANDSAT8_SPECTRAL_WAVELENGTH_MAP;
     static
     {
-        LANDSAT8_SPECTRAL_WAVELENGTH_MAP = new HashMap<Integer, Integer>();
+        LANDSAT8_SPECTRAL_WAVELENGTH_MAP = new HashMap<>();
         LANDSAT8_SPECTRAL_WAVELENGTH_MAP.put(440, 0);
         LANDSAT8_SPECTRAL_WAVELENGTH_MAP.put(480, 1);
         LANDSAT8_SPECTRAL_WAVELENGTH_MAP.put(560, 2);
@@ -69,4 +69,5 @@ public class Landsat8Constants {
             "thermal_infrared_(tirs)_2", // 10 (12005nm)
     };
     public static final int LANDSAT8_NUM_SPECTRAL_BANDS = LANDSAT8_SPECTRAL_BAND_NAMES.length;
+
 }

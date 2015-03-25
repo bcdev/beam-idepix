@@ -137,6 +137,30 @@ public class Landsat8Op extends Operator {
             label = "Threshold for whiteness classification over water")
     private float whitenessThreshWater;
 
+    // SHIMEZ parameters:
+    @Parameter(defaultValue = "true",
+               label = " Apply SHIMEZ cloud test")
+    private boolean applyShimezCloudTest;
+
+    @Parameter(defaultValue = "0.1",
+               description = "Threshold A for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
+               label = "Threshold A for SHIMEZ cloud test")
+    private float shimezDiffThresh;
+
+    @Parameter(defaultValue = "0.35",
+               description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
+               label = "Threshold B for SHIMEZ cloud test")
+    private float shimezMeanThresh;
+
+    // HOT parameters:
+    @Parameter(defaultValue = "true",
+               label = " Apply HOT cloud test")
+    private boolean applyHotCloudTest;
+
+    @Parameter(defaultValue = "0.15",
+               description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
+               label = "Threshold A for HOT cloud test")
+    private float hotThresh;
 
 
     private static final int LAND_WATER_MASK_RESOLUTION = 50;
@@ -159,6 +183,11 @@ public class Landsat8Op extends Operator {
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
+
+        // todo: this does not work yet, will likely be slow
+//        HashMap<String, Product> otsuInput = new HashMap<>();
+//        otsuInput.put("l8source", sourceProduct);
+//        Product otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), GPF.NO_PARAMS, otsuInput);
 
         preProcess();
         computeCloudProduct();
@@ -196,6 +225,12 @@ public class Landsat8Op extends Operator {
         classificationParameters.put("whitenessThreshWater", whitenessThreshWater);
         classificationParameters.put("whitenessBand1Water", whitenessBand1Water);
         classificationParameters.put("whitenessBand2Water", whitenessBand2Water);
+
+        classificationParameters.put("applyShimezCloudTest", applyShimezCloudTest);
+        classificationParameters.put("shimezDiffThresh", shimezDiffThresh);
+        classificationParameters.put("shimezMeanThresh", shimezMeanThresh);
+        classificationParameters.put("applyHotCloudTest", applyHotCloudTest);
+        classificationParameters.put("hotThresh", hotThresh);
     }
 
     private void computeCloudProduct() {

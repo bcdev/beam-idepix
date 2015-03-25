@@ -144,7 +144,10 @@ public class AvhrrAcConstants {
     public static final double c1 = 1.1910659*1.E-5; // mW/(m^2 sr cm^-4)
     public static final double c2 = 1.438833;
 
-    public static final double EMISSIVITY_THRESH = 2.2;
+//    public static final double TGCT_THRESH = 244.0;
+    public static final double TGCT_THRESH = 260.0;
+
+    public static final double EMISSIVITY_THRESH = 0.022;
     public static final double LAT_MAX_THRESH = 60.0;
 
     public static double[] fmftTestThresholds = new double[] {

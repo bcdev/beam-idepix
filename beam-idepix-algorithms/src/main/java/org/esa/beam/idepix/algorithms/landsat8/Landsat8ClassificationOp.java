@@ -101,6 +101,31 @@ public class Landsat8ClassificationOp extends Operator {
             label = "Threshold for whiteness classification over water")
     private float whitenessThreshWater;
 
+    // SHIMEZ parameters
+    @Parameter(defaultValue = "true",
+               label = " Apply SHIMEZ cloud test")
+    private boolean applyShimezCloudTest;
+
+    @Parameter(defaultValue = "0.35",
+               description = "Threshold A for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
+               label = "Threshold A for SHIMEZ cloud test")
+    private float shimezDiffThresh;
+
+    @Parameter(defaultValue = "0.35",
+               description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
+               label = "Threshold B for SHIMEZ cloud test")
+    private float shimezMeanThresh;
+
+    // HOT parameters:
+    @Parameter(defaultValue = "true",
+               label = " Apply HOT cloud test")
+    private boolean applyHotCloudTest;
+
+    @Parameter(defaultValue = "0.15",
+               description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
+               label = "Threshold A for HOT cloud test")
+    private float hotThresh;
+
 
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
@@ -255,8 +280,14 @@ public class Landsat8ClassificationOp extends Operator {
         }
 
         l8Algorithm.setInvalid(l8FlagTile.getSampleBit(x, y, L8_F_DESIGNATED_FILL));
-        l8Algorithm.setL8Radiance(l8Radiance);
+        l8Algorithm.setL8SpectralBandData(l8Radiance);
         l8Algorithm.setIsLand(isLand);
+
+        l8Algorithm.setApplyShimezCloudTest(applyShimezCloudTest);
+        l8Algorithm.setShimezDiffThresh(shimezDiffThresh);
+        l8Algorithm.setShimezMeanThresh(shimezMeanThresh);
+        l8Algorithm.setHotThresh(hotThresh);
+        l8Algorithm.setApplyHotCloudTest(applyHotCloudTest);
 
         l8Algorithm.setBrightnessBandLand(brightnessBandLand);
         l8Algorithm.setBrightnessThreshLand(brightnessThreshLand);

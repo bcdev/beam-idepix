@@ -1,5 +1,6 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -34,15 +35,25 @@ public class AvhrrAcOp extends BasisOp {
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
 
-    private Product classifProduct;
+    private Product classificationProduct;
+    private Product postProcessingProduct;
     private Product waterMaskProduct;
 
     // AvhrrAc parameters
-    @Parameter(defaultValue = "false", label = " Copy input radiance/reflectance bands")
+//    @Parameter(defaultValue = "false", label = " Copy input radiance/reflectance bands")
     private boolean aacCopyRadiances = false;
 
+    @Parameter(defaultValue = "true",
+               label = " Compute a cloud buffer")
+    private boolean computeCloudBuffer;
+
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
-    private int aacCloudBufferWidth;
+    private int cloudBufferWidth;
+
+    @Parameter(defaultValue = "true",
+               label = " Refine pixel classification near coastlines",
+               description = "Refine pixel classification near coastlines. ")
+    private boolean refineClassificationNearCoastlines;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
             description = "Resolution in m/pixel")
@@ -121,7 +132,7 @@ public class AvhrrAcOp extends BasisOp {
     private Map<String, Object> createAacCloudClassificationParameters() {
         Map<String, Object> aacCloudClassificationParameters = new HashMap<>(1);
         aacCloudClassificationParameters.put("aacCopyRadiances", aacCopyRadiances);
-        aacCloudClassificationParameters.put("aacCloudBufferWidth", aacCloudBufferWidth);
+        aacCloudClassificationParameters.put("aacCloudBufferWidth", cloudBufferWidth);
         aacCloudClassificationParameters.put("wmResolution", wmResolution);
         aacCloudClassificationParameters.put("aacUseWaterMaskFraction", aacUseWaterMaskFraction);
         aacCloudClassificationParameters.put("flipSourceImages", flipSourceImages);
@@ -169,8 +180,31 @@ public class AvhrrAcOp extends BasisOp {
         acClassificationOp.setSourceProduct("aacl1b", sourceProduct);
         acClassificationOp.setSourceProduct("waterMask", waterMaskProduct);
 
-        setTargetProduct(acClassificationOp.getTargetProduct());
+//        setTargetProduct(acClassificationOp.getTargetProduct());
+        classificationProduct = acClassificationOp.getTargetProduct();
+        postProcess();
+
+        targetProduct = IdepixUtils.cloneProduct(classificationProduct);
+
+        Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS);
+        cloudFlagBand.setSourceImage(postProcessingProduct.getBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS).getSourceImage());
+
     }
+
+    private void postProcess() {
+        HashMap<String, Product> input = new HashMap<>();
+        input.put("l1b", sourceProduct);
+        input.put("avhrrCloud", classificationProduct);
+        input.put("waterMask", waterMaskProduct);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("cloudBufferWidth", cloudBufferWidth);
+        params.put("computeCloudBuffer", computeCloudBuffer);
+        params.put("computeCloudShadow", false);     // todo: we need algo
+        params.put("refineClassificationNearCoastlines", refineClassificationNearCoastlines);  // always an improvement, but time consuming
+        postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AvhrrAcPostProcessOp.class), params, input);
+    }
+
 
     private void computeAvhrrAcAlgorithmInputProducts(Map<String, Product> aacCloudInput) {
         createWaterMaskProduct();
