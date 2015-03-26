@@ -7,18 +7,10 @@ package org.esa.beam.idepix.algorithms.landsat8;
  *
  */
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 
 public class OtsuBinarize {
-
-    private OtsuBinarize otsuBinarize;
-
-    private static BufferedImage original, grayscale, binarized;
 
     // Return histogram of grayscale image
     public static int[] imageHistogram(BufferedImage input) {
@@ -44,8 +36,7 @@ public class OtsuBinarize {
         int alpha, red, green, blue;
         int newPixel;
 
-//        BufferedImage lum = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
-        BufferedImage lum = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
+        BufferedImage lum = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
 
         for (int i = 0; i < original.getWidth(); i++) {
             for (int j = 0; j < original.getHeight(); j++) {
@@ -81,7 +72,7 @@ public class OtsuBinarize {
 
         float sumB = 0;
         int wB = 0;
-        int wF = 0;
+        int wF;
 
         float varMax = 0;
         int threshold = 0;
@@ -131,7 +122,6 @@ public class OtsuBinarize {
                 }
                 newPixel = colorToRGB(alpha, newPixel, newPixel, newPixel);
                 binarized.setRGB(i, j, newPixel);
-
             }
         }
 

@@ -25,14 +25,9 @@ public class Landsat8Constants {
 
     public static final String F_INVALID_DESCR_TEXT = "Invalid pixel";
     public static final String F_CLOUD_DESCR_TEXT = "Cloudy pixel";
-    public static final String F_CLOUD_AMBIGUOUS_DESCR_TEXT = "Semi transparent clouds, or clouds where the detection level is uncertain";
-    public static final String F_CLOUD_SURE_DESCR_TEXT = "Fully opaque clouds with full confidence of their detection";
     public static final String F_CLOUD_BUFFER_DESCR_TEXT = "A buffer of n pixels around a cloud. n is a user supplied parameter. Applied to pixels masked as 'cloud'";
-    public static final String F_CLOUD_SHADOW_DESCR_TEXT = "Pixel is affect by a cloud shadow";
     public static final String F_BRIGHT_DESCR_TEXT = "Bright pixel";
     public static final String F_WHITE_DESCR_TEXT = "White pixel";
-    public static final String F_SNOW_ICE_DESCR_TEXT = "Snow/ice pixel";
-    public static final String F_GLINTRISK_DESCR_TEXT = "Pixel with glint risk";
     public static final String F_COASTLINE_DESCR_TEXT = "Pixel at a coastline";
     public static final String F_LAND_DESCR_TEXT = "Land pixel";
 
@@ -55,18 +50,30 @@ public class Landsat8Constants {
         LANDSAT8_SPECTRAL_WAVELENGTH_MAP.put(12005, 10);
     }
 
+    public static final String LANDSAT8_COASTAL_AEROSOL_BAND_NAME = "coastal_aerosol";
+    public static final String LANDSAT8_BLUE_BAND_NAME = "blue";
+    public static final String LANDSAT8_GREEN_BAND_NAME = "green";
+    public static final String LANDSAT8_RED_BAND_NAME = "red";
+    public static final String LANDSAT8_NEAR_INFRARED_BAND_NAME = "near_infrared";
+    public static final String LANDSAT8_SWIR1_BAND_NAME = "swir_1";
+    public static final String LANDSAT8_SWIR2_BAND_NAME = "swir_2";
+    public static final String LANDSAT8_PANCHROMATIC_BAND_NAME = "panchromatic";
+    public static final String LANDSAT8_CIRRUS_BAND_NAME = "cirrus";
+    public static final String LANDSAT8_THERMAL_INFRARED_TIRS_1_BAND_NAME = "thermal_infrared_(tirs)_1";
+    public static final String LANDSAT8_THERMAL_INFRARED_TIRS_2_BAND_NAME = "thermal_infrared_(tirs)_2";
+
     public static final String[] LANDSAT8_SPECTRAL_BAND_NAMES = {
-            "coastal_aerosol",           // 0  (440nm)
-            "blue",                      // 1  (480nm)
-            "green",                     // 2  (560nm)
-            "red",                       // 3  (655nm)
-            "near_infrared",             // 4  (865nm)
-            "swir_1",                    // 5  (1610nm)
-            "swir_2",                    // 6  (2200nm)
-            "panchromatic",              // 7  (590nm)
-            "cirrus",                    // 8  (1370nm)
-            "thermal_infrared_(tirs)_1", // 9  (10895nm)
-            "thermal_infrared_(tirs)_2", // 10 (12005nm)
+            LANDSAT8_COASTAL_AEROSOL_BAND_NAME,           // 0  (440nm)
+            LANDSAT8_BLUE_BAND_NAME,                      // 1  (480nm)
+            LANDSAT8_GREEN_BAND_NAME,                     // 2  (560nm)
+            LANDSAT8_RED_BAND_NAME,                       // 3  (655nm)
+            LANDSAT8_NEAR_INFRARED_BAND_NAME,             // 4  (865nm)
+            LANDSAT8_SWIR1_BAND_NAME,                     // 5  (1610nm)
+            LANDSAT8_SWIR2_BAND_NAME,                     // 6  (2200nm)
+            LANDSAT8_PANCHROMATIC_BAND_NAME,              // 7  (590nm)
+            LANDSAT8_CIRRUS_BAND_NAME,                    // 8  (1370nm)
+            LANDSAT8_THERMAL_INFRARED_TIRS_1_BAND_NAME,   // 9  (10895nm)
+            LANDSAT8_THERMAL_INFRARED_TIRS_2_BAND_NAME,   // 10 (12005nm)
     };
     public static final int LANDSAT8_NUM_SPECTRAL_BANDS = LANDSAT8_SPECTRAL_BAND_NAMES.length;
 

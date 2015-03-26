@@ -25,14 +25,14 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.landsat8",
-        version = "2.2",
-        copyright = "(c) 2014 by Brockmann Consult",
-        description = "Pixel identification for Landsat 8.")
+                  version = "2.2",
+                  copyright = "(c) 2014 by Brockmann Consult",
+                  description = "Pixel identification for Landsat 8.")
 public class Landsat8Op extends Operator {
 
     @SourceProduct(alias = "sourceProduct",
-            label = "Landsat 8 product",
-            description = "The Landsat 8 source product.")
+                   label = "Landsat 8 product",
+                   description = "The Landsat 8 source product.")
     private Product sourceProduct;
 
     @TargetProduct(description = "The target product.")
@@ -41,8 +41,8 @@ public class Landsat8Op extends Operator {
     // overall parameters
 
     @Parameter(defaultValue = "false",
-            description = "Write source bands to the target product.",
-            label = " Write source bands to the target product")
+               description = "Write source bands to the target product.",
+               label = " Write source bands to the target product")
     private boolean outputSourceBands = false;
 
     //    @Parameter(defaultValue = "true",
@@ -51,90 +51,90 @@ public class Landsat8Op extends Operator {
     private boolean computeCloudShadow = false;  // todo: later if we find a way how to compute
 
     @Parameter(defaultValue = "true",
-            label = " Compute a cloud buffer")
+               label = " Compute a cloud buffer")
     private boolean computeCloudBuffer;
 
     @Parameter(defaultValue = "true",
-            label = " Refine pixel classification near coastlines",
-            description = "Refine pixel classification near coastlines. ")
+               label = " Refine pixel classification near coastlines",
+               description = "Refine pixel classification near coastlines. ")
     private boolean refineClassificationNearCoastlines;
 
     @Parameter(defaultValue = "2",
-            interval = "[0,100]",
-            description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
-            label = "Width of cloud buffer (# of pixels)")
+               interval = "[0,100]",
+               description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
+               label = "Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
     @Parameter(defaultValue = "865",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength for brightness computation br = R(wvl) over land.",
-            label = "Wavelength for brightness computation over land")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength for brightness computation br = R(wvl) over land.",
+               label = "Wavelength for brightness computation over land")
     private int brightnessBandLand;
 
     @Parameter(defaultValue = "100.0",
-            description = "Threshold T for brightness classification over land: bright if br > T.",
-            label = "Threshold for brightness classification over land")
+               description = "Threshold T for brightness classification over land: bright if br > T.",
+               label = "Threshold for brightness classification over land")
     private float brightnessThreshLand;
 
     @Parameter(defaultValue = "655",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength 1 for brightness computation over water.",
-            label = "Wavelength 1 for brightness computation over water")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength 1 for brightness computation over water.",
+               label = "Wavelength 1 for brightness computation over water")
     private int brightnessBand1Water;
 
     @Parameter(defaultValue = "1.0",
-            description = "Weight A for wavelength 1 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
-            label = "Weight A for wavelength 1 for brightness computation over water")
+               description = "Weight A for wavelength 1 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
+               label = "Weight A for wavelength 1 for brightness computation over water")
     private float brightnessWeightBand1Water;
 
     @Parameter(defaultValue = "865",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength 2 for brightness computation over water.",
-            label = "Wavelength 1 for brightness computation over water")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength 2 for brightness computation over water.",
+               label = "Wavelength 1 for brightness computation over water")
     private int brightnessBand2Water;
 
     @Parameter(defaultValue = "1.0",
-            description = "Weight B for wavelength 2 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
-            label = "Weight B for wavelength 2 for brightness computation over water")
+               description = "Weight B for wavelength 2 for brightness computation (br = A*R(wvl_1) + B*R(wvl_2)) over water.",
+               label = "Weight B for wavelength 2 for brightness computation over water")
     private float brightnessWeightBand2Water;
 
     @Parameter(defaultValue = "100.0",
-            description = "Threshold T for brightness classification over water: bright if br > T.",
-            label = "Threshold for brightness classification over water")
+               description = "Threshold T for brightness classification over water: bright if br > T.",
+               label = "Threshold for brightness classification over water")
     private float brightnessThreshWater;
 
     @Parameter(defaultValue = "655",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
-            label = "Wavelength 1 for whiteness computation over land")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
+               label = "Wavelength 1 for whiteness computation over land")
     private int whitenessBand1Land;
 
     @Parameter(defaultValue = "865",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
-            label = "Wavelength 2 for whiteness computation over land")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over land.",
+               label = "Wavelength 2 for whiteness computation over land")
     private int whitenessBand2Land;
 
     @Parameter(defaultValue = "2.0",
-            description = "Threshold T for whiteness classification over land: white if wh < T.",
-            label = "Threshold for whiteness classification over land")
+               description = "Threshold T for whiteness classification over land: white if wh < T.",
+               label = "Threshold for whiteness classification over land")
     private float whitenessThreshLand;
 
     @Parameter(defaultValue = "655",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
-            label = "Wavelength 1 for whiteness computation over water")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength 1 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+               label = "Wavelength 1 for whiteness computation over water")
     private int whitenessBand1Water;
 
     @Parameter(defaultValue = "865",
-            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
-            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
-            label = "Wavelength 2 for whiteness computation over water")
+               valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+               description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+               label = "Wavelength 2 for whiteness computation over water")
     private int whitenessBand2Water;
 
     @Parameter(defaultValue = "2.0",
-            description = "Threshold T for whiteness classification over water: white if wh < T.",
-            label = "Threshold for whiteness classification over water")
+               description = "Threshold T for whiteness classification over water: white if wh < T.",
+               label = "Threshold for whiteness classification over water")
     private float whitenessThreshWater;
 
     // SHIMEZ parameters:
@@ -162,6 +162,12 @@ public class Landsat8Op extends Operator {
                label = "Threshold A for HOT cloud test")
     private float hotThresh;
 
+    // todo: maybe activate
+//    @Parameter(defaultValue = "GREY",
+//               valueSet = {"GREY", "BINARY"},
+//               description = "OTSU processing mode (grey or binary target image)",
+//               label = "OTSU processing mode (grey or binary target image)")
+    private String otsuMode = "GREY";
 
     private static final int LAND_WATER_MASK_RESOLUTION = 50;
     private static final int OVERSAMPLING_FACTOR_X = 3;
@@ -184,10 +190,13 @@ public class Landsat8Op extends Operator {
             throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
         }
 
-        // todo: this does not work yet, will likely be slow
+        // todo: discuss and maybe activate
 //        HashMap<String, Product> otsuInput = new HashMap<>();
 //        otsuInput.put("l8source", sourceProduct);
-//        Product otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), GPF.NO_PARAMS, otsuInput);
+//        HashMap<String, Object> otsuParameters = new HashMap<>();
+//        otsuParameters.put("otsuMode", otsuMode);
+//        Product otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), otsuParameters, otsuInput);
+//        setTargetProduct(otsuProduct);
 
         preProcess();
         computeCloudProduct();
@@ -239,7 +248,7 @@ public class Landsat8Op extends Operator {
         classificationInputProducts.put("l8source", sourceProduct);
         classificationInputProducts.put("waterMask", waterMaskProduct);
         classificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Landsat8ClassificationOp.class),
-                classificationParameters, classificationInputProducts);
+                                                  classificationParameters, classificationInputProducts);
     }
 
     private void postProcess() {
