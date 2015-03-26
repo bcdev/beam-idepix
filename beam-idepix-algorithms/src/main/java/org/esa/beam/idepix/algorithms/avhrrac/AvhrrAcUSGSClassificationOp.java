@@ -238,9 +238,9 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         final GeoPos satPosition = computeSatPosition(y);
         final GeoPos pointPosition = getGeoPos(x, y);
-        if (x == 560 && y == 49) {
-            System.out.println("albedo2 = ");
-        }
+//        if (x == 560 && y == 49) {
+//            System.out.println("albedo2 = ");
+//        }
 
         final double[] azimuthAngles = computeAzimuthAngles(sza, vza, satPosition, pointPosition, sunPosition);
         final double saaRad = azimuthAngles[0];
@@ -252,7 +252,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         final double albedo1 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_1].getDouble();             // %
         final double albedo2 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_2].getDouble();             // %
 
-        // convert albedo1,2 to 'normalized' albedo:
+        // GK, 20150325: convert albedo1,2 to 'normalized' albedo:
         // norm_albedo_i = albedo_i * d^2_sun/cos(theta_sun)    , effect is a few % only
         final double d = getDistanceCorr()/Math.cos(sza * MathUtils.DTOR);
         final double albedo1Norm = albedo1 * d;
@@ -293,7 +293,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setAmbiguousSureSeparationValue(avhrracSchillerNNCloudAmbiguousSureSeparationValue);
             aacAlgorithm.setSureSnowSeparationValue(avhrracSchillerNNCloudSureSnowSeparationValue);
 
-            aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> todo: put here albedo_norm now!!
+            aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> put here albedo_norm now!!
             aacAlgorithm.setReflCh2(albedo2Norm / 100.0); // on [0,1]
             final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
             aacAlgorithm.setBtCh3(btCh3 + 273.15);
@@ -326,8 +326,10 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             targetSamples[targetSamplesIndex++].set(btCh3);
             targetSamples[targetSamplesIndex++].set(btCh4);
             targetSamples[targetSamplesIndex++].set(btCh5);
-            targetSamples[targetSamplesIndex++].set(albedo1);
-            targetSamples[targetSamplesIndex++].set(albedo2);
+//            targetSamples[targetSamplesIndex++].set(albedo1);
+//            targetSamples[targetSamplesIndex++].set(albedo2);
+            targetSamples[targetSamplesIndex++].set(albedo1Norm/100.);     // GK, 20150326
+            targetSamples[targetSamplesIndex++].set(albedo2Norm/100.);
 
         } else {
             targetSamplesIndex = 0;

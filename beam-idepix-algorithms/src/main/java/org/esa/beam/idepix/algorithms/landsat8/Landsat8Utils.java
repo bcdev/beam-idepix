@@ -4,7 +4,10 @@ import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.BitSetter;
+import org.esa.beam.util.jai.JAIUtils;
+import org.esa.beam.util.math.Histogram;
 
+import javax.media.jai.RenderedOp;
 import java.awt.*;
 
 /**
@@ -101,6 +104,34 @@ public class Landsat8Utils {
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, Landsat8Constants.F_COASTLINE), Landsat8Constants.F_COASTLINE_DESCR_TEXT);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, Landsat8Constants.F_LAND), Landsat8Constants.F_LAND_DESCR_TEXT);
         return flagCoding;
+    }
+
+    public static Histogram getBeamHistogram(RenderedOp histogramImage) {
+        javax.media.jai.Histogram jaiHistogram = JAIUtils.getHistogramOf(histogramImage);
+
+        int[] bins = jaiHistogram.getBins(0);
+        int minIndex = 0;
+        int maxIndex = bins.length - 1;
+        for (int i = 0; i < bins.length; i++) {
+            if (bins[i] > 0) {
+                minIndex = i;
+                break;
+            }
+        }
+        for (int i = bins.length - 1; i >= 0; i--) {
+            if (bins[i] > 0) {
+                maxIndex = i;
+                break;
+            }
+        }
+        double lowValue = jaiHistogram.getLowValue(0);
+        double highValue = jaiHistogram.getHighValue(0);
+        int numBins = jaiHistogram.getNumBins(0);
+        double binWidth = (highValue - lowValue) / numBins;
+        int[] croppedBins = new int[maxIndex - minIndex + 1];
+        System.arraycopy(bins, minIndex, croppedBins, 0, croppedBins.length);
+        return new Histogram(croppedBins, lowValue + minIndex * binWidth, lowValue
+                + (maxIndex + 1.0) * binWidth);
     }
 
 }

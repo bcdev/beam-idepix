@@ -1,7 +1,10 @@
 package org.esa.beam.idepix.algorithms.landsat8;
 
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.VirtualBand;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -13,8 +16,12 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.jai.ResolutionLevel;
+import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.math.Histogram;
 
+import javax.media.jai.RenderedOp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -198,6 +205,8 @@ public class Landsat8Op extends Operator {
 //        Product otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), otsuParameters, otsuInput);
 //        setTargetProduct(otsuProduct);
 
+        final Histogram clostHistogram = createClostHistogram();
+
         preProcess();
         computeCloudProduct();
         postProcess();
@@ -274,6 +283,39 @@ public class Landsat8Op extends Operator {
                 ProductUtils.copyBand(b.getName(), sourceProduct, targetProduct, true);
             }
         }
+    }
+
+    private Histogram createClostHistogram() {
+        final long t1 = System.currentTimeMillis();
+        final String aerosolName = Landsat8Constants.LANDSAT8_COASTAL_AEROSOL_BAND_NAME;
+        Band coastalAerosolBand = sourceProduct.getBand(aerosolName);
+        final String panName = Landsat8Constants.LANDSAT8_PANCHROMATIC_BAND_NAME;
+        Band panchromaticBand = sourceProduct.getBand(panName);
+        final String blueName = Landsat8Constants.LANDSAT8_BLUE_BAND_NAME;
+        Band blueBand = sourceProduct.getBand(blueName);
+        final String cirrusName = Landsat8Constants.LANDSAT8_CIRRUS_BAND_NAME;
+        Band cirrusBand = sourceProduct.getBand(cirrusName);
+
+        final String validMaskExpression = blueBand.getValidMaskExpression();
+        final String clostExpression = aerosolName + " * " + panName + " * " + blueName + " * " + cirrusName;
+        final String fullExpression = "(" + validMaskExpression + ") ? (" + clostExpression + ") : NaN";
+//        Band clostBand = new VirtualBand("CLOST", ProductData.TYPE_FLOAT32,
+//                                         sourceProduct.getSceneRasterWidth(),
+//                                         sourceProduct.getSceneRasterHeight(),
+//                                         fullExpression);
+//
+//        final MultiLevelImage clostImage = VirtualBand.createVirtualSourceImage(clostBand, fullExpression);
+//        clostBand.setSourceImage(clostImage);
+
+//        final VirtualBandOpImage opImage =
+//                VirtualBandOpImage.createMask(fullExpression, sourceProduct, ResolutionLevel.MAXRES);
+        final VirtualBandOpImage opImage =
+                VirtualBandOpImage.create(fullExpression, ProductData.TYPE_FLOAT32, null, sourceProduct, ResolutionLevel.MAXRES);
+        final long t2 = System.currentTimeMillis();
+        System.out.println("clostHisto took " + (t2 - t1) + " ms.");
+
+        return Landsat8Utils.getBeamHistogram((RenderedOp) opImage.getSourceImage(0));
+//        return Landsat8Utils.getBeamHistogram((RenderedOp) clostImage.getSourceImage(0));
     }
 
     /**

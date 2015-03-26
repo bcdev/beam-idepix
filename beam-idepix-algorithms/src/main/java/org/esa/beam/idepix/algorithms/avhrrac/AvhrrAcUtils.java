@@ -157,7 +157,8 @@ public class AvhrrAcUtils {
     public static boolean anglesInvalid(double sza, double vza, double saa, double vaa) {
         // todo: we have a discontinuity in angle retrieval at sza=90deg. Check!
         final double eps = 1.E-6;
-        final boolean szaInvalid = sza < 90.0 + eps && sza > 90.0 - eps;
+//        final boolean szaInvalid = sza < 90.0 + eps && sza > 90.0 - eps;
+        final boolean szaInvalid = sza  > 85.0; // GK, 20150326
 
         final boolean vzaInvalid = Double.isNaN(vza);
         final boolean saaInvalid = Double.isNaN(saa);
