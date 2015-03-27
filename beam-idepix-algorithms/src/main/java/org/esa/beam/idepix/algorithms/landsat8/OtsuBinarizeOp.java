@@ -59,11 +59,13 @@ public class OtsuBinarizeOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        final Band redBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_SPECTRAL_BAND_NAMES[3]);
-        final Band greenBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_SPECTRAL_BAND_NAMES[2]);
-        final Band blueBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_SPECTRAL_BAND_NAMES[1]);
+        final Band redBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_RED_BAND_NAME);
+        final Band greenBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_GREEN_BAND_NAME);
+        final Band blueBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_BLUE_BAND_NAME);
+        final Band cirrusBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_CIRRUS_BAND_NAME);
 
-        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{redBand, greenBand, blueBand};
+//        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{redBand, greenBand, blueBand};
+        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{cirrusBand};
 
         try {
             final ImageInfo imageInfo = ProductUtils.createImageInfo(rgbChannelNodes, true, ProgressMonitor.NULL);

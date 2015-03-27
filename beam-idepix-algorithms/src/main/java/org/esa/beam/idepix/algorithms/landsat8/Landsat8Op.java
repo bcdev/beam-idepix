@@ -1,10 +1,7 @@
 package org.esa.beam.idepix.algorithms.landsat8;
 
-import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.VirtualBand;
+import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -19,9 +16,8 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.jai.VirtualBandOpImage;
 import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.math.Histogram;
 
-import javax.media.jai.RenderedOp;
+import javax.media.jai.PlanarImage;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -154,7 +150,7 @@ public class Landsat8Op extends Operator {
                label = "Threshold A for SHIMEZ cloud test")
     private float shimezDiffThresh;
 
-    @Parameter(defaultValue = "0.35",
+    @Parameter(defaultValue = "0.3",
                description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
                label = "Threshold B for SHIMEZ cloud test")
     private float shimezMeanThresh;
@@ -164,10 +160,20 @@ public class Landsat8Op extends Operator {
                label = " Apply HOT cloud test")
     private boolean applyHotCloudTest;
 
-    @Parameter(defaultValue = "0.15",
+    @Parameter(defaultValue = "0.1",
                description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
                label = "Threshold A for HOT cloud test")
     private float hotThresh;
+
+    // CLOST parameters:
+    @Parameter(defaultValue = "false",
+               label = " Apply CLOST cloud test")
+    private boolean applyClostCloudTest;
+
+    @Parameter(defaultValue = "0.00001",
+               description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
+               label = "Threshold A for CLOST cloud test")
+    private float clostThresh;
 
     // todo: maybe activate
 //    @Parameter(defaultValue = "GREY",
@@ -205,7 +211,8 @@ public class Landsat8Op extends Operator {
 //        Product otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), otsuParameters, otsuInput);
 //        setTargetProduct(otsuProduct);
 
-        final Histogram clostHistogram = createClostHistogram();
+        // todo: check if useful for Clost test, maybe activate
+        final double clostHistogramMean = computeClostHistogramMean();
 
         preProcess();
         computeCloudProduct();
@@ -249,6 +256,8 @@ public class Landsat8Op extends Operator {
         classificationParameters.put("shimezMeanThresh", shimezMeanThresh);
         classificationParameters.put("applyHotCloudTest", applyHotCloudTest);
         classificationParameters.put("hotThresh", hotThresh);
+        classificationParameters.put("applyClostCloudTest", applyClostCloudTest);
+        classificationParameters.put("clostThresh", clostThresh);
     }
 
     private void computeCloudProduct() {
@@ -285,38 +294,42 @@ public class Landsat8Op extends Operator {
         }
     }
 
-    private Histogram createClostHistogram() {
-        final long t1 = System.currentTimeMillis();
+    private double computeClostHistogramMean() {
         final String aerosolName = Landsat8Constants.LANDSAT8_COASTAL_AEROSOL_BAND_NAME;
-        Band coastalAerosolBand = sourceProduct.getBand(aerosolName);
         final String panName = Landsat8Constants.LANDSAT8_PANCHROMATIC_BAND_NAME;
-        Band panchromaticBand = sourceProduct.getBand(panName);
         final String blueName = Landsat8Constants.LANDSAT8_BLUE_BAND_NAME;
-        Band blueBand = sourceProduct.getBand(blueName);
         final String cirrusName = Landsat8Constants.LANDSAT8_CIRRUS_BAND_NAME;
-        Band cirrusBand = sourceProduct.getBand(cirrusName);
 
-        final String validMaskExpression = blueBand.getValidMaskExpression();
-        final String clostExpression = aerosolName + " * " + panName + " * " + blueName + " * " + cirrusName;
+        final Band aerosolBand = sourceProduct.getBand(aerosolName);
+        final Band panBand = sourceProduct.getBand(panName);
+        final Band cirrusBand = sourceProduct.getBand(cirrusName);
+        final Band blueBand = sourceProduct.getBand(blueName);
+        final String validMaskExpression = aerosolBand.getValidMaskExpression() + " && " +
+                panBand.getValidMaskExpression() + " && " +
+                blueBand.getValidMaskExpression() + " && " +
+                cirrusBand.getValidMaskExpression();
+
+        final String clostExpression =
+                aerosolName + " * " + panName + " * " + blueName + " * " + cirrusName;
         final String fullExpression = "(" + validMaskExpression + ") ? (" + clostExpression + ") : NaN";
-//        Band clostBand = new VirtualBand("CLOST", ProductData.TYPE_FLOAT32,
-//                                         sourceProduct.getSceneRasterWidth(),
-//                                         sourceProduct.getSceneRasterHeight(),
-//                                         fullExpression);
-//
-//        final MultiLevelImage clostImage = VirtualBand.createVirtualSourceImage(clostBand, fullExpression);
-//        clostBand.setSourceImage(clostImage);
+        final Band clostBand = new VirtualBand("CLOST", ProductData.TYPE_FLOAT32,
+                                               sourceProduct.getSceneRasterWidth(),
+                                               sourceProduct.getSceneRasterHeight(),
+                                               fullExpression);
 
-//        final VirtualBandOpImage opImage =
-//                VirtualBandOpImage.createMask(fullExpression, sourceProduct, ResolutionLevel.MAXRES);
-        final VirtualBandOpImage opImage =
-                VirtualBandOpImage.create(fullExpression, ProductData.TYPE_FLOAT32, null, sourceProduct, ResolutionLevel.MAXRES);
-        final long t2 = System.currentTimeMillis();
-        System.out.println("clostHisto took " + (t2 - t1) + " ms.");
+        final PlanarImage clostImage = VirtualBandOpImage.create(fullExpression, ProductData.TYPE_FLOAT32, null,
+                                                                 sourceProduct, ResolutionLevel.MAXRES);
+        clostBand.setSourceImage(clostImage);
+        final Stx stx = new StxFactory().create(clostBand, ProgressMonitor.NULL);
 
-        return Landsat8Utils.getBeamHistogram((RenderedOp) opImage.getSourceImage(0));
-//        return Landsat8Utils.getBeamHistogram((RenderedOp) clostImage.getSourceImage(0));
+        System.out.println("clost stx mean = " + stx.getMean());
+        System.out.println("clost stx std = " + stx.getStandardDeviation());
+        System.out.println("clost stx low = " + stx.getMinimum());
+        System.out.println("clost stx high = " + stx.getMaximum());
+
+        return stx.getMean();
     }
+
 
     /**
      * The Service Provider Interface (SPI) for the operator.

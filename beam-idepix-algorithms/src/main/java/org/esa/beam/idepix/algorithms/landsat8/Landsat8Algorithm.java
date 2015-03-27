@@ -30,6 +30,8 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float shimezMeanThresh;
     private boolean applyHotCloudTest;
     private float hotThresh;
+    private float clostThresh;
+    private boolean applyClostCloudTest;
 
     @Override
     public boolean isInvalid() {
@@ -48,10 +50,11 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isCloudSure() {
-        final boolean isCloudShimez = applyShimezCloudTest ? isCloudShimez() : true;
-        final boolean isCloudHot = applyHotCloudTest ? isCloudHot() : true;
+        final boolean isCloudShimez = applyShimezCloudTest ? isCloudShimez() : false;
+        final boolean isCloudHot = applyHotCloudTest ? isCloudHot() : false;
+        final boolean isCloudClost = applyClostCloudTest ? isCloudClost() : false;
 //        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);   // todo: discuss logic
-        return !isInvalid() && (isCloudShimez || isCloudHot);
+        return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost);
     }
 
     private boolean isCloudShimez() {
@@ -65,8 +68,8 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     }
 
     private boolean isCloudClost() {
-        // todo
-        return false;
+        final double clost = l8SpectralBandData[0] * l8SpectralBandData[1] * l8SpectralBandData[7] * l8SpectralBandData[8];
+        return clost > clostThresh;
     }
 
     private boolean isCloudHot() {
@@ -223,5 +226,13 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     public void setHotThresh(float hotThresh) {
         this.hotThresh = hotThresh;
+    }
+
+    public void setClostThresh(float clostThresh) {
+        this.clostThresh = clostThresh;
+    }
+
+    public void setApplyClostCloudTest(boolean applyClostCloudTest) {
+        this.applyClostCloudTest = applyClostCloudTest;
     }
 }

@@ -118,7 +118,8 @@ public class OtsuBinarize {
                 if (red > threshold) {
                     newPixel = 255;
                 } else {
-                    newPixel = 0;
+                    newPixel = 1;
+//                    newPixel = 0;
                 }
                 newPixel = colorToRGB(alpha, newPixel, newPixel, newPixel);
                 binarized.setRGB(i, j, newPixel);

@@ -106,12 +106,12 @@ public class Landsat8ClassificationOp extends Operator {
                label = " Apply SHIMEZ cloud test")
     private boolean applyShimezCloudTest;
 
-    @Parameter(defaultValue = "0.35",
+    @Parameter(defaultValue = "0.1",
                description = "Threshold A for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
                label = "Threshold A for SHIMEZ cloud test")
     private float shimezDiffThresh;
 
-    @Parameter(defaultValue = "0.35",
+    @Parameter(defaultValue = "0.3",
                description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
                label = "Threshold B for SHIMEZ cloud test")
     private float shimezMeanThresh;
@@ -121,10 +121,20 @@ public class Landsat8ClassificationOp extends Operator {
                label = " Apply HOT cloud test")
     private boolean applyHotCloudTest;
 
-    @Parameter(defaultValue = "0.15",
+    @Parameter(defaultValue = "0.1",
                description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
                label = "Threshold A for HOT cloud test")
     private float hotThresh;
+
+    // CLOST parameters:
+    @Parameter(defaultValue = "false",
+               label = " Apply CLOST cloud test")
+    private boolean applyClostCloudTest;
+
+    @Parameter(defaultValue = "0.00001",
+               description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
+               label = "Threshold A for CLOST cloud test")
+    private float clostThresh;
 
 
     @SourceProduct(alias = "l8source", description = "The source product.")
@@ -288,6 +298,8 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setShimezMeanThresh(shimezMeanThresh);
         l8Algorithm.setHotThresh(hotThresh);
         l8Algorithm.setApplyHotCloudTest(applyHotCloudTest);
+        l8Algorithm.setClostThresh(clostThresh);
+        l8Algorithm.setApplyClostCloudTest(applyClostCloudTest);
 
         l8Algorithm.setBrightnessBandLand(brightnessBandLand);
         l8Algorithm.setBrightnessThreshLand(brightnessThreshLand);
