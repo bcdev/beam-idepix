@@ -59,12 +59,28 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     private boolean isCloudShimez() {
         // make sure we have reflectances here!!
-        final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
-        final double diff = Math.abs((l8SpectralBandData[1] - mean) / mean) +
-                Math.abs((l8SpectralBandData[2] - mean) / mean) +
-                Math.abs((l8SpectralBandData[3] - mean) / mean);
+//        final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
+//        final double diff = Math.abs((l8SpectralBandData[1] - mean) / mean) +
+//                Math.abs((l8SpectralBandData[2] - mean) / mean) +
+//                Math.abs((l8SpectralBandData[3] - mean) / mean);
+//
+//        return diff < shimezDiffThresh && mean > shimezMeanThresh;
 
-        return diff < shimezDiffThresh && mean > shimezMeanThresh;
+         // todo: this is the latest correction from MPa , 20150330:
+//        abs(blue/red-1)<A &&
+//                abs(blue/green-1)<A &&
+//                abs(red/green-1)<A &&
+//                (red+green+blue)/3 > 0.35
+//                  A = 0.1 over the day
+//                  A = 0.2 if twilight
+
+        final double blueGreenRatio = l8SpectralBandData[1]/l8SpectralBandData[2];
+        final double redGreenRatio = l8SpectralBandData[3]/l8SpectralBandData[2];
+        final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
+
+        return Math.abs(blueGreenRatio - 1.0) < shimezDiffThresh &&
+               Math.abs(redGreenRatio - 1.0) < shimezDiffThresh &&
+               mean > shimezMeanThresh;
     }
 
     private boolean isCloudClost() {

@@ -1,10 +1,7 @@
 package org.esa.beam.idepix.algorithms.landsat8;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -22,8 +19,10 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.BandSelectDescriptor;
 import javax.media.jai.operator.FormatDescriptor;
+import javax.media.jai.operator.MultiplyDescriptor;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 
 /**
@@ -47,11 +46,14 @@ public class OtsuBinarizeOp extends Operator {
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
 
+    @SourceProduct(alias = "clost", description = "The CLOST product.")
+    Product clostProduct;
+
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
     @Parameter(defaultValue = "GREY",
-               valueSet = {"GREY","BINARY"},
+               valueSet = {"GREY", "BINARY"},
                description = "OTSU processing mode (grey or binary target image)",
                label = "OTSU processing mode (grey or binary target image)")
     private String otsuMode;
@@ -63,9 +65,15 @@ public class OtsuBinarizeOp extends Operator {
         final Band greenBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_GREEN_BAND_NAME);
         final Band blueBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_BLUE_BAND_NAME);
         final Band cirrusBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_CIRRUS_BAND_NAME);
+        final Band aerosolBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_COASTAL_AEROSOL_BAND_NAME);
+        final Band panBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_PANCHROMATIC_BAND_NAME);
+
+        // MPa: try with clost band:
+        Band clostBand = clostProduct.getBand(ClostOp.CLOST_BAND_NAME);
 
 //        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{redBand, greenBand, blueBand};
-        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{cirrusBand};
+//        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{cirrusBand};
+        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{clostBand};
 
         try {
             final ImageInfo imageInfo = ProductUtils.createImageInfo(rgbChannelNodes, true, ProgressMonitor.NULL);
@@ -82,6 +90,8 @@ public class OtsuBinarizeOp extends Operator {
             } else {
                 otsuProduct = createBinarizedProduct(rgbImageBinarized);
             }
+
+            ProductUtils.copyBand(ClostOp.CLOST_BAND_NAME, clostProduct, otsuProduct, true);
             setTargetProduct(otsuProduct);
         } catch (IOException e) {
             throw new OperatorException("Cannot do OTSU binarization: " + e.getMessage());

@@ -150,7 +150,7 @@ public class Landsat8Op extends Operator {
                label = "Threshold A for SHIMEZ cloud test")
     private float shimezDiffThresh;
 
-    @Parameter(defaultValue = "0.3",
+    @Parameter(defaultValue = "0.35",
                description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
                label = "Threshold B for SHIMEZ cloud test")
     private float shimezMeanThresh;
@@ -204,8 +204,14 @@ public class Landsat8Op extends Operator {
         }
 
         // todo: discuss and maybe activate
+//        HashMap<String, Product> clostInput = new HashMap<>();
+//        clostInput.put("l8source", sourceProduct);
+//        Product clostProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ClostOp.class), GPF.NO_PARAMS, clostInput);
+//        setTargetProduct(clostProduct);
+//
 //        HashMap<String, Product> otsuInput = new HashMap<>();
 //        otsuInput.put("l8source", sourceProduct);
+//        otsuInput.put("clost", clostProduct);
 //        HashMap<String, Object> otsuParameters = new HashMap<>();
 //        otsuParameters.put("otsuMode", otsuMode);
 //        Product otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), otsuParameters, otsuInput);

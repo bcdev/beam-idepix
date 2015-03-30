@@ -111,7 +111,7 @@ public class Landsat8ClassificationOp extends Operator {
                label = "Threshold A for SHIMEZ cloud test")
     private float shimezDiffThresh;
 
-    @Parameter(defaultValue = "0.3",
+    @Parameter(defaultValue = "0.35",
                description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
                label = "Threshold B for SHIMEZ cloud test")
     private float shimezMeanThresh;
