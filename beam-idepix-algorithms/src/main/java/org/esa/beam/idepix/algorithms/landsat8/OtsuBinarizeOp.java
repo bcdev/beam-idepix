@@ -1,7 +1,10 @@
 package org.esa.beam.idepix.algorithms.landsat8;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -19,10 +22,8 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.BandSelectDescriptor;
 import javax.media.jai.operator.FormatDescriptor;
-import javax.media.jai.operator.MultiplyDescriptor;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.IOException;
 
 /**
@@ -33,15 +34,15 @@ import java.io.IOException;
  * @author olafd
  */
 @OperatorMetadata(alias = "idepix.landsat8.otsu",
-                  version = "2.2.1",
-                  internal = true,
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2015 by Brockmann Consult",
-                  description = "Landsat 8 Otsu binarization: provides product with binarized R, G, and B image.")
+        version = "2.2.1",
+        internal = true,
+        authors = "Olaf Danne",
+        copyright = "(c) 2015 by Brockmann Consult",
+        description = "Landsat 8 Otsu binarization: provides product with binarized R, G, and B image.")
 public class OtsuBinarizeOp extends Operator {
 
-    public static final String RGB_BINARY_BAND_NAME = "RGB_TO_BINARY";
-    public static final String RGB_GREY_BAND_NAME = "RGB_TO_GREY";
+    public static final String OTSU_BINARY_BAND_NAME = "OTSU_BINARY";
+    public static final String OTSU_GREY_BAND_NAME = "OTSU_GREY";
 
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
@@ -53,9 +54,9 @@ public class OtsuBinarizeOp extends Operator {
     Product targetProduct;
 
     @Parameter(defaultValue = "GREY",
-               valueSet = {"GREY", "BINARY"},
-               description = "OTSU processing mode (grey or binary target image)",
-               label = "OTSU processing mode (grey or binary target image)")
+            valueSet = {"GREY", "BINARY"},
+            description = "OTSU processing mode (grey or binary target image)",
+            label = "OTSU processing mode (grey or binary target image)")
     private String otsuMode;
 
 
@@ -76,19 +77,15 @@ public class OtsuBinarizeOp extends Operator {
         final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{clostBand};
 
         try {
-            final ImageInfo imageInfo = ProductUtils.createImageInfo(rgbChannelNodes, true, ProgressMonitor.NULL);
-            BufferedImage rgbImage = ProductUtils.createRgbImage(rgbChannelNodes, imageInfo, ProgressMonitor.NULL);
-            final BufferedImage rgbImageGray = OtsuBinarize.toGray(rgbImage);
-            final BufferedImage rgbImageBinarized = OtsuBinarize.binarize(rgbImageGray);
-
-//            File file = new File("test.jpg");
-//            ImageIO.write(rgbImageBinarized, "jpg", file);
-
+            final ImageInfo clostImageInfo = ProductUtils.createImageInfo(rgbChannelNodes, true, ProgressMonitor.NULL);
+            BufferedImage clostImageRgb = ProductUtils.createRgbImage(rgbChannelNodes, clostImageInfo, ProgressMonitor.NULL);
+            final BufferedImage clostImageGray = OtsuBinarize.toGray(clostImageRgb);
+            final BufferedImage clostImageBinarized = OtsuBinarize.binarize(clostImageGray);
             Product otsuProduct;
             if (otsuMode.equals("GREY")) {
-                otsuProduct = createGreyProduct(rgbImageGray);
+                otsuProduct = createGreyProduct(clostImageGray);
             } else {
-                otsuProduct = createBinarizedProduct(rgbImageBinarized);
+                otsuProduct = createBinarizedProduct(clostImageBinarized);
             }
 
             ProductUtils.copyBand(ClostOp.CLOST_BAND_NAME, clostProduct, otsuProduct, true);
@@ -101,23 +98,23 @@ public class OtsuBinarizeOp extends Operator {
     private Product createBinarizedProduct(BufferedImage sourceImage) {
 
         Product product = new Product(sourceProduct.getName() + "_binary",
-                                      sourceProduct.getProductType() + " (binarized)",
-                                      sourceProduct.getSceneRasterWidth(),
-                                      sourceProduct.getSceneRasterHeight());
+                sourceProduct.getProductType() + " (binarized)",
+                sourceProduct.getSceneRasterWidth(),
+                sourceProduct.getSceneRasterHeight());
 
         product.setGeoCoding(sourceProduct.getGeoCoding());
         product.setDescription("Product holding RGB Image transformed to binary");
 
         final PlanarImage planarImage = PlanarImage.wrapRenderedImage(sourceImage);
         RenderedOp bandImage = getBandSourceImage(planarImage, 0);
-        Band band = product.addBand(RGB_BINARY_BAND_NAME, ImageManager.getProductDataType(bandImage.getSampleModel().getDataType()));
+        Band band = product.addBand(OTSU_BINARY_BAND_NAME, ImageManager.getProductDataType(bandImage.getSampleModel().getDataType()));
         band.setSourceImage(bandImage);
         band.setUnit("dl");
         band.setDescription("RGB Image transformed to binary");
         final Band sourceProductReferenceBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_RED_BAND_NAME);
         band.setNoDataValue(sourceProductReferenceBand.getNoDataValue());
         band.setNoDataValueUsed(sourceProductReferenceBand.isNoDataValueUsed());
-        product.getBand(RGB_BINARY_BAND_NAME).setValidPixelExpression(sourceProductReferenceBand.getValidPixelExpression());
+        product.getBand(OTSU_BINARY_BAND_NAME).setValidPixelExpression(sourceProductReferenceBand.getValidPixelExpression());
 
         return product;
     }
@@ -125,23 +122,23 @@ public class OtsuBinarizeOp extends Operator {
     private Product createGreyProduct(BufferedImage sourceImage) {
 
         Product product = new Product(sourceProduct.getName() + "_grey",
-                                      sourceProduct.getProductType() + " (greyscaled)",
-                                      sourceProduct.getSceneRasterWidth(),
-                                      sourceProduct.getSceneRasterHeight());
+                sourceProduct.getProductType() + " (greyscaled)",
+                sourceProduct.getSceneRasterWidth(),
+                sourceProduct.getSceneRasterHeight());
 
         product.setGeoCoding(sourceProduct.getGeoCoding());
         product.setDescription("Product holding RGB Image transformed to greyscale");
 
         final PlanarImage planarImage = PlanarImage.wrapRenderedImage(sourceImage);
         RenderedOp bandImage = getBandSourceImage(planarImage, 0);
-        Band band = product.addBand(RGB_GREY_BAND_NAME, ImageManager.getProductDataType(bandImage.getSampleModel().getDataType()));
+        Band band = product.addBand(OTSU_GREY_BAND_NAME, ImageManager.getProductDataType(bandImage.getSampleModel().getDataType()));
         band.setSourceImage(bandImage);
         band.setUnit("dl");
         band.setDescription("RGB Image transformed to greyscale");
         final Band sourceProductReferenceBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_RED_BAND_NAME);
         band.setNoDataValue(sourceProductReferenceBand.getNoDataValue());
         band.setNoDataValueUsed(sourceProductReferenceBand.isNoDataValueUsed());
-        product.getBand(RGB_GREY_BAND_NAME).setValidPixelExpression(sourceProductReferenceBand.getValidPixelExpression());
+        product.getBand(OTSU_GREY_BAND_NAME).setValidPixelExpression(sourceProductReferenceBand.getValidPixelExpression());
 
         return product;
     }

@@ -32,6 +32,9 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float hotThresh;
     private float clostThresh;
     private boolean applyClostCloudTest;
+    private float clostValue;
+    private float otsuValue;
+    private boolean applyOtsuCloudTest;
 
     @Override
     public boolean isInvalid() {
@@ -53,8 +56,9 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         final boolean isCloudShimez = applyShimezCloudTest ? isCloudShimez() : false;
         final boolean isCloudHot = applyHotCloudTest ? isCloudHot() : false;
         final boolean isCloudClost = applyClostCloudTest ? isCloudClost() : false;
+        final boolean isCloudOtsu = applyOtsuCloudTest ? isCloudOtsu() : false;
 //        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);   // todo: discuss logic
-        return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost);
+        return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost || isCloudOtsu);
     }
 
     private boolean isCloudShimez() {
@@ -66,7 +70,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 //
 //        return diff < shimezDiffThresh && mean > shimezMeanThresh;
 
-         // todo: this is the latest correction from MPa , 20150330:
+         // this is the latest correction from MPa , 20150330:
 //        abs(blue/red-1)<A &&
 //                abs(blue/green-1)<A &&
 //                abs(red/green-1)<A &&
@@ -84,8 +88,9 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     }
 
     private boolean isCloudClost() {
-        final double clost = l8SpectralBandData[0] * l8SpectralBandData[1] * l8SpectralBandData[7] * l8SpectralBandData[8];
-        return clost > clostThresh;
+//        final double clost = l8SpectralBandData[0] * l8SpectralBandData[1] * l8SpectralBandData[7] * l8SpectralBandData[8];
+//        return clost > clostThresh;
+        return clostValue > clostThresh;
     }
 
     private boolean isCloudHot() {
@@ -95,7 +100,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     private boolean isCloudOtsu() {
         // todo
-        return false;
+        return otsuValue > 128;
     }
 
     @Override
@@ -250,5 +255,17 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     public void setApplyClostCloudTest(boolean applyClostCloudTest) {
         this.applyClostCloudTest = applyClostCloudTest;
+    }
+
+    public void setClostValue(float clostValue) {
+        this.clostValue = clostValue;
+    }
+
+    public void setOtsuValue(float otsuValue) {
+        this.otsuValue = otsuValue;
+    }
+
+    public void setApplyOtsuCloudTest(boolean applyOtsuCloudTest) {
+        this.applyOtsuCloudTest = applyOtsuCloudTest;
     }
 }

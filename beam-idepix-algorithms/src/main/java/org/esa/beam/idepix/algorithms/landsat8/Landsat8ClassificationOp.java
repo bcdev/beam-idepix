@@ -103,43 +103,51 @@ public class Landsat8ClassificationOp extends Operator {
 
     // SHIMEZ parameters
     @Parameter(defaultValue = "true",
-               label = " Apply SHIMEZ cloud test")
+            label = " Apply SHIMEZ cloud test")
     private boolean applyShimezCloudTest;
 
     @Parameter(defaultValue = "0.1",
-               description = "Threshold A for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
-               label = "Threshold A for SHIMEZ cloud test")
+            description = "Threshold A for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
+            label = "Threshold A for SHIMEZ cloud test")
     private float shimezDiffThresh;
 
     @Parameter(defaultValue = "0.35",
-               description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
-               label = "Threshold B for SHIMEZ cloud test")
+            description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
+            label = "Threshold B for SHIMEZ cloud test")
     private float shimezMeanThresh;
 
     // HOT parameters:
     @Parameter(defaultValue = "true",
-               label = " Apply HOT cloud test")
+            label = " Apply HOT cloud test")
     private boolean applyHotCloudTest;
 
     @Parameter(defaultValue = "0.1",
-               description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
-               label = "Threshold A for HOT cloud test")
+            description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
+            label = "Threshold A for HOT cloud test")
     private float hotThresh;
 
     // CLOST parameters:
     @Parameter(defaultValue = "false",
-               label = " Apply CLOST cloud test")
+            label = " Apply CLOST cloud test")
     private boolean applyClostCloudTest;
 
     @Parameter(defaultValue = "0.00001",
-               description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
-               label = "Threshold A for CLOST cloud test")
+            description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
+            label = "Threshold A for CLOST cloud test")
     private float clostThresh;
 
+    // OTSU parameters:
+    @Parameter(defaultValue = "false",
+            label = " Apply OTSU cloud test")
+    private boolean applyOtsuCloudTest;
 
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
-    @SourceProduct(alias = "waterMask", optional=true)
+
+    @SourceProduct(alias = "otsu", description = "The OTSU product.")
+    Product otsuProduct;
+
+    @SourceProduct(alias = "waterMask", optional = true)
     private Product waterMaskProduct;
 
     @TargetProduct(description = "The target product.")
@@ -149,6 +157,8 @@ public class Landsat8ClassificationOp extends Operator {
 
     private Band[] l8RadianceBands;
     private Band landWaterBand;
+    private Band clostBand;
+    private Band otsuBand;
 
     static final int L8_F_DESIGNATED_FILL = 0;
     static final int L8_F_WATER_CONFIDENCE_HIGH = 5;  // todo: do we need this?
@@ -162,6 +172,8 @@ public class Landsat8ClassificationOp extends Operator {
         if (waterMaskProduct != null) {
             landWaterBand = waterMaskProduct.getBand("land_water_fraction");
         }
+        clostBand = otsuProduct.getBand(ClostOp.CLOST_BAND_NAME);
+        otsuBand = otsuProduct.getBand(OtsuBinarizeOp.OTSU_BINARY_BAND_NAME);
     }
 
     public void setBands() {
@@ -200,6 +212,9 @@ public class Landsat8ClassificationOp extends Operator {
             waterFractionTile = getSourceTile(landWaterBand, rectangle);
         }
 
+        Tile clostTile = getSourceTile(clostBand, rectangle);
+        Tile otsuTile = getSourceTile(otsuBand, rectangle);
+
         final Band l8FlagBand = sourceProduct.getBand(Landsat8Constants.Landsat8_FLAGS_NAME);
         final Tile l8FlagTile = getSourceTile(l8FlagBand, rectangle);
 
@@ -220,6 +235,8 @@ public class Landsat8ClassificationOp extends Operator {
                             l8RadianceTiles,
                             l8FlagTile,
                             waterFractionTile,
+                            clostTile,
+                            otsuTile,
                             y,
                             x);
 
@@ -274,6 +291,8 @@ public class Landsat8ClassificationOp extends Operator {
     private Landsat8Algorithm createLandsat8Algorithm(Tile[] l8RadianceTiles,
                                                       Tile l8FlagTile,
                                                       Tile waterFractionTile,
+                                                      Tile clostTile,
+                                                      Tile otsuTile,
                                                       int y,
                                                       int x) {
         Landsat8Algorithm l8Algorithm = new Landsat8Algorithm();
@@ -300,6 +319,9 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setApplyHotCloudTest(applyHotCloudTest);
         l8Algorithm.setClostThresh(clostThresh);
         l8Algorithm.setApplyClostCloudTest(applyClostCloudTest);
+        l8Algorithm.setClostValue(clostTile.getSampleFloat(x, y));
+        l8Algorithm.setApplyOtsuCloudTest(applyOtsuCloudTest);
+        l8Algorithm.setOtsuValue(otsuTile.getSampleFloat(x, y));
 
         l8Algorithm.setBrightnessBandLand(brightnessBandLand);
         l8Algorithm.setBrightnessThreshLand(brightnessThreshLand);

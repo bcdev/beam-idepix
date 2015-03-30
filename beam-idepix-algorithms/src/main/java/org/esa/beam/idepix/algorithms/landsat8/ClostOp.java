@@ -47,12 +47,12 @@ public class ClostOp extends Operator {
 
         // MPa: try with clost band:
         // get clost image: blue * aerosol * pan * cirrus
-        RenderedImage blueImage = blueBand.getSourceImage();
-        RenderedImage aerosolImage = aerosolBand.getSourceImage();
+        RenderedImage blueImage = blueBand.getGeophysicalImage();
+        RenderedImage aerosolImage = aerosolBand.getGeophysicalImage();
         RenderedOp blueAerosolImage = MultiplyDescriptor.create(blueImage, aerosolImage, null);
-        RenderedImage panImage = panBand.getSourceImage();
+        RenderedImage panImage = panBand.getGeophysicalImage();
         RenderedOp blueAerosolPanImage = MultiplyDescriptor.create(blueAerosolImage, panImage, null);
-        RenderedImage cirrusImage = cirrusBand.getSourceImage();
+        RenderedImage cirrusImage = cirrusBand.getGeophysicalImage();
         RenderedOp blueAerosolPanCirrusImage = MultiplyDescriptor.create(blueAerosolPanImage, cirrusImage, null);
 
         final Product clostProduct = createClostProduct(blueAerosolPanCirrusImage, blueBand);
@@ -70,10 +70,10 @@ public class ClostOp extends Operator {
         product.setDescription("Product holding Clost Image");
 
 //        Band band = product.addBand(CLOST_BAND_NAME, referenceBand.getDataType());
-        Band band = product.addBand(CLOST_BAND_NAME, ProductData.TYPE_UINT16);
+        Band band = product.addBand(CLOST_BAND_NAME, ProductData.TYPE_FLOAT32);
         band.setSourceImage(blueAerosolPanCirrusImage);
-        band.setScalingFactor(1000.0*referenceBand.getScalingFactor());
-        band.setScalingOffset(referenceBand.getScalingOffset());
+//        band.setScalingFactor(1000.0*referenceBand.getScalingFactor());
+//        band.setScalingOffset(referenceBand.getScalingOffset());
         band.setUnit("dl");
         band.setDescription("CLOST Image: aerosol * blue * pan * cirrus ");
 
