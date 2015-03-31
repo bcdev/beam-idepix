@@ -3,11 +3,10 @@ package org.esa.beam.idepix.algorithms.landsat8;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.util.BitSetter;
-import org.esa.beam.util.jai.JAIUtils;
-import org.esa.beam.util.math.Histogram;
 
-import javax.media.jai.RenderedOp;
+import javax.media.jai.Histogram;
 import java.awt.*;
 
 /**
@@ -106,32 +105,36 @@ public class Landsat8Utils {
         return flagCoding;
     }
 
-    public static Histogram getBeamHistogram(RenderedOp histogramImage) {
-        javax.media.jai.Histogram jaiHistogram = JAIUtils.getHistogramOf(histogramImage);
+    public static double getHistogramBinAtNPercentOfMaximum(Stx stx, double percent) {
+        final Histogram h = stx.getHistogram();
+        final double highValue = h.getHighValue()[0];
+        final double lowValue = h.getLowValue()[0];
+        final int numBins = h.getNumBins(0);
+        final double binWidth = (highValue - lowValue)/ numBins;
+        final double peakValue = getHistogramPeakValue(h);
 
-        int[] bins = jaiHistogram.getBins(0);
-        int minIndex = 0;
-        int maxIndex = bins.length - 1;
-        for (int i = 0; i < bins.length; i++) {
-            if (bins[i] > 0) {
-                minIndex = i;
-                break;
+        for (int i= numBins -1; i>=0; i--) {
+            final double currValue = highValue - (numBins-i)*binWidth;
+            if (h.getBins()[0][i] >= percent*peakValue/100.0) {
+                return currValue;
             }
         }
-        for (int i = bins.length - 1; i >= 0; i--) {
-            if (bins[i] > 0) {
-                maxIndex = i;
-                break;
-            }
-        }
-        double lowValue = jaiHistogram.getLowValue(0);
-        double highValue = jaiHistogram.getHighValue(0);
-        int numBins = jaiHistogram.getNumBins(0);
-        double binWidth = (highValue - lowValue) / numBins;
-        int[] croppedBins = new int[maxIndex - minIndex + 1];
-        System.arraycopy(bins, minIndex, croppedBins, 0, croppedBins.length);
-        return new Histogram(croppedBins, lowValue + minIndex * binWidth, lowValue
-                + (maxIndex + 1.0) * binWidth);
+        return peakValue;
+
+//        final double mean = stx.getMean();
+//        final double stdev = stx.getStandardDeviation();
+        // assume Gaussian shape of histogram: H := H(x, mean, stdev) = percent*H(x=mean)
+        // --> solve quadratic equation for x, return the solution which is larger than mean
+//        return mean + Math.sqrt(2.0*stdev*stdev*Math.log(100.0/percent));
     }
 
+    private static double getHistogramPeakValue(Histogram h) {
+        int peakValue = 0;
+        for (int i=0; i<h.getNumBins(0); i++) {
+            if (h.getBins()[0][i] > peakValue) {
+                peakValue = h.getBins()[0][i];
+            }
+        }
+        return (double) peakValue;
+    }
 }

@@ -71,6 +71,8 @@ public class OtsuBinarizeOp extends Operator {
 
         // MPa: try with clost band:
         Band clostBand = clostProduct.getBand(ClostOp.CLOST_BAND_NAME);
+        // MPa: now try with cirrus band...:     // todo: define what we want!!
+//        Band clostBand = sourceProduct.getBand(Landsat8Constants.LANDSAT8_CIRRUS_BAND_NAME);
 
 //        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{redBand, greenBand, blueBand};
 //        final RasterDataNode[] rgbChannelNodes = new RasterDataNode[]{cirrusBand};

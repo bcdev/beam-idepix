@@ -134,7 +134,7 @@ public class Landsat8ClassificationOp extends Operator {
     @Parameter(defaultValue = "0.00001",
             description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
             label = "Threshold A for CLOST cloud test")
-    private float clostThresh;
+    private double clostThresh;
 
     // OTSU parameters:
     @Parameter(defaultValue = "false",
@@ -144,7 +144,7 @@ public class Landsat8ClassificationOp extends Operator {
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
 
-    @SourceProduct(alias = "otsu", description = "The OTSU product.")
+    @SourceProduct(alias = "otsu", optional=true, description = "The OTSU product.")
     Product otsuProduct;
 
     @SourceProduct(alias = "waterMask", optional = true)
@@ -172,8 +172,10 @@ public class Landsat8ClassificationOp extends Operator {
         if (waterMaskProduct != null) {
             landWaterBand = waterMaskProduct.getBand("land_water_fraction");
         }
-        clostBand = otsuProduct.getBand(ClostOp.CLOST_BAND_NAME);
-        otsuBand = otsuProduct.getBand(OtsuBinarizeOp.OTSU_BINARY_BAND_NAME);
+        if (otsuProduct != null) {
+            clostBand = otsuProduct.getBand(ClostOp.CLOST_BAND_NAME);
+            otsuBand = otsuProduct.getBand(OtsuBinarizeOp.OTSU_BINARY_BAND_NAME);
+        }
     }
 
     public void setBands() {
@@ -212,8 +214,12 @@ public class Landsat8ClassificationOp extends Operator {
             waterFractionTile = getSourceTile(landWaterBand, rectangle);
         }
 
-        Tile clostTile = getSourceTile(clostBand, rectangle);
-        Tile otsuTile = getSourceTile(otsuBand, rectangle);
+        Tile clostTile = null;
+        Tile otsuTile = null;
+        if (otsuProduct != null) {
+            clostTile = getSourceTile(clostBand, rectangle);
+            otsuTile = getSourceTile(otsuBand, rectangle);
+        }
 
         final Band l8FlagBand = sourceProduct.getBand(Landsat8Constants.Landsat8_FLAGS_NAME);
         final Tile l8FlagTile = getSourceTile(l8FlagBand, rectangle);
@@ -319,9 +325,11 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setApplyHotCloudTest(applyHotCloudTest);
         l8Algorithm.setClostThresh(clostThresh);
         l8Algorithm.setApplyClostCloudTest(applyClostCloudTest);
-        l8Algorithm.setClostValue(clostTile.getSampleFloat(x, y));
         l8Algorithm.setApplyOtsuCloudTest(applyOtsuCloudTest);
-        l8Algorithm.setOtsuValue(otsuTile.getSampleFloat(x, y));
+        if (otsuProduct != null) {
+            l8Algorithm.setClostValue(clostTile.getSampleFloat(x, y));
+            l8Algorithm.setOtsuValue(otsuTile.getSampleFloat(x, y));
+        }
 
         l8Algorithm.setBrightnessBandLand(brightnessBandLand);
         l8Algorithm.setBrightnessThreshLand(brightnessThreshLand);

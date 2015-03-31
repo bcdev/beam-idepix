@@ -173,7 +173,7 @@ public class Landsat8Op extends Operator {
     @Parameter(defaultValue = "0.00001",
             description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
             label = "Threshold A for CLOST cloud test")
-    private float clostThresh;
+    private double clostThresh;
 
     // OTSU parameters:
     @Parameter(defaultValue = "false",
@@ -187,6 +187,11 @@ public class Landsat8Op extends Operator {
 //               label = "OTSU processing mode (grey or binary target image)")
     private String otsuMode = "BINARY";
 
+    @Parameter(defaultValue = "false",
+               description = "If computed, write OTSU bands (Clost and binary) to the target product.",
+               label = " Write OTSU bands (Clost and binary) bands to the target product")
+    private boolean outputOtsuBands = false;
+
     private static final int LAND_WATER_MASK_RESOLUTION = 50;
     private static final int OVERSAMPLING_FACTOR_X = 3;
     private static final int OVERSAMPLING_FACTOR_Y = 3;
@@ -199,6 +204,7 @@ public class Landsat8Op extends Operator {
     private Map<String, Product> classificationInputProducts;
     private Map<String, Object> classificationParameters;
     private Product otsuProduct;
+    private Product clostProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -210,20 +216,24 @@ public class Landsat8Op extends Operator {
         }
 
         // todo: discuss and maybe activate
-        HashMap<String, Product> clostInput = new HashMap<>();
-        clostInput.put("l8source", sourceProduct);
-        Product clostProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ClostOp.class), GPF.NO_PARAMS, clostInput);
+        if (applyClostCloudTest || applyOtsuCloudTest) {
+            HashMap<String, Product> clostInput = new HashMap<>();
+            clostInput.put("l8source", sourceProduct);
+            clostProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ClostOp.class), GPF.NO_PARAMS, clostInput);
+            final Band clostBand = clostProduct.getBand(ClostOp.CLOST_BAND_NAME);
 
-        HashMap<String, Product> otsuInput = new HashMap<>();
-        otsuInput.put("l8source", sourceProduct);
-        otsuInput.put("clost", clostProduct);
-        HashMap<String, Object> otsuParameters = new HashMap<>();
-        otsuParameters.put("otsuMode", otsuMode);
-        otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), otsuParameters, otsuInput);
-        setTargetProduct(otsuProduct);
+            clostThresh = computeClostHistogram3PercentOfMaximum(clostBand);
+            System.out.println("clostThresh = " + clostThresh);
+        }
 
-        // todo: check if useful for Clost test, maybe activate
-//        final double clostHistogramMean = computeClostHistogramMean();
+        if (applyOtsuCloudTest) {
+            HashMap<String, Product> otsuInput = new HashMap<>();
+            otsuInput.put("l8source", sourceProduct);
+            otsuInput.put("clost", clostProduct);
+            HashMap<String, Object> otsuParameters = new HashMap<>();
+            otsuParameters.put("otsuMode", otsuMode);
+            otsuProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OtsuBinarizeOp.class), otsuParameters, otsuInput);
+        }
 
         preProcess();
         computeCloudProduct();
@@ -305,42 +315,17 @@ public class Landsat8Op extends Operator {
                 ProductUtils.copyBand(b.getName(), sourceProduct, targetProduct, true);
             }
         }
+
+        if (applyOtsuCloudTest && outputOtsuBands) {
+            for (Band b : otsuProduct.getBands()) {
+                ProductUtils.copyBand(b.getName(), otsuProduct, targetProduct, true);
+            }
+        }
     }
 
-    private double computeClostHistogramMean() {
-        final String aerosolName = Landsat8Constants.LANDSAT8_COASTAL_AEROSOL_BAND_NAME;
-        final String panName = Landsat8Constants.LANDSAT8_PANCHROMATIC_BAND_NAME;
-        final String blueName = Landsat8Constants.LANDSAT8_BLUE_BAND_NAME;
-        final String cirrusName = Landsat8Constants.LANDSAT8_CIRRUS_BAND_NAME;
-
-        final Band aerosolBand = sourceProduct.getBand(aerosolName);
-        final Band panBand = sourceProduct.getBand(panName);
-        final Band cirrusBand = sourceProduct.getBand(cirrusName);
-        final Band blueBand = sourceProduct.getBand(blueName);
-        final String validMaskExpression = aerosolBand.getValidMaskExpression() + " && " +
-                panBand.getValidMaskExpression() + " && " +
-                blueBand.getValidMaskExpression() + " && " +
-                cirrusBand.getValidMaskExpression();
-
-        final String clostExpression =
-                aerosolName + " * " + panName + " * " + blueName + " * " + cirrusName;
-        final String fullExpression = "(" + validMaskExpression + ") ? (" + clostExpression + ") : NaN";
-        final Band clostBand = new VirtualBand("CLOST", ProductData.TYPE_FLOAT32,
-                sourceProduct.getSceneRasterWidth(),
-                sourceProduct.getSceneRasterHeight(),
-                fullExpression);
-
-        final PlanarImage clostImage = VirtualBandOpImage.create(fullExpression, ProductData.TYPE_FLOAT32, null,
-                sourceProduct, ResolutionLevel.MAXRES);
-        clostBand.setSourceImage(clostImage);
-        final Stx stx = new StxFactory().create(clostBand, ProgressMonitor.NULL);
-
-        System.out.println("clost stx mean = " + stx.getMean());
-        System.out.println("clost stx std = " + stx.getStandardDeviation());
-        System.out.println("clost stx low = " + stx.getMinimum());
-        System.out.println("clost stx high = " + stx.getMaximum());
-
-        return stx.getMean();
+    private double computeClostHistogram3PercentOfMaximum(Band b) {
+        final Stx stx = new StxFactory().create(b, ProgressMonitor.NULL);
+        return Landsat8Utils.getHistogramBinAtNPercentOfMaximum(stx, 3.0);
     }
 
 

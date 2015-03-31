@@ -30,7 +30,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float shimezMeanThresh;
     private boolean applyHotCloudTest;
     private float hotThresh;
-    private float clostThresh;
+    private double clostThresh;
     private boolean applyClostCloudTest;
     private float clostValue;
     private float otsuValue;
@@ -70,7 +70,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 //
 //        return diff < shimezDiffThresh && mean > shimezMeanThresh;
 
-         // this is the latest correction from MPa , 20150330:
+        // this is the latest correction from MPa , 20150330:
 //        abs(blue/red-1)<A &&
 //                abs(blue/green-1)<A &&
 //                abs(red/green-1)<A &&
@@ -78,23 +78,27 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 //                  A = 0.1 over the day
 //                  A = 0.2 if twilight
 
-        final double blueGreenRatio = l8SpectralBandData[1]/l8SpectralBandData[2];
-        final double redGreenRatio = l8SpectralBandData[3]/l8SpectralBandData[2];
+        final double blueGreenRatio = l8SpectralBandData[1] / l8SpectralBandData[2];
+        final double redGreenRatio = l8SpectralBandData[3] / l8SpectralBandData[2];
         final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
 
         return Math.abs(blueGreenRatio - 1.0) < shimezDiffThresh &&
-               Math.abs(redGreenRatio - 1.0) < shimezDiffThresh &&
-               mean > shimezMeanThresh;
+                Math.abs(redGreenRatio - 1.0) < shimezDiffThresh &&
+                mean > shimezMeanThresh;
     }
 
     private boolean isCloudClost() {
-//        final double clost = l8SpectralBandData[0] * l8SpectralBandData[1] * l8SpectralBandData[7] * l8SpectralBandData[8];
-//        return clost > clostThresh;
-        return clostValue > clostThresh;
+        if (applyOtsuCloudTest) {
+            return clostValue > clostThresh;
+        } else {
+            final double clost = l8SpectralBandData[0] * l8SpectralBandData[1] * l8SpectralBandData[7] * l8SpectralBandData[8];
+            return clost > clostThresh;
+        }
+
     }
 
     private boolean isCloudHot() {
-        final double hot = l8SpectralBandData[1] - 0.5*l8SpectralBandData[3];
+        final double hot = l8SpectralBandData[1] - 0.5 * l8SpectralBandData[3];
         return hot > hotThresh;
     }
 
@@ -249,7 +253,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         this.hotThresh = hotThresh;
     }
 
-    public void setClostThresh(float clostThresh) {
+    public void setClostThresh(double clostThresh) {
         this.clostThresh = clostThresh;
     }
 
