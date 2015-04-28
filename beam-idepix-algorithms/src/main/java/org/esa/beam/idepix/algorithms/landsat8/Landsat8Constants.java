@@ -11,17 +11,23 @@ import java.util.Map;
 public class Landsat8Constants {
 
     public static final int F_INVALID = 0;
-    public static final int F_CLOUD = 1;
-    public static final int F_CLOUD_AMBIGUOUS = 2;
-    public static final int F_CLOUD_SURE = 3;
-    public static final int F_CLOUD_BUFFER = 4;
-    public static final int F_CLOUD_SHADOW = 5;
-    public static final int F_BRIGHT = 6;
-    public static final int F_WHITE = 7;
-    public static final int F_SNOW_ICE = 8;
-    public static final int F_GLINTRISK = 9;
-    public static final int F_COASTLINE = 10;
-    public static final int F_LAND = 11;
+    public static final int F_CLOUD_SHIMEZ = 1;
+    public static final int F_CLOUD_SHIMEZ_BUFFER = 2;
+    public static final int F_CLOUD_HOT = 3;
+    public static final int F_CLOUD_HOT_BUFFER = 4;
+    public static final int F_CLOUD_OTSU = 5;
+    public static final int F_CLOUD_OTSU_BUFFER = 6;
+    public static final int F_CLOUD_CLOST = 7;
+    public static final int F_CLOUD_CLOST_BUFFER = 8;
+    public static final int F_CLOUD_AMBIGUOUS = 9;
+    public static final int F_CLOUD_SURE = 10;
+    public static final int F_CLOUD_SHADOW = 11;
+    public static final int F_BRIGHT = 12;
+    public static final int F_WHITE = 13;
+    public static final int F_SNOW_ICE = 14;
+    public static final int F_GLINTRISK = 15;
+    public static final int F_COASTLINE = 16;
+    public static final int F_LAND = 17;
 
     public static final String F_INVALID_DESCR_TEXT = "Invalid pixel";
     public static final String F_CLOUD_DESCR_TEXT = "Cloudy pixel";
@@ -77,4 +83,20 @@ public class Landsat8Constants {
     };
     public static final int LANDSAT8_NUM_SPECTRAL_BANDS = LANDSAT8_SPECTRAL_BAND_NAMES.length;
 
+    public static final int SHIMEZ_CLOUD_TEST_INDEX = 0;
+    public static final int HOT_CLOUD_TEST_INDEX = 1;
+    public static final int OTSU_CLOUD_TEST_INDEX = 2;
+    public static final int CLOST_CLOUD_TEST_INDEX = 3;
+
+    public static final String SHIMEZ_CLASSIF_BAND_SUFFIX = "SHIMEZ";
+    public static final String HOT_CLASSIF_BAND_SUFFIX = "HOT";
+    public static final String OTSU_CLASSIF_BAND_SUFFIX = "OTSU";
+    public static final String CLOST_CLASSIF_BAND_SUFFIX = "CLOST";
+
+    public static final String[] CLOUD_CLASSIF_BAND_SUFFICES = {
+            SHIMEZ_CLASSIF_BAND_SUFFIX,
+            HOT_CLASSIF_BAND_SUFFIX,
+            OTSU_CLASSIF_BAND_SUFFIX,
+            CLOST_CLASSIF_BAND_SUFFIX
+    };
 }

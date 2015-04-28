@@ -127,7 +127,7 @@ public class Landsat8ClassificationOp extends Operator {
     private float hotThresh;
 
     // CLOST parameters:
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Apply CLOST cloud test")
     private boolean applyClostCloudTest;
 
@@ -137,7 +137,7 @@ public class Landsat8ClassificationOp extends Operator {
     private double clostThresh;
 
     // OTSU parameters:
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Apply OTSU cloud test")
     private boolean applyOtsuCloudTest;
 
@@ -162,6 +162,7 @@ public class Landsat8ClassificationOp extends Operator {
 
     static final int L8_F_DESIGNATED_FILL = 0;
     static final int L8_F_WATER_CONFIDENCE_HIGH = 5;  // todo: do we need this?
+    private String cloudFlagBandName;
 
     @Override
     public void initialize() throws OperatorException {
@@ -192,8 +193,9 @@ public class Landsat8ClassificationOp extends Operator {
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), sceneWidth, sceneHeight);
 
         // shall be the only target band!!
-        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        FlagCoding flagCoding = Landsat8Utils.createLandsat8FlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        cloudFlagBandName = IdepixUtils.IDEPIX_CLOUD_FLAGS;
+        cloudFlagBand = targetProduct.addBand(cloudFlagBandName, ProductData.TYPE_INT32);
+        FlagCoding flagCoding = Landsat8Utils.createLandsat8FlagCoding(cloudFlagBandName);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
@@ -229,7 +231,7 @@ public class Landsat8ClassificationOp extends Operator {
             l8RadianceTiles[i] = getSourceTile(l8RadianceBands[i], rectangle);
         }
 
-        final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        final Band cloudFlagTargetBand = targetProduct.getBand(cloudFlagBandName);
         final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
 
         try {
@@ -281,13 +283,19 @@ public class Landsat8ClassificationOp extends Operator {
     void setCloudFlag(Tile targetTile, int y, int x, Landsat8Algorithm l8Algorithm) {
         // for given instrument, compute boolean pixel properties and write to cloud flag band
         targetTile.setSample(x, y, Landsat8Constants.F_INVALID, l8Algorithm.isInvalid());
-        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD, l8Algorithm.isCloud());
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHIMEZ, applyShimezCloudTest && l8Algorithm.isCloudShimez());
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHIMEZ_BUFFER, false); // not computed here
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_HOT, applyHotCloudTest && l8Algorithm.isCloudHot());
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_HOT_BUFFER, false); // not computed here
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_OTSU, applyOtsuCloudTest && l8Algorithm.isCloudOtsu());
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_OTSU_BUFFER, false); // not computed here
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_CLOST, applyClostCloudTest && l8Algorithm.isCloudClost());
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_CLOST_BUFFER, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SURE, l8Algorithm.isCloud());   // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_AMBIGUOUS, l8Algorithm.isCloud());  // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, l8Algorithm.isSnowIce()); // todo
         targetTile.setSample(x, y, Landsat8Constants.F_BRIGHT, l8Algorithm.isBright());
         targetTile.setSample(x, y, Landsat8Constants.F_WHITE, l8Algorithm.isWhite());
-        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_BUFFER, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHADOW, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_GLINTRISK, false);   // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, false);   // TODO

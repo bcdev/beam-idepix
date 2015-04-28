@@ -39,7 +39,7 @@ public class Landsat8PostProcessOp extends Operator {
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
-    @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
+    @Parameter(defaultValue = "false", label = " Compute a cloud buffer")
     private boolean computeCloudBuffer;
 
     //    @Parameter(defaultValue = "true",
@@ -47,10 +47,13 @@ public class Landsat8PostProcessOp extends Operator {
 //            description = " Compute cloud shadow with latest 'fronts' algorithm")
     private boolean computeCloudShadow = false;   // todo: we have no info at all for this (pressure, height, temperature)
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             label = " Refine pixel classification near coastlines",
             description = "Refine pixel classification near coastlines. ")
     private boolean refineClassificationNearCoastlines;
+
+    @Parameter(label = " Cloud classification band suffix")
+    private String cloudClassifBandSuffix;
 
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
@@ -74,26 +77,22 @@ public class Landsat8PostProcessOp extends Operator {
             Product postProcessedCloudProduct = createTargetProduct(landsatCloudProduct,
                                                                     "postProcessedCloud", "postProcessedCloud");
 
-//        HashMap<String, Object> waterParameters = new HashMap<>();
-//        waterParameters.put("resolution", 50);
-//        waterParameters.put("subSamplingFactorX", 3);
-//        waterParameters.put("subSamplingFactorY", 3);
-//        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, l1bProduct);
             waterFractionBand = waterMaskProduct.getBand("land_water_fraction");
 
             geoCoding = l1bProduct.getGeoCoding();
 
-            origCloudFlagBand = landsatCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+            final String cloudClassifBandName = IdepixUtils.IDEPIX_CLOUD_FLAGS;
+            origCloudFlagBand = landsatCloudProduct.getBand(cloudClassifBandName);
             int extendedWidth = 64;
             int extendedHeight = 64; // todo: what do we need?
 
-            rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                                 l1bProduct.getSceneRasterHeight()),
+            rectCalculator = new RectangleExtender(new Rectangle(landsatCloudProduct.getSceneRasterWidth(),
+                                                                 landsatCloudProduct.getSceneRasterHeight()),
                                                    extendedWidth, extendedHeight
             );
 
 
-            ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, landsatCloudProduct, postProcessedCloudProduct, false);
+            ProductUtils.copyBand(cloudClassifBandName, landsatCloudProduct, postProcessedCloudProduct, false);
             setTargetProduct(postProcessedCloudProduct);
         }
     }
@@ -123,30 +122,44 @@ public class Landsat8PostProcessOp extends Operator {
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
-                    boolean isCloud = sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
+//                    boolean isCloud = sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD_SHIMEZ);
+//                    combineFlags(x, y, sourceFlagTile, targetTile);
+//
+//                    if (refineClassificationNearCoastlines) {
+//                        if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
+//                            targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, true);
+//                            refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+//                            if (isCloud) {
+//                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
+//                            }
+//                        }
+//                    }
+//                    boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD_SHIMEZ);
+//                    if (isCloudAfterRefinement) {
+//                        targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, false);
+//                        if ((computeCloudBuffer)) {
+//                            CloudBuffer.computeSimpleCloudBuffer(x, y,
+//                                                                 targetTile, targetTile,
+//                                                                 cloudBufferWidth,
+//                                                                 Landsat8Constants.F_CLOUD_SHIMEZ,
+//                                                                 Landsat8Constants.F_CLOUD_SHIMEZ_BUFFER);
+//                        }
+//                    }
+
                     combineFlags(x, y, sourceFlagTile, targetTile);
 
-                    if (refineClassificationNearCoastlines) {
-                        if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
-                            targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, true);
-                            refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
-                            if (isCloud) {
-                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
-                            }
-                        }
-                    }
-                    boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-                    if (isCloudAfterRefinement) {
-                        targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, false);
-                        if ((computeCloudBuffer)) {
-                            CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                                 targetTile, targetTile,
-                                                                 cloudBufferWidth,
-                                                                 Landsat8Constants.F_CLOUD,
-                                                                 Landsat8Constants.F_CLOUD_BUFFER);
-                        }
-                    }
-
+                    postProcess(x, y, targetTile, srcRectangle, sourceFlagTile, waterFractionTile,
+                                Landsat8Constants.F_CLOUD_SHIMEZ,
+                                Landsat8Constants.F_CLOUD_SHIMEZ_BUFFER);
+                    postProcess(x, y, targetTile, srcRectangle, sourceFlagTile, waterFractionTile,
+                                Landsat8Constants.F_CLOUD_HOT,
+                                Landsat8Constants.F_CLOUD_HOT_BUFFER);
+                    postProcess(x, y, targetTile, srcRectangle, sourceFlagTile, waterFractionTile,
+                                Landsat8Constants.F_CLOUD_OTSU,
+                                Landsat8Constants.F_CLOUD_OTSU_BUFFER);
+                    postProcess(x, y, targetTile, srcRectangle, sourceFlagTile, waterFractionTile,
+                                Landsat8Constants.F_CLOUD_CLOST,
+                                Landsat8Constants.F_CLOUD_CLOST_BUFFER);
                 }
             }
         }
@@ -193,6 +206,32 @@ public class Landsat8PostProcessOp extends Operator {
 //                }
 //            };
 //            cloudShadowFronts.computeCloudShadow();
+        }
+    }
+
+    private void postProcess(int x, int y, Tile targetTile, Rectangle srcRectangle, Tile sourceFlagTile, Tile waterFractionTile,
+                             int cloudFlagBit, int cloudBufferFlagBit) {
+        boolean isCloud = sourceFlagTile.getSampleBit(x, y, cloudFlagBit);
+        if (refineClassificationNearCoastlines) {
+            if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
+                targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, true);
+                refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+                if (isCloud) {
+                    refineCloudFlaggingForCoastlines(x, y, cloudFlagBit,
+                                                     sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
+                }
+            }
+        }
+        boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, cloudFlagBit);
+        if (isCloudAfterRefinement) {
+            targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, false);
+            if ((computeCloudBuffer)) {
+                CloudBuffer.computeSimpleCloudBuffer(x, y,
+                                                     targetTile, targetTile,
+                                                     cloudBufferWidth,
+                                                     cloudFlagBit,
+                                                     cloudBufferFlagBit);
+            }
         }
     }
 
@@ -250,20 +289,22 @@ public class Landsat8PostProcessOp extends Operator {
         return false;
     }
 
-    private void refineCloudFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile, Rectangle srcRectangle) {
+    private void refineCloudFlaggingForCoastlines(int x, int y, int cloudFlagBit,
+                                                  Tile sourceFlagTile, Tile waterFractionTile, Tile targetTile,
+                                                  Rectangle srcRectangle) {
         final int windowWidth = 1;
         final int LEFT_BORDER = Math.max(x - windowWidth, srcRectangle.x);
         final int RIGHT_BORDER = Math.min(x + windowWidth, srcRectangle.x + srcRectangle.width - 1);
         final int TOP_BORDER = Math.max(y - windowWidth, srcRectangle.y);
         final int BOTTOM_BORDER = Math.min(y + windowWidth, srcRectangle.y + srcRectangle.height - 1);
         boolean removeCloudFlag = true;
-        if (CloudShadowFronts.isPixelSurrounded(x, y, sourceFlagTile, Landsat8Constants.F_CLOUD)) {
+        if (CloudShadowFronts.isPixelSurrounded(x, y, sourceFlagTile, cloudFlagBit)) {
             removeCloudFlag = false;
         } else {
             Rectangle targetTileRectangle = targetTile.getRectangle();
             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                    boolean is_cloud = sourceFlagTile.getSampleBit(i, j, Landsat8Constants.F_CLOUD);
+                    boolean is_cloud = sourceFlagTile.getSampleBit(i, j, cloudFlagBit);
                     if (is_cloud && targetTileRectangle.contains(i, j) && !isNearCoastline(i, j, waterFractionTile, srcRectangle)) {
                         removeCloudFlag = false;
                         break;
@@ -273,7 +314,7 @@ public class Landsat8PostProcessOp extends Operator {
         }
 
         if (removeCloudFlag) {
-            targetTile.setSample(x, y, Landsat8Constants.F_CLOUD, false);
+            targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHIMEZ, false);
             targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SURE, false);
             targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_AMBIGUOUS, false);
         }

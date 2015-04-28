@@ -53,15 +53,16 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isCloudSure() {
+        // todo: discuss logic of cloudSure
         final boolean isCloudShimez = applyShimezCloudTest ? isCloudShimez() : false;
         final boolean isCloudHot = applyHotCloudTest ? isCloudHot() : false;
         final boolean isCloudClost = applyClostCloudTest ? isCloudClost() : false;
         final boolean isCloudOtsu = applyOtsuCloudTest ? isCloudOtsu() : false;
-//        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);   // todo: discuss logic
+//        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);
         return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost || isCloudOtsu);
     }
 
-    private boolean isCloudShimez() {
+    public boolean isCloudShimez() {
         // make sure we have reflectances here!!
 //        final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
 //        final double diff = Math.abs((l8SpectralBandData[1] - mean) / mean) +
@@ -87,22 +88,21 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
                 mean > shimezMeanThresh;
     }
 
-    private boolean isCloudClost() {
+    public boolean isCloudHot() {
+        final double hot = l8SpectralBandData[1] - 0.5 * l8SpectralBandData[3];
+        return hot > hotThresh;
+    }
+
+    public boolean isCloudClost() {
         if (applyOtsuCloudTest) {
             return clostValue > clostThresh;
         } else {
             final double clost = l8SpectralBandData[0] * l8SpectralBandData[1] * l8SpectralBandData[7] * l8SpectralBandData[8];
             return clost > clostThresh;
         }
-
     }
 
-    private boolean isCloudHot() {
-        final double hot = l8SpectralBandData[1] - 0.5 * l8SpectralBandData[3];
-        return hot > hotThresh;
-    }
-
-    private boolean isCloudOtsu() {
+    public boolean isCloudOtsu() {
         // todo
         return otsuValue > 128;
     }

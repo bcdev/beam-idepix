@@ -25,15 +25,59 @@ public class Landsat8Utils {
         Mask mask;
 
         mask = Mask.BandMathsType.create("landsat8_invalid",
-                Landsat8Constants.F_INVALID_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_INVALID",
-                Color.red.darker(), 0.5f);
+                                         Landsat8Constants.F_INVALID_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_INVALID",
+                                         Color.red.darker(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("landsat8_cloud",
-                Landsat8Constants.F_CLOUD_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD",
-                Color.magenta, 0.5f);
+
+        // SHIMEZ
+        mask = Mask.BandMathsType.create("landsat8_cloud_shimez",
+                                         Landsat8Constants.F_CLOUD_DESCR_TEXT + "[SHIMEZ]", w, h,
+                                         "cloud_classif_flags.F_CLOUD_SHIMEZ",
+                                         Color.magenta, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_cloud_buffer_shimez",
+                                         Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_SHIMEZ_BUFFER",
+                                         Color.orange, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+
+        // HOT
+        mask = Mask.BandMathsType.create("landsat8_cloud_hot",
+                                         Landsat8Constants.F_CLOUD_DESCR_TEXT + "[HOT]", w, h,
+                                         "cloud_classif_flags.F_CLOUD_HOT",
+                                         Color.magenta, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_cloud_buffer_hot",
+                                         Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_HOT_BUFFER",
+                                         Color.orange, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+
+        // OTSU
+        mask = Mask.BandMathsType.create("landsat8_cloud_otsu",
+                                         Landsat8Constants.F_CLOUD_DESCR_TEXT + "[OTSU]", w, h,
+                                         "cloud_classif_flags.F_CLOUD_OTSU",
+                                         Color.magenta, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_cloud_buffer_otsu",
+                                         Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_OTSU_BUFFER",
+                                         Color.orange, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+
+        // CLOST
+        mask = Mask.BandMathsType.create("landsat8_cloud_clost",
+                                         Landsat8Constants.F_CLOUD_DESCR_TEXT + "[CLOST]", w, h,
+                                         "cloud_classif_flags.F_CLOUD_CLOST",
+                                         Color.magenta, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_cloud_buffer_clost",
+                                         Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_CLOST_BUFFER",
+                                         Color.orange, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+
 //        mask = Mask.BandMathsType.create("landsat8_cloud_ambiguous",
 //                Landsat8Constants.F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
 //                "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
@@ -44,25 +88,20 @@ public class Landsat8Utils {
 //                "cloud_classif_flags.F_CLOUD_SURE",
 //                Color.red, 0.5f);
 //        cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("landsat8_cloud_buffer",
-                Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_BUFFER",
-                Color.orange, 0.5f);
-        cloudProduct.getMaskGroup().add(index++, mask);
 //        mask = Mask.BandMathsType.create("landsat8_cloud_shadow",
 //                Landsat8Constants.F_CLOUD_SHADOW_DESCR_TEXT, w, h,
 //                "cloud_classif_flags.F_CLOUD_SHADOW",
 //                Color.red.darker(), 0.5f);
 //        cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("landsat8_bright",
-                Landsat8Constants.F_BRIGHT_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_BRIGHT",
-                Color.yellow.darker(), 0.5f);
+                                         Landsat8Constants.F_BRIGHT_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_BRIGHT",
+                                         Color.yellow.darker(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("landsat8_white",
-                Landsat8Constants.F_WHITE_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_WHITE",
-                Color.red.brighter(), 0.5f);
+                                         Landsat8Constants.F_WHITE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_WHITE",
+                                         Color.red.brighter(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
 //        mask = Mask.BandMathsType.create("landsat8_snow_ice",
 //                Landsat8Constants.F_SNOW_ICE_DESCR_TEXT, w, h,
@@ -75,14 +114,14 @@ public class Landsat8Utils {
 //                Color.pink, 0.5f);
 //        cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("landsat8_coastline",
-                Landsat8Constants.F_COASTLINE_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_COASTLINE",
-                Color.green.darker(), 0.5f);
+                                         Landsat8Constants.F_COASTLINE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_COASTLINE",
+                                         Color.green.darker(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("landsat8_land",
-                Landsat8Constants.F_LAND_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_LAND",
-                Color.green.brighter(), 0.5f);
+                                         Landsat8Constants.F_LAND_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_LAND",
+                                         Color.green.brighter(), 0.5f);
         cloudProduct.getMaskGroup().add(index, mask);
 
         return index;
@@ -91,10 +130,20 @@ public class Landsat8Utils {
     public static FlagCoding createLandsat8FlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, Landsat8Constants.F_INVALID), Landsat8Constants.F_INVALID_DESCR_TEXT);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD), Landsat8Constants.F_CLOUD_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_SHIMEZ", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SHIMEZ),
+                           Landsat8Constants.F_CLOUD_DESCR_TEXT + "[SHIMEZ]");
+        flagCoding.addFlag("F_CLOUD_SHIMEZ_BUFFER", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SHIMEZ_BUFFER), Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_HOT", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_HOT),
+                           Landsat8Constants.F_CLOUD_DESCR_TEXT + "[HOT]");
+        flagCoding.addFlag("F_CLOUD_HOT_BUFFER", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_HOT_BUFFER), Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_OTSU", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_OTSU),
+                           Landsat8Constants.F_CLOUD_DESCR_TEXT + "[OTSU]");
+        flagCoding.addFlag("F_CLOUD_OTSU_BUFFER", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_OTSU_BUFFER), Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_CLOST", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_CLOST),
+                           Landsat8Constants.F_CLOUD_DESCR_TEXT + "[CLOST]");
+        flagCoding.addFlag("F_CLOUD_CLOST_BUFFER", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_CLOST_BUFFER), Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT);
 //        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_AMBIGUOUS), Landsat8Constants.F_CLOUD_AMBIGUOUS_DESCR_TEXT);
 //        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SURE), Landsat8Constants.F_CLOUD_SURE_DESCR_TEXT);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_BUFFER), Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT);
 //        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SHADOW), Landsat8Constants.F_CLOUD_SHADOW_DESCR_TEXT);
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, Landsat8Constants.F_BRIGHT), Landsat8Constants.F_BRIGHT_DESCR_TEXT);
         flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, Landsat8Constants.F_WHITE), Landsat8Constants.F_WHITE_DESCR_TEXT);
@@ -110,12 +159,12 @@ public class Landsat8Utils {
         final double highValue = h.getHighValue()[0];
         final double lowValue = h.getLowValue()[0];
         final int numBins = h.getNumBins(0);
-        final double binWidth = (highValue - lowValue)/ numBins;
+        final double binWidth = (highValue - lowValue) / numBins;
         final double peakValue = getHistogramPeakValue(h);
 
-        for (int i= numBins -1; i>=0; i--) {
-            final double currValue = highValue - (numBins-i)*binWidth;
-            if (h.getBins()[0][i] >= percent*peakValue/100.0) {
+        for (int i = numBins - 1; i >= 0; i--) {
+            final double currValue = highValue - (numBins - i) * binWidth;
+            if (h.getBins()[0][i] >= percent * peakValue / 100.0) {
                 return currValue;
             }
         }
@@ -130,7 +179,7 @@ public class Landsat8Utils {
 
     private static double getHistogramPeakValue(Histogram h) {
         int peakValue = 0;
-        for (int i=0; i<h.getNumBins(0); i++) {
+        for (int i = 0; i < h.getNumBins(0); i++) {
             if (h.getBins()[0][i] > peakValue) {
                 peakValue = h.getBins()[0][i];
             }
