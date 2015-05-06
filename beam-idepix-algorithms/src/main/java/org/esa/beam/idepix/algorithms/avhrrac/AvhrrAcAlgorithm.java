@@ -120,7 +120,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         // 3.45 < x < 4.45 : cloudy --> cloud sure
         // 4.45 < x : clear snow/ice
         if (nnOutput != null) {
-            isCloudSureSchiller =  nnOutput[0] >= avhrracSchillerNNCloudAmbiguousSureSeparationValue &&
+            isCloudSureSchiller = nnOutput[0] >= avhrracSchillerNNCloudAmbiguousSureSeparationValue &&
                     nnOutput[0] < avhrracSchillerNNCloudSureSnowSeparationValue;   // separation numbers from report HS, 0141112 for NN Nr.2
         } else {
             isCloudSureSchiller = false;
@@ -132,14 +132,14 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         // first apply additional tests (GK, 20150313):
 
         // 1. RGCT test:
-        final double ndvi = (reflCh2 - reflCh1)/(reflCh2 + reflCh1);
+        final double ndvi = (reflCh2 - reflCh1) / (reflCh2 + reflCh1);
         final double rgctThresh = getRgctThreshold(ndvi);
 //        final boolean isCloudRGCT = isLand() && reflCh1/100.0 > rgctThresh;
         final boolean isCloudRGCT = isLand() && reflCh1 > rgctThresh;  // reflCh1 should not be divided by 100?!
 
         // 2. RRCT test:
         final double rrctThresh = 1.1;
-        final boolean isCloudRRCT = isLand() && !isDesertArea() && reflCh2/reflCh1 < rrctThresh;
+        final boolean isCloudRRCT = isLand() && !isDesertArea() && reflCh2 / reflCh1 < rrctThresh;
 
         // 3. C3AT test:
         final double c3atThresh = 0.06;
@@ -178,10 +178,10 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
                 isCloudAdditional = true;
             }
             // second branch of condition tree:
-            if ((isDesertArea() && (isCloudFMFT || Math.abs(latitude) < AvhrrAcConstants.LAT_MAX_THRESH)) ||
-                        (isCloudRRCT && isCloudFMFT) ||
-                        (isCloudRRCT && isCloudTGCT) ||
-                        (isCloudRRCT && isCloudC3AT)) {
+            if (isDesertArea() && (isCloudFMFT || (Math.abs(latitude) < AvhrrAcConstants.LAT_MAX_THRESH && isCloudTGCT)) ||
+                    (!isDesertArea() && isCloudRRCT && isCloudFMFT) ||
+                    (!isDesertArea() && isCloudRRCT && (Math.abs(latitude) < AvhrrAcConstants.LAT_MAX_THRESH && isCloudTGCT)) ||
+                    (!isDesertArea() && isCloudRRCT && isCloudC3AT)) {
                 isCloudAdditional = true;
             }
         }
@@ -193,27 +193,27 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     }
 
     private double getTmftMinThreshold(double bt34) {
-        int tmftMinThresholdIndexRow = (int) ((btCh4 - 190.0)/10.0);
+        int tmftMinThresholdIndexRow = (int) ((btCh4 - 190.0) / 10.0);
         tmftMinThresholdIndexRow = Math.max(0, tmftMinThresholdIndexRow);
         tmftMinThresholdIndexRow = Math.min(13, tmftMinThresholdIndexRow);
-        int tmftMinThresholdIndexColumn = (int) ((bt34 - 7.5)/15.0) + 1;
+        int tmftMinThresholdIndexColumn = (int) ((bt34 - 7.5) / 15.0) + 1;
         tmftMinThresholdIndexColumn = Math.max(0, tmftMinThresholdIndexColumn);
         tmftMinThresholdIndexColumn = Math.min(3, tmftMinThresholdIndexColumn);
 
-        final int tmftMinThresholdIndex = 4*tmftMinThresholdIndexRow + tmftMinThresholdIndexColumn;
+        final int tmftMinThresholdIndex = 4 * tmftMinThresholdIndexRow + tmftMinThresholdIndexColumn;
 
         return AvhrrAcConstants.tmftTestMinThresholds[tmftMinThresholdIndex];
     }
 
     private double getTmftMaxThreshold(double bt34) {
-        int tmftMaxThresholdIndexRow = (int) ((btCh4 - 190.0)/10.0);
+        int tmftMaxThresholdIndexRow = (int) ((btCh4 - 190.0) / 10.0);
         tmftMaxThresholdIndexRow = Math.max(0, tmftMaxThresholdIndexRow);
         tmftMaxThresholdIndexRow = Math.min(13, tmftMaxThresholdIndexRow);
-        int tmftMaxThresholdIndexColumn = (int) ((bt34 - 7.5)/15.0) + 1;
+        int tmftMaxThresholdIndexColumn = (int) ((bt34 - 7.5) / 15.0) + 1;
         tmftMaxThresholdIndexColumn = Math.max(0, tmftMaxThresholdIndexColumn);
         tmftMaxThresholdIndexColumn = Math.min(3, tmftMaxThresholdIndexColumn);
 
-        final int tmftMaxThresholdIndex = 4*tmftMaxThresholdIndexRow + tmftMaxThresholdIndexColumn;
+        final int tmftMaxThresholdIndex = 4 * tmftMaxThresholdIndexRow + tmftMaxThresholdIndexColumn;
 
         return AvhrrAcConstants.tmftTestMaxThresholds[tmftMaxThresholdIndex];
     }
@@ -244,7 +244,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             rgctThresh = 0.4;
         } else if (ndvi >= 0.1 && ndvi < 0.15) {
             rgctThresh = 0.35;
-        }  else if (ndvi >= 0.15 && ndvi < 0.25) {
+        } else if (ndvi >= 0.15 && ndvi < 0.25) {
             rgctThresh = 0.3;
         } else if (ndvi >= 0.25) {
             rgctThresh = 0.25;
@@ -336,6 +336,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     public void setReflCh3(double reflCh3) {
         this.reflCh3 = reflCh3;
     }
+
     public void setBtCh3(double btCh3) {
         this.btCh3 = btCh3;
     }
@@ -351,23 +352,25 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     public void setRadiance(double[] rad) {
         this.radiance = rad;
     }
+
     public void setWaterFraction(float waterFraction) {
         this.waterFraction = waterFraction;
     }
+
     public void setNnOutput(double[] nnOutput) {
         this.nnOutput = nnOutput;
     }
 
     public void setAmbiguousLowerBoundaryValue(double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue) {
-       this.avhrracSchillerNNCloudAmbiguousLowerBoundaryValue = avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
+        this.avhrracSchillerNNCloudAmbiguousLowerBoundaryValue = avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
     }
 
     public void setAmbiguousSureSeparationValue(double avhrracSchillerNNCloudAmbiguousSureSeparationValue) {
-       this.avhrracSchillerNNCloudAmbiguousSureSeparationValue = avhrracSchillerNNCloudAmbiguousSureSeparationValue;
+        this.avhrracSchillerNNCloudAmbiguousSureSeparationValue = avhrracSchillerNNCloudAmbiguousSureSeparationValue;
     }
 
     public void setSureSnowSeparationValue(double avhrracSchillerNNCloudSureSnowSeparationValue) {
-       this.avhrracSchillerNNCloudSureSnowSeparationValue = avhrracSchillerNNCloudSureSnowSeparationValue;
+        this.avhrracSchillerNNCloudSureSnowSeparationValue = avhrracSchillerNNCloudSureSnowSeparationValue;
     }
 
     public void setLatitude(double latitude) {
@@ -397,18 +400,18 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         final double c1 = AvhrrAcConstants.c1;
         final double c2 = AvhrrAcConstants.c2;
 
-        final double T3bB0 = (btCh4 - btCh5) > 1.0 ? A0 + B0*btCh4 + C0*(btCh4 - btCh5) : btCh4;
+        final double T3bB0 = (btCh4 - btCh5) > 1.0 ? A0 + B0 * btCh4 + C0 * (btCh4 - btCh5) : btCh4;
 
-        final double expEnumerator = c2*AvhrrAcConstants.NU_CH3;
-        final double expDenominator = (T3bB0 - a13b)/a23b;
-        final double expTerm = Math.exp(expEnumerator/expDenominator);
+        final double expEnumerator = c2 * AvhrrAcConstants.NU_CH3;
+        final double expDenominator = (T3bB0 - a13b) / a23b;
+        final double expTerm = Math.exp(expEnumerator / expDenominator);
 //        final double btCh4Celsius = btCh4 - 273.15;
         final double btCh4Celsius = btCh4;  // test!
-        final double R3bem = btCh4Celsius > 0.0 ? c1*Math.pow(AvhrrAcConstants.NU_CH3, 3.0)/(expTerm - 1.0) : 0.0;
-        final double B03b = 1000.0*solar3b/ew3b;
+        final double R3bem = btCh4Celsius > 0.0 ? c1 * Math.pow(AvhrrAcConstants.NU_CH3, 3.0) / (expTerm - 1.0) : 0.0;
+        final double B03b = 1000.0 * solar3b / ew3b;
 
 //        emissivity3b = btCh4Celsius > 0.0 ? radiance[2]/R3bem : 0.0;
-        emissivity3b = btCh4Celsius > 0.0 ? R3bem/radiance[2] : 0.0;       // BT4 in K should always be > 0 !!
+        emissivity3b = btCh4Celsius > 0.0 ? R3bem / radiance[2] : 0.0;       // BT4 in K should always be > 0 !!
         emissivity3b = Math.max(Math.min(emissivity3b, 1.0), 0.0);
 
         if (sza < 90.0 && R3bem > 0.0 && radiance[2] > 0.0) {
@@ -421,7 +424,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             rho3b = Double.NaN;
         }
 
-        ndsi = !Double.isNaN(rho3b) ? (reflCh1 - rho3b)/(reflCh1 + rho3b) : Double.NaN;
+        ndsi = !Double.isNaN(rho3b) ? (reflCh1 - rho3b) / (reflCh1 + rho3b) : Double.NaN;
     }
 
     public void setNoaaId(String noaaId) {
