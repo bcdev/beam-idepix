@@ -62,6 +62,21 @@ public class OccciClassificationOp extends PixelOperator {
                description = "Write TOA reflectance to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRefl;
 
+    @Parameter(defaultValue = "true",
+               label = " Apply brightness test (MODIS)",
+               description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private boolean ocModisApplyBrightnessTest = true;
+
+    @Parameter(defaultValue = "0.15",
+               label = " Brightness test 'cloud sure' threshold (MODIS)",
+               description = "Brightness test 'cloud sure' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudSure;
+
+    @Parameter(defaultValue = "0.07",
+               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
+               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudAmbiguous;
+
 
     private SensorContext sensorContext;
 
@@ -159,6 +174,11 @@ public class OccciClassificationOp extends PixelOperator {
                         sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
             }
             occciAlgorithm.setWaterFraction(waterFraction);
+
+            ((OccciModisAlgorithm) occciAlgorithm).setModisApplyBrightnessTest(ocModisApplyBrightnessTest);
+            ((OccciModisAlgorithm) occciAlgorithm).setModisBrightnessThreshCloudSure(ocModisBrightnessThreshCloudSure);
+            ((OccciModisAlgorithm) occciAlgorithm).
+                    setModisBrightnessThreshCloudAmbiguous(ocModisBrightnessThreshCloudAmbiguous);
 
             double[] modisNeuralNetInput = modisAllNeuralNet.get().getInputVector();
             modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1

@@ -16,6 +16,10 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     private static final double THRESH_BRIGHT_SNOW_ICE = 0.25;
     private static final double THRESH_NDSI_SNOW_ICE = 0.8;
 
+    private boolean modisApplyBrightnessTest;
+    private double modisBrightnessThreshCloudSure;
+    private double modisBrightnessThreshCloudAmbiguous;
+
     @Override
     public boolean isSnowIce() {
 
@@ -27,7 +31,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         // 4.2 < x : clear snow/ice
         boolean isSnowIceFromNN;
         if (nnOutput != null) {
-            isSnowIceFromNN =  nnOutput[0] > 4.2 && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
+            isSnowIceFromNN = nnOutput[0] > 4.2 && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
         } else {
             // fallback
             // needs ndsi and brightness
@@ -35,7 +39,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             // maybe we can forget the Rayleigh (it's small)
             // MODIS: for slope use bands 16 (869nm) and 7 (2130nm, 500m spatial), threshold to be adjusted
             // for brightness use band 16 (Rayleigh corrected?)
-            isSnowIceFromNN =  (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
+            isSnowIceFromNN = (!isInvalid() && brightValue() > THRESH_BRIGHT_SNOW_ICE && ndsiValue() > THRESH_NDSI_SNOW_ICE);
             // todo: use MP stuff as fallback or in combination?
         }
 
@@ -79,12 +83,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         // 3.35 < x < 4.2 : cloudy --> cloud sure
         // 4.2 < x : clear snow/ice
         boolean isCloudAmbiguousFromNN;
+        final boolean isCloudAmbiguousFromBrightness = modisApplyBrightnessTest &&
+                brightValue() > modisBrightnessThreshCloudAmbiguous;
         if (nnOutput != null) {
             isCloudAmbiguousFromNN = nnOutput[0] > 2.0 && nnOutput[0] <= 3.35;    // separation numbers from HS, 20140923
         } else {
             // fallback
-            isCloudAmbiguousFromNN = (brightValue() > THRESH_BRIGHT_CLOUD_AMBIGUOUS);
-            // todo: use MP stuff as fallback or in combination?
+            isCloudAmbiguousFromNN = isCloudAmbiguousFromBrightness;
         }
 
         // MP additional criteria:
@@ -108,7 +113,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             isCloudAmbiguousFromWhitenesses = m > 0.3 && c1 > 0.6 && c2 > 0.74 && c3 > 0.9;
         }
 
-        return isCloudAmbiguousFromNN || isCloudAmbiguousFromWhitenesses;
+        return isCloudAmbiguousFromNN || isCloudAmbiguousFromBrightness || isCloudAmbiguousFromWhitenesses;
     }
 
     @Override
@@ -124,12 +129,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         // 3.35 < x < 4.2 : cloudy --> cloud sure
         // 4.2 < x : clear snow/ice
         boolean isCloudSureFromNN;
+        final boolean isCloudSureFromBrightness = modisApplyBrightnessTest &&
+                brightValue() > modisBrightnessThreshCloudSure;
         if (nnOutput != null) {
-            isCloudSureFromNN =  nnOutput[0] > 3.35 && nnOutput[0] <= 4.2;   // ALL NN separation numbers from HS, 20140923
+            isCloudSureFromNN = nnOutput[0] > 3.35 && nnOutput[0] <= 4.2;   // ALL NN separation numbers from HS, 20140923
         } else {
             // fallback
-            isCloudSureFromNN =  (brightValue() > THRESH_BRIGHT_CLOUD_SURE);
-            // todo: use MP stuff as fallback or in combination?
+            isCloudSureFromNN = isCloudSureFromBrightness;
         }
 
         // MP additional criteria:
@@ -154,7 +160,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
             isCloudSureFromWhitenesses = c1 > 0.87 && c2 > 0.9 && c3 > 0.97;
         }
 
-        return isCloudSureFromNN || isCloudSureFromWhitenesses;
+        return isCloudSureFromNN || isCloudSureFromBrightness || isCloudSureFromWhitenesses;
     }
 
     @Override
@@ -196,13 +202,24 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     @Override
     public float whiteValue(int numeratorIndex, int denominatorIndex) {
-        return (float) (refl[numeratorIndex]/refl[denominatorIndex]);
+        return (float) (refl[numeratorIndex] / refl[denominatorIndex]);
     }
 
     @Override
     public float ndsiValue() {
         // use EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7
-        return (float) ((refl[0] - refl[6])/(refl[0] + refl[6]));
+        return (float) ((refl[0] - refl[6]) / (refl[0] + refl[6]));
     }
 
+    public void setModisApplyBrightnessTest(boolean modisApplyBrightnessTest) {
+        this.modisApplyBrightnessTest = modisApplyBrightnessTest;
+    }
+
+    public void setModisBrightnessThreshCloudSure(double modisBrightnessThresh) {
+        this.modisBrightnessThreshCloudSure = modisBrightnessThresh;
+    }
+
+    public void setModisBrightnessThreshCloudAmbiguous(double modisBrightnessThreshCloudAmbiguous) {
+        this.modisBrightnessThreshCloudAmbiguous = modisBrightnessThreshCloudAmbiguous;
+    }
 }

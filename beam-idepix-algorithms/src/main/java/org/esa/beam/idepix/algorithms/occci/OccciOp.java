@@ -43,6 +43,21 @@ public class OccciOp extends BasisOp {
                description = "Write 'Emissive' bands to target product (MODIS).")
     private boolean ocOutputEmissive = false;
 
+    @Parameter(defaultValue = "true",
+               label = " Apply brightness test (MODIS)",
+               description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private boolean ocModisApplyBrightnessTest = true;
+
+    @Parameter(defaultValue = "0.15",
+               label = " Brightness test 'cloud sure' threshold (MODIS)",
+               description = "Brightness test 'cloud sure' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudSure;
+
+    @Parameter(defaultValue = "0.07",
+               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
+               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudAmbiguous;
+
     @Parameter(defaultValue = "false",
                label = " Radiance bands (SeaWiFS)",
                description = "Write TOA radiance bands to target product (SeaWiFS).")
@@ -135,6 +150,9 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("wmResolution", ocWaterMaskResolution);
         occciCloudClassificationParameters.put("ocOutputDebug", ocOutputDebug);
         occciCloudClassificationParameters.put("ocOutputSeawifsRadiance", ocOutputSeawifsRadiance);
+        occciCloudClassificationParameters.put("ocModisApplyBrightnessTest", ocModisApplyBrightnessTest);
+        occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudSure", ocModisBrightnessThreshCloudSure);
+        occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);
 
         return occciCloudClassificationParameters;
     }
