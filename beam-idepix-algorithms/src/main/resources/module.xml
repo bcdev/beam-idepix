@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.2.2</version>
+    <version>2.2.3</version>
     <name>Idepix Algorithms</name>
     <description>
         Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical
@@ -17,6 +17,7 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.3:</b>
         <b>Version 2.2.2:</b>
         <br/>
         Improvements of cloud tests and performance for Landsat 8.
