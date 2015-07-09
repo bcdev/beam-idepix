@@ -90,6 +90,11 @@ public class OccciSeawifsAlgorithm extends OccciAlgorithm {
     }
 
     @Override
+    public boolean isBright() {
+        return false;   // todo
+    }
+
+    @Override
     public float brightValue() {
         // use L_865
         return (float) refl[7];

@@ -37,5 +37,6 @@ class Constants {
     public static final int F_GLINT_RISK = 8;
     public static final int F_COASTLINE = 9;
     public static final int F_LAND = 10;
+    public static final int F_BRIGHT = 10;
 
 }

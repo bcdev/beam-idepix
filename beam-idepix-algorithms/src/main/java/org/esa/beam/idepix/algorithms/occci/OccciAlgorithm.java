@@ -17,6 +17,7 @@ public abstract class OccciAlgorithm extends OccciAbstractPixelProperties {
     public abstract boolean isSnowIce();
     public abstract boolean isMixedPixel();
     public abstract boolean isGlintRisk();
+    public abstract boolean isBright();
 
     public abstract float brightValue();
     public abstract float whiteValue(int numeratorIndex, int denominatorIndex);

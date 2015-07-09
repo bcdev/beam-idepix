@@ -33,6 +33,7 @@ public class OccciUtils {
         flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, Constants.F_GLINT_RISK), null);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, Constants.F_COASTLINE), null);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, Constants.F_LAND), null);
+        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, Constants.F_BRIGHT), null);
 
         return flagCoding;
     }
@@ -98,6 +99,11 @@ public class OccciUtils {
 
         mask = Mask.BandMathsType.create("F_LAND", "Land pixel", w, h,
                                          "pixel_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
+        occciProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_BRIGHT", "Bright pixel", w, h,
+                                         "pixel_classif_flags.F_BRIGHT",
                                          getRandomColour(r), 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 

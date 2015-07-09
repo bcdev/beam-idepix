@@ -19,6 +19,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     private boolean modisApplyBrightnessTest;
     private double modisBrightnessThreshCloudSure;
     private double modisBrightnessThreshCloudAmbiguous;
+    private double modisGlintThresh859;
 
     @Override
     public boolean isSnowIce() {
@@ -87,6 +88,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
                 brightValue() > modisBrightnessThreshCloudAmbiguous;
         if (nnOutput != null) {
             isCloudAmbiguousFromNN = nnOutput[0] > 2.0 && nnOutput[0] <= 3.35;    // separation numbers from HS, 20140923
+            isCloudAmbiguousFromNN = isCloudAmbiguousFromNN && refl[1] > modisGlintThresh859;
         } else {
             // fallback
             isCloudAmbiguousFromNN = isCloudAmbiguousFromBrightness;
@@ -114,6 +116,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         }
 
         return isCloudAmbiguousFromNN || isCloudAmbiguousFromBrightness || isCloudAmbiguousFromWhitenesses;
+//        return isCloudAmbiguousFromNN || (isCloudAmbiguousFromBrightness && isCloudAmbiguousFromWhitenesses);
     }
 
     @Override
@@ -130,9 +133,10 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         // 4.2 < x : clear snow/ice
         boolean isCloudSureFromNN;
         final boolean isCloudSureFromBrightness = modisApplyBrightnessTest &&
-                brightValue() > modisBrightnessThreshCloudSure;
+                brightValue() > Math.max(modisBrightnessThreshCloudSure, modisBrightnessThreshCloudAmbiguous);
         if (nnOutput != null) {
             isCloudSureFromNN = nnOutput[0] > 3.35 && nnOutput[0] <= 4.2;   // ALL NN separation numbers from HS, 20140923
+            isCloudSureFromNN = isCloudSureFromNN && refl[1] > modisGlintThresh859;
         } else {
             // fallback
             isCloudSureFromNN = isCloudSureFromBrightness;
@@ -161,6 +165,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         }
 
         return isCloudSureFromNN || isCloudSureFromBrightness || isCloudSureFromWhitenesses;
+//        return isCloudSureFromNN || (isCloudSureFromBrightness && isCloudSureFromWhitenesses);
     }
 
     @Override
@@ -191,13 +196,19 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         return false;
     }
 
+    @Override
+    public boolean isBright() {
+        return brightValue() > modisBrightnessThreshCloudSure;
+    }
+
     ///////////////////////////////////////////////////////////////////////
     // feature values
 
     @Override
     public float brightValue() {
-        // use EV_250_Aggr1km_RefSB_1
-        return (float) refl[0];
+        return (float) refl[0];   //  EV_250_Aggr1km_RefSB_1 (645nm)
+//        return (float) refl[1];   //  EV_250_Aggr1km_RefSB_2 (859nm)
+//        return (float) refl[4];   //  EV_250_Aggr1km_RefSB_5 (1240nm)
     }
 
     @Override
@@ -221,5 +232,9 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     public void setModisBrightnessThreshCloudAmbiguous(double modisBrightnessThreshCloudAmbiguous) {
         this.modisBrightnessThreshCloudAmbiguous = modisBrightnessThreshCloudAmbiguous;
+    }
+
+    public void setModisGlintThresh859(double modisGlintThresh859) {
+        this.modisGlintThresh859 = modisGlintThresh859;
     }
 }

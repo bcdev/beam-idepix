@@ -67,15 +67,20 @@ public class OccciClassificationOp extends PixelOperator {
                description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private boolean ocModisApplyBrightnessTest = true;
 
-    @Parameter(defaultValue = "0.15",
-               label = " Brightness test 'cloud sure' threshold (MODIS)",
-               description = "Brightness test 'cloud sure' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
-    private double ocModisBrightnessThreshCloudSure;
+//    @Parameter(defaultValue = "0.15",
+//               label = " Brightness test threshold (MODIS)",
+//               description = "Brightness test threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudSure = 0.15;
 
-    @Parameter(defaultValue = "0.07",
-               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
-               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
-    private double ocModisBrightnessThreshCloudAmbiguous;
+//    @Parameter(defaultValue = "0.07",
+//               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
+//               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
+
+    @Parameter(defaultValue = "0.1",
+               label = " 'Dark glint' threshold at 859nm (MODIS)",
+               description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisGlintThresh859 = 0.15;
 
 
     private SensorContext sensorContext;
@@ -148,6 +153,7 @@ public class OccciClassificationOp extends PixelOperator {
         targetSamples[0].set(Constants.F_GLINT_RISK, algorithm.isGlintRisk());
         targetSamples[0].set(Constants.F_COASTLINE, algorithm.isCoastline());
         targetSamples[0].set(Constants.F_LAND, algorithm.isLand());
+        targetSamples[0].set(Constants.F_BRIGHT, algorithm.isBright());
 
         if (ocOutputDebug) {
             targetSamples[1].set(algorithm.brightValue());
@@ -179,6 +185,7 @@ public class OccciClassificationOp extends PixelOperator {
             ((OccciModisAlgorithm) occciAlgorithm).setModisBrightnessThreshCloudSure(ocModisBrightnessThreshCloudSure);
             ((OccciModisAlgorithm) occciAlgorithm).
                     setModisBrightnessThreshCloudAmbiguous(ocModisBrightnessThreshCloudAmbiguous);
+            ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859(ocModisGlintThresh859);
 
             double[] modisNeuralNetInput = modisAllNeuralNet.get().getInputVector();
             modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1

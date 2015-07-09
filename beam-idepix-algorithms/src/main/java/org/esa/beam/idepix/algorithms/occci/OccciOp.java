@@ -43,20 +43,25 @@ public class OccciOp extends BasisOp {
                description = "Write 'Emissive' bands to target product (MODIS).")
     private boolean ocOutputEmissive = false;
 
+    //    @Parameter(defaultValue = "0.15",
+//               label = " Brightness test threshold (MODIS)",
+//               description = "Brightness test threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudSure = 0.15;
+
+    @Parameter(defaultValue = "0.1",
+               label = " 'Dark glint' threshold at 859nm (MODIS)",
+               description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisGlintThresh859 = 0.15;
+
     @Parameter(defaultValue = "true",
                label = " Apply brightness test (MODIS)",
                description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private boolean ocModisApplyBrightnessTest = true;
 
-    @Parameter(defaultValue = "0.15",
-               label = " Brightness test 'cloud sure' threshold (MODIS)",
-               description = "Brightness test 'cloud sure' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
-    private double ocModisBrightnessThreshCloudSure;
-
-    @Parameter(defaultValue = "0.07",
-               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
-               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
-    private double ocModisBrightnessThreshCloudAmbiguous;
+    //    @Parameter(defaultValue = "0.07",
+//               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
+//               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+    private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
 
     @Parameter(defaultValue = "false",
                label = " Radiance bands (SeaWiFS)",
@@ -153,6 +158,7 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("ocModisApplyBrightnessTest", ocModisApplyBrightnessTest);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudSure", ocModisBrightnessThreshCloudSure);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);
+        occciCloudClassificationParameters.put("ocModisGlintThresh859", ocModisGlintThresh859);
 
         return occciCloudClassificationParameters;
     }
