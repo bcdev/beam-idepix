@@ -67,6 +67,11 @@ public class OccciClassificationOp extends PixelOperator {
                description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private boolean ocModisApplyBrightnessTest = true;
 
+    @Parameter(defaultValue = "true",
+               label = " Apply 'OR' logic in cloud test (MODIS)",
+               description = "Apply 'OR' logic instead of 'AND' logic in cloud test (MODIS).")
+    private boolean ocModisApplyOrLogicInCloudTest = true;
+
 //    @Parameter(defaultValue = "0.15",
 //               label = " Brightness test threshold (MODIS)",
 //               description = "Brightness test threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
@@ -77,7 +82,7 @@ public class OccciClassificationOp extends PixelOperator {
 //               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
 
-    @Parameter(defaultValue = "0.1",
+    @Parameter(defaultValue = "0.15",
                label = " 'Dark glint' threshold at 859nm (MODIS)",
                description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisGlintThresh859 = 0.15;
@@ -186,6 +191,7 @@ public class OccciClassificationOp extends PixelOperator {
             ((OccciModisAlgorithm) occciAlgorithm).
                     setModisBrightnessThreshCloudAmbiguous(ocModisBrightnessThreshCloudAmbiguous);
             ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859(ocModisGlintThresh859);
+            ((OccciModisAlgorithm) occciAlgorithm).setModisApplyOrLogicInCloudTest(ocModisApplyOrLogicInCloudTest);
 
             double[] modisNeuralNetInput = modisAllNeuralNet.get().getInputVector();
             modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1

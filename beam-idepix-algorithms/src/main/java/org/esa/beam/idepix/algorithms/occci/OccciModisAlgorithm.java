@@ -20,6 +20,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     private double modisBrightnessThreshCloudSure;
     private double modisBrightnessThreshCloudAmbiguous;
     private double modisGlintThresh859;
+    private boolean modisApplyOrLogicInCloudTest;
 
     @Override
     public boolean isSnowIce() {
@@ -114,9 +115,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         } else {
             isCloudAmbiguousFromWhitenesses = m > 0.3 && c1 > 0.6 && c2 > 0.74 && c3 > 0.9;
         }
+        isCloudAmbiguousFromWhitenesses = isCloudAmbiguousFromWhitenesses && refl[1] > modisGlintThresh859;
 
-        return isCloudAmbiguousFromNN || isCloudAmbiguousFromBrightness || isCloudAmbiguousFromWhitenesses;
-//        return isCloudAmbiguousFromNN || (isCloudAmbiguousFromBrightness && isCloudAmbiguousFromWhitenesses);
+        if (modisApplyOrLogicInCloudTest) {
+            return isCloudAmbiguousFromNN || isCloudAmbiguousFromBrightness || isCloudAmbiguousFromWhitenesses;
+        } else {
+            return isCloudAmbiguousFromNN || (isCloudAmbiguousFromBrightness && isCloudAmbiguousFromWhitenesses);
+        }
     }
 
     @Override
@@ -163,9 +168,13 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 //            isCloudSureFromWhitenesses = m > 0.3 && c1 > 0.87 && c2 > 0.9 && c3 > 0.97;
             isCloudSureFromWhitenesses = c1 > 0.87 && c2 > 0.9 && c3 > 0.97;
         }
+        isCloudSureFromWhitenesses = isCloudSureFromWhitenesses && refl[1] > modisGlintThresh859;
 
-        return isCloudSureFromNN || isCloudSureFromBrightness || isCloudSureFromWhitenesses;
-//        return isCloudSureFromNN || (isCloudSureFromBrightness && isCloudSureFromWhitenesses);
+        if (modisApplyOrLogicInCloudTest) {
+            return isCloudSureFromNN || isCloudSureFromBrightness || isCloudSureFromWhitenesses;
+        } else {
+            return isCloudSureFromNN || (isCloudSureFromBrightness && isCloudSureFromWhitenesses);
+        }
     }
 
     @Override
@@ -236,5 +245,9 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     public void setModisGlintThresh859(double modisGlintThresh859) {
         this.modisGlintThresh859 = modisGlintThresh859;
+    }
+
+    public void setModisApplyOrLogicInCloudTest(boolean modisApplyOrLogicInCloudTest) {
+        this.modisApplyOrLogicInCloudTest = modisApplyOrLogicInCloudTest;
     }
 }

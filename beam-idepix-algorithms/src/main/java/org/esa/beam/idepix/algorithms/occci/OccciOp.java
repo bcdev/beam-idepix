@@ -48,7 +48,7 @@ public class OccciOp extends BasisOp {
 //               description = "Brightness test threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private double ocModisBrightnessThreshCloudSure = 0.15;
 
-    @Parameter(defaultValue = "0.1",
+    @Parameter(defaultValue = "0.15",
                label = " 'Dark glint' threshold at 859nm (MODIS)",
                description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisGlintThresh859 = 0.15;
@@ -57,6 +57,11 @@ public class OccciOp extends BasisOp {
                label = " Apply brightness test (MODIS)",
                description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private boolean ocModisApplyBrightnessTest = true;
+
+    @Parameter(defaultValue = "true",
+               label = " Apply 'OR' logic in cloud test (MODIS)",
+               description = "Apply 'OR' logic instead of 'AND' logic in cloud test (MODIS).")
+    private boolean ocModisApplyOrLogicInCloudTest = true;
 
     //    @Parameter(defaultValue = "0.07",
 //               label = " Brightness test 'cloud ambiguous' threshold (MODIS)",
@@ -159,6 +164,7 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudSure", ocModisBrightnessThreshCloudSure);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);
         occciCloudClassificationParameters.put("ocModisGlintThresh859", ocModisGlintThresh859);
+        occciCloudClassificationParameters.put("ocModisApplyOrLogicInCloudTest", ocModisApplyOrLogicInCloudTest);
 
         return occciCloudClassificationParameters;
     }
