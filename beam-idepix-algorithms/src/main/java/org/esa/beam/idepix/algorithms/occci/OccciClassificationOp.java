@@ -194,20 +194,20 @@ public class OccciClassificationOp extends PixelOperator {
             ((OccciModisAlgorithm) occciAlgorithm).setModisApplyOrLogicInCloudTest(ocModisApplyOrLogicInCloudTest);
 
             double[] modisNeuralNetInput = modisAllNeuralNet.get().getInputVector();
-            modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1
-            modisNeuralNetInput[1] = Math.sqrt(sourceSamples[2].getFloat());    // EV_250_Aggr1km_RefSB.3
-            modisNeuralNetInput[2] = Math.sqrt(sourceSamples[3].getFloat());    // EV_250_Aggr1km_RefSB.4
-            modisNeuralNetInput[3] = Math.sqrt(sourceSamples[4].getFloat());    // EV_250_Aggr1km_RefSB.5
-            modisNeuralNetInput[4] = Math.sqrt(sourceSamples[6].getFloat());    // EV_250_Aggr1km_RefSB.7
+            modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1 (645nm)
+            modisNeuralNetInput[1] = Math.sqrt(sourceSamples[2].getFloat());    // EV_250_Aggr1km_RefSB.3 (469nm)
+            modisNeuralNetInput[2] = Math.sqrt(sourceSamples[3].getFloat());    // EV_500_Aggr1km_RefSB.4 (555nm)
+            modisNeuralNetInput[3] = Math.sqrt(sourceSamples[4].getFloat());    // EV_500_Aggr1km_RefSB.5 (1240nm)
+            modisNeuralNetInput[4] = Math.sqrt(sourceSamples[6].getFloat());    // EV_500_Aggr1km_RefSB.7 (2130nm)
             final float emissive23Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 3].getFloat();
-            modisNeuralNetInput[5] = Math.sqrt(emissive23Rad);                  // EV_1KM_Emissive.23
+            modisNeuralNetInput[5] = Math.sqrt(emissive23Rad);                  // EV_1KM_Emissive.23   (4050nm)
             final float emissive25Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 5].getFloat();
-            modisNeuralNetInput[6] = Math.sqrt(emissive25Rad);                  // EV_1KM_Emissive.25
-            modisNeuralNetInput[7] = Math.sqrt(sourceSamples[21].getFloat());
+            modisNeuralNetInput[6] = Math.sqrt(emissive25Rad);                  // EV_1KM_Emissive.25   (4515nm)
+            modisNeuralNetInput[7] = Math.sqrt(sourceSamples[21].getFloat());   // EV_1KM_RefSB.26    (1375nm)
             final float emissive31Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 10].getFloat();
-            modisNeuralNetInput[8] = Math.sqrt(emissive31Rad);                  // EV_1KM_Emissive.31
+            modisNeuralNetInput[8] = Math.sqrt(emissive31Rad);                  // EV_1KM_Emissive.31   (11030nm)
             final float emissive32Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 11].getFloat();
-            modisNeuralNetInput[9] = Math.sqrt(emissive32Rad);                  // EV_1KM_Emissive.32
+            modisNeuralNetInput[9] = Math.sqrt(emissive32Rad);                  // EV_1KM_Emissive.32   (12020nm)
 
 
 //                if (occciAlgorithm.isLand()) {

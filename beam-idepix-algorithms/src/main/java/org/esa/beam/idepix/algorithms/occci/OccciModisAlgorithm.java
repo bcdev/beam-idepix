@@ -151,9 +151,9 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
         // Whiteness Criteria
         // (A bright and spectrally flat signal)
-        // c1: EV_250_Aggr1km_RefSB_1 / EV_500_Aggr1km_RefSB_3
-        // c2: EV_500_Aggr1km_RefSB_4/ EV_500_Aggr1km_RefSB_3
-        // c3: EV_250_Aggr1km_RefSB_1 / EV_500_Aggr1km_RefSB_4
+        // c1: EV_250_Aggr1km_RefSB_1 / EV_500_Aggr1km_RefSB_3       (645/469)
+        // c2: EV_500_Aggr1km_RefSB_4/ EV_500_Aggr1km_RefSB_3        (555/469)
+        // c3: EV_250_Aggr1km_RefSB_1 / EV_500_Aggr1km_RefSB_4       (645/555)
 
         // c1 > 0.87 && c2 > 0.9 && c3 > 0.97 --> cloud sure
         final float c1 = whiteValue(0, 2);
