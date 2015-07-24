@@ -20,14 +20,25 @@ class SeaWiFSSensorContext implements SensorContext {
     // derived from cahalan table from Kerstin tb 2013-11-22
     private static final double[] defaultNasaSolarFluxes = {1735.518167, 1858.404314, 1981.076667, 1881.566829, 1874.005, 1537.254783, 1230.04, 957.6122143};
 
-    private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
-    private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
-    private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "L_490";
-    private static final String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "L_510";
-    private static final String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "L_555";
-    private static final String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "L_670";
-    private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "L_765";
-    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "L_865";
+    // 'pixbox' band names?
+//    private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
+//    private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
+//    private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "L_490";
+//    private static final String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "L_510";
+//    private static final String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "L_555";
+//    private static final String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "L_670";
+//    private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "L_765";
+//    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "L_865";
+
+    // in GAC/HRPT we have these names
+    private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "Lt_412";
+    private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "Lt_443";
+    private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "Lt_490";
+    private static final String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "Lt_510";
+    private static final String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "Lt_555";
+    private static final String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "Lt_670";
+    private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "Lt_765";
+    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "Lt_865";
 
     static final String[] SEAWIFS_L1B_SPECTRAL_BAND_NAMES = {
             SEAWIFS_L1B_RADIANCE_1_BAND_NAME,

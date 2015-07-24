@@ -179,7 +179,8 @@ public class OccciOp extends BasisOp {
             copySourceBands(rad2reflProduct, targetProduct, "Emissive");
         }
         if (ocOutputSeawifsRadiance) {
-            copySourceBands(rad2reflProduct, targetProduct, "L_");
+//            copySourceBands(rad2reflProduct, targetProduct, "L_");
+            copySourceBands(rad2reflProduct, targetProduct, "Lt_");
         }
 
         if (ocOutputDebug) {
