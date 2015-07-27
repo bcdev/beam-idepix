@@ -83,11 +83,14 @@ public class OccciOp extends BasisOp {
                description = "Write geometry bands to target product (SeaWiFS).")
     private boolean ocOutputGeometry = true;
 
+    @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_"}, label = " Prefix of input radiance bands (SeaWiFS).",
+               description = "Prefix of input radiance bands (SeaWiFS)")
+    private String ocSeawifsRadianceBandPrefix;
+
     @Parameter(defaultValue = "false",
                label = " Debug bands",
                description = "Write further useful bands to target product.")
     private boolean ocOutputDebug = false;
-
 
     @Parameter(label = " Product type",
                description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
@@ -160,6 +163,7 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("wmResolution", ocWaterMaskResolution);
         occciCloudClassificationParameters.put("ocOutputDebug", ocOutputDebug);
         occciCloudClassificationParameters.put("ocOutputSeawifsRadiance", ocOutputSeawifsRadiance);
+        occciCloudClassificationParameters.put("ocSeawifsRadianceBandPrefix", ocSeawifsRadianceBandPrefix);
         occciCloudClassificationParameters.put("ocModisApplyBrightnessTest", ocModisApplyBrightnessTest);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudSure", ocModisBrightnessThreshCloudSure);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);

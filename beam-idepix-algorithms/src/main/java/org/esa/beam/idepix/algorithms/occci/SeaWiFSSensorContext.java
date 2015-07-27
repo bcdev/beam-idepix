@@ -31,14 +31,14 @@ class SeaWiFSSensorContext implements SensorContext {
 //    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "L_865";
 
     // in GAC/HRPT we have these names
-    private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "Lt_412";
-    private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "Lt_443";
-    private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "Lt_490";
-    private static final String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "Lt_510";
-    private static final String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "Lt_555";
-    private static final String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "Lt_670";
-    private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "Lt_765";
-    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "Lt_865";
+    private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "412";
+    private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "443";
+    private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "490";
+    private static final String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "510";
+    private static final String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "555";
+    private static final String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "670";
+    private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "765";
+    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "865";
 
     static final String[] SEAWIFS_L1B_SPECTRAL_BAND_NAMES = {
             SEAWIFS_L1B_RADIANCE_1_BAND_NAME,
@@ -67,13 +67,14 @@ class SeaWiFSSensorContext implements SensorContext {
     }
 
     @Override
-    public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct) {
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct, String spectralBandPrefix) {
         sampleConfigurer.defineSample(Constants.SRC_SZA, "solz", sourceProduct);
         sampleConfigurer.defineSample(Constants.SRC_SAA, "sola", sourceProduct);
         sampleConfigurer.defineSample(Constants.SRC_VZA, "senz", sourceProduct);
         sampleConfigurer.defineSample(Constants.SRC_VAA, "sena", sourceProduct);
         for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            sampleConfigurer.defineSample(Constants.SEAWIFS_SRC_RAD_OFFSET+ i, SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct);
+            sampleConfigurer.defineSample(Constants.SEAWIFS_SRC_RAD_OFFSET+ i,
+                                          spectralBandPrefix + SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct);
         }
     }
 

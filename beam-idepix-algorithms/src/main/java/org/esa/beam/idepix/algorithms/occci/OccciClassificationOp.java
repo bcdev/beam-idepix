@@ -62,6 +62,10 @@ public class OccciClassificationOp extends PixelOperator {
                description = "Write TOA reflectance to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRefl;
 
+    @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_"}, label = " Prefix of input radiance bands (SeaWiFS).",
+               description = "Prefix of input radiance bands (SeaWiFS)")
+    private String ocSeawifsRadianceBandPrefix;
+
     @Parameter(defaultValue = "true",
                label = " Apply brightness test (MODIS)",
                description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
@@ -263,7 +267,7 @@ public class OccciClassificationOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sensorContext.configureSourceSamples(sampleConfigurer, reflProduct);
+        sensorContext.configureSourceSamples(sampleConfigurer, reflProduct, ocSeawifsRadianceBandPrefix);
 
         int index = sensorContext.getSrcRadOffset() + sensorContext.getNumSpectralInputBands() + 1;
         sampleConfigurer.defineSample(index, Constants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
@@ -285,7 +289,8 @@ public class OccciClassificationOp extends PixelOperator {
         if (ocOutputSeawifsRefl && sensorContext.getSensor() == Sensor.SEAWIFS) {
             for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
                 sampleConfigurer.defineSample(4 + i,
-                                              SeaWiFSSensorContext.SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i] + "_refl");
+                                              ocSeawifsRadianceBandPrefix +
+                                                      SeaWiFSSensorContext.SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i] + "_refl");
             }
         }
     }
@@ -324,8 +329,10 @@ public class OccciClassificationOp extends PixelOperator {
         // SeaWiFS reflectances:
         if (ocOutputSeawifsRefl && sensorContext.getSensor() == Sensor.SEAWIFS) {
             for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
-                Band reflBand = productConfigurer.addBand(SeaWiFSSensorContext.SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i] + "_refl", ProductData.TYPE_FLOAT32);
-                reflBand.setDescription(SeaWiFSSensorContext.SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i] + " TOA reflectance");
+                Band reflBand = productConfigurer.addBand(ocSeawifsRadianceBandPrefix +
+                                                                  SeaWiFSSensorContext.SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i] + "_refl", ProductData.TYPE_FLOAT32);
+                reflBand.setDescription(ocSeawifsRadianceBandPrefix +
+                                                SeaWiFSSensorContext.SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i] + " TOA reflectance");
                 reflBand.setUnit("dl");
             }
         }

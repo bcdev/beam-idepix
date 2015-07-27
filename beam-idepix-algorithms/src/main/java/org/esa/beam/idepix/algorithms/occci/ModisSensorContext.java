@@ -140,7 +140,7 @@ class ModisSensorContext implements SensorContext {
     }
 
     @Override
-    public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct) {
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct, String spectralBandPrefix) {
         for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             if (sourceProduct.containsBand(MODIS_L1B_SPECTRAL_BAND_NAMES[i])) {
                 sampleConfigurer.defineSample(i, MODIS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct);

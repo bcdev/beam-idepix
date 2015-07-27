@@ -14,7 +14,7 @@ public interface SensorContext {
 
     int getNumSpectralInputBands();
 
-    void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct);
+    void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct, String spectralBandPrefix);
 
     /**
      * Scales the input spectral data to be consistent with MERIS TOA reflectances  (dimensionless)
