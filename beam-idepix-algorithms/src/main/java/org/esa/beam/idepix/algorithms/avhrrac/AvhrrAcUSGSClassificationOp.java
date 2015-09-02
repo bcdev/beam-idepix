@@ -44,7 +44,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
     // AvhrrAc parameters
 //    @Parameter(defaultValue = "false", label = " Copy input radiance bands (with albedo1/2 converted)")
-    boolean aacCopyRadiances = false;
+    boolean aacCopyRadiances = true;
 
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     int aacCloudBufferWidth;
@@ -354,7 +354,9 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         }
 
         if (aacCopyRadiances) {
-            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+//            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+            for (int i = 2; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+                // do just radiances 3-5
                 targetSamples[targetSamplesIndex + i].set(avhrrRadiance[i]);
             }
         }
@@ -435,7 +437,8 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         // radiances:
         if (aacCopyRadiances) {
-            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+//            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+            for (int i = 2; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES[i]);
             }
         }
@@ -548,7 +551,8 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         // radiances:
         if (aacCopyRadiances) {
-            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+//            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
+            for (int i = 2; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 Band radianceBand = productConfigurer.addBand("radiance_" + (i + 1), ProductData.TYPE_FLOAT32);
                 radianceBand.setDescription("TOA radiance band " + (i + 1));
                 radianceBand.setUnit("mW/(m^2 sr cm^-1)");
