@@ -78,37 +78,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
-
-//    @Parameter(defaultValue = "0.2",
-//            label = " Reflectance 1 'brightness' threshold ",
-//            description = " Reflectance 1 'brightness' threshold ")
-//    double reflCh1Thresh;
-//
-//    @Parameter(defaultValue = "0.2",
-//            label = " Reflectance 2 'brightness' threshold ",
-//            description = " Reflectance 2 'brightness' threshold ")
-//    double reflCh2Thresh;
-//
-//    @Parameter(defaultValue = "1.0",
-//            label = " Reflectance 2/1 ratio threshold ",
-//            description = " Reflectance 2/1 ratio threshold ")
-//    double r2r1RatioThresh;
-//
-//    @Parameter(defaultValue = "1.0",
-//            label = " Reflectance 3/1 ratio threshold ",
-//            description = " Reflectance 3/1 ratio threshold ")
-//    double r3r1RatioThresh;
-//
-//    @Parameter(defaultValue = "-30.0",
-//            label = " Channel 4 brightness temperature threshold (C)",
-//            description = " Channel 4 brightness temperature threshold (C)")
-//    double btCh4Thresh;
-//
-//    @Parameter(defaultValue = "-30.0",
-//            label = " Channel 5 brightness temperature threshold (C)",
-//            description = " Channel 5 brightness temperature threshold (C)")
-//    double btCh5Thresh;
-
     ElevationModel getasseElevationModel;
 
     @Override
@@ -251,9 +220,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         final GeoPos satPosition = computeSatPosition(y);
         final GeoPos pointPosition = getGeoPos(x, y);
-//        if (x == 560 && y == 49) {
-//            System.out.println("albedo2 = ");
-//        }
 
         final double[] azimuthAngles = computeAzimuthAngles(sza, vza, satPosition, pointPosition, sunPosition);
         final double saaRad = azimuthAngles[0];
@@ -316,33 +282,19 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
             aacAlgorithm.setBtCh5(btCh5 + 273.15);
 
-//            aacAlgorithm.setReflCh1Thresh(reflCh1Thresh);
-//            aacAlgorithm.setReflCh2Thresh(reflCh2Thresh);
-//            aacAlgorithm.setR2r1RatioThresh(r2r1RatioThresh);
-//            aacAlgorithm.setR3r1RatioThresh(r3r1RatioThresh);
-//            aacAlgorithm.setBtCh4Thresh(btCh4Thresh);
-//            aacAlgorithm.setBtCh5Thresh(btCh5Thresh);
-
-            aacAlgorithm.computeAdditionalSpectralQuantities();
+//            aacAlgorithm.computeAdditionalSpectralQuantities();
 
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamplesIndex = 1;
-//            targetSamples[targetSamplesIndex++].set(nnOutput[0]);
-//            targetSamples[targetSamplesIndex++].set(aacAlgorithm.getEmissivity3b());
-//            targetSamples[targetSamplesIndex++].set(aacAlgorithm.getRho3b());
-//            targetSamples[targetSamplesIndex++].set(aacAlgorithm.getNdsi());
             targetSamples[targetSamplesIndex++].set(vza);
             targetSamples[targetSamplesIndex++].set(sza);
             targetSamples[targetSamplesIndex++].set(vaaRad * MathUtils.RTOD);
             targetSamples[targetSamplesIndex++].set(saaRad * MathUtils.RTOD);
-//            targetSamples[targetSamplesIndex++].set(greatCircleRad * MathUtils.RTOD);
             targetSamples[targetSamplesIndex++].set(relAzi);
             targetSamples[targetSamplesIndex++].set(altitude);
             targetSamples[targetSamplesIndex++].set(btCh3);
             targetSamples[targetSamplesIndex++].set(btCh4);
             targetSamples[targetSamplesIndex++].set(btCh5);
-//            targetSamples[targetSamplesIndex++].set(albedo1);
-//            targetSamples[targetSamplesIndex++].set(albedo2);
             targetSamples[targetSamplesIndex++].set(albedo1Norm/100.);     // GK, 20150326
             targetSamples[targetSamplesIndex++].set(albedo2Norm/100.);
 
