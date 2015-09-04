@@ -54,22 +54,22 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     @Override
     public boolean isCloudSure() {
         // todo: discuss logic of cloudSure
-        final boolean isCloudShimez = applyShimezCloudTest ? isCloudShimez() : false;
-        final boolean isCloudHot = applyHotCloudTest ? isCloudHot() : false;
-        final boolean isCloudClost = applyClostCloudTest ? isCloudClost() : false;
-        final boolean isCloudOtsu = applyOtsuCloudTest ? isCloudOtsu() : false;
+        // todo: also discuss if Michael's tests shall be fully replaced by Schiller NN when available
+        final boolean isCloudShimez = applyShimezCloudTest && isCloudShimez();
+        final boolean isCloudHot = applyHotCloudTest && isCloudHot();
+        final boolean isCloudClost = applyClostCloudTest && isCloudClost();
+        final boolean isCloudOtsu = applyOtsuCloudTest && isCloudOtsu();
 //        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);
         return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost || isCloudOtsu);
     }
 
+    public boolean isCloudNN() {
+        // todo: implement with Schiller NN when available
+        return false;
+    }
+
     public boolean isCloudShimez() {
         // make sure we have reflectances here!!
-//        final double mean = (l8SpectralBandData[1] + l8SpectralBandData[2] + l8SpectralBandData[3]) / 3.0;
-//        final double diff = Math.abs((l8SpectralBandData[1] - mean) / mean) +
-//                Math.abs((l8SpectralBandData[2] - mean) / mean) +
-//                Math.abs((l8SpectralBandData[3] - mean) / mean);
-//
-//        return diff < shimezDiffThresh && mean > shimezMeanThresh;
 
         // this is the latest correction from MPa , 20150330:
 //        abs(blue/red-1)<A &&

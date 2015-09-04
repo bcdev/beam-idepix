@@ -11,7 +11,6 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 
 import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.ConstantDescriptor;
 import javax.media.jai.operator.MultiplyDescriptor;
 import java.awt.image.RenderedImage;
 
@@ -55,11 +54,11 @@ public class ClostOp extends Operator {
         RenderedImage cirrusImage = cirrusBand.getGeophysicalImage();
         RenderedOp blueAerosolPanCirrusImage = MultiplyDescriptor.create(blueAerosolPanImage, cirrusImage, null);
 
-        final Product clostProduct = createClostProduct(blueAerosolPanCirrusImage, blueBand);
+        final Product clostProduct = createClostProduct(blueAerosolPanCirrusImage);
         setTargetProduct(clostProduct);
     }
 
-    private Product createClostProduct(RenderedOp blueAerosolPanCirrusImage, Band referenceBand) {
+    private Product createClostProduct(RenderedOp blueAerosolPanCirrusImage) {
 
         Product product = new Product(sourceProduct.getName() + "_clost",
                                       sourceProduct.getProductType() + " (clost)",
@@ -69,11 +68,8 @@ public class ClostOp extends Operator {
         product.setGeoCoding(sourceProduct.getGeoCoding());
         product.setDescription("Product holding Clost Image");
 
-//        Band band = product.addBand(CLOST_BAND_NAME, referenceBand.getDataType());
         Band band = product.addBand(CLOST_BAND_NAME, ProductData.TYPE_FLOAT32);
         band.setSourceImage(blueAerosolPanCirrusImage);
-//        band.setScalingFactor(1000.0*referenceBand.getScalingFactor());
-//        band.setScalingOffset(referenceBand.getScalingOffset());
         band.setUnit("dl");
         band.setDescription("CLOST Image: aerosol * blue * pan * cirrus ");
 

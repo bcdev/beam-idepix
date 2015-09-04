@@ -83,20 +83,4 @@ public class Landsat8Constants {
     };
     public static final int LANDSAT8_NUM_SPECTRAL_BANDS = LANDSAT8_SPECTRAL_BAND_NAMES.length;
 
-    public static final int SHIMEZ_CLOUD_TEST_INDEX = 0;
-    public static final int HOT_CLOUD_TEST_INDEX = 1;
-    public static final int OTSU_CLOUD_TEST_INDEX = 2;
-    public static final int CLOST_CLOUD_TEST_INDEX = 3;
-
-    public static final String SHIMEZ_CLASSIF_BAND_SUFFIX = "SHIMEZ";
-    public static final String HOT_CLASSIF_BAND_SUFFIX = "HOT";
-    public static final String OTSU_CLASSIF_BAND_SUFFIX = "OTSU";
-    public static final String CLOST_CLASSIF_BAND_SUFFIX = "CLOST";
-
-    public static final String[] CLOUD_CLASSIF_BAND_SUFFICES = {
-            SHIMEZ_CLASSIF_BAND_SUFFIX,
-            HOT_CLASSIF_BAND_SUFFIX,
-            OTSU_CLASSIF_BAND_SUFFIX,
-            CLOST_CLASSIF_BAND_SUFFIX
-    };
 }
