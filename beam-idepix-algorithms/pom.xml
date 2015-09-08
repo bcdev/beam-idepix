@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>beam-idepix-algorithms</artifactId>
-    <name>Idepix algorithms module</name>
+    <name>Idepix Algorithms Module</name>
 
     <dependencies>
         <dependency>

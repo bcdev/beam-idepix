@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>beam-idepix-operators</artifactId>
-    <name>Idepix operators module</name>
+    <name>Idepix Operators Module</name>
 
     <dependencies>
         <dependency>
