@@ -22,8 +22,7 @@ import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.BitSetter;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.util.ArrayList;
@@ -75,7 +74,7 @@ public class FubScapeMLakesOp extends Operator {
     public void initialize() throws OperatorException {
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.FubScapeM);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
         geoCoding = sourceProduct.getGeoCoding();
         if (geoCoding == null) {

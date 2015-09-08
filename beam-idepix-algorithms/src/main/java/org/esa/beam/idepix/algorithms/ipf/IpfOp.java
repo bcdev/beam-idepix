@@ -146,7 +146,7 @@ public class IpfOp extends BasisOp {
     public void initialize() throws OperatorException {
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.IPF);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
         processQwg();
     }

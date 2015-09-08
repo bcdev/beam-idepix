@@ -127,7 +127,7 @@ public class CawaOp extends BasisOp {
 
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.Cawa);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
 
         preProcess();

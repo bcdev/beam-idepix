@@ -29,36 +29,36 @@ public class IdepixConstants {
     public static final int F_VEG_RISK = 16;
     public static final int F_SEAICE = 17;
 
-    public static String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
+    public static final String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
 
-    public static String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
-    public static String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
-    public static String AVHRR_L1b_AVISA_PRODUCT_TYPE = "AVHRR_3_L1B";
-    public static String AVHRR_L1b_UNIDATA_PRODUCT_TYPE = "CF-1.6, Unidata Observation Dataset v1.1";
+    public static final String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
+    public static final String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
+    public static final String AVHRR_L1b_AVISA_PRODUCT_TYPE = "AVHRR_3_L1B";
+    public static final String AVHRR_L1b_UNIDATA_PRODUCT_TYPE = "CF-1.6, Unidata Observation Dataset v1.1";
 
     public static final int PRODUCT_TYPE_INVALID = -1;
     public static final int PRODUCT_TYPE_MERIS = 0;
     public static final int PRODUCT_TYPE_AATSR = 1;
     public static final int PRODUCT_TYPE_VGT = 2;
 
-    public static String VGT_RADIANCE_0_BAND_NAME = "B0";
-    public static String VGT_RADIANCE_2_BAND_NAME = "B2";
-    public static String VGT_RADIANCE_3_BAND_NAME = "B3";
-    public static String VGT_RADIANCE_MIR_BAND_NAME = "MIR";
+    public static final String VGT_RADIANCE_0_BAND_NAME = "B0";
+    public static final String VGT_RADIANCE_2_BAND_NAME = "B2";
+    public static final String VGT_RADIANCE_3_BAND_NAME = "B3";
+    public static final String VGT_RADIANCE_MIR_BAND_NAME = "MIR";
 
     public static final int NO_DATA_VALUE = -1;
 
     /**
      * The names of the VGT spectral band names.
      */
-    public static String[] VGT_REFLECTANCE_BAND_NAMES = {
+    public static final String[] VGT_REFLECTANCE_BAND_NAMES = {
             VGT_RADIANCE_0_BAND_NAME, // 0
             VGT_RADIANCE_2_BAND_NAME, // 1
             VGT_RADIANCE_3_BAND_NAME, // 2
             VGT_RADIANCE_MIR_BAND_NAME, // 3
     };
 
-    public static String[] VGT_ANNOTATION_BAND_NAMES = {
+    public static final String[] VGT_ANNOTATION_BAND_NAMES = {
             "VZA",
             "SZA",
             "VAA",
@@ -76,7 +76,7 @@ public class IdepixConstants {
                     708.3f, 753.3f, 761.5f, 778.4f, 864.9f, 884.9f, 900.0f
             };
 
-    public static String[] MERIS_BRR_BAND_NAMES = {
+    public static final String[] MERIS_BRR_BAND_NAMES = {
             "brr_1", // 0
             "brr_2", // 0
             "brr_3", // 0
@@ -92,11 +92,11 @@ public class IdepixConstants {
             "brr_14", // 0
     };
 
-    public static final String inputconsistencyErrorMessage =
+    public static final String INPUT_INCONSISTENCY_ERROR_MESSAGE =
             "Selected cloud screening algorithm cannot be used with given input product. \n\n" +
-                    "Valid are: MERIS, VGT, AATSR, AVHRR, MODIS, SeaWIFS, colocated MERIS/AATSR L1b products.";
+                    "Valid are: MERIS, VGT, AATSR, AVHRR, MODIS, Landsat8, SeaWIFS, colocated MERIS/AATSR L1b products.";
 
-    public static final String ctpModeDefault = "Derive from Neural Net";
+    public static final String CTP_MODE_DEFAULT = "Derive from Neural Net";
 
     // constants for spectral unmixing
     public static final String[] SMA_SOURCE_BAND_NAMES = {"brr_5_n", "brr_7_n", "brr_9_n", "brr_10_n", "brr_12_n", "brr_13_n"};
@@ -118,6 +118,8 @@ public class IdepixConstants {
      *
      * @see java.util.regex.Matcher
      */
-    public static Pattern MERIS_CCL1P_TYPE_PATTERN = Pattern.compile("MER_..._CCL1P");
+    public static final Pattern MERIS_CCL1P_TYPE_PATTERN = Pattern.compile("MER_..._CCL1P");
 
+    private IdepixConstants() {
+    }
 }

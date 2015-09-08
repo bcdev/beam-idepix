@@ -41,7 +41,7 @@ public class MagicStickOp extends BasisOp {
 
     @Parameter(label = " CTP value to use in MERIS cloud shadow algorithm", defaultValue = "Derive from Neural Net",
                valueSet = {
-                       IdepixConstants.ctpModeDefault,
+                       IdepixConstants.CTP_MODE_DEFAULT,
                        "850 hPa",
                        "700 hPa",
                        "500 hPa",
@@ -56,7 +56,7 @@ public class MagicStickOp extends BasisOp {
     public void initialize() throws OperatorException {
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.MagicStick);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
         processMagicStick();
         renameL1bMaskNames(targetProduct);

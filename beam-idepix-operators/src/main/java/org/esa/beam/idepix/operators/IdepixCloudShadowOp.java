@@ -2,7 +2,14 @@ package org.esa.beam.idepix.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -169,9 +176,9 @@ public class IdepixCloudShadowOp extends Operator {
             Tile altTile = getSourceTile(altitudeRDN, sourceRectangle);
             Tile ctpTile = null;
             float ctp = 500.0f;
-            if (ctpProduct != null && ctpMode.equals(IdepixConstants.ctpModeDefault)) {
+            if (ctpProduct != null && ctpMode.equals(IdepixConstants.CTP_MODE_DEFAULT)) {
                 ctpTile = getSourceTile(ctpProduct.getBand("cloud_top_press"), sourceRectangle);
-            } else if (!ctpMode.equals(IdepixConstants.ctpModeDefault)) {
+            } else if (!ctpMode.equals(IdepixConstants.CTP_MODE_DEFAULT)) {
                 ctp = Integer.parseInt(ctpMode.substring(0, 3));
             }
 

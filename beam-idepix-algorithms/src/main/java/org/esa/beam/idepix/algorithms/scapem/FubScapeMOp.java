@@ -49,7 +49,7 @@ public class FubScapeMOp extends BasisOp {
     public void initialize() throws OperatorException {
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.FubScapeM);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
         processFubScapeM();
         renameL1bMaskNames(targetProduct);

@@ -14,7 +14,6 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
-import org.esa.beam.idepix.operators.IdepixCloudShadowOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
@@ -173,7 +172,7 @@ public class GlobAlbedoOp extends BasisOp {
     public void initialize() throws OperatorException {
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.GlobAlbedo);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
 
         if (IdepixUtils.isValidMerisProduct(sourceProduct)) {

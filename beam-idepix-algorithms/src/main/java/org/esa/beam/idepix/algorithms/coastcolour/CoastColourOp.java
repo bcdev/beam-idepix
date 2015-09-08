@@ -17,7 +17,6 @@ import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 
-import javax.media.jai.JAI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -153,7 +152,7 @@ public class CoastColourOp extends BasisOp {
 
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.CoastColour);
         if (!inputProductIsValid) {
-            throw new OperatorException(IdepixConstants.inputconsistencyErrorMessage);
+            throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
         processCoastColour();
     }
