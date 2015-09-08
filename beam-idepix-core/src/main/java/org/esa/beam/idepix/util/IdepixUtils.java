@@ -1,7 +1,13 @@
 package org.esa.beam.idepix.util;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
@@ -181,7 +187,18 @@ public class IdepixUtils {
     }
 
     public static boolean isValidLandsat8Product(Product product) {
-        return true; // todo!!
+        return product.containsBand("coastal_aerosol") &&
+                product.containsBand("blue") &&
+                product.containsBand("green") &&
+                product.containsBand("red") &&
+                product.containsBand("near_infrared") &&
+                product.containsBand("swir_1") &&
+                product.containsBand("swir_2") &&
+                product.containsBand("panchromatic") &&
+                product.containsBand("cirrus") &&
+                product.containsBand("thermal_infrared_(tirs)_1") &&
+                product.containsBand("thermal_infrared_(tirs)_2");
+
     }
 
     public static boolean isValidModisProduct(Product product) {

@@ -179,4 +179,26 @@ public class IdepixUtilsTest {
         noaaId = IdepixUtils.getAvhrrTimelineNoaaId(product);
         assertNull(noaaId);
     }
+
+    @Test
+    public void testIsValidLandsat8Product() {
+        final Product product = new Product("l8", "l8", 1, 1);
+        product.addBand("coastal_aerosol", ProductData.TYPE_FLOAT32);
+        product.addBand("blue", ProductData.TYPE_FLOAT32);
+        product.addBand("green", ProductData.TYPE_FLOAT32);
+        product.addBand("red", ProductData.TYPE_FLOAT32);
+        product.addBand("near_infrared", ProductData.TYPE_FLOAT32);
+        product.addBand("swir_1", ProductData.TYPE_FLOAT32);
+        product.addBand("swir_2", ProductData.TYPE_FLOAT32);
+        product.addBand("panchromatic", ProductData.TYPE_FLOAT32);
+        product.addBand("cirrus", ProductData.TYPE_FLOAT32);
+        product.addBand("thermal_infrared_(tirs)_2", ProductData.TYPE_FLOAT32);
+
+        assertFalse(IdepixUtils.isValidLandsat8Product(product));
+
+        product.addBand("thermal_infrared_(tirs)_1", ProductData.TYPE_FLOAT32);
+
+        assertTrue(IdepixUtils.isValidLandsat8Product(product));
+    }
+
 }
