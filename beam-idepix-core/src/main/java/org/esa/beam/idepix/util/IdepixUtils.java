@@ -135,7 +135,7 @@ public class IdepixUtils {
         if (globalAttributes != null) {
             final MetadataAttribute projectAttr = globalAttributes.getAttribute("project");
             if (projectAttr != null) {
-                return (projectAttr.getData() != null && projectAttr.getData().toString().equals("TIMELINE"));
+                return (projectAttr.getData() != null && "TIMELINE".equals(projectAttr.getData().toString()));
             }
         }
         return false;
@@ -164,7 +164,7 @@ public class IdepixUtils {
             if (dataSetQualityIndicatorsAttributes != null) {
                 final MetadataAttribute noaa17Attr = headerRecordAttributes.getAttribute("NOAA_SPACECRAFT_IDENTIFICATION_CODE");
                 if (noaa17Attr != null) {
-                    return (noaa17Attr.getData() != null && noaa17Attr.getData().toString().equals("NOAA-17 (NOAA-M)"));
+                    return (noaa17Attr.getData() != null && "NOAA-17 (NOAA-M)".equals(noaa17Attr.getData().toString()));
                 }
             }
         }
@@ -180,7 +180,7 @@ public class IdepixUtils {
         if (globalAttributes != null) {
             final MetadataAttribute descriptionAttr = globalAttributes.getAttribute("description");
             if (descriptionAttr != null) {
-                return (descriptionAttr.getData() != null && descriptionAttr.getData().toString().equals("noaa-14 L1B"));
+                return (descriptionAttr.getData() != null && "noaa-14 L1B".equals(descriptionAttr.getData().toString()));
             }
         }
         return false;

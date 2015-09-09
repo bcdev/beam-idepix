@@ -17,9 +17,12 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.util.ProductUtils;
 
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -35,6 +38,9 @@ import java.util.Map;
         description = "Landsat 8 water pixel classification operator.")
 public class Landsat8ClassificationOp extends Operator {
 
+    // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
+    private static final float WATER_MASK_SOUTH_BOUND = -58.0f;
+    private static final String NN_RESULT_BAND_NAME = "nnResult";
     @Parameter(defaultValue = "865",
             valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
             description = "Wavelength for brightness computation br = R(wvl) over land.",
@@ -150,7 +156,7 @@ public class Landsat8ClassificationOp extends Operator {
     @SourceProduct(alias = "l8source", description = "The source product.")
     Product sourceProduct;
 
-    @SourceProduct(alias = "otsu", optional=true, description = "The OTSU product.")
+    @SourceProduct(alias = "otsu", optional = true, description = "The OTSU product.")
     Product otsuProduct;
 
     @SourceProduct(alias = "waterMask", optional = true)
@@ -158,8 +164,6 @@ public class Landsat8ClassificationOp extends Operator {
 
     @TargetProduct(description = "The target product.")
     Product targetProduct;
-
-    Band cloudFlagBand;
 
     private Band[] l8RadianceBands;
     private Band landWaterBand;
@@ -170,10 +174,14 @@ public class Landsat8ClassificationOp extends Operator {
     static final int L8_F_WATER_CONFIDENCE_HIGH = 5;  // todo: do we need this?
     private String cloudFlagBandName;
 
+
+    private static final String LANDSAT8_CLOUD_NET_NAME = "8x5x3_342.3.net";
+    private ThreadLocal<SchillerNeuralNetWrapper> landsat8CloudNet;
+
     @Override
     public void initialize() throws OperatorException {
+        initCloudNet();
         setBands();
-
         createTargetProduct();
 
         if (waterMaskProduct != null) {
@@ -200,10 +208,13 @@ public class Landsat8ClassificationOp extends Operator {
 
         // shall be the only target band!!
         cloudFlagBandName = IdepixUtils.IDEPIX_CLOUD_FLAGS;
-        cloudFlagBand = targetProduct.addBand(cloudFlagBandName, ProductData.TYPE_INT32);
+        Band cloudFlagBand = targetProduct.addBand(cloudFlagBandName, ProductData.TYPE_INT32);
         FlagCoding flagCoding = Landsat8Utils.createLandsat8FlagCoding(cloudFlagBandName);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
+
+        // todo - temporarily added the nn results as band for testing. Shall be removed later. (mp/08.09.2015)
+        targetProduct.addBand(NN_RESULT_BAND_NAME, ProductData.TYPE_INT8);
 
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
 
@@ -237,8 +248,8 @@ public class Landsat8ClassificationOp extends Operator {
             l8RadianceTiles[i] = getSourceTile(l8RadianceBands[i], rectangle);
         }
 
-        final Band cloudFlagTargetBand = targetProduct.getBand(cloudFlagBandName);
-        final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
+        final Tile cloudFlagTargetTile = targetTiles.get(targetProduct.getBand(cloudFlagBandName));
+        final Tile nnResultTargetTile = targetTiles.get(targetProduct.getBand(NN_RESULT_BAND_NAME));
 
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
@@ -251,10 +262,11 @@ public class Landsat8ClassificationOp extends Operator {
                             waterFractionTile,
                             clostTile,
                             otsuTile,
-                            y,
-                            x);
+                            x, y
+                    );
 
-                    setCloudFlag(cloudFlagTargetTile, y, x, landsat8Algorithm);
+                    setCloudFlag(cloudFlagTargetTile, x, y, landsat8Algorithm);
+                    nnResultTargetTile.setSample(x, y, landsat8Algorithm.getNnOutput()[0]);
                 }
             }
         } catch (Exception e) {
@@ -263,8 +275,7 @@ public class Landsat8ClassificationOp extends Operator {
     }
 
     private boolean isLandPixel(int x, int y, Tile l8FlagTile, int waterFraction) {
-        // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
-        if (getGeoPos(x, y).lat > -58f) {
+        if (getGeoPos(x, y).lat > WATER_MASK_SOUTH_BOUND) {
             // values bigger than 100 indicate no data
             if (waterFraction <= 100) {
                 // todo: this does not work if we have a PixelGeocoding. In that case, waterFraction
@@ -286,7 +297,7 @@ public class Landsat8ClassificationOp extends Operator {
         return geoPos;
     }
 
-    void setCloudFlag(Tile targetTile, int y, int x, Landsat8Algorithm l8Algorithm) {
+    private void setCloudFlag(Tile targetTile, int x, int y, Landsat8Algorithm l8Algorithm) {
         // for given instrument, compute boolean pixel properties and write to cloud flag band
         targetTile.setSample(x, y, Landsat8Constants.F_INVALID, l8Algorithm.isInvalid());
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHIMEZ, applyShimezCloudTest && l8Algorithm.isCloudShimez());
@@ -305,16 +316,16 @@ public class Landsat8ClassificationOp extends Operator {
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHADOW, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_GLINTRISK, false);   // TODO
         targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, false);   // TODO
-        targetTile.setSample(x, y, Landsat8Constants.F_LAND, l8Algorithm.isLand);         // TODO
+        targetTile.setSample(x, y, Landsat8Constants.F_LAND, l8Algorithm.isLand());         // TODO
     }
+
 
     private Landsat8Algorithm createLandsat8Algorithm(Tile[] l8RadianceTiles,
                                                       Tile l8FlagTile,
                                                       Tile waterFractionTile,
                                                       Tile clostTile,
                                                       Tile otsuTile,
-                                                      int y,
-                                                      int x) {
+                                                      int x, int y) {
         Landsat8Algorithm l8Algorithm = new Landsat8Algorithm();
 
         boolean isLand = false;
@@ -359,7 +370,25 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setWhitenessBand2Water(whitenessBand2Water);
         l8Algorithm.setWhitenessThreshWater(whitenessThreshWater);
 
+        l8Algorithm.setNnOutput(calcNeuralNetResult(l8Radiance));
+
         return l8Algorithm;
+    }
+
+    private double[] calcNeuralNetResult(float[] l8Radiance) {
+        double[] cloudNetInput = landsat8CloudNet.get().getInputVector();
+        for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
+            cloudNetInput[i] = Math.sqrt(l8Radiance[i]);
+        }
+        return landsat8CloudNet.get().getNeuralNet().calc(cloudNetInput);
+    }
+
+    private void initCloudNet() {
+        try (InputStream cloudNet = getClass().getResourceAsStream(LANDSAT8_CLOUD_NET_NAME)) {
+            landsat8CloudNet = SchillerNeuralNetWrapper.create(cloudNet);
+        } catch (IOException e) {
+            throw new OperatorException("Cannot read cloud neural net: " + e.getMessage());
+        }
     }
 
     /**

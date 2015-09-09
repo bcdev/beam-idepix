@@ -7,24 +7,24 @@ package org.esa.beam.idepix.algorithms.landsat8;
  */
 public class Landsat8Algorithm implements Landsat8PixelProperties {
 
-    float[] l8SpectralBandData;
+    private float[] l8SpectralBandData;
 
-    int brightnessBandLand;
-    float brightnessThreshLand;
-    int brightnessBand1Water;
-    float brightnessWeightBand1Water;
-    int brightnessBand2Water;
-    float brightnessWeightBand2Water;
-    float brightnessThreshWater;
-    int whitenessBand1Land;
-    int whitenessBand2Land;
-    float whitenessThreshLand;
-    int whitenessBand1Water;
-    int whitenessBand2Water;
-    float whitenessThreshWater;
+    private int brightnessBandLand;
+    private float brightnessThreshLand;
+    private int brightnessBand1Water;
+    private float brightnessWeightBand1Water;
+    private int brightnessBand2Water;
+    private float brightnessWeightBand2Water;
+    private float brightnessThreshWater;
+    private int whitenessBand1Land;
+    private int whitenessBand2Land;
+    private float whitenessThreshLand;
+    private int whitenessBand1Water;
+    private int whitenessBand2Water;
+    private float whitenessThreshWater;
 
-    boolean isLand;
-    boolean isInvalid;
+    private boolean isLand;
+    private boolean isInvalid;
     private boolean applyShimezCloudTest;
     private float shimezDiffThresh;
     private float shimezMeanThresh;
@@ -35,6 +35,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float clostValue;
     private float otsuValue;
     private boolean applyOtsuCloudTest;
+    private double[] nnOutput;
 
     @Override
     public boolean isInvalid() {
@@ -63,9 +64,16 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost || isCloudOtsu);
     }
 
+    public void setNnOutput(double[] nnOutput) {
+        this.nnOutput = nnOutput;
+    }
+
+    public double[] getNnOutput() {
+        return nnOutput;
+    }
+
     public boolean isCloudNN() {
-        // todo: implement with Schiller NN when available
-        return false;
+        return nnOutput != null;
     }
 
     public boolean isCloudShimez() {
@@ -272,4 +280,5 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     public void setApplyOtsuCloudTest(boolean applyOtsuCloudTest) {
         this.applyOtsuCloudTest = applyOtsuCloudTest;
     }
+
 }
