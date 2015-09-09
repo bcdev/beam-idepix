@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.landsat8",
-                  version = "2.2",
+        version = "2.3",
                   copyright = "(c) 2014 by Brockmann Consult",
                   description = "Pixel identification for Landsat 8.")
 public class Landsat8Op extends Operator {
