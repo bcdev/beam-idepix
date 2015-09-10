@@ -40,7 +40,12 @@ public class Landsat8ClassificationOp extends Operator {
 
     // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
     private static final float WATER_MASK_SOUTH_BOUND = -58.0f;
+    // todo - temporary bands; should be removed when algorithm is stable (mp/10.09.2015)
     private static final String NN_RESULT_BAND_NAME = "nnResult";
+    private static final String DARK_GLINT_TEST_ONE_BAND_NAME = "darkGlintTest1";
+    private static final String DARK_Glint_TEST_TWO_BAND_NAME = "darkGlintTest2";
+
+
     @Parameter(defaultValue = "865",
             valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
             description = "Wavelength for brightness computation br = R(wvl) over land.",
@@ -112,6 +117,28 @@ public class Landsat8ClassificationOp extends Operator {
             description = "Threshold T for whiteness classification over water: white if wh < T.",
             label = "Threshold for whiteness classification over water")
     private float whitenessThreshWater;
+
+    @Parameter(defaultValue = "0.15",
+            label = "Dark Glint Test 1",
+            description = "'Dark glint' threshold: Cloud possible only if refl > THRESH.")
+    private double darkGlintThreshTest1;
+
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength used for Dark Glint Test 1")
+    private int darkGlintThreshTest1Wavelength;
+
+    @Parameter(defaultValue = "0.15",
+            label = "Dark Glint Test 2",
+            description = "'Dark glint' threshold: Cloud possible only if refl > THRESH.")
+    private double darkGlintThreshTest2;
+
+    @Parameter(defaultValue = "1610",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength used for Dark Glint Test 2")
+    private int darkGlintThreshTest2Wavelength;
 
     // SHIMEZ parameters
     @Parameter(defaultValue = "true",
@@ -213,8 +240,12 @@ public class Landsat8ClassificationOp extends Operator {
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
-        // todo - temporarily added the nn results as band for testing. Shall be removed later. (mp/08.09.2015)
+        // todo - temporarily added the bands for testing. Shall be removed later. (mp/08.09.2015)
         targetProduct.addBand(NN_RESULT_BAND_NAME, ProductData.TYPE_INT8);
+        final Band dgt1 = targetProduct.addBand(DARK_GLINT_TEST_ONE_BAND_NAME, ProductData.TYPE_INT8);
+        dgt1.setDescription(String.format("Glint Test 1 @%d", darkGlintThreshTest1Wavelength));
+        final Band dgt2 = targetProduct.addBand(DARK_Glint_TEST_TWO_BAND_NAME, ProductData.TYPE_INT8);
+        dgt2.setDescription(String.format("Glint Test 2 @%d", darkGlintThreshTest2Wavelength));
 
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
 
@@ -250,6 +281,8 @@ public class Landsat8ClassificationOp extends Operator {
 
         final Tile cloudFlagTargetTile = targetTiles.get(targetProduct.getBand(cloudFlagBandName));
         final Tile nnResultTargetTile = targetTiles.get(targetProduct.getBand(NN_RESULT_BAND_NAME));
+        final Tile darkGlintTest1TargetTile = targetTiles.get(targetProduct.getBand(DARK_GLINT_TEST_ONE_BAND_NAME));
+        final Tile darkGlintTest2TargetTile = targetTiles.get(targetProduct.getBand(DARK_Glint_TEST_TWO_BAND_NAME));
 
         try {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
@@ -267,10 +300,12 @@ public class Landsat8ClassificationOp extends Operator {
 
                     setCloudFlag(cloudFlagTargetTile, x, y, landsat8Algorithm);
                     nnResultTargetTile.setSample(x, y, landsat8Algorithm.getNnOutput()[0]);
+                    darkGlintTest1TargetTile.setSample(x, y, landsat8Algorithm.isDarkGlintTest1());
+                    darkGlintTest2TargetTile.setSample(x, y, landsat8Algorithm.isDarkGlintTest2());
                 }
             }
         } catch (Exception e) {
-            throw new OperatorException("Failed to provide GA cloud screening:\n" + e.getMessage(), e);
+            throw new OperatorException("Failed to provide Landsat8 cloud screening:\n" + e.getMessage(), e);
         }
     }
 
@@ -370,7 +405,13 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setWhitenessBand2Water(whitenessBand2Water);
         l8Algorithm.setWhitenessThreshWater(whitenessThreshWater);
 
+        l8Algorithm.setDarkGlintThresholdTest1(darkGlintThreshTest1);
+        l8Algorithm.setDarkGlintThresholdTest1Wvl(darkGlintThreshTest1Wavelength);
+        l8Algorithm.setDarkGlintThresholdTest2(darkGlintThreshTest2);
+        l8Algorithm.setDarkGlintThresholdTest2Wvl(darkGlintThreshTest2Wavelength);
+
         l8Algorithm.setNnOutput(calcNeuralNetResult(l8Reflectance));
+
 
         return l8Algorithm;
     }

@@ -36,6 +36,10 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float otsuValue;
     private boolean applyOtsuCloudTest;
     private double[] nnOutput;
+    private double darkGlintThresholdTest1;
+    private double darkGlintThresholdTest2;
+    private int darkGlintThresholdTest1Wvl;
+    private int darkGlintThresholdTest2Wvl;
 
     @Override
     public boolean isInvalid() {
@@ -174,6 +178,16 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         }
     }
 
+    public boolean isDarkGlintTest1() {
+        Integer darkGlintTest1Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(darkGlintThresholdTest1Wvl);
+        return l8SpectralBandData[darkGlintTest1Index] > darkGlintThresholdTest1;
+    }
+
+    public boolean isDarkGlintTest2() {
+        Integer darkGlintTest2Index = Landsat8Constants.LANDSAT8_SPECTRAL_WAVELENGTH_MAP.get(darkGlintThresholdTest2Wvl);
+        return l8SpectralBandData[darkGlintTest2Index] > darkGlintThresholdTest2;
+
+    }
     // setter methods
 
     public void setL8SpectralBandData(float[] l8SpectralBandData) {
@@ -279,6 +293,22 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     public void setApplyOtsuCloudTest(boolean applyOtsuCloudTest) {
         this.applyOtsuCloudTest = applyOtsuCloudTest;
+    }
+
+    public void setDarkGlintThresholdTest1(double darkThreshold865) {
+        this.darkGlintThresholdTest1 = darkThreshold865;
+    }
+
+    public void setDarkGlintThresholdTest1Wvl(int darkGlintThresholdTest1Wvl) {
+        this.darkGlintThresholdTest1Wvl = darkGlintThresholdTest1Wvl;
+    }
+
+    public void setDarkGlintThresholdTest2(double darkThreshold1610) {
+        this.darkGlintThresholdTest2 = darkThreshold1610;
+    }
+
+    public void setDarkGlintThresholdTest2Wvl(int darkGlintThresholdTest2Wvl) {
+        this.darkGlintThresholdTest2Wvl = darkGlintThresholdTest2Wvl;
     }
 
 }

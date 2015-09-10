@@ -140,6 +140,30 @@ public class Landsat8Op extends Operator {
             label = "Threshold for whiteness classification over water")
     private float whitenessThreshWater;
 
+    @Parameter(defaultValue = "0.15",
+            label = "Dark Glint Test 1",
+            description = "'Dark glint' threshold: Cloud possible only if refl > THRESH.")
+    private double darkGlintThreshTest1;
+
+    @Parameter(defaultValue = "865",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength used for Dark Glint Test 1")
+    private int darkGlintThreshTest1Wavelength;
+
+    @Parameter(defaultValue = "0.15",
+            label = "Dark Glint Test 2",
+            description = "'Dark glint' threshold: Cloud possible only if refl > THRESH.")
+    private double darkGlintThreshTest2;
+
+    @Parameter(defaultValue = "1610",
+            valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
+            description = "Wavelength 2 for whiteness computation (wh = R(wvl_1) / R(wvl_2)) over water.",
+            label = "Wavelength used for Dark Glint Test 2")
+    private int darkGlintThreshTest2Wavelength;
+
+
+
     // SHIMEZ parameters:
     @Parameter(defaultValue = "true",
             label = " Apply SHIMEZ cloud test")
@@ -287,6 +311,12 @@ public class Landsat8Op extends Operator {
         classificationParameters.put("applyClostCloudTest", applyClostCloudTest);
         classificationParameters.put("clostThresh", clostThresh);
         classificationParameters.put("applyOtsuCloudTest", applyOtsuCloudTest);
+
+
+        classificationParameters.put("darkGlintThreshTest1", darkGlintThreshTest1);
+        classificationParameters.put("darkGlintThreshTest1Wavelength", darkGlintThreshTest1Wavelength);
+        classificationParameters.put("darkGlintThreshTest2", darkGlintThreshTest2);
+        classificationParameters.put("darkGlintThreshTest2Wavelength", darkGlintThreshTest2Wavelength);
     }
 
     private void computeCloudProduct() {
