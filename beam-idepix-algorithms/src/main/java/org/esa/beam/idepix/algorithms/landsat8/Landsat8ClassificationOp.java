@@ -20,7 +20,7 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -417,11 +417,19 @@ public class Landsat8ClassificationOp extends Operator {
     }
 
     private double[] calcNeuralNetResult(float[] l8Reflectance) {
-        double[] cloudNetInput = landsat8CloudNet.get().getInputVector();
+        SchillerNeuralNetWrapper neuralNetWrapper = landsat8CloudNet.get();
+        double[] cloudNetInput = neuralNetWrapper.getInputVector();
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
-            cloudNetInput[i] = Math.sqrt(l8Reflectance[i]);
+            double sqrtRefl = Math.sqrt(l8Reflectance[i]);
+            if (i == 8) {
+                // cirrus band can have negative values
+                // --> not allowing values lower as the net minimum
+                cloudNetInput[8] = Math.max(sqrtRefl, neuralNetWrapper.getNeuralNet().getInmin()[8]);
+            } else {
+                cloudNetInput[i] = sqrtRefl;
+            }
         }
-        return landsat8CloudNet.get().getNeuralNet().calc(cloudNetInput);
+        return neuralNetWrapper.getNeuralNet().calc(cloudNetInput);
     }
 
     private void initCloudNet() {
