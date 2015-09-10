@@ -165,7 +165,7 @@ public class Landsat8ClassificationOp extends Operator {
     @TargetProduct(description = "The target product.")
     Product targetProduct;
 
-    private Band[] l8RadianceBands;
+    private Band[] l8ReflectanceBands;
     private Band landWaterBand;
     private Band clostBand;
     private Band otsuBand;
@@ -194,9 +194,9 @@ public class Landsat8ClassificationOp extends Operator {
     }
 
     public void setBands() {
-        l8RadianceBands = new Band[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
+        l8ReflectanceBands = new Band[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
-            l8RadianceBands[i] = sourceProduct.getBand(Landsat8Constants.LANDSAT8_SPECTRAL_BAND_NAMES[i]);
+            l8ReflectanceBands[i] = sourceProduct.getBand(Landsat8Constants.LANDSAT8_SPECTRAL_BAND_NAMES[i]);
         }
     }
 
@@ -243,9 +243,9 @@ public class Landsat8ClassificationOp extends Operator {
         final Band l8FlagBand = sourceProduct.getBand(Landsat8Constants.Landsat8_FLAGS_NAME);
         final Tile l8FlagTile = getSourceTile(l8FlagBand, rectangle);
 
-        Tile[] l8RadianceTiles = new Tile[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
+        Tile[] l8ReflectanceTiles = new Tile[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
-            l8RadianceTiles[i] = getSourceTile(l8RadianceBands[i], rectangle);
+            l8ReflectanceTiles[i] = getSourceTile(l8ReflectanceBands[i], rectangle);
         }
 
         final Tile cloudFlagTargetTile = targetTiles.get(targetProduct.getBand(cloudFlagBandName));
@@ -257,7 +257,7 @@ public class Landsat8ClassificationOp extends Operator {
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                     // set up pixel properties for given instruments...
                     Landsat8Algorithm landsat8Algorithm = createLandsat8Algorithm(
-                            l8RadianceTiles,
+                            l8ReflectanceTiles,
                             l8FlagTile,
                             waterFractionTile,
                             clostTile,
@@ -320,7 +320,7 @@ public class Landsat8ClassificationOp extends Operator {
     }
 
 
-    private Landsat8Algorithm createLandsat8Algorithm(Tile[] l8RadianceTiles,
+    private Landsat8Algorithm createLandsat8Algorithm(Tile[] l8ReflectanceTiles,
                                                       Tile l8FlagTile,
                                                       Tile waterFractionTile,
                                                       Tile clostTile,
@@ -334,13 +334,13 @@ public class Landsat8ClassificationOp extends Operator {
             isLand = isLandPixel(x, y, l8FlagTile, waterFraction);
         }
 
-        float[] l8Radiance = new float[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
+        float[] l8Reflectance = new float[Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
-            l8Radiance[i] = l8RadianceTiles[i].getSampleFloat(x, y);
+            l8Reflectance[i] = l8ReflectanceTiles[i].getSampleFloat(x, y);
         }
 
         l8Algorithm.setInvalid(l8FlagTile.getSampleBit(x, y, L8_F_DESIGNATED_FILL));
-        l8Algorithm.setL8SpectralBandData(l8Radiance);
+        l8Algorithm.setL8SpectralBandData(l8Reflectance);
         l8Algorithm.setIsLand(isLand);
 
         l8Algorithm.setApplyShimezCloudTest(applyShimezCloudTest);
@@ -370,15 +370,15 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setWhitenessBand2Water(whitenessBand2Water);
         l8Algorithm.setWhitenessThreshWater(whitenessThreshWater);
 
-        l8Algorithm.setNnOutput(calcNeuralNetResult(l8Radiance));
+        l8Algorithm.setNnOutput(calcNeuralNetResult(l8Reflectance));
 
         return l8Algorithm;
     }
 
-    private double[] calcNeuralNetResult(float[] l8Radiance) {
+    private double[] calcNeuralNetResult(float[] l8Reflectance) {
         double[] cloudNetInput = landsat8CloudNet.get().getInputVector();
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
-            cloudNetInput[i] = Math.sqrt(l8Radiance[i]);
+            cloudNetInput[i] = Math.sqrt(l8Reflectance[i]);
         }
         return landsat8CloudNet.get().getNeuralNet().calc(cloudNetInput);
     }
