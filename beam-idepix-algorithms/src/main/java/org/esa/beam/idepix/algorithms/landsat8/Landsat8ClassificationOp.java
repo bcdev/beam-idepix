@@ -243,9 +243,9 @@ public class Landsat8ClassificationOp extends Operator {
         // todo - temporarily added the bands for testing. Shall be removed later. (mp/08.09.2015)
         targetProduct.addBand(NN_RESULT_BAND_NAME, ProductData.TYPE_INT8);
         final Band dgt1 = targetProduct.addBand(DARK_GLINT_TEST_ONE_BAND_NAME, ProductData.TYPE_INT8);
-        dgt1.setDescription(String.format("Glint Test 1 @%d", darkGlintThreshTest1Wavelength));
+        dgt1.setDescription(String.format("Dark Glint Test 1 @%d", darkGlintThreshTest1Wavelength));
         final Band dgt2 = targetProduct.addBand(DARK_Glint_TEST_TWO_BAND_NAME, ProductData.TYPE_INT8);
-        dgt2.setDescription(String.format("Glint Test 2 @%d", darkGlintThreshTest2Wavelength));
+        dgt2.setDescription(String.format("Dark Glint Test 2 @%d", darkGlintThreshTest2Wavelength));
 
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
 
