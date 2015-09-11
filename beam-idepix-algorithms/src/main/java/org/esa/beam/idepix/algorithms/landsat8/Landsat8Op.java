@@ -46,12 +46,12 @@ public class Landsat8Op extends Operator {
     @Parameter(defaultValue = "false",
             description = "Write source bands to the target product.",
             label = " Write source bands to the target product")
-    private boolean outputSourceBands = false;
+    private boolean outputSourceBands;
 
-    //    @Parameter(defaultValue = "true",
+//    @Parameter(defaultValue = "false",
 //            label = " Compute cloud shadow",
 //            description = " Compute cloud shadow with the algorithm from 'Fronts' project")
-    private boolean computeCloudShadow = false;  // todo: later if we find a way how to compute
+//    private boolean computeCloudShadow;  // todo: later if we find a way how to compute
 
     @Parameter(defaultValue = "false",
             label = " Compute a cloud buffer")
@@ -167,7 +167,7 @@ public class Landsat8Op extends Operator {
     // SHIMEZ parameters:
     @Parameter(defaultValue = "true",
             label = " Apply SHIMEZ cloud test")
-    private boolean applyShimezCloudTest = true;
+    private boolean applyShimezCloudTest;
 
     @Parameter(defaultValue = "0.1",
             description = "Threshold A for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
@@ -182,7 +182,7 @@ public class Landsat8Op extends Operator {
     // HOT parameters:
     @Parameter(defaultValue = "true",
             label = " Apply HOT cloud test")
-    private boolean applyHotCloudTest = true;
+    private boolean applyHotCloudTest;
 
     @Parameter(defaultValue = "0.1",
             description = "Threshold A for HOT cloud test: cloud if blue - 0.5*red > A.",
@@ -192,7 +192,7 @@ public class Landsat8Op extends Operator {
     // CLOST parameters:
     @Parameter(defaultValue = "false",
             label = " Apply CLOST cloud test")
-    private boolean applyClostCloudTest = false;
+    private boolean applyClostCloudTest;
 
     @Parameter(defaultValue = "0.00001",
             description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
@@ -202,7 +202,7 @@ public class Landsat8Op extends Operator {
     // OTSU parameters:
     @Parameter(defaultValue = "false",
             label = " Apply OTSU cloud test")
-    private boolean applyOtsuCloudTest = false;
+    private boolean applyOtsuCloudTest;
 
     // todo: maybe activate
 //    @Parameter(defaultValue = "GREY",
@@ -214,7 +214,7 @@ public class Landsat8Op extends Operator {
     @Parameter(defaultValue = "false",
             description = "If computed, write OTSU bands (Clost and binary) to the target product.",
             label = " Write OTSU bands (Clost and binary) bands to the target product")
-    private boolean outputOtsuBands = false;
+    private boolean outputOtsuBands;
 
     private static final int LAND_WATER_MASK_RESOLUTION = 50;
     private static final int OVERSAMPLING_FACTOR_X = 3;
@@ -347,21 +347,21 @@ public class Landsat8Op extends Operator {
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
         Landsat8Utils.setupLandsat8Bitmasks(targetProduct);
         if (outputSourceBands) {
-            for (Band b : sourceProduct.getBands()) {
+            for (Band sourceBand : sourceProduct.getBands()) {
                 ProductUtils.copyFlagCodings(sourceProduct, targetProduct);
-                ProductUtils.copyBand(b.getName(), sourceProduct, targetProduct, true);
+                ProductUtils.copyBand(sourceBand.getName(), sourceProduct, targetProduct, true);
             }
         }
 
         if (outputOtsuBands) {
-            for (Band b : otsuProduct.getBands()) {
-                ProductUtils.copyBand(b.getName(), otsuProduct, targetProduct, true);
+            for (Band otsuBands : otsuProduct.getBands()) {
+                ProductUtils.copyBand(otsuBands.getName(), otsuProduct, targetProduct, true);
             }
         }
     }
 
-    private double computeClostHistogram3PercentOfMaximum(Band b) {
-        final Stx stx = new StxFactory().create(b, ProgressMonitor.NULL);
+    private double computeClostHistogram3PercentOfMaximum(Band band) {
+        final Stx stx = new StxFactory().create(band, ProgressMonitor.NULL);
         return Landsat8Utils.getHistogramBinAtNPercentOfMaximum(stx, 3.0);
     }
 
