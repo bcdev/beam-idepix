@@ -181,16 +181,16 @@ public class Landsat8ClassificationOp extends Operator {
     private boolean applyOtsuCloudTest;
 
     @SourceProduct(alias = "l8source", description = "The source product.")
-    Product sourceProduct;
+    private Product sourceProduct;
 
     @SourceProduct(alias = "otsu", optional = true, description = "The OTSU product.")
-    Product otsuProduct;
+    private Product otsuProduct;
 
     @SourceProduct(alias = "waterMask", optional = true)
     private Product waterMaskProduct;
 
     @TargetProduct(description = "The target product.")
-    Product targetProduct;
+    private Product targetProduct;
 
     private Band[] l8ReflectanceBands;
     private Band landWaterBand;
