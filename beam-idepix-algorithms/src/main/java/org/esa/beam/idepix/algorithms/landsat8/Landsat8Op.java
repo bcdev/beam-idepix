@@ -43,7 +43,7 @@ public class Landsat8Op extends Operator {
 
     // overall parameters
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             description = "Write source bands to the target product.",
             label = " Write source bands to the target product")
     private boolean outputSourceBands;
@@ -53,20 +53,20 @@ public class Landsat8Op extends Operator {
 //            description = " Compute cloud shadow with the algorithm from 'Fronts' project")
 //    private boolean computeCloudShadow;  // todo: later if we find a way how to compute
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Compute a cloud buffer")
     private boolean computeCloudBuffer;
-
-    @Parameter(defaultValue = "false",
-            label = " Refine pixel classification near coastlines",
-            description = "Refine pixel classification near coastlines. ")
-    private boolean refineClassificationNearCoastlines;
 
     @Parameter(defaultValue = "2",
             interval = "[0,100]",
             description = "The width of a cloud 'safety buffer' around a pixel which was classified as cloudy.",
             label = "Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
+
+    @Parameter(defaultValue = "true",
+            label = " Refine pixel classification near coastlines",
+            description = "Refine pixel classification near coastlines. ")
+    private boolean refineClassificationNearCoastlines;
 
     @Parameter(defaultValue = "865",
             valueSet = {"440", "480", "560", "655", "865", "1610", "2200", "590", "1370", "10895", "12005"},
@@ -174,13 +174,13 @@ public class Landsat8Op extends Operator {
             label = "Threshold A for SHIMEZ cloud test")
     private float shimezDiffThresh;
 
-    @Parameter(defaultValue = "0.35",
+    @Parameter(defaultValue = "0.25",
             description = "Threshold B for SHIMEZ cloud test: cloud if mean > B AND diff < A.",
             label = "Threshold B for SHIMEZ cloud test")
     private float shimezMeanThresh;
 
     // HOT parameters:
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             label = " Apply HOT cloud test")
     private boolean applyHotCloudTest;
 
@@ -190,17 +190,17 @@ public class Landsat8Op extends Operator {
     private float hotThresh;
 
     // CLOST parameters:
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Apply CLOST cloud test")
     private boolean applyClostCloudTest;
 
-    @Parameter(defaultValue = "0.00001",
+    @Parameter(defaultValue = "0.001",
             description = "Threshold A for CLOST cloud test: cloud if coastal_aerosol*blue*panchromatic*cirrus > A.",
             label = "Threshold A for CLOST cloud test")
     private double clostThresh;
 
     // OTSU parameters:
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Apply OTSU cloud test")
     private boolean applyOtsuCloudTest;
 

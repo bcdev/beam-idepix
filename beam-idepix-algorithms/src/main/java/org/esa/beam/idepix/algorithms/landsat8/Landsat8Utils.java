@@ -7,7 +7,7 @@ import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.util.BitSetter;
 
 import javax.media.jai.Histogram;
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * Utility class for Idepix Landsat 8
@@ -142,12 +142,12 @@ public class Landsat8Utils {
         flagCoding.addFlag("F_CLOUD_CLOST", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_CLOST),
                            Landsat8Constants.F_CLOUD_DESCR_TEXT + "[CLOST]");
         flagCoding.addFlag("F_CLOUD_CLOST_BUFFER", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_CLOST_BUFFER), Landsat8Constants.F_CLOUD_BUFFER_DESCR_TEXT);
-//        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_AMBIGUOUS), Landsat8Constants.F_CLOUD_AMBIGUOUS_DESCR_TEXT);
-//        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SURE), Landsat8Constants.F_CLOUD_SURE_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_AMBIGUOUS), Landsat8Constants.F_CLOUD_AMBIGUOUS_DESCR_TEXT);
+        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SURE), Landsat8Constants.F_CLOUD_SURE_DESCR_TEXT);
 //        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, Landsat8Constants.F_CLOUD_SHADOW), Landsat8Constants.F_CLOUD_SHADOW_DESCR_TEXT);
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, Landsat8Constants.F_BRIGHT), Landsat8Constants.F_BRIGHT_DESCR_TEXT);
         flagCoding.addFlag("F_WHITE", BitSetter.setFlag(0, Landsat8Constants.F_WHITE), Landsat8Constants.F_WHITE_DESCR_TEXT);
-//        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, Landsat8Constants.F_SNOW_ICE), Landsat8Constants.F_SNOW_ICE_DESCR_TEXT);
+        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, Landsat8Constants.F_SNOW_ICE), Landsat8Constants.F_SNOW_ICE_DESCR_TEXT);
 //        flagCoding.addFlag("F_GLINTRISK", BitSetter.setFlag(0, Landsat8Constants.F_GLINTRISK), Landsat8Constants.F_GLINTRISK_DESCR_TEXT);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, Landsat8Constants.F_COASTLINE), Landsat8Constants.F_COASTLINE_DESCR_TEXT);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, Landsat8Constants.F_LAND), Landsat8Constants.F_LAND_DESCR_TEXT);

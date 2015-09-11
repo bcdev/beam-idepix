@@ -7,6 +7,11 @@ package org.esa.beam.idepix.algorithms.landsat8;
  */
 public class Landsat8Algorithm implements Landsat8PixelProperties {
 
+    private static final int NN_CATEGORY_CLEAR_SKY_WATER = 1;
+    private static final int NN_CATEGORY_NON_CLEAR_SKY = 2;
+    private static final int NN_CATEGORY_CLOUD = 3;
+    private static final int NN_CATEGORY_CLEAR_SKY_SNOW_ICE = 4;
+
     private float[] l8SpectralBandData;
 
     private int brightnessBandLand;
@@ -48,12 +53,12 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isCloud() {
-        return !isInvalid() && (isCloudSure() || isCloudAmbiguous());
+        return isCloudSure();
     }
 
     @Override
     public boolean isCloudAmbiguous() {
-        return !isInvalid() && isCloudSure(); // todo: define if needed
+        return !isInvalid() && nnOutput[0] == NN_CATEGORY_NON_CLEAR_SKY;
     }
 
     @Override
@@ -61,11 +66,12 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         // todo: discuss logic of cloudSure
         // todo: also discuss if Michael's tests shall be fully replaced by Schiller NN when available
         final boolean isCloudShimez = applyShimezCloudTest && isCloudShimez();
-        final boolean isCloudHot = applyHotCloudTest && isCloudHot();
+//        final boolean isCloudHot = applyHotCloudTest && isCloudHot();
         final boolean isCloudClost = applyClostCloudTest && isCloudClost();
         final boolean isCloudOtsu = applyOtsuCloudTest && isCloudOtsu();
 //        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);
-        return !isInvalid() && (isCloudShimez || isCloudHot || isCloudClost || isCloudOtsu);
+        boolean nnCloud = nnOutput[0] == NN_CATEGORY_CLOUD;
+        return !isInvalid() && (isCloudShimez || isCloudClost || isCloudOtsu || (nnCloud && !isLand()));
     }
 
     public void setNnOutput(double[] nnOutput) {
@@ -131,7 +137,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isSnowIce() {
-        return false; // no way to compute?!
+        return nnOutput[0] == NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
     }
 
     @Override
