@@ -36,7 +36,7 @@ public class Landsat8Constants {
     public static final String F_CLOUD_BUFFER_DESCR_TEXT = "A buffer of n pixels around a cloud. n is a user supplied parameter. Applied to pixels masked as 'cloud'";
     public static final String F_CLOUD_AMBIGUOUS_DESCR_TEXT = IdepixUtils.F_CLOUD_AMBIGUOUS_DESCR_TEXT;
     public static final String F_CLOUD_SURE_DESCR_TEXT = IdepixUtils.F_CLOUD_SURE_DESCR_TEXT;
-    public static final String F_SNOW_ICE_DESCR_TEXT = "Ssnow/Ice pixel";
+    public static final String F_SNOW_ICE_DESCR_TEXT = "Snow/Ice pixel";
     public static final String F_BRIGHT_DESCR_TEXT = "Bright pixel";
     public static final String F_WHITE_DESCR_TEXT = "White pixel";
     public static final String F_COASTLINE_DESCR_TEXT = "Pixel at a coastline";
