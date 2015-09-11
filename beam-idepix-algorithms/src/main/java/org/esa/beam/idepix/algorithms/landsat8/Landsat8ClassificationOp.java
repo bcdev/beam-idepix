@@ -31,7 +31,7 @@ import java.util.Map;
  * @author olafd
  */
 @OperatorMetadata(alias = "idepix.landsat8.classification",
-        version = "2.2.1",
+        version = "2.3",
         internal = true,
         authors = "Olaf Danne",
         copyright = "(c) 2015 by Brockmann Consult",
