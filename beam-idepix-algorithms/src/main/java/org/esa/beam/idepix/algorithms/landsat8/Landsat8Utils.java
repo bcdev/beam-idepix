@@ -15,6 +15,8 @@ import java.awt.Color;
  * @author olafd
  */
 public class Landsat8Utils {
+    private Landsat8Utils() {
+    }
     // if possible, put here everything which is common for both land and water parts
 
     public static int setupLandsat8Bitmasks(Product cloudProduct) {
@@ -78,16 +80,16 @@ public class Landsat8Utils {
                                          Color.orange, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
 
-//        mask = Mask.BandMathsType.create("landsat8_cloud_ambiguous",
-//                Landsat8Constants.F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
-//                "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
-//                Color.yellow, 0.5f);
-//        cloudProduct.getMaskGroup().add(index++, mask);
-//        mask = Mask.BandMathsType.create("landsat8_cloud_sure",
-//                Landsat8Constants.F_CLOUD_SURE_DESCR_TEXT, w, h,
-//                "cloud_classif_flags.F_CLOUD_SURE",
-//                Color.red, 0.5f);
-//        cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_cloud_ambiguous",
+                                         Landsat8Constants.F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
+                                         Color.yellow, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_cloud_sure",
+                                         Landsat8Constants.F_CLOUD_SURE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_SURE",
+                                         Color.red, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
 //        mask = Mask.BandMathsType.create("landsat8_cloud_shadow",
 //                Landsat8Constants.F_CLOUD_SHADOW_DESCR_TEXT, w, h,
 //                "cloud_classif_flags.F_CLOUD_SHADOW",
@@ -103,11 +105,11 @@ public class Landsat8Utils {
                                          "cloud_classif_flags.F_WHITE",
                                          Color.red.brighter(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-//        mask = Mask.BandMathsType.create("landsat8_snow_ice",
-//                Landsat8Constants.F_SNOW_ICE_DESCR_TEXT, w, h,
-//                "cloud_classif_flags.F_SNOW_ICE",
-//                Color.cyan, 0.5f);
-//        cloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("landsat8_snow_ice",
+                                         Landsat8Constants.F_SNOW_ICE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_SNOW_ICE",
+                                         Color.cyan, 0.5f);
+        cloudProduct.getMaskGroup().add(index++, mask);
 //        mask = Mask.BandMathsType.create("landsat8_glint_risk",
 //                Landsat8Constants.F_GLINTRISK_DESCR_TEXT, w, h,
 //                "cloud_classif_flags.F_GLINTRISK",
