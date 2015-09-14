@@ -256,7 +256,7 @@ public class CoastColourOp extends BasisOp {
         }
 
         if (ccApplyMERISAlternativeSchillerNN) {
-            //IdepixProducts.addMERISAlternativeNNOutputBand(merisCloudProduct, targetProduct);
+            IdepixProducts.addMERISAlternativeNNOutputBand(merisCloudProduct, targetProduct);
         }
 
         addCloudClassificationFlagBandCoastColour();
