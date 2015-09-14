@@ -7,10 +7,10 @@ package org.esa.beam.idepix.algorithms.landsat8;
  */
 public class Landsat8Algorithm implements Landsat8PixelProperties {
 
-    private static final int NN_CATEGORY_CLEAR_SKY_WATER = 1;
-    private static final int NN_CATEGORY_NON_CLEAR_SKY = 2;
-    private static final int NN_CATEGORY_CLOUD = 3;
-    private static final int NN_CATEGORY_CLEAR_SKY_SNOW_ICE = 4;
+    public static final int NN_CATEGORY_CLEAR_SKY_WATER = 1;
+    public static final int NN_CATEGORY_NON_CLEAR_SKY = 3;
+    public static final int NN_CATEGORY_CLOUD = 4;
+    public static final int NN_CATEGORY_CLEAR_SKY_SNOW_ICE = 5;
 
     private float[] l8SpectralBandData;
 
@@ -40,7 +40,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float clostValue;
     private float otsuValue;
     private boolean applyOtsuCloudTest;
-    private double[] nnOutput;
+    private int[] nnClassification;
     private double darkGlintThresholdTest1;
     private double darkGlintThresholdTest2;
     private int darkGlintThresholdTest1Wvl;
@@ -58,7 +58,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isCloudAmbiguous() {
-        return !isInvalid() && nnOutput[0] == NN_CATEGORY_NON_CLEAR_SKY;
+        return !isInvalid() && nnClassification[0] == NN_CATEGORY_NON_CLEAR_SKY;
     }
 
     @Override
@@ -70,20 +70,20 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         final boolean isCloudClost = applyClostCloudTest && isCloudClost();
         final boolean isCloudOtsu = applyOtsuCloudTest && isCloudOtsu();
 //        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);
-        boolean nnCloud = nnOutput[0] == NN_CATEGORY_CLOUD;
+        boolean nnCloud = nnClassification[0] == NN_CATEGORY_CLOUD;
         return !isInvalid() && (isCloudShimez || isCloudClost || isCloudOtsu || (nnCloud && !isLand()));
     }
 
-    public void setNnOutput(double[] nnOutput) {
-        this.nnOutput = nnOutput;
+    public void setNnClassification(int[] nnClassification) {
+        this.nnClassification = nnClassification;
     }
 
-    public double[] getNnOutput() {
-        return nnOutput;
+    public int[] getNnClassification() {
+        return nnClassification;
     }
 
     public boolean isCloudNN() {
-        return nnOutput != null;
+        return nnClassification != null;
     }
 
     public boolean isCloudShimez() {
@@ -137,7 +137,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isSnowIce() {
-        return nnOutput[0] == NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
+        return nnClassification[0] == NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
     }
 
     @Override

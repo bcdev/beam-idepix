@@ -162,6 +162,16 @@ public class Landsat8Op extends Operator {
             label = "Wavelength used for Dark Glint Test 2")
     private int darkGlintThreshTest2Wavelength;
 
+    @Parameter(defaultValue = "2.0",
+            label = "Alternative for first classification boundary ")
+    private double alternativeFirstClassBoundary;
+    @Parameter(defaultValue = "3.6",
+            label = "Alternative for second classification boundary ")
+    private double alternativeSecondClassBoundary;
+    @Parameter(defaultValue = "4.2",
+            label = "Alternative for third classification boundary ")
+    private double alternativeThirdClassBoundary;
+
 
 
     // SHIMEZ parameters:
@@ -317,6 +327,10 @@ public class Landsat8Op extends Operator {
         classificationParameters.put("darkGlintThreshTest1Wavelength", darkGlintThreshTest1Wavelength);
         classificationParameters.put("darkGlintThreshTest2", darkGlintThreshTest2);
         classificationParameters.put("darkGlintThreshTest2Wavelength", darkGlintThreshTest2Wavelength);
+
+        classificationParameters.put("alternativeFirstClassBoundary", alternativeFirstClassBoundary);
+        classificationParameters.put("alternativeSecondClassBoundary", alternativeSecondClassBoundary);
+        classificationParameters.put("alternativeThirdClassBoundary", alternativeThirdClassBoundary);
     }
 
     private void computeCloudProduct() {
