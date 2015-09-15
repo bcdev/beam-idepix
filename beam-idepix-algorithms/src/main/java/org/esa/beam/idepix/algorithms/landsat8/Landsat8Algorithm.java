@@ -7,10 +7,10 @@ package org.esa.beam.idepix.algorithms.landsat8;
  */
 public class Landsat8Algorithm implements Landsat8PixelProperties {
 
-    public static final int NN_CATEGORY_CLEAR_SKY_WATER = 1;
-    public static final int NN_CATEGORY_NON_CLEAR_SKY = 3;
-    public static final int NN_CATEGORY_CLOUD = 4;
-    public static final int NN_CATEGORY_CLEAR_SKY_SNOW_ICE = 5;
+    private static final int NN_CATEGORY_CLEAR_SKY_WATER = 1;
+    private static final int NN_CATEGORY_NON_CLEAR_SKY = 3;
+    private static final int NN_CATEGORY_CLOUD = 4;
+    private static final int NN_CATEGORY_CLEAR_SKY_SNOW_ICE = 5;
 
     private float[] l8SpectralBandData;
 
@@ -40,7 +40,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     private float clostValue;
     private float otsuValue;
     private boolean applyOtsuCloudTest;
-    private int[] nnClassification;
+    private double[] nnResult;
     private double darkGlintThresholdTest1;
     private double darkGlintThresholdTest2;
     private int darkGlintThresholdTest1Wvl;
@@ -58,7 +58,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isCloudAmbiguous() {
-        return !isInvalid() && nnClassification[0] == NN_CATEGORY_NON_CLEAR_SKY;
+        return !isInvalid() && nnResult[0] == NN_CATEGORY_NON_CLEAR_SKY;
     }
 
     @Override
@@ -70,20 +70,24 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
         final boolean isCloudClost = applyClostCloudTest && isCloudClost();
         final boolean isCloudOtsu = applyOtsuCloudTest && isCloudOtsu();
 //        return !isInvalid() && isBright() && isWhite() && (isCloudShimez || isCloudHot);
-        boolean nnCloud = nnClassification[0] == NN_CATEGORY_CLOUD;
+        boolean nnCloud = nnResult[0] == NN_CATEGORY_CLOUD;
         return !isInvalid() && (isCloudShimez || isCloudClost || isCloudOtsu || (nnCloud && !isLand()));
     }
 
-    public void setNnClassification(int[] nnClassification) {
-        this.nnClassification = nnClassification;
+    public void setNnResult(double[] nnResult) {
+        this.nnResult = nnResult;
+    }
+
+    public double[] getNnResult() {
+        return nnResult;
     }
 
     public int[] getNnClassification() {
-        return nnClassification;
+        return classifyNNResult(nnResult);
     }
 
     public boolean isCloudNN() {
-        return nnClassification != null;
+        return nnResult != null;
     }
 
     public boolean isCloudShimez() {
@@ -137,7 +141,7 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
 
     @Override
     public boolean isSnowIce() {
-        return nnClassification[0] == NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
+        return nnResult[0] == NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
     }
 
     @Override
@@ -316,5 +320,21 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     public void setDarkGlintThresholdTest2Wvl(int darkGlintThresholdTest2Wvl) {
         this.darkGlintThresholdTest2Wvl = darkGlintThresholdTest2Wvl;
     }
+
+    private int[] classifyNNResult(double[] netResult) {
+        double netResultValue = netResult[0];
+        int[] nnClassification = new int[netResult.length];
+        if (netResultValue < 2.0) {
+            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_CLEAR_SKY_WATER;
+        } else if (netResultValue >= 2.0 && netResultValue < 3.6) {
+            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_NON_CLEAR_SKY;
+        } else if (netResultValue >= 3.6 && netResultValue < 4.2) {
+            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_CLOUD;
+        } else {
+            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
+        }
+        return nnClassification;
+    }
+
 
 }

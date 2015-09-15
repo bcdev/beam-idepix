@@ -252,7 +252,7 @@ public class Landsat8ClassificationOp extends Operator {
         targetProduct.getFlagCodingGroup().add(flagCoding);
 
         // todo - temporarily added the bands for testing. Shall be removed later. (mp/08.09.2015)
-        targetProduct.addBand(NN_RESULT_BAND_NAME, ProductData.TYPE_INT8);
+        targetProduct.addBand(NN_RESULT_BAND_NAME, ProductData.TYPE_FLOAT32);
         final Band dgt1 = targetProduct.addBand(DARK_GLINT_TEST_ONE_BAND_NAME, ProductData.TYPE_INT8);
         dgt1.setDescription(String.format("Dark Glint Test 1 @%d", darkGlintThreshTest1Wavelength));
         final Band dgt2 = targetProduct.addBand(DARK_Glint_TEST_TWO_BAND_NAME, ProductData.TYPE_INT8);
@@ -310,7 +310,7 @@ public class Landsat8ClassificationOp extends Operator {
                     );
 
                     setCloudFlag(cloudFlagTargetTile, x, y, landsat8Algorithm);
-                    nnResultTargetTile.setSample(x, y, landsat8Algorithm.getNnClassification()[0]);
+                    nnResultTargetTile.setSample(x, y, landsat8Algorithm.getNnResult()[0]);
                     darkGlintTest1TargetTile.setSample(x, y, landsat8Algorithm.isDarkGlintTest1());
                     darkGlintTest2TargetTile.setSample(x, y, landsat8Algorithm.isDarkGlintTest2());
                 }
@@ -422,25 +422,9 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setDarkGlintThresholdTest2Wvl(darkGlintThreshTest2Wavelength);
 
         double[] netResult = calcNeuralNetResult(l8Reflectance);
-        l8Algorithm.setNnClassification(classifyNNResult(netResult));
-
+        l8Algorithm.setNnResult(netResult);
 
         return l8Algorithm;
-    }
-
-    private int[] classifyNNResult(double[] netResult) {
-        double netResultValue = netResult[0];
-        int[] nnClassification = new int[netResult.length];
-        if (netResultValue < 2.0) {
-            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_CLEAR_SKY_WATER;
-        } else if (netResultValue >= 2.0 && netResultValue < 3.6) {
-            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_NON_CLEAR_SKY;
-        } else if (netResultValue >= 3.6 && netResultValue < 4.2) {
-            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_CLOUD;
-        } else {
-            nnClassification[0] = Landsat8Algorithm.NN_CATEGORY_CLEAR_SKY_SNOW_ICE;
-        }
-        return nnClassification;
     }
 
     private double[] calcNeuralNetResult(float[] l8Reflectance) {

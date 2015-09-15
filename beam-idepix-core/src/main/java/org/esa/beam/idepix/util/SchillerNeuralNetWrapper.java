@@ -16,15 +16,10 @@
 
 package org.esa.beam.idepix.util;
 
-import com.bc.jnn.Jnn;
-import com.bc.jnn.JnnException;
-import com.bc.jnn.JnnNet;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.nn.NNffbpAlphaTabFast;
-import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
