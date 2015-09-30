@@ -62,8 +62,8 @@ public class OccciClassificationOp extends PixelOperator {
                description = "Write TOA reflectance to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRefl;
 
-    @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_"}, label = " Prefix of input radiance bands (SeaWiFS).",
-               description = "Prefix of input radiance bands (SeaWiFS)")
+    @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_", "rhot_"}, label = " Prefix of input spectral bands (SeaWiFS).",
+               description = "Prefix of input radiance or reflectance bands (SeaWiFS)")
     private String ocSeawifsRadianceBandPrefix;
 
     @Parameter(defaultValue = "true",
@@ -226,7 +226,9 @@ public class OccciClassificationOp extends PixelOperator {
             double[] seawifsNeuralNetInput = seawifsNeuralNet.get().getInputVector();
             for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
                 reflectance[i] = sourceSamples[Constants.SEAWIFS_SRC_RAD_OFFSET + i].getFloat();
-                sensorContext.scaleInputSpectralDataToReflectance(reflectance, 0);
+                if (!ocSeawifsRadianceBandPrefix.equals("rhot_")) {  // L1C are already reflectances
+                    sensorContext.scaleInputSpectralDataToReflectance(reflectance, 0);
+                }
                 seawifsNeuralNetInput[i] = Math.sqrt(reflectance[i]);
             }
             occciAlgorithm.setRefl(reflectance);

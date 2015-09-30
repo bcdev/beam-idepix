@@ -1,13 +1,7 @@
 package org.esa.beam.idepix.util;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
@@ -54,9 +48,9 @@ public class IdepixUtils {
 
     public static Product cloneProduct(Product sourceProduct) {
         Product clonedProduct = new Product(sourceProduct.getName(),
-                sourceProduct.getProductType(),
-                sourceProduct.getSceneRasterWidth(),
-                sourceProduct.getSceneRasterHeight());
+                                            sourceProduct.getProductType(),
+                                            sourceProduct.getSceneRasterWidth(),
+                                            sourceProduct.getSceneRasterHeight());
 
         ProductUtils.copyMetadata(sourceProduct, clonedProduct);
         ProductUtils.copyGeoCoding(sourceProduct, clonedProduct);
@@ -215,7 +209,8 @@ public class IdepixUtils {
 //        S2005141121515.L1B_MLAC
         return (product.getName().matches("S[0-9]{13}.(?i)(L1B_LAC)") ||
                 product.getName().matches("S[0-9]{13}.(?i)(L1B_MLAC)") ||
-                product.getName().matches("S[0-9]{13}.(?i)(L1B_HRPT)"));
+                product.getName().matches("S[0-9]{13}.(?i)(L1B_HRPT)") ||
+                product.getName().matches("S[0-9]{13}.(?i)(L1C)"));
     }
 
 
@@ -253,7 +248,7 @@ public class IdepixUtils {
             return (isValidMerisProduct(sourceProduct));
         } else if (AlgorithmSelector.Cawa == algorithm) {
             return (isValidMerisProduct(sourceProduct));
-        } else if (AlgorithmSelector.Landsat8== algorithm) {
+        } else if (AlgorithmSelector.Landsat8 == algorithm) {
             return (isValidLandsat8Product(sourceProduct));
         } else if (AlgorithmSelector.GlobAlbedo == algorithm) {
             return (isValidMerisProduct(sourceProduct) ||
@@ -271,7 +266,7 @@ public class IdepixUtils {
     public static void logErrorMessage(String msg) {
         if (System.getProperty("gpfMode") != null && "GUI".equals(System.getProperty("gpfMode"))) {
             JOptionPane.showOptionDialog(null, msg, "IDEPIX - Error Message", JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.ERROR_MESSAGE, null, null, null);
+                                         JOptionPane.ERROR_MESSAGE, null, null, null);
         } else {
             info(msg);
         }
@@ -378,89 +373,89 @@ public class IdepixUtils {
         Random r = new Random();
 
         mask = Mask.BandMathsType.create("lc_invalid",
-                F_INVALID_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_INVALID",
-                getRandomColour(r), 0.5f);
+                                         F_INVALID_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_INVALID",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud",
-                F_CLOUD_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_SURE or cloud_classif_flags.F_CLOUD_AMBIGUOUS",
-                new Color(178, 178, 0), 0.5f);
+                                         F_CLOUD_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_SURE or cloud_classif_flags.F_CLOUD_AMBIGUOUS",
+                                         new Color(178, 178, 0), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_ambiguous",
-                F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
-                new Color(255, 219, 156), 0.5f);
+                                         F_CLOUD_AMBIGUOUS_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_AMBIGUOUS",
+                                         new Color(255, 219, 156), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_sure",
-                F_CLOUD_SURE_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_SURE",
-                new Color(224, 224, 30), 0.5f);
+                                         F_CLOUD_SURE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_SURE",
+                                         new Color(224, 224, 30), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_buffer",
-                F_CLOUD_BUFFER_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_BUFFER",
-                Color.red, 0.5f);
+                                         F_CLOUD_BUFFER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_BUFFER",
+                                         Color.red, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_shadow",
-                F_CLOUD_SHADOW_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLOUD_SHADOW",
-                Color.cyan, 0.5f);
+                                         F_CLOUD_SHADOW_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLOUD_SHADOW",
+                                         Color.cyan, 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_coastline",
-                F_COASTLINE_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_COASTLINE",
-                getRandomColour(r), 0.5f);
+                                         F_COASTLINE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_COASTLINE",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_clear_snow",
-                F_CLEAR_SNOW_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLEAR_SNOW",
-                getRandomColour(r), 0.5f);
+                                         F_CLEAR_SNOW_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLEAR_SNOW",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_clear_land",
-                F_CLEAR_LAND_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLEAR_LAND",
-                getRandomColour(r), 0.5f);
+                                         F_CLEAR_LAND_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLEAR_LAND",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_clear_water",
-                F_CLEAR_WATER_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_CLEAR_WATER",
-                getRandomColour(r), 0.5f);
+                                         F_CLEAR_WATER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_CLEAR_WATER",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_land",
-                F_LAND_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_LAND",
-                getRandomColour(r), 0.5f);
+                                         F_LAND_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_water",
-                F_WATER_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_WATER",
-                getRandomColour(r), 0.5f);
+                                         F_WATER_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_WATER",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_bright",
-                F_BRIGHT_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_BRIGHT",
-                getRandomColour(r), 0.5f);
+                                         F_BRIGHT_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_BRIGHT",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_white",
-                F_WHITE_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_WHITE",
-                getRandomColour(r), 0.5f);
+                                         F_WHITE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_WHITE",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_brightwhite",
-                F_BRIGHTWHITE_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_BRIGHTWHITE",
-                getRandomColour(r), 0.5f);
+                                         F_BRIGHTWHITE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_BRIGHTWHITE",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_high",
-                F_HIGH_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_HIGH",
-                getRandomColour(r), 0.5f);
+                                         F_HIGH_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_HIGH",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_veg_risk",
-                F_VEG_RISK_DESCR_TEXT, w, h,
-                "cloud_classif_flags.F_VEG_RISK",
-                getRandomColour(r), 0.5f);
+                                         F_VEG_RISK_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_VEG_RISK",
+                                         getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
 
         return index;
@@ -470,8 +465,8 @@ public class IdepixUtils {
         Endmember[] endmembers = new Endmember[IdepixConstants.SMA_ENDMEMBER_NAMES.length];
         for (int i = 0; i < endmembers.length; i++) {
             endmembers[i] = new Endmember(IdepixConstants.SMA_ENDMEMBER_NAMES[i],
-                    IdepixConstants.SMA_ENDMEMBER_WAVELENGTHS,
-                    IdepixConstants.SMA_ENDMEMBER_RADIATIONS[i]);
+                                          IdepixConstants.SMA_ENDMEMBER_WAVELENGTHS,
+                                          IdepixConstants.SMA_ENDMEMBER_RADIATIONS[i]);
 
         }
 

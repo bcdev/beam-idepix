@@ -12,7 +12,8 @@ public class SensorContextFactory {
                 || productTypeName.equalsIgnoreCase("MODIS Level 1B")
                 || productTypeName.equalsIgnoreCase("NetCDF")) {
             return new ModisSensorContext();
-        } else if (productTypeName.equalsIgnoreCase("Generic Level 1B")) {
+        } else if (productTypeName.equalsIgnoreCase("Generic Level 1B") ||
+                productTypeName.equalsIgnoreCase("Level 2")) {
             return new SeaWiFSSensorContext();
         }
         throw new IllegalArgumentException("Invalid Product Type: " + productTypeName);

@@ -83,8 +83,8 @@ public class OccciOp extends BasisOp {
                description = "Write geometry bands to target product (SeaWiFS).")
     private boolean ocOutputGeometry = true;
 
-    @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_"}, label = " Prefix of input radiance bands (SeaWiFS).",
-               description = "Prefix of input radiance bands (SeaWiFS)")
+    @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_", "rhot_"}, label = " Prefix of input spectral bands (SeaWiFS).",
+               description = "Prefix of input radiance or reflectance bands (SeaWiFS)")
     private String ocSeawifsRadianceBandPrefix;
 
     @Parameter(defaultValue = "false",
