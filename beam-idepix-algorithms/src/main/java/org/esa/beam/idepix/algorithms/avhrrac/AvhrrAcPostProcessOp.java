@@ -58,6 +58,10 @@ public class AvhrrAcPostProcessOp extends Operator {
 
     private Band waterFractionBand;
     private Band origCloudFlagBand;
+    private Band rt3Band;
+    private Band bt4Band;
+    private Band refl1Band;
+    private Band refl2Band;
     private GeoCoding geoCoding;
 
     private RectangleExtender rectCalculator;
@@ -76,6 +80,12 @@ public class AvhrrAcPostProcessOp extends Operator {
             geoCoding = l1bProduct.getGeoCoding();
 
             origCloudFlagBand = avhrrCloudProduct.getBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS);
+            rt3Band = avhrrCloudProduct.getBand("rt_3");
+            bt4Band = avhrrCloudProduct.getBand("bt_4");
+            refl1Band = avhrrCloudProduct.getBand("refl_1");
+            refl2Band = avhrrCloudProduct.getBand("refl_2");
+
+
             int extendedWidth = 64;
             int extendedHeight = 64; // todo: what do we need?
 
@@ -110,13 +120,24 @@ public class AvhrrAcPostProcessOp extends Operator {
         final Tile sourceFlagTile = getSourceTile(origCloudFlagBand, srcRectangle);
         final Tile waterFractionTile = getSourceTile(waterFractionBand, srcRectangle);
 
+        final Tile rt3Tile = getSourceTile(rt3Band, srcRectangle);
+        final Tile bt4Tile = getSourceTile(bt4Band, srcRectangle);
+        final Tile refl1Tile = getSourceTile(refl1Band, srcRectangle);
+        final Tile refl2Tile = getSourceTile(refl2Band, srcRectangle);
+
         for (int y = srcRectangle.y; y < srcRectangle.y + srcRectangle.height; y++) {
             checkForCancellation();
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
                     boolean isCloud = sourceFlagTile.getSampleBit(x, y, AvhrrAcConstants.F_CLOUD);
+                    boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, AvhrrAcConstants.F_SNOW_ICE);
                     combineFlags(x, y, sourceFlagTile, targetTile);
+
+                    // snow/ice filter refinement for AVHRR (GK 20150922):
+                    if (isSnowIce) {
+                        refineSnowIceCloudFlagging(x, y, rt3Tile, bt4Tile, refl1Tile, refl2Tile, targetTile);
+                    }
 
                     if (refineClassificationNearCoastlines) {
                         if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
@@ -274,6 +295,29 @@ public class AvhrrAcPostProcessOp extends Operator {
     private void refineSnowIceFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile targetTile) {
         final boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, AvhrrAcConstants.F_SNOW_ICE);
         if (isSnowIce) {
+            targetTile.setSample(x, y, AvhrrAcConstants.F_SNOW_ICE, false);
+        }
+    }
+
+    private void refineSnowIceCloudFlagging(int x, int y,
+                                            Tile rt3Tile, Tile bt4Tile, Tile refl1Tile, Tile refl2Tile,
+                                            Tile targetTile) {
+
+        final double rt3 = rt3Tile.getSampleDouble(x, y);
+        final double bt4 = bt4Tile.getSampleDouble(x, y);
+        final double refl1 = refl1Tile.getSampleDouble(x, y);
+        final double refl2 = refl2Tile.getSampleDouble(x, y);
+        final double ratio21 = refl2/refl1;
+
+        final boolean firstCrit = rt3 > 0.08;
+        final boolean secondCrit = (-40.15 < bt4 && bt4 < 1.35) &&
+                refl1 > 0.25 && (0.85 < ratio21 && ratio21 < 1.15) && rt3 < 0.02;
+
+        if (firstCrit && !secondCrit) {
+            // reset snow_ice to cloud todo: check with a test product from GK if this makes sense at all
+            targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD, true);
+            targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD_SURE, true);
+            targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD_AMBIGUOUS, false);
             targetTile.setSample(x, y, AvhrrAcConstants.F_SNOW_ICE, false);
         }
     }

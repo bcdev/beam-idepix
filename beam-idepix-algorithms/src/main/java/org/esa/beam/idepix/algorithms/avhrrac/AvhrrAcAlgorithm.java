@@ -281,49 +281,6 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         return false;
     }
 
-    /// test tests... :-)
-//    public boolean isReflCh1Bright() {
-//        return reflCh1 > reflCh1Thresh;
-//    }
-//    public boolean isReflCh2Bright() {
-//        return reflCh2 > reflCh2Thresh;
-//    }
-//    public boolean isR2R1RatioAboveThresh() {
-//        return reflCh2/reflCh1 > r2r1RatioThresh;
-//    }
-//    public boolean isR3R1RatioAboveThresh() {
-//        return reflCh3/reflCh1 > r3r1RatioThresh;
-//    }
-//    public boolean isCh4BtAboveThresh() {
-//        return (btCh4-273.15) > btCh4Thresh;
-//    }
-//    public boolean isCh5BtAboveThresh() {
-//        return (btCh5-273.15) > btCh5Thresh;
-//    }
-
-//    public void setReflCh1Thresh(double reflCh1Thresh) {
-//        this.reflCh1Thresh = reflCh1Thresh;
-//    }
-//
-//    public void setReflCh2Thresh(double reflCh2Thresh) {
-//        this.reflCh2Thresh = reflCh2Thresh;
-//    }
-//
-//    public void setR2r1RatioThresh(double r2r1RatioThresh) {
-//        this.r2r1RatioThresh = r2r1RatioThresh;
-//    }
-//
-//    public void setR3r1RatioThresh(double r3r1RatioThresh) {
-//        this.r3r1RatioThresh = r3r1RatioThresh;
-//    }
-//
-//    public void setBtCh4Thresh(double btCh4Thresh) {
-//        this.btCh4Thresh = btCh4Thresh;
-//    }
-//
-//    public void setBtCh5Thresh(double btCh5Thresh) {
-//        this.btCh5Thresh = btCh5Thresh;
-//    }
 
     public void setReflCh1(double reflCh1) {
         this.reflCh1 = reflCh1;

@@ -224,7 +224,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         final double[] azimuthAngles = computeAzimuthAngles(sza, vza, satPosition, pointPosition, sunPosition);
         final double saaRad = azimuthAngles[0];
         final double vaaRad = azimuthAngles[1];
-        final double greatCircleRad = azimuthAngles[2];
         final double relAzi = computeRelativeAzimuth(saaRad, vaaRad) * MathUtils.RTOD;
         final double altitude = computeGetasseAltitude(x, y);
 
@@ -244,6 +243,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE, 0);
             avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE, 1);
             avhrrRadiance[2] = sourceSamples[AvhrrAcConstants.SRC_USGS_RADIANCE_3].getDouble();           // mW*cm/(m^2*sr)
+            final double albedo3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO, 2);
             avhrrRadiance[3] = sourceSamples[AvhrrAcConstants.SRC_USGS_RADIANCE_4].getDouble();           // mW*cm/(m^2*sr)
             avhrrRadiance[4] = sourceSamples[AvhrrAcConstants.SRC_USGS_RADIANCE_5].getDouble();           // mW*cm/(m^2*sr)
             aacAlgorithm.setRadiance(avhrrRadiance);
@@ -275,6 +275,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
             aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> put here albedo_norm now!!
             aacAlgorithm.setReflCh2(albedo2Norm / 100.0); // on [0,1]
+            aacAlgorithm.setReflCh3(albedo3); // on [0,1]
             final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
             aacAlgorithm.setBtCh3(btCh3 + 273.15);
             final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
@@ -297,10 +298,12 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             targetSamples[targetSamplesIndex++].set(btCh5);
             targetSamples[targetSamplesIndex++].set(albedo1Norm/100.);     // GK, 20150326
             targetSamples[targetSamplesIndex++].set(albedo2Norm/100.);
+            targetSamples[targetSamplesIndex++].set(albedo3); // todo: normalize somehow?
 
         } else {
             targetSamplesIndex = 0;
             targetSamples[targetSamplesIndex++].set(AvhrrAcConstants.F_INVALID, true);
+            targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
             targetSamples[targetSamplesIndex++].set(Float.NaN);
@@ -328,7 +331,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
     private double computeGetasseAltitude(float x, float y)  {
         final PixelPos pixelPos = new PixelPos(x + 0.5f, y + 0.5f);
         GeoPos geoPos = sourceProduct.getGeoCoding().getGeoPos(pixelPos, null);
-        double altitude = 0;
+        double altitude;
         try {
             altitude = getasseElevationModel.getElevation(geoPos);
         } catch (Exception e) {
@@ -351,13 +354,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         targetSamples[0].set(AvhrrAcConstants.F_GLINT_RISK, algorithm.isGlintRisk());
         targetSamples[0].set(AvhrrAcConstants.F_COASTLINE, algorithm.isCoastline());
         targetSamples[0].set(AvhrrAcConstants.F_LAND, algorithm.isLand());
-        // test:
-//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 1, algorithm.isReflCh1Bright());
-//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 2, algorithm.isReflCh2Bright());
-//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 3, algorithm.isR2R1RatioAboveThresh());
-//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 4, algorithm.isR3R1RatioAboveThresh());
-//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 5, algorithm.isCh4BtAboveThresh());
-//        targetSamples[0].set(AvhrrAcConstants.F_LAND + 6, algorithm.isCh5BtAboveThresh());
     }
 
     @Override
@@ -395,16 +391,10 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         int index = 0;
         // the only standard band:
         sampleConfigurer.defineSample(index++, AvhrrAcConstants.CLASSIF_BAND_NAME);
-
-//        sampleConfigurer.defineSample(index++, AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
-//        sampleConfigurer.defineSample(index++, AvhrrAcConstants.EMISSIVITY3B_OUTPUT_BAND_NAME);
-//        sampleConfigurer.defineSample(index++, AvhrrAcConstants.RHO3B_OUTPUT_BAND_NAME);
-//        sampleConfigurer.defineSample(index++, AvhrrAcConstants.NDSI_OUTPUT_BAND_NAME);
         sampleConfigurer.defineSample(index++, "vza");
         sampleConfigurer.defineSample(index++, "sza");
         sampleConfigurer.defineSample(index++, "vaa");
         sampleConfigurer.defineSample(index++, "saa");
-//        sampleConfigurer.defineSample(index++, "great_circle");
         sampleConfigurer.defineSample(index++, "rel_azimuth");
         sampleConfigurer.defineSample(index++, "altitude");
         sampleConfigurer.defineSample(index++, "bt_3");
@@ -412,10 +402,10 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         sampleConfigurer.defineSample(index++, "bt_5");
         sampleConfigurer.defineSample(index++, "refl_1");
         sampleConfigurer.defineSample(index++, "refl_2");
+        sampleConfigurer.defineSample(index++, "rt_3");
 
         // radiances:
         if (aacCopyRadiances) {
-//            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
             for (int i = 2; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 sampleConfigurer.defineSample(index++, AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES[i]);
             }
@@ -436,30 +426,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         productConfigurer.copyGeoCoding();
         AvhrrAcUtils.setupAvhrrAcClassifBitmask(getTargetProduct());
-
-//        Band nnValueBand = productConfigurer.addBand(AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
-//        nnValueBand.setDescription("Schiller NN output value");
-//        nnValueBand.setUnit("dl");
-//        nnValueBand.setNoDataValue(Float.NaN);
-//        nnValueBand.setNoDataValueUsed(true);
-//
-//        Band emissivity3bBand = productConfigurer.addBand(AvhrrAcConstants.EMISSIVITY3B_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
-//        emissivity3bBand.setDescription("Emissivity 3b");
-//        emissivity3bBand.setUnit("dl");
-//        emissivity3bBand.setNoDataValue(Float.NaN);
-//        emissivity3bBand.setNoDataValueUsed(true);
-//
-//        Band rho3bBand = productConfigurer.addBand(AvhrrAcConstants.RHO3B_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
-//        rho3bBand.setDescription("Rho 3b term");
-//        rho3bBand.setUnit("dl");
-//        rho3bBand.setNoDataValue(Float.NaN);
-//        rho3bBand.setNoDataValueUsed(true);
-//
-//        Band ndsiBand = productConfigurer.addBand(AvhrrAcConstants.NDSI_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
-//        ndsiBand.setDescription("NDSI");
-//        ndsiBand.setUnit("dl");
-//        ndsiBand.setNoDataValue(Float.NaN);
-//        ndsiBand.setNoDataValueUsed(true);
 
         Band vzaBand = productConfigurer.addBand("vza", ProductData.TYPE_FLOAT32);
         vzaBand.setDescription("view zenith angle");
@@ -484,12 +450,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         saaBand.setUnit("dl");
         saaBand.setNoDataValue(Float.NaN);
         saaBand.setNoDataValueUsed(true);
-
-//        Band greatCircleBand = productConfigurer.addBand("great_circle", ProductData.TYPE_FLOAT32);
-//        greatCircleBand.setDescription("greatcircle");
-//        greatCircleBand.setUnit("dl");
-//        greatCircleBand.setNoDataValue(Float.NaN);
-//        greatCircleBand.setNoDataValueUsed(true);
 
         Band relaziBand = productConfigurer.addBand("rel_azimuth", ProductData.TYPE_FLOAT32);
         relaziBand.setDescription("relative azimuth");
@@ -533,9 +493,14 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         refl2Band.setNoDataValue(Float.NaN);
         refl2Band.setNoDataValueUsed(true);
 
+        Band refl3Band = productConfigurer.addBand("rt_3", ProductData.TYPE_FLOAT32);
+        refl3Band.setDescription("Channel 3 reflective part (rt3)");
+        refl3Band.setUnit("dl");
+        refl3Band.setNoDataValue(Float.NaN);
+        refl3Band.setNoDataValueUsed(true);
+
         // radiances:
         if (aacCopyRadiances) {
-//            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
             for (int i = 2; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 Band radianceBand = productConfigurer.addBand("radiance_" + (i + 1), ProductData.TYPE_FLOAT32);
                 radianceBand.setDescription("TOA radiance band " + (i + 1));
