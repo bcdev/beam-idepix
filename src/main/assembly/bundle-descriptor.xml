@@ -154,11 +154,6 @@
                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
                     <value>true</value>
                 </jobParameter>
-
-                <jobParameter>
-                    <name>calvalus.output.compression</name>
-                    <value>NONE</value>
-                </jobParameter>
             </jobConfig>
 
             <outputVariables>
@@ -280,6 +275,13 @@
                     <defaultValue>false</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
+                    <name>gaCopyCTP</name>
+                    <type>boolean</type>
+                    <description>Write CTP (cloud-top-pressure) to the target product
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
                     <name>gaCopyFeatureValues</name>
                     <type>boolean</type>
                     <description>Whether to write Feature Values to the target product
@@ -379,11 +381,6 @@
                 <jobParameter>
                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
                     <value>true</value>
-                </jobParameter>
-
-                <jobParameter>
-                    <name>calvalus.output.compression</name>
-                    <value>NONE</value>
                 </jobParameter>
             </jobConfig>
 
@@ -556,6 +553,137 @@
 
         </processorDescriptor>
 
-    </processorDescriptors>
+        <processorDescriptor>
+             <executableName>idepix.occci</executableName>
+             <processorName>Idepix (OC-CCI Algorithm for MODIS and SeaWiFS)</processorName>
+             <processorVersion>${pom.version}</processorVersion>
 
+             <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
+             <descriptionHtml>
+                 <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MODIS and SeaWiFS.</p>]]>
+             </descriptionHtml>
+             <inputProductTypes>MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+             <outputProductType>IDEPIX_L2</outputProductType>
+             <validMaskExpression></validMaskExpression>
+
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>ocOutputRad2Refl</name>
+                    <type>boolean</type>
+                    <description>Write TOA reflective solar bands (RefSB) to target product (MODIS).</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputEmissive</name>
+                    <type>boolean</type>
+                    <description>Write 'Emissive' bands to target product (MODIS).
+                    </description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocModisGlintThresh859</name>
+                    <type>string</type>
+                    <description>'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.
+                    </description>
+                    <defaultValue>0.15</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocModisApplyBrightnessTest</name>
+                    <type>boolean</type>
+                    <description>Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).
+                    </description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocModisApplyOrLogicInCloudTest</name>
+                    <type>boolean</type>
+                    <description>Apply 'OR' logic instead of 'AND' logic in cloud test (MODIS).</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputSeawifsRadiance</name>
+                    <type>boolean</type>
+                    <description>Write TOA radiance bands to target product (SeaWiFS).</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputSeawifsRefl</name>
+                    <type>boolean</type>
+                    <description>Write TOA reflectance bands to target product (SeaWiFS).
+                    </description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputGeometry</name>
+                    <type>boolean</type>
+                    <description>Write geometry bands to target product (SeaWiFS).</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocSeawifsRadianceBandPrefix</name>
+                    <type>string</type>
+                    <description>Prefix of input radiance or reflectance bands (SeaWiFS)</description>
+                    <defaultValue>L_</defaultValue>
+                    <valueSet>L_,Lt_,rhot_</valueSet>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputDebug</name>
+                    <type>boolean</type>
+                    <description>Write further useful bands to target product.</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>productTypeString</name>
+                    <type>string</type>
+                    <description>Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.</description>
+                    <defaultValue></defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>cloudBufferWidth</name>
+                    <type>string</type>
+                    <description>Width of cloud buffer (# of pixels)</description>
+                    <defaultValue>1</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocWaterMaskResolution</name>
+                    <type>string</type>
+                    <description>Resolution of used land-water mask in m/pixel</description>
+                    <defaultValue>50</defaultValue>
+                    <valueSet>50,150</valueSet>
+                </parameterDescriptor>
+            </parameterDescriptors>
+
+             <jobConfig>
+                 <jobParameter>
+                     <name>calvalus.hadoop.mapred.child.java.opts</name>
+                     <value>-Xmx1500M</value>
+                 </jobParameter>
+                 <jobParameter>
+                     <name>calvalus.system.beam.envisat.usePixelGeoCoding</name>
+                     <value>true</value>
+                 </jobParameter>
+                 <jobParameter>
+                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
+                     <value>true</value>
+                 </jobParameter>
+                 <jobParameter>
+                     <name>calvalus.auxdata.modis_geo</name>
+                     <value>'/calvalus/eodata/MODISA_GEO/v1/'yyyy'/'MM'/'dd'/'</value>
+                 </jobParameter>
+             </jobConfig>
+
+
+             <outputVariables>
+                 <outputVariable>
+                     <name>schiller_cloud_value</name>
+                     <defaultAggregator>AVG</defaultAggregator>
+                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                 </outputVariable>
+                 <outputVariable>
+                     <name>cloud_classif_flags</name>
+                 </outputVariable>
+             </outputVariables>
+         </processorDescriptor>
+
+    </processorDescriptors>
 </bundleDescriptor>
