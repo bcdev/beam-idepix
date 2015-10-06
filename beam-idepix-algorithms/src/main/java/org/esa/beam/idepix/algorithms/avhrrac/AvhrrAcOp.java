@@ -40,7 +40,7 @@ public class AvhrrAcOp extends BasisOp {
     private Product waterMaskProduct;
 
     // AvhrrAc parameters
-//    @Parameter(defaultValue = "false", label = " Copy input radiance/reflectance bands")
+    @Parameter(defaultValue = "false", label = " Copy input radiance/reflectance bands")
     private boolean aacCopyRadiances = false;
 
     @Parameter(defaultValue = "true",
@@ -185,6 +185,7 @@ public class AvhrrAcOp extends BasisOp {
         postProcess();
 
         targetProduct = IdepixUtils.cloneProduct(classificationProduct);
+        targetProduct.setName(sourceProduct.getName()+".idepix");
 
         Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS);
         cloudFlagBand.setSourceImage(postProcessingProduct.getBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS).getSourceImage());
