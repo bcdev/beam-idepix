@@ -25,6 +25,7 @@ org.esa.beam.idepix.algorithms.scapem.FubScapeMLakesOp$Spi
 
 org.esa.beam.idepix.algorithms.occci.OccciOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciClassificationOp$Spi
+org.esa.beam.idepix.algorithms.occci.OccciMerisClassificationOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciPostProcessingOp$Spi
 
 org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcOp$Spi
@@ -45,3 +46,4 @@ org.esa.beam.idepix.algorithms.landsat8.Landsat8ClassificationOp$Spi
 org.esa.beam.idepix.algorithms.landsat8.Landsat8PostProcessOp$Spi
 org.esa.beam.idepix.algorithms.landsat8.OtsuBinarizeOp$Spi
 org.esa.beam.idepix.algorithms.landsat8.ClostOp$Spi
+

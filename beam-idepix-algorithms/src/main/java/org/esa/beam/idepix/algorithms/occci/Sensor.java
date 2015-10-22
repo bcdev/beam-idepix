@@ -6,5 +6,5 @@ package org.esa.beam.idepix.algorithms.occci;
  * @author olafd
  */
 public enum Sensor {
-    MODIS, SEAWIFS
+    MERIS, MODIS, SEAWIFS
 }

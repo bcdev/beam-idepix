@@ -22,18 +22,18 @@ public class OccciUtils {
 
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
 
-        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, Constants.F_INVALID), null);
-        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, Constants.F_CLOUD), null);
-        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, Constants.F_CLOUD_AMBIGUOUS), null);
-        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, Constants.F_CLOUD_SURE), null);
-        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, Constants.F_CLOUD_BUFFER), null);
-        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, Constants.F_CLOUD_SHADOW), null);
-        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, Constants.F_SNOW_ICE), null);
-        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, Constants.F_MIXED_PIXEL), null);
-        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, Constants.F_GLINT_RISK), null);
-        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, Constants.F_COASTLINE), null);
-        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, Constants.F_LAND), null);
-        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, Constants.F_BRIGHT), null);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, OccciConstants.F_INVALID), null);
+        flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, OccciConstants.F_CLOUD), null);
+        flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, OccciConstants.F_CLOUD_AMBIGUOUS), null);
+        flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, OccciConstants.F_CLOUD_SURE), null);
+        flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, OccciConstants.F_CLOUD_BUFFER), null);
+        flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, OccciConstants.F_CLOUD_SHADOW), null);
+        flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, OccciConstants.F_SNOW_ICE), null);
+        flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, OccciConstants.F_MIXED_PIXEL), null);
+        flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, OccciConstants.F_GLINT_RISK), null);
+        flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, OccciConstants.F_COASTLINE), null);
+        flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, OccciConstants.F_LAND), null);
+        flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, OccciConstants.F_BRIGHT), null);
 
         return flagCoding;
     }

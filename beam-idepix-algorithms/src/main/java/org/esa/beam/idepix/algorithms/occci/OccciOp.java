@@ -9,6 +9,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -23,24 +24,72 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldCanBeLocal"})
 @OperatorMetadata(alias = "idepix.occci",
-                  version = "2.2",
-                  copyright = "(c) 2014 by Brockmann Consult",
-                  description = "Pixel identification and classification with OC-CCI algorithm.")
+        version = "2.2",
+        copyright = "(c) 2014 by Brockmann Consult",
+        description = "Pixel identification and classification with OC-CCI algorithm.")
 public class OccciOp extends BasisOp {
 
     @SourceProduct(alias = "source", label = "Name (MODIS/SeaWiFS L1b product)", description = "The source product.")
     private Product sourceProduct;
 
     private Product rad2reflProduct;
+    private Product pressureLiseProduct;
+    private Product ctpProduct;
+    private Product pbaroProduct;
 
     @Parameter(defaultValue = "true",
-               label = " Reflective solar bands (MODIS)",
-               description = "Write TOA reflective solar bands (RefSB) to target product (MODIS).")
+            label = " Use Schiller 'MERIS/AATSR' NN (MERIS) ",
+            description = " Use Schiller 'MERIS/AATSR' NN (instead of 'WATER' NN) ")
+    private boolean useSchillerMerisAatsrNN = true;   // seems actually the best we have
+
+    @Parameter(defaultValue = "10.0",
+            label = " Schiller 'MERIS1600' threshold (MERIS) ",
+            description = " Schiller 'MERIS1600' threshold value ")
+    double schillerMeris1600Threshold;
+
+    @Parameter(defaultValue = "0.5",
+            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS) ",
+            description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
+    double schillerMerisAatsrCloudIceSeparationValue;
+
+    @Parameter(defaultValue = "false",
+            label = " Radiance bands (MERIS)",
+            description = "Write TOA radiance bands to target product (MERIS).")
+    private boolean ocOutputMerisRadiance = false;
+
+//    @Parameter(defaultValue = "false",
+//            label = " Write Schiller NN value to the target product (MERIS).",
+//            description = " If applied, write Schiller NN value to the target product (MERIS)")
+//    private boolean outputSchillerMerisNNValue;
+    private boolean outputSchillerMerisNNValue = false;
+
+//    @Parameter(defaultValue = "2.0",
+//            label = " Schiller NN cloud ambiguous lower boundary (MERIS)",
+//            description = " Schiller NN cloud ambiguous lower boundary (MERIS)")
+//    double schillerMerisNNCloudAmbiguousLowerBoundaryValue;
+    double schillerMerisNNCloudAmbiguousLowerBoundaryValue = 2.0;
+
+//    @Parameter(defaultValue = "3.7",
+//            label = " Schiller NN cloud ambiguous/sure separation value (MERIS)",
+//            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (MERIS)")
+//    double schillerMerisNNCloudAmbiguousSureSeparationValue;
+    double schillerMerisNNCloudAmbiguousSureSeparationValue = 3.7;
+
+//    @Parameter(defaultValue = "4.05",
+//            label = " Schiller NN cloud sure/snow separation value (MERIS)",
+//            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (MERIS)")
+//    double schillerMerisNNCloudSureSnowSeparationValue;
+    double schillerMerisNNCloudSureSnowSeparationValue = 4.05;
+
+
+    @Parameter(defaultValue = "true",
+            label = " Reflective solar bands (MODIS)",
+            description = "Write TOA reflective solar bands (RefSB) to target product (MODIS).")
     private boolean ocOutputRad2Refl = true;
 
     @Parameter(defaultValue = "false",
-               label = " Emissive bands (MODIS)",
-               description = "Write 'Emissive' bands to target product (MODIS).")
+            label = " Emissive bands (MODIS)",
+            description = "Write 'Emissive' bands to target product (MODIS).")
     private boolean ocOutputEmissive = false;
 
     //    @Parameter(defaultValue = "0.15",
@@ -49,18 +98,18 @@ public class OccciOp extends BasisOp {
     private double ocModisBrightnessThreshCloudSure = 0.15;
 
     @Parameter(defaultValue = "0.15",
-               label = " 'Dark glint' threshold at 859nm (MODIS)",
-               description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+            label = " 'Dark glint' threshold at 859nm (MODIS)",
+            description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisGlintThresh859 = 0.15;
 
     @Parameter(defaultValue = "true",
-               label = " Apply brightness test (MODIS)",
-               description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
+            label = " Apply brightness test (MODIS)",
+            description = "Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private boolean ocModisApplyBrightnessTest = true;
 
     @Parameter(defaultValue = "true",
-               label = " Apply 'OR' logic in cloud test (MODIS)",
-               description = "Apply 'OR' logic instead of 'AND' logic in cloud test (MODIS).")
+            label = " Apply 'OR' logic in cloud test (MODIS)",
+            description = "Apply 'OR' logic instead of 'AND' logic in cloud test (MODIS).")
     private boolean ocModisApplyOrLogicInCloudTest = true;
 
     //    @Parameter(defaultValue = "0.07",
@@ -69,42 +118,43 @@ public class OccciOp extends BasisOp {
     private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
 
     @Parameter(defaultValue = "false",
-               label = " Radiance bands (SeaWiFS)",
-               description = "Write TOA radiance bands to target product (SeaWiFS).")
+            label = " Radiance bands (SeaWiFS)",
+            description = "Write TOA radiance bands to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRadiance = false;
 
     @Parameter(defaultValue = "true",
-               label = " Reflectance bands (SeaWiFS)",
-               description = "Write TOA reflectance bands to target product (SeaWiFS).")
+            label = " Reflectance bands (SeaWiFS)",
+            description = "Write TOA reflectance bands to target product (SeaWiFS).")
     private boolean ocOutputSeawifsRefl = true;
 
     @Parameter(defaultValue = "true",
-               label = " Geometry bands (SeaWiFS)",
-               description = "Write geometry bands to target product (SeaWiFS).")
+            label = " Geometry bands (SeaWiFS)",
+            description = "Write geometry bands to target product (SeaWiFS).")
     private boolean ocOutputGeometry = true;
 
     @Parameter(defaultValue = "L_", valueSet = {"L_", "Lt_", "rhot_"}, label = " Prefix of input spectral bands (SeaWiFS).",
-               description = "Prefix of input radiance or reflectance bands (SeaWiFS)")
+            description = "Prefix of input radiance or reflectance bands (SeaWiFS)")
     private String ocSeawifsRadianceBandPrefix;
 
     @Parameter(defaultValue = "false",
-               label = " Debug bands",
-               description = "Write further useful bands to target product.")
+            label = " Debug bands",
+            description = "Write further useful bands to target product.")
     private boolean ocOutputDebug = false;
 
     @Parameter(label = " Product type",
-               description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
+            description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
     String productTypeString;
 
     @Parameter(defaultValue = "1", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
     @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
-               description = "Resolution in m/pixel")
+            description = "Resolution in m/pixel")
     private int ocWaterMaskResolution;
 
     private Product classifProduct;
     private Product waterMaskProduct;
+    private Map<String, Object> waterClassificationParameters;
 
 
     @Override
@@ -118,34 +168,52 @@ public class OccciOp extends BasisOp {
     }
 
     private void processOccci(Map<String, Object> occciCloudClassificationParameters) {
-        Map<String, Product> modisClassifInput = new HashMap<>(4);
-        computeAlgorithmInputProducts(modisClassifInput);
+        Map<String, Product> occciClassifInput = new HashMap<>(4);
+        computeAlgorithmInputProducts(occciClassifInput);
 
-        classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
-                                           occciCloudClassificationParameters, modisClassifInput);
-
-        // post processing:
+        // post processing input:
         // - cloud buffer
-        // - cloud shadow todo
+        // - cloud shadow todo (currently only for Meris)
         Map<String, Object> postProcessParameters = new HashMap<>();
         postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
         Map<String, Product> postProcessInput = new HashMap<>();
-        postProcessInput.put("refl", rad2reflProduct);
-        postProcessInput.put("classif", classifProduct);
         postProcessInput.put("waterMask", waterMaskProduct);
+
+        if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
+            classifProduct = computeMerisClassificationProduct();
+            postProcessInput.put("refl", sourceProduct);
+            postProcessInput.put("ctp", ctpProduct);
+            postProcessParameters.put("computeCloudShadow", true);
+        } else {
+            postProcessInput.put("refl", rad2reflProduct);
+            classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
+                                               occciCloudClassificationParameters, occciClassifInput);
+        }
+
+        postProcessInput.put("classif", classifProduct);
+
         Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
                                                        postProcessParameters, postProcessInput);
-
         setTargetProduct(postProcessProduct);
         addBandsToTargetProduct(postProcessProduct);
     }
 
-    private void computeAlgorithmInputProducts(Map<String, Product> modisClassifInput) {
+    private void computeAlgorithmInputProducts(Map<String, Product> occciClassifInput) {
         createWaterMaskProduct();
-        modisClassifInput.put("waterMask", waterMaskProduct);
+        occciClassifInput.put("waterMask", waterMaskProduct);
 
-        rad2reflProduct = sourceProduct; // we will convert pixelwise later, for MODIS inputs are TOA reflectances anyway
-        modisClassifInput.put("refl", rad2reflProduct);
+        if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
+            // MERIS:
+            rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
+            ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
+            pressureLiseProduct = IdepixProducts.computePressureLiseProduct(sourceProduct, rad2reflProduct,
+                                                                            false, false, true, false, false, true);
+            pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, false);
+        } else {
+            // MODIS, SeaWIFS: we will convert pixelwise later, for MODIS inputs are TOA reflectances anyway
+            rad2reflProduct = sourceProduct;
+        }
+        occciClassifInput.put("refl", rad2reflProduct);
     }
 
     private void createWaterMaskProduct() {
@@ -173,9 +241,40 @@ public class OccciOp extends BasisOp {
         return occciCloudClassificationParameters;
     }
 
+    private Product computeMerisClassificationProduct() {
+        setWaterClassificationParameters();
+        Map<String, Product> classificationInputProducts = new HashMap<>();
+        classificationInputProducts.put("l1b", sourceProduct);
+        classificationInputProducts.put("rhotoa", rad2reflProduct);
+        classificationInputProducts.put("pressure", ctpProduct);
+        classificationInputProducts.put("pressureLise", pressureLiseProduct);
+        classificationInputProducts.put("waterMask", waterMaskProduct);
+
+        return GPF.createProduct(OperatorSpi.getOperatorAlias(OccciMerisClassificationOp.class),
+                                 waterClassificationParameters, classificationInputProducts);
+    }
+
+    private void setWaterClassificationParameters() {
+        waterClassificationParameters = new HashMap<>();
+        waterClassificationParameters.put("outputSchillerNNValue", outputSchillerMerisNNValue);
+        waterClassificationParameters.put("useSchillerMerisAatsrNN", useSchillerMerisAatsrNN);
+        waterClassificationParameters.put("schillerMeris1600Threshold", schillerMeris1600Threshold);
+        waterClassificationParameters.put("schillerMerisAatsrCloudIceSeparationValue", schillerMerisAatsrCloudIceSeparationValue);
+        waterClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
+                                          schillerMerisNNCloudAmbiguousLowerBoundaryValue);
+        waterClassificationParameters.put("ccSchillerNNCloudAmbiguousSureSeparationValue",
+                                          schillerMerisNNCloudAmbiguousSureSeparationValue);
+        waterClassificationParameters.put("ccSchillerNNCloudSureSnowSeparationValue",
+                                          schillerMerisNNCloudSureSnowSeparationValue);
+    }
+
+
     private void addBandsToTargetProduct(Product targetProduct) {
 //        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
 
+        if (ocOutputMerisRadiance) {
+            copySourceBands(sourceProduct, targetProduct, "radiance_");
+        }
         if (ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB");
         }
@@ -190,7 +289,7 @@ public class OccciOp extends BasisOp {
         if (ocOutputDebug) {
             copySourceBands(classifProduct, targetProduct, "_value");
         }
-        copySourceBands(classifProduct, targetProduct, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        copySourceBands(classifProduct, targetProduct, OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
 
         if (ocOutputSeawifsRefl) {
             copySourceBands(classifProduct, targetProduct, "_refl");

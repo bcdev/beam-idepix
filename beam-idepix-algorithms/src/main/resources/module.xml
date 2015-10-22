@@ -156,7 +156,7 @@
         <action>
             <id>modisSeawifsAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixModisSeawifsAction</class>
-            <text>OC-CCI (MODIS, SeaWiFS)...</text>
+            <text>OC-CCI (MERIS, MODIS, SeaWiFS)...</text>
             <shortDescr>Pixel classification with OC-CCI algorithm (Schiller NNs).</shortDescr>
             <mnemonic>O</mnemonic>
             <parent>idepix</parent>

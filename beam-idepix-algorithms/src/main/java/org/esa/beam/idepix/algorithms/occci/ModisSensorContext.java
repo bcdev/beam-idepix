@@ -2,7 +2,6 @@ package org.esa.beam.idepix.algorithms.occci;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 /**
@@ -150,14 +149,14 @@ class ModisSensorContext implements SensorContext {
         }
         for (int i = 0; i < MODIS_L1B_NUM_EMISSIVE_BANDS; i++) {
             if (sourceProduct.containsBand(MODIS_L1B_EMISSIVE_BAND_NAMES[i])) {
-                sampleConfigurer.defineSample(Constants.MODIS_SRC_RAD_OFFSET + i, MODIS_L1B_EMISSIVE_BAND_NAMES[i], sourceProduct);
+                sampleConfigurer.defineSample(OccciConstants.MODIS_SRC_RAD_OFFSET + i, MODIS_L1B_EMISSIVE_BAND_NAMES[i], sourceProduct);
             } else {
                 final String newEmissiveBandName = MODIS_L1B_EMISSIVE_BAND_NAMES[i].replace(".", "_");
                 final Band emissiveBand = sourceProduct.getBand(newEmissiveBandName);
                 emissiveBand.setScalingFactor(1.0);      // todo: we do this to come back to counts with SeaDAS reader,
                                                          // as the NN was also trained with counts
                 emissiveBand.setScalingOffset(0.0);
-                sampleConfigurer.defineSample(Constants.MODIS_SRC_RAD_OFFSET + i, newEmissiveBandName, sourceProduct);
+                sampleConfigurer.defineSample(OccciConstants.MODIS_SRC_RAD_OFFSET + i, newEmissiveBandName, sourceProduct);
             }
         }
     }
@@ -174,6 +173,6 @@ class ModisSensorContext implements SensorContext {
 
     @Override
     public int getSrcRadOffset() {
-        return Constants.MODIS_SRC_RAD_OFFSET;
+        return OccciConstants.MODIS_SRC_RAD_OFFSET;
     }
 }

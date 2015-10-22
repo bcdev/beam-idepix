@@ -1,7 +1,6 @@
 package org.esa.beam.idepix.algorithms.occci;
 
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 /**
@@ -68,12 +67,12 @@ class SeaWiFSSensorContext implements SensorContext {
 
     @Override
     public void configureSourceSamples(SampleConfigurer sampleConfigurer, Product sourceProduct, String spectralBandPrefix) {
-        sampleConfigurer.defineSample(Constants.SRC_SZA, "solz", sourceProduct);
-        sampleConfigurer.defineSample(Constants.SRC_SAA, "sola", sourceProduct);
-        sampleConfigurer.defineSample(Constants.SRC_VZA, "senz", sourceProduct);
-        sampleConfigurer.defineSample(Constants.SRC_VAA, "sena", sourceProduct);
+        sampleConfigurer.defineSample(OccciConstants.SRC_SZA, "solz", sourceProduct);
+        sampleConfigurer.defineSample(OccciConstants.SRC_SAA, "sola", sourceProduct);
+        sampleConfigurer.defineSample(OccciConstants.SRC_VZA, "senz", sourceProduct);
+        sampleConfigurer.defineSample(OccciConstants.SRC_VAA, "sena", sourceProduct);
         for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            sampleConfigurer.defineSample(Constants.SEAWIFS_SRC_RAD_OFFSET+ i,
+            sampleConfigurer.defineSample(OccciConstants.SEAWIFS_SRC_RAD_OFFSET+ i,
                                           spectralBandPrefix + SEAWIFS_L1B_SPECTRAL_BAND_NAMES[i], sourceProduct);
         }
     }
@@ -112,7 +111,7 @@ class SeaWiFSSensorContext implements SensorContext {
 
     @Override
     public int getSrcRadOffset() {
-        return Constants.SEAWIFS_SRC_RAD_OFFSET;
+        return OccciConstants.SEAWIFS_SRC_RAD_OFFSET;
     }
 
 }

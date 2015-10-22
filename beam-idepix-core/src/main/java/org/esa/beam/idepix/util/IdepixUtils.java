@@ -257,6 +257,7 @@ public class IdepixUtils {
                     isValidMerisAatsrSynergyProduct(sourceProduct));
         } else if (AlgorithmSelector.Occci == algorithm) {
             return (isValidModisProduct(sourceProduct) ||
+                    isValidMerisProduct(sourceProduct) ||
                     isValidSeawifsProduct(sourceProduct));
         } else {
             return AlgorithmSelector.AvhrrAc == algorithm && (isValidAvhrrProduct(sourceProduct));

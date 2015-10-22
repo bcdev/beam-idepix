@@ -151,18 +151,18 @@ public class OccciClassificationOp extends PixelOperator {
     }
 
     private void setClassifFlag(WritableSample[] targetSamples, OccciAlgorithm algorithm) {
-        targetSamples[0].set(Constants.F_INVALID, algorithm.isInvalid());
-        targetSamples[0].set(Constants.F_CLOUD, algorithm.isCloud());
-        targetSamples[0].set(Constants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
-        targetSamples[0].set(Constants.F_CLOUD_SURE, algorithm.isCloudSure());
-        targetSamples[0].set(Constants.F_CLOUD_BUFFER, algorithm.isCloudBuffer());
-        targetSamples[0].set(Constants.F_CLOUD_SHADOW, algorithm.isCloudShadow());
-        targetSamples[0].set(Constants.F_SNOW_ICE, algorithm.isSnowIce());
-        targetSamples[0].set(Constants.F_MIXED_PIXEL, algorithm.isMixedPixel());
-        targetSamples[0].set(Constants.F_GLINT_RISK, algorithm.isGlintRisk());
-        targetSamples[0].set(Constants.F_COASTLINE, algorithm.isCoastline());
-        targetSamples[0].set(Constants.F_LAND, algorithm.isLand());
-        targetSamples[0].set(Constants.F_BRIGHT, algorithm.isBright());
+        targetSamples[0].set(OccciConstants.F_INVALID, algorithm.isInvalid());
+        targetSamples[0].set(OccciConstants.F_CLOUD, algorithm.isCloud());
+        targetSamples[0].set(OccciConstants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
+        targetSamples[0].set(OccciConstants.F_CLOUD_SURE, algorithm.isCloudSure());
+        targetSamples[0].set(OccciConstants.F_CLOUD_BUFFER, algorithm.isCloudBuffer());
+        targetSamples[0].set(OccciConstants.F_CLOUD_SHADOW, algorithm.isCloudShadow());
+        targetSamples[0].set(OccciConstants.F_SNOW_ICE, algorithm.isSnowIce());
+        targetSamples[0].set(OccciConstants.F_MIXED_PIXEL, algorithm.isMixedPixel());
+        targetSamples[0].set(OccciConstants.F_GLINT_RISK, algorithm.isGlintRisk());
+        targetSamples[0].set(OccciConstants.F_COASTLINE, algorithm.isCoastline());
+        targetSamples[0].set(OccciConstants.F_LAND, algorithm.isLand());
+        targetSamples[0].set(OccciConstants.F_BRIGHT, algorithm.isBright());
 
         if (ocOutputDebug) {
             targetSamples[1].set(algorithm.brightValue());
@@ -186,7 +186,7 @@ public class OccciClassificationOp extends PixelOperator {
             // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
             if (getGeoPos(x, y).lat > -58f) {
                 waterFraction =
-                        sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
+                        sourceSamples[OccciConstants.MODIS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
             }
             occciAlgorithm.setWaterFraction(waterFraction);
 
@@ -203,14 +203,14 @@ public class OccciClassificationOp extends PixelOperator {
             modisNeuralNetInput[2] = Math.sqrt(sourceSamples[3].getFloat());    // EV_500_Aggr1km_RefSB.4 (555nm)
             modisNeuralNetInput[3] = Math.sqrt(sourceSamples[4].getFloat());    // EV_500_Aggr1km_RefSB.5 (1240nm)
             modisNeuralNetInput[4] = Math.sqrt(sourceSamples[6].getFloat());    // EV_500_Aggr1km_RefSB.7 (2130nm)
-            final float emissive23Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 3].getFloat();
+            final float emissive23Rad = sourceSamples[OccciConstants.MODIS_SRC_RAD_OFFSET + 3].getFloat();
             modisNeuralNetInput[5] = Math.sqrt(emissive23Rad);                  // EV_1KM_Emissive.23   (4050nm)
-            final float emissive25Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 5].getFloat();
+            final float emissive25Rad = sourceSamples[OccciConstants.MODIS_SRC_RAD_OFFSET + 5].getFloat();
             modisNeuralNetInput[6] = Math.sqrt(emissive25Rad);                  // EV_1KM_Emissive.25   (4515nm)
             modisNeuralNetInput[7] = Math.sqrt(sourceSamples[21].getFloat());   // EV_1KM_RefSB.26    (1375nm)
-            final float emissive31Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 10].getFloat();
+            final float emissive31Rad = sourceSamples[OccciConstants.MODIS_SRC_RAD_OFFSET + 10].getFloat();
             modisNeuralNetInput[8] = Math.sqrt(emissive31Rad);                  // EV_1KM_Emissive.31   (11030nm)
-            final float emissive32Rad = sourceSamples[Constants.MODIS_SRC_RAD_OFFSET + 11].getFloat();
+            final float emissive32Rad = sourceSamples[OccciConstants.MODIS_SRC_RAD_OFFSET + 11].getFloat();
             modisNeuralNetInput[9] = Math.sqrt(emissive32Rad);                  // EV_1KM_Emissive.32   (12020nm)
 
 
@@ -225,7 +225,7 @@ public class OccciClassificationOp extends PixelOperator {
             occciAlgorithm = new OccciSeawifsAlgorithm();
             double[] seawifsNeuralNetInput = seawifsNeuralNet.get().getInputVector();
             for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
-                reflectance[i] = sourceSamples[Constants.SEAWIFS_SRC_RAD_OFFSET + i].getFloat();
+                reflectance[i] = sourceSamples[OccciConstants.SEAWIFS_SRC_RAD_OFFSET + i].getFloat();
                 if (!ocSeawifsRadianceBandPrefix.equals("rhot_")) {  // L1C are already reflectances
                     sensorContext.scaleInputSpectralDataToReflectance(reflectance, 0);
                 }
@@ -235,7 +235,7 @@ public class OccciClassificationOp extends PixelOperator {
             // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
             if (getGeoPos(x, y).lat > -58f) {
                 waterFraction =
-                        sourceSamples[Constants.SEAWIFS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
+                        sourceSamples[OccciConstants.SEAWIFS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
             }
             occciAlgorithm.setWaterFraction(waterFraction);
 
@@ -272,20 +272,20 @@ public class OccciClassificationOp extends PixelOperator {
         sensorContext.configureSourceSamples(sampleConfigurer, reflProduct, ocSeawifsRadianceBandPrefix);
 
         int index = sensorContext.getSrcRadOffset() + sensorContext.getNumSpectralInputBands() + 1;
-        sampleConfigurer.defineSample(index, Constants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
+        sampleConfigurer.defineSample(index, OccciConstants.LAND_WATER_FRACTION_BAND_NAME, waterMaskProduct);
     }
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         // the only standard band:
-        sampleConfigurer.defineSample(0, Constants.CLASSIF_BAND_NAME);
+        sampleConfigurer.defineSample(0, OccciConstants.CLASSIF_BAND_NAME);
 
         // debug bands:
         if (ocOutputDebug) {
-            sampleConfigurer.defineSample(1, Constants.BRIGHTNESS_BAND_NAME);
-            sampleConfigurer.defineSample(2, Constants.NDSI_BAND_NAME);
+            sampleConfigurer.defineSample(1, OccciConstants.BRIGHTNESS_BAND_NAME);
+            sampleConfigurer.defineSample(2, OccciConstants.NDSI_BAND_NAME);
         }
-        sampleConfigurer.defineSample(3, Constants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        sampleConfigurer.defineSample(3, OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
 
         // SeaWiFS reflectances:
         if (ocOutputSeawifsRefl && sensorContext.getSensor() == Sensor.SEAWIFS) {
@@ -301,11 +301,11 @@ public class OccciClassificationOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         productConfigurer.copyTimeCoding();
         productConfigurer.copyTiePointGrids();
-        Band classifFlagBand = productConfigurer.addBand(Constants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
+        Band classifFlagBand = productConfigurer.addBand(OccciConstants.CLASSIF_BAND_NAME, ProductData.TYPE_INT16);
 
         classifFlagBand.setDescription("Pixel classification flag");
         classifFlagBand.setUnit("dl");
-        FlagCoding flagCoding = OccciUtils.createOccciFlagCoding(Constants.CLASSIF_BAND_NAME);
+        FlagCoding flagCoding = OccciUtils.createOccciFlagCoding(OccciConstants.CLASSIF_BAND_NAME);
         classifFlagBand.setSampleCoding(flagCoding);
         getTargetProduct().getFlagCodingGroup().add(flagCoding);
 
@@ -315,16 +315,16 @@ public class OccciClassificationOp extends PixelOperator {
 
         // debug bands:
         if (ocOutputDebug) {
-            Band brightnessValueBand = productConfigurer.addBand(Constants.BRIGHTNESS_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band brightnessValueBand = productConfigurer.addBand(OccciConstants.BRIGHTNESS_BAND_NAME, ProductData.TYPE_FLOAT32);
             brightnessValueBand.setDescription("Brightness value (uses EV_250_Aggr1km_RefSB_1) ");
             brightnessValueBand.setUnit("dl");
 
-            Band ndsiValueBand = productConfigurer.addBand(Constants.NDSI_BAND_NAME, ProductData.TYPE_FLOAT32);
+            Band ndsiValueBand = productConfigurer.addBand(OccciConstants.NDSI_BAND_NAME, ProductData.TYPE_FLOAT32);
             ndsiValueBand.setDescription("NDSI value (uses EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_7)");
             ndsiValueBand.setUnit("dl");
 
         }
-        Band nnValueBand = productConfigurer.addBand(Constants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
+        Band nnValueBand = productConfigurer.addBand(OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
         nnValueBand.setDescription("Schiller NN output value");
         nnValueBand.setUnit("dl");
 

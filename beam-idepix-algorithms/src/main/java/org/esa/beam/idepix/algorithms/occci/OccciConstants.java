@@ -8,7 +8,7 @@ package org.esa.beam.idepix.algorithms.occci;
  *
  * @author olafd
  */
-class Constants {
+class OccciConstants {
 
     public static final String CLASSIF_BAND_NAME = "pixel_classif_flags";
     public static final String LAND_WATER_FRACTION_BAND_NAME = "land_water_fraction";
