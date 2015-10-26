@@ -161,6 +161,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         final float c3 = whiteValue(0, 3);
 
         boolean isCloudSureFromWhitenesses;
+//        m = Min(EV_250_Aggr1km_RefSB_1, EV_500_Aggr1km_RefSB_3, EV_500_Aggr1km_RefSB_4) > 0.3:
         final double m = Math.min(Math.min(refl[0], refl[2]), refl[3]);
         if (isLand()) {
             isCloudSureFromWhitenesses = m > 0.7 && c1 > 0.96 && c2 > 0.93 && c3 > 0.95 && c1 < 1.04 && c2 < 1.05 && c3 < 1.05;
