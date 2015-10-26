@@ -39,10 +39,10 @@ public class OccciOp extends BasisOp {
 
     @Parameter(defaultValue = "true",
             label = " Use Schiller 'MERIS/AATSR' NN (MERIS) ",
-            description = " Use Schiller 'MERIS/AATSR' NN (instead of 'WATER' NN) ")
+            description = " Use Schiller 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
     private boolean useSchillerMerisAatsrNN = true;   // seems actually the best we have
 
-    @Parameter(defaultValue = "10.0",
+    @Parameter(defaultValue = "20.0",
             label = " Schiller 'MERIS1600' threshold (MERIS) ",
             description = " Schiller 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
@@ -52,10 +52,10 @@ public class OccciOp extends BasisOp {
             description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Radiance bands (MERIS)",
             description = "Write TOA radiance bands to target product (MERIS).")
-    private boolean ocOutputMerisRadiance = false;
+    private boolean ocOutputMerisRadiance = true;
 
 //    @Parameter(defaultValue = "false",
 //            label = " Write Schiller NN value to the target product (MERIS).",
@@ -256,6 +256,7 @@ public class OccciOp extends BasisOp {
 
     private void setWaterClassificationParameters() {
         waterClassificationParameters = new HashMap<>();
+        waterClassificationParameters.put("copyAllTiePoints", true);
         waterClassificationParameters.put("outputSchillerNNValue", outputSchillerMerisNNValue);
         waterClassificationParameters.put("useSchillerMerisAatsrNN", useSchillerMerisAatsrNN);
         waterClassificationParameters.put("schillerMeris1600Threshold", schillerMeris1600Threshold);

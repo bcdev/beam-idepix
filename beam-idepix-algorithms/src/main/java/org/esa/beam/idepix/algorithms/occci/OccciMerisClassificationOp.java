@@ -27,7 +27,6 @@ import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
-import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
@@ -132,10 +131,10 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
 
     @Parameter(defaultValue = "true",
             label = " Use Schiller 'MERIS/AATSR' NN (MERIS) ",
-            description = " Use Schiller 'MERIS/AATSR' NN (instead of 'WATER' NN) ")
+            description = " Use Schiller 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
     private boolean useSchillerMerisAatsrNN = true;   // seems actually the best we have
 
-    @Parameter(defaultValue = "10.0",
+    @Parameter(defaultValue = "20.0",
             label = " Schiller 'MERIS1600' threshold (MERIS) ",
             description = " Schiller 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
@@ -172,11 +171,13 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
 
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
-    public static final String SCHILLER_MERIS_AATSR_NET_NAME = "6_912.1.net";
+    public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "6_912.1.net";  // VZA > 14deg
+    public static final String SCHILLER_MERIS_AATSR_INNER_NET_NAME = "6_1271.6.net"; // VZA < 7deg
 
     ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
-    ThreadLocal<SchillerNeuralNetWrapper> merisAatsrNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisAatsrOuterNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisAatsrInnerNeuralNet;
 
 
     @Override
@@ -205,10 +206,12 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
     private void readSchillerNets() {
         try (InputStream isWater = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
              InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME);
-             InputStream isMerisAatsr = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_NET_NAME)) {
+             InputStream isMerisAatsrOuter = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_OUTER_NET_NAME);
+             InputStream isMerisAatsrInner = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_INNER_NET_NAME)) {
             merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
             merisAllNeuralNet = SchillerNeuralNetWrapper.create(isAll);
-            merisAatsrNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsr);
+            merisAatsrOuterNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrOuter);
+            merisAatsrInnerNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrInner);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
         }
@@ -310,7 +313,6 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
 
     @Override
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        System.out.println("band = " + band.getName());
         Rectangle targetRectangle = targetTile.getRectangle();
         try {
             final Rectangle sourceRectangle = createSourceRectangle(band, targetRectangle);
@@ -490,7 +492,7 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
                         final double reflMeris1600 = nnOutput[0];
                         final double merisAatsrCloudProb = nnOutput[1];
                         is_snow_ice = reflMeris1600 < schillerMeris1600Threshold &&
-                                merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
+                                merisAatsrCloudProb > schillerMerisAatsrCloudIceSeparationValue;
                     } else {
                         is_snow_ice = nnOutput[0] > schillerNNCloudSureSnowSeparationValue; // old
                     }
@@ -505,14 +507,18 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
                 }
 
                 if (!applyMERISSchillerNNPure && !isCloudSure && !isCloudAmbiguous) {
-                    final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
-                    isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
-                    // special case: set very bright clouds misclassified as snow_ice from NN but
-                    // outside seaice climatology range to cloud
-                    if (!checkForSeaIce && nnOutput[0] > schillerNNCloudSureSnowSeparationValue) {
-                        isCloudSure = true;
+                    if (useSchillerMerisAatsrNN) {
+                        // todo
+                    } else {
+                        final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
+                        isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
+                        // special case: set very bright clouds misclassified as snow_ice from NN but
+                        // outside seaice climatology range to cloud
+                        if (!checkForSeaIce && nnOutput[0] > schillerNNCloudSureSnowSeparationValue) {
+                            isCloudSure = true;
+                        }
+                        isCloudAmbiguous = !isCloudSure && cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
                     }
-                    isCloudAmbiguous = !isCloudSure && cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
 
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, isCloudSure);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
@@ -540,7 +546,11 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
 //            return getMerisNNOutputImpl(sd, pixelInfo, merisWaterNeuralNet.get());
 //        }
         if (useSchillerMerisAatsrNN) {
-            return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrNeuralNet.get());
+            if (sd.vza[pixelInfo.index] > 7.0f) {
+                return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
+            } else {
+                return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrInnerNeuralNet.get());
+            }
         } else {
             return getMerisNNOutputImpl(sd, pixelInfo, merisAllNeuralNet.get());
         }
