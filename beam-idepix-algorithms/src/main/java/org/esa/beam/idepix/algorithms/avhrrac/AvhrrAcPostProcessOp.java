@@ -313,7 +313,7 @@ public class AvhrrAcPostProcessOp extends Operator {
         final boolean secondCrit = (-40.15 < bt4 && bt4 < 1.35) &&
                 refl1 > 0.25 && (0.85 < ratio21 && ratio21 < 1.15) && rt3 < 0.02;
 
-        if (firstCrit && !secondCrit) {
+        if (firstCrit || !secondCrit) {
             // reset snow_ice to cloud todo: check with a test product from GK if this makes sense at all
             targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD, true);
             targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD_SURE, true);
