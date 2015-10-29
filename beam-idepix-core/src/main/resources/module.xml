@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-core</symbolicName>
-    <version>2.2.15-SNAPSHOT</version>
+    <version>2.2.16-SNAPSHOT</version>
     <name>Idepix Core</name>
     <description>
         Idepix core module. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.

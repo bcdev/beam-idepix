@@ -282,8 +282,16 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setBtCh4(btCh4 + 273.15);
             final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
             aacAlgorithm.setBtCh5(btCh5 + 273.15);
+            aacAlgorithm.setElevation(altitude);
 
 //            aacAlgorithm.computeAdditionalSpectralQuantities();
+
+            if (x == 70 && y == 261) {
+                System.out.println("x,y = " + x + "," + y);
+            }
+            if (x == 80 && y == 500) {
+                System.out.println("x,y = " + x + "," + y);
+            }
 
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamplesIndex = 1;

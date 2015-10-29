@@ -181,6 +181,7 @@ public class AvhrrAcOp extends BasisOp {
         acClassificationOp.setSourceProduct("waterMask", waterMaskProduct);
 
 //        setTargetProduct(acClassificationOp.getTargetProduct());
+        // todo: do we want postprocessing for AATSR?
         classificationProduct = acClassificationOp.getTargetProduct();
         postProcess();
 

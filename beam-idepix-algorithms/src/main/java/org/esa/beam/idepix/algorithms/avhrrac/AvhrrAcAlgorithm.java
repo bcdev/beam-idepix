@@ -42,6 +42,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
     private double latitude;
     private double longitude;
+    private double elevation;
 
     @Override
     public boolean isInvalid() {
@@ -71,12 +72,71 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             isSnowIce = nnOutput[0] > avhrracSchillerNNCloudSureSnowSeparationValue && nnOutput[0] <= 5.0;
         }
 
+        // forget all the old stuff, completely new test now (GK/JM, 20151028):
+        isSnowIce = false;
+        final double btCh3Celsius = btCh3 - 273.15;
+        final double btCh4Celsius = btCh4 - 273.15;
+        final double btCh5Celsius = btCh5 - 273.15;
+        final double ratio21 = reflCh2 / reflCh1;
+        final double diffbt53 = btCh5Celsius - btCh3Celsius;
+        final double ratiobt53 = btCh5Celsius/btCh3Celsius;
+        final double diffrefl1rt3 = reflCh1 - reflCh3;
+        final double sumrefl2rt3 = reflCh2 + reflCh3;
+
+        if (latitude > 62.0) {
+            // NORTH (lat > 62N)
+            // shall be:
+//        (( ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.95 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
+//                           and rt_3<0.054 and elevation > 300 and bt_5-bt_3 > -14 and (bt_5/bt_3) > 1.7) or
+//           ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
+//                           and (rt_3<0.054 and rt_3 > 0.026) and elevation > 300
+//                           and bt_5-bt_3 > -13 and (bt_5/bt_3) <= -0.98 or
+//           ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
+//                           and rt_3<0.054 and elevation > 300 and bt_5-bt_3 > -11
+//                           and ((bt_5/bt_3) <= 1.7 and (bt_5/bt_3) > -0.98) or
+//           ((refl_1-rt_3)/(refl_2+rt_3)) > 1.1 and bt_5-bt_3 > -8)
+//
+            final boolean condBtCh4 = -15.0 < btCh4Celsius && btCh4Celsius < 1.35;
+            final boolean condElevation = elevation > 300.0;
+
+            final boolean cond1 = condBtCh4 && reflCh1 > 0.4 && 0.95 <= ratio21 && ratio21 < 1.15
+                    && reflCh3 < 0.054 && condElevation && diffbt53 > -14.0 && ratiobt53 > 1.7;
+            final boolean cond2 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
+                    && reflCh3 < 0.054 && reflCh3 > 0.026 && condElevation && diffbt53 > -13.0 && ratiobt53 <= -0.98;
+            final boolean cond3 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
+                    && reflCh3 < 0.054 && condElevation && diffbt53 > -11.0 && ratiobt53 <= 1.7 && ratiobt53 > -0.98;
+            final boolean cond4 = diffrefl1rt3/sumrefl2rt3 > 1.1 && diffbt53 > -8.0;
+
+            final boolean snowIceCondition = (cond1 || cond2 ||cond3 || cond4);
+
+            isSnowIce = isLand() && snowIceCondition;
+
+        } else if (latitude < -62.0) {
+            // SOUTH (lat < -62S)
+            // shall be:
+//      (((-27.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.75 and (0.85 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
+//                       and rt_3 < 0.03 and bt_5-bt_3 > -13 or (refl_1- rt_3) / (refl_2+ rt_3) > 1.05
+//                       and refl_1 > 0.55) and lat < -62
+            isSnowIce = -27.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.75 &&
+                    ratio21 > 0.85 && ratio21 < 1.15 && reflCh3 < 0.03 &&
+                    diffbt53 > -13.0 || (reflCh1-reflCh3)/(reflCh2+reflCh3) > 1.05 && reflCh1 > 0.55;
+
+        } else {
+            // CENTER (-62S < lat < 62N)
+            // shall be:
+//        ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
+//                        and rt_3<0.054 and bt_5-bt_3 > -14 and elevation > 1000
+//                        and pixel_classif_flags.F_LAND and (lat <= 62 and lat >= -62)
+            isSnowIce = isLand() && -15.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.4 &&
+                    ratio21 > 0.8 && ratio21 < 1.15 && reflCh3 < 0.054 && diffbt53 > -14.0 && elevation > 1000.0;
+        }
+
         return isSnowIce;
     }
 
     @Override
     public boolean isCloudAmbiguous() {
-        return isCloudSure(); // todo: discuss
+        return isCloudSure(); // todo: discuss if we need specific ambiguous flag
 //        if (isCloudSure()) {   // this check has priority
 //            return false;
 //        }
@@ -336,6 +396,10 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public void setElevation(double elevation) {
+        this.elevation = elevation;
     }
 
     public void setSza(double sza) {
