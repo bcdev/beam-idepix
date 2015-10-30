@@ -135,9 +135,10 @@ public class AvhrrAcPostProcessOp extends Operator {
                     combineFlags(x, y, sourceFlagTile, targetTile);
 
                     // snow/ice filter refinement for AVHRR (GK 20150922):
-                    if (isSnowIce) {
-                        refineSnowIceCloudFlagging(x, y, rt3Tile, bt4Tile, refl1Tile, refl2Tile, targetTile);
-                    }
+                    // GK/JM don't want this any more after complete snow/ice revision, 20151028
+//                    if (isSnowIce) {
+//                        refineSnowIceCloudFlagging(x, y, rt3Tile, bt4Tile, refl1Tile, refl2Tile, targetTile);
+//                    }
 
                     if (refineClassificationNearCoastlines) {
                         if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
