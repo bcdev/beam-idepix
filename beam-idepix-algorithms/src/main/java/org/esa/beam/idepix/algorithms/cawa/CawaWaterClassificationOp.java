@@ -327,6 +327,8 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
                             }
                         }
+                    } else {
+                        targetTile.setSample(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID, true);
                     }
                 }
             }

@@ -20,6 +20,7 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     static final float PRESSURE_THRESH = 0.9f;
 
     private float[] brr;
+    private boolean l1FlagInvalid;
     private boolean l1FlagLand;
     private float p1;
     private float pscatt;
@@ -27,6 +28,11 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
     private float brr442;
     private float brr442Thresh;
     private double[] nnOutput;
+
+    @Override
+    public boolean isInvalid() {
+        return super.isInvalid() || l1FlagInvalid;
+    }
 
     @Override
     public boolean isCloud() {
@@ -171,6 +177,10 @@ public class GlobAlbedoMerisAlgorithm extends GlobAlbedoAlgorithm {
 
     public void setL1FlagLand(boolean l1FlagLand) {
         this.l1FlagLand = l1FlagLand;
+    }
+
+    public void setL1FlagInvalid(boolean l1FlagInvalid) {
+        this.l1FlagInvalid = l1FlagInvalid;
     }
 
     public void setP1(float p1) {

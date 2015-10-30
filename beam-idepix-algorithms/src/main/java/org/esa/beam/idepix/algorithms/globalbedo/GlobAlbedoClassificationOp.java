@@ -108,7 +108,6 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
 
     WatermaskStrategy strategy = null;
 
-    static final int MERIS_L1B_F_LAND = 4;
     static final byte WATERMASK_FRACTION_THRESH = 23;   // for 3x3 subsampling, this means 2 subpixels water
 
     Band cloudFlagBand;

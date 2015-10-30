@@ -168,7 +168,21 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             isCloudSureSchiller = isCloudSureSchiller();
         }
 
-        return isCloudSureSchiller || isCloudAdditional;
+        // Test (GK/JM 20151029): use 'old' snow/ice test as additional cloud criterion:
+        boolean isCloudFromOldSnowIce = !isCloudTgct() && ndsi > 0.8;
+        // for AVHRR, nnOutput has one element:
+        // nnOutput[0] =
+        // 0 < x < 2.15 : clear
+        // 2.15 < x < 3.45 : noncl / semitransparent cloud --> cloud ambiguous
+        // 3.45 < x < 4.45 : cloudy --> cloud sure
+        // 4.45 < x : clear snow/ice
+        if (!isCloudFromOldSnowIce && nnOutput != null) {
+            // separation numbers from HS, 20140923
+            isCloudFromOldSnowIce = nnOutput[0] > avhrracSchillerNNCloudSureSnowSeparationValue && nnOutput[0] <= 5.0;
+        }
+
+//        return isCloudSureSchiller || isCloudAdditional;
+        return isCloudSureSchiller || isCloudAdditional || isCloudFromOldSnowIce;
     }
 
     private boolean isCloudSureSchiller() {

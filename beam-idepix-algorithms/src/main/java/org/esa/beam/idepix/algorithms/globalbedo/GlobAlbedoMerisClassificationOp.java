@@ -62,6 +62,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
             description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
     private double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
 
+    private static final int MERIS_L1B_F_INVALID = 7;
+    private static final int MERIS_L1B_F_LAND = 4;
 
     private Band[] merisReflBands;
     private Band[] merisBrrBands;
@@ -311,6 +313,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
         gaAlgorithm.setP1(p1Tile.getSampleFloat(x, y));
         gaAlgorithm.setPBaro(pbaroTile.getSampleFloat(x, y));
         gaAlgorithm.setPscatt(pscattTile.getSampleFloat(x, y));
+        final boolean isL1bInvalid = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_INVALID);
+        gaAlgorithm.setL1FlagInvalid(isL1bInvalid);
 
         if (gaUseL1bLandWaterFlag) {
             final boolean isLand = merisL1bFlagTile.getSampleBit(x, y, MERIS_L1B_F_LAND);
