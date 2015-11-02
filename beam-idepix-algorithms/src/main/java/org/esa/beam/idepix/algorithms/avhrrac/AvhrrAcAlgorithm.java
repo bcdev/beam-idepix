@@ -424,44 +424,6 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         this.distanceCorr = distanceCorr;
     }
 
-    public void computeAdditionalSpectralQuantities() {
-        final double solar3b = AvhrrAcConstants.SOLAR_3b;
-        final double ew3b = noaaId.equals("11") ? AvhrrAcConstants.EW_3b[0] : AvhrrAcConstants.EW_3b[1];
-        final double A0 = noaaId.equals("11") ? AvhrrAcConstants.A0[0] : AvhrrAcConstants.A0[1];
-        final double B0 = noaaId.equals("11") ? AvhrrAcConstants.B0[0] : AvhrrAcConstants.B0[1];
-        final double C0 = noaaId.equals("11") ? AvhrrAcConstants.C0[0] : AvhrrAcConstants.C0[1];
-        final double a13b = noaaId.equals("11") ? AvhrrAcConstants.a1_3b[0] : AvhrrAcConstants.a1_3b[1];
-        final double a23b = noaaId.equals("11") ? AvhrrAcConstants.a2_3b[0] : AvhrrAcConstants.a2_3b[1];
-        final double c1 = AvhrrAcConstants.c1;
-        final double c2 = AvhrrAcConstants.c2;
-
-        final double T3bB0 = (btCh4 - btCh5) > 1.0 ? A0 + B0 * btCh4 + C0 * (btCh4 - btCh5) : btCh4;
-
-        final double expEnumerator = c2 * AvhrrAcConstants.NU_CH3;
-        final double expDenominator = (T3bB0 - a13b) / a23b;
-        final double expTerm = Math.exp(expEnumerator / expDenominator);
-//        final double btCh4Celsius = btCh4 - 273.15;
-        final double btCh4Celsius = btCh4;  // test!
-        final double R3bem = btCh4Celsius > 0.0 ? c1 * Math.pow(AvhrrAcConstants.NU_CH3, 3.0) / (expTerm - 1.0) : 0.0;
-        final double B03b = 1000.0 * solar3b / ew3b;
-
-//        emissivity3b = btCh4Celsius > 0.0 ? radiance[2]/R3bem : 0.0;
-        emissivity3b = btCh4Celsius > 0.0 ? R3bem / radiance[2] : 0.0;       // BT4 in K should always be > 0 !!
-        emissivity3b = Math.max(Math.min(emissivity3b, 1.0), 0.0);
-
-        if (sza < 90.0 && R3bem > 0.0 && radiance[2] > 0.0) {
-            rho3b = Math.PI * (radiance[2] - R3bem) /
-                    ((B03b * Math.cos(sza * MathUtils.DTOR) / distanceCorr) - Math.PI * R3bem);
-            rho3b = Math.max(Math.min(rho3b, 1.0), 0.0);
-        } else if (sza > 90.0 && emissivity3b > 0.0) {
-            rho3b = 1.0 - emissivity3b;
-        } else {
-            rho3b = Double.NaN;
-        }
-
-        ndsi = !Double.isNaN(rho3b) ? (reflCh1 - rho3b) / (reflCh1 + rho3b) : Double.NaN;
-    }
-
     public void setNoaaId(String noaaId) {
         this.noaaId = noaaId;
     }
@@ -470,15 +432,4 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         return waterFraction;
     }
 
-    public double getRho3b() {
-        return rho3b;
-    }
-
-    public double getEmissivity3b() {
-        return emissivity3b;
-    }
-
-    public double getNdsi() {
-        return ndsi;
-    }
 }

@@ -276,22 +276,15 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> put here albedo_norm now!!
             aacAlgorithm.setReflCh2(albedo2Norm / 100.0); // on [0,1]
             aacAlgorithm.setReflCh3(albedo3); // on [0,1]
-            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
-            aacAlgorithm.setBtCh3(btCh3 + 273.15);
-            final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
-            aacAlgorithm.setBtCh4(btCh4 + 273.15);
-            final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
-            aacAlgorithm.setBtCh5(btCh5 + 273.15);
+//            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
+            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3);     // GK,MB 20151102: use K everywhere!!
+//            aacAlgorithm.setBtCh3(btCh3 + 273.15);
+            aacAlgorithm.setBtCh3(btCh3);
+            final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4);
+            aacAlgorithm.setBtCh4(btCh4);
+            final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5);
+            aacAlgorithm.setBtCh5(btCh5);
             aacAlgorithm.setElevation(altitude);
-
-//            aacAlgorithm.computeAdditionalSpectralQuantities();
-
-            if (x == 70 && y == 261) {
-                System.out.println("x,y = " + x + "," + y);
-            }
-            if (x == 80 && y == 500) {
-                System.out.println("x,y = " + x + "," + y);
-            }
 
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamplesIndex = 1;
@@ -473,19 +466,19 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         Band bt3Band = productConfigurer.addBand("bt_3", ProductData.TYPE_FLOAT32);
         bt3Band.setDescription("Channel 3 brightness temperature");
-        bt3Band.setUnit("C");
+        bt3Band.setUnit("K");
         bt3Band.setNoDataValue(Float.NaN);
         bt3Band.setNoDataValueUsed(true);
 
         Band bt4Band = productConfigurer.addBand("bt_4", ProductData.TYPE_FLOAT32);
         bt4Band.setDescription("Channel 4 brightness temperature");
-        bt4Band.setUnit("C");
+        bt4Band.setUnit("K");
         bt4Band.setNoDataValue(Float.NaN);
         bt4Band.setNoDataValueUsed(true);
 
         Band bt5Band = productConfigurer.addBand("bt_5", ProductData.TYPE_FLOAT32);
         bt5Band.setDescription("Channel 5 brightness temperature");
-        bt5Band.setUnit("C");
+        bt5Band.setUnit("K");
         bt5Band.setNoDataValue(Float.NaN);
         bt5Band.setNoDataValueUsed(true);
 
