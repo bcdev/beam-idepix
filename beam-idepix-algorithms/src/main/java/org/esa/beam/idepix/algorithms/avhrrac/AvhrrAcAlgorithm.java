@@ -325,7 +325,8 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         return (latitude >= 10.0 && latitude < 35.0 && longitude >= -20.0 && longitude < 30.0) ||
                 (latitude >= 5.0 && latitude < 50.0 && longitude >= 30.0 && longitude < 60.0) ||
                 (latitude >= 25.0 && latitude < 50.0 && longitude >= 60.0 && longitude < 110.0) ||
-                (latitude >= -31.0 && latitude < 19.0 && longitude >= 121.0 && longitude < 141.0);
+                (latitude >= -31.0 && latitude < 19.0 && longitude >= 121.0 && longitude < 141.0) ||
+                (latitude >= 35.0 && latitude < 50.0 && longitude >= 110.0 && longitude < 127.0);
     }
 
     private double getRgctThreshold(double ndvi) {
