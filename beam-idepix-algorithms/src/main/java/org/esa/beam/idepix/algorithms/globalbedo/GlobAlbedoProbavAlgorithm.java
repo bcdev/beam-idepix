@@ -5,7 +5,7 @@ import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 /**
- * IDEPIX pixel identification algorithm for GlobAlbedo/VGT
+ * IDEPIX pixel identification algorithm for GlobAlbedo/PROBA-V
  *
  * @author olafd
  */
@@ -38,7 +38,7 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public boolean isSeaIce() {
-        // no algorithm available for VGT only
+        // no algorithm available yet for PROBA-V
         return false;
     }
 
@@ -161,12 +161,12 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public float getBrightWhiteThreshold() {
-        return BRIGHTWHITE_THRESH;  //To change body of implemented methods use File | Settings | File Templates.
+        return BRIGHTWHITE_THRESH;
     }
 
     @Override
     public float getNdsiThreshold() {
-        return NDSI_THRESH;  //To change body of implemented methods use File | Settings | File Templates.
+        return NDSI_THRESH;
     }
 
     @Override
@@ -189,7 +189,7 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
         return PRESSURE_THRESH;
     }
 
-    // setters for VGT specific quantities
+    // setters for PROBA-V specific quantities
 
     public void setSmLand(boolean smLand) {
         this.smLand = smLand;
