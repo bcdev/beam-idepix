@@ -30,6 +30,7 @@ public class IdepixConstants {
     public static final int F_SEAICE = 17;
 
     public static final String SPOT_VGT_PRODUCT_TYPE_PREFIX = "VGT";
+    public static final String PROBAV_PRODUCT_TYPE_PREFIX = "PROBA-V";
 
     public static final String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
     public static final String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
@@ -46,6 +47,11 @@ public class IdepixConstants {
     public static final String VGT_RADIANCE_3_BAND_NAME = "B3";
     public static final String VGT_RADIANCE_MIR_BAND_NAME = "MIR";
 
+    public static final String PROBAV_BLUE_BAND_NAME = "TOA_REFL_BLUE";
+    public static final String PROBAV_RED_BAND_NAME = "TOA_REFL_RED";
+    public static final String PROBAV_NIR_BAND_NAME = "TOA_REFL_NIR";
+    public static final String PROBAV_SWIR_BAND_NAME = "TOA_REFL_SWIR";
+
     public static final int NO_DATA_VALUE = -1;
 
     /**
@@ -55,7 +61,7 @@ public class IdepixConstants {
             VGT_RADIANCE_0_BAND_NAME, // 0
             VGT_RADIANCE_2_BAND_NAME, // 1
             VGT_RADIANCE_3_BAND_NAME, // 2
-            VGT_RADIANCE_MIR_BAND_NAME, // 3
+            VGT_RADIANCE_MIR_BAND_NAME // 3
     };
 
     public static final String[] VGT_ANNOTATION_BAND_NAMES = {
@@ -65,10 +71,29 @@ public class IdepixConstants {
             "SAA",
             "WVG",
             "OG",
-            "AG",
+            "AG"
     };
 
     public static final float[] VGT_WAVELENGTHS = {450.0f, 645.0f, 835.0f, 1670.0f};
+
+    public static final String[] PROBAV_REFLECTANCE_BAND_NAMES = {
+            PROBAV_BLUE_BAND_NAME,
+            PROBAV_RED_BAND_NAME,
+            PROBAV_NIR_BAND_NAME,
+            PROBAV_SWIR_BAND_NAME
+    };
+
+    public static final String[] PROBAV_ANNOTATION_BAND_NAMES = {
+            "VZA_SWIR",
+            "VZA_VNIR",
+            "SZA",
+            "VAA_SWIR",
+            "VAA_VNIR",
+            "SAA",
+            "NDVI"
+    };
+
+    public static final float[] PROBAV_WAVELENGTHS = {462.0f, 655.5f, 843.0f, 1599.0f};
 
     public static final float[] MERIS_WAVELENGTHS =
             {
@@ -77,19 +102,19 @@ public class IdepixConstants {
             };
 
     public static final String[] MERIS_BRR_BAND_NAMES = {
-            "brr_1", // 0
-            "brr_2", // 0
-            "brr_3", // 0
-            "brr_4", // 0
-            "brr_5", // 0
-            "brr_6", // 0
-            "brr_7", // 0
-            "brr_8", // 0
-            "brr_9", // 0
-            "brr_10", // 0
-            "brr_12", // 0
-            "brr_13", // 0
-            "brr_14", // 0
+            "brr_1",
+            "brr_2",
+            "brr_3",
+            "brr_4",
+            "brr_5",
+            "brr_6",
+            "brr_7",
+            "brr_8",
+            "brr_9",
+            "brr_10",
+            "brr_12",
+            "brr_13",
+            "brr_14"
     };
 
     public static final String INPUT_INCONSISTENCY_ERROR_MESSAGE =

@@ -22,55 +22,55 @@ import java.util.Map;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "idepix.globalbedo.classification.vgt",
+@OperatorMetadata(alias = "idepix.globalbedo.classification.probav",
                   version = "2.2",
                   internal = true,
                   authors = "Olaf Danne",
                   copyright = "(c) 2008, 2012 by Brockmann Consult",
-                  description = "This operator provides cloud screening from SPOT VGT data.")
-public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
+                  description = "This operator provides cloud screening from PROBA-V data.")
+public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp {
 
     @Parameter(defaultValue = "1.1",
-            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
-            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous lower boundary (VGT/Proba-V only)",
+            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous/sure separation value (VGT/Proba-V only)",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-            label = " Schiller NN cloud sure/snow separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud sure/snow separation value (VGT/Proba-V only)",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudSureSnowSeparationValue;
 
     // VGT bands:
-    private Band[] vgtReflectanceBands;
+    private Band[] probavReflectanceBands;
 
-    private static final int SM_F_LAND = 3;
-    private static final int SM_F_MIR_GOOD = 4;
-    private static final int SM_F_B3_GOOD = 5;
-    private static final int SM_F_B2_GOOD = 6;
-    private static final int SM_F_B0_GOOD = 7;
+    private static final int SM_F_LAND = 5;
+    private static final int SM_F_SWIR_GOOD = 6;
+    private static final int SM_F_NIR_GOOD = 7;
+    private static final int SM_F_RED_GOOD = 8;
+    private static final int SM_F_BLUE_GOOD = 9;
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
         // VGT variables
-        final Band smFlagBand = sourceProduct.getBand("SM");
+        final Band smFlagBand = sourceProduct.getBand("SM_FLAGS");
         final Tile smFlagTile = getSourceTile(smFlagBand, rectangle);
 
-        Tile[] vgtReflectanceTiles = new Tile[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
-        float[] vgtReflectance = new float[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
-        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
-            vgtReflectanceTiles[i] = getSourceTile(vgtReflectanceBands[i], rectangle);
+        Tile[] probavReflectanceTiles = new Tile[IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length];
+        float[] probavReflectance = new float[IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length];
+        for (int i = 0; i < IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length; i++) {
+            probavReflectanceTiles[i] = getSourceTile(probavReflectanceBands[i], rectangle);
         }
 
         GeoPos geoPos = null;
         final Band cloudFlagTargetBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         final Tile cloudFlagTargetTile = targetTiles.get(cloudFlagTargetBand);
 
-        final Band nnTargetBand = targetProduct.getBand("vgt_nn_value");
+        final Band nnTargetBand = targetProduct.getBand("probav_nn_value");
         final Tile nnTargetTile = targetTiles.get(nnTargetBand);
 
         try {
@@ -90,16 +90,16 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
                     }
 
                     // set up pixel properties for given instruments...
-                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createVgtAlgorithm(smFlagTile, vgtReflectanceTiles,
-                                                                                 vgtReflectance,
-                                                                                 waterMaskSample,
-                                                                                 waterMaskFraction,
-                                                                                 y, x);
+                    GlobAlbedoAlgorithm globAlbedoAlgorithm = createProbavAlgorithm(smFlagTile, probavReflectanceTiles,
+                                                                                    probavReflectance,
+                                                                                    waterMaskSample,
+                                                                                    waterMaskFraction,
+                                                                                    y, x);
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
                     // apply improvement from Schiller NN approach...
-                    final double[] nnOutput = ((GlobAlbedoVgtAlgorithm) globAlbedoAlgorithm).getNnOutput();
+                    final double[] nnOutput = ((GlobAlbedoProbavAlgorithm) globAlbedoAlgorithm).getNnOutput();
                     if (gaApplyVGTSchillerNN) {
                         if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {
                             cloudFlagTargetTile.setSample(x, y, IdepixConstants.F_CLOUD_AMBIGUOUS, false);
@@ -142,61 +142,61 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
     @Override
     public void setBands() {
-        vgtReflectanceBands = new Band[IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length];
-        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
-            vgtReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.VGT_REFLECTANCE_BAND_NAMES[i]);
+        probavReflectanceBands= new Band[IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length];
+        for (int i = 0; i < IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length; i++) {
+            probavReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES[i]);
         }
     }
 
     @Override
     public void extendTargetProduct() throws OperatorException {
         if (gaCopyToaReflectances) {
-            copyVgtReflectances();
+            copyProbavReflectances();
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         }
 
         if (gaCopyAnnotations) {
-            copyVgtAnnotations();
+            copyProbavAnnotations();
         }
 
         if (gaApplyVGTSchillerNN) {
-            targetProduct.addBand("vgt_nn_value", ProductData.TYPE_FLOAT32);
+            targetProduct.addBand("probav_nn_value", ProductData.TYPE_FLOAT32);
         }
     }
 
-    private void copyVgtAnnotations() {
-        for (String bandName : IdepixConstants.VGT_ANNOTATION_BAND_NAMES) {
+    private void copyProbavAnnotations() {
+        for (String bandName : IdepixConstants.PROBAV_ANNOTATION_BAND_NAMES) {
             ProductUtils.copyBand(bandName, sourceProduct, targetProduct, true);
         }
     }
 
-    private void copyVgtReflectances() {
-        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
+    private void copyProbavReflectances() {
+        for (int i = 0; i < IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length; i++) {
             // write the original reflectance bands:
-            ProductUtils.copyBand(IdepixConstants.VGT_REFLECTANCE_BAND_NAMES[i], sourceProduct,
+            ProductUtils.copyBand(IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES[i], sourceProduct,
                                   targetProduct, true);
         }
     }
 
-    private GlobAlbedoAlgorithm createVgtAlgorithm(Tile smFlagTile, Tile[] vgtReflectanceTiles,
-                                                   float[] vgtReflectance,
-                                                   byte watermask, byte watermaskFraction,
-                                                   int y, int x) {
+    private GlobAlbedoAlgorithm createProbavAlgorithm(Tile smFlagTile, Tile[] probavReflectanceTiles,
+                                                      float[] probavReflectance,
+                                                      byte watermask, byte watermaskFraction,
+                                                      int y, int x) {
 
-        GlobAlbedoVgtAlgorithm gaAlgorithm = new GlobAlbedoVgtAlgorithm();
+        GlobAlbedoProbavAlgorithm gaAlgorithm = new GlobAlbedoProbavAlgorithm();
 
-        for (int i = 0; i < IdepixConstants.VGT_REFLECTANCE_BAND_NAMES.length; i++) {
-            vgtReflectance[i] = vgtReflectanceTiles[i].getSampleFloat(x, y);
+        for (int i = 0; i < IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length; i++) {
+            probavReflectance[i] = probavReflectanceTiles[i].getSampleFloat(x, y);
         }
 
-        checkVgtReflectanceQuality(vgtReflectance, smFlagTile, x, y);
-        float[] vgtReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(vgtReflectance);
-        gaAlgorithm.setRefl(vgtReflectanceSaturationCorrected);
+        checkProbavReflectanceQuality(probavReflectance, smFlagTile, x, y);
+        float[] probavReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(probavReflectance);
+        gaAlgorithm.setRefl(probavReflectanceSaturationCorrected);
 
         SchillerNeuralNetWrapper nnWrapper = vgtNeuralNet.get();
         double[] inputVector = nnWrapper.getInputVector();
         for (int i = 0; i < inputVector.length; i++) {
-            inputVector[i] = Math.sqrt(vgtReflectanceSaturationCorrected[i]);
+            inputVector[i] = Math.sqrt(probavReflectanceSaturationCorrected[i]);
         }
         gaAlgorithm.setNnOutput(nnWrapper.getNeuralNet().calc(inputVector));
 
@@ -215,14 +215,14 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
         return gaAlgorithm;
     }
 
-    private void checkVgtReflectanceQuality(float[] vgtReflectance, Tile smFlagTile, int x, int y) {
-        final boolean isB0Good = smFlagTile.getSampleBit(x, y, SM_F_B0_GOOD);
-        final boolean isB2Good = smFlagTile.getSampleBit(x, y, SM_F_B2_GOOD);
-        final boolean isB3Good = smFlagTile.getSampleBit(x, y, SM_F_B3_GOOD);
-        final boolean isMirGood = smFlagTile.getSampleBit(x, y, SM_F_MIR_GOOD) || vgtReflectance[3] <= 0.65; // MIR_refl
-        if (!isB0Good || !isB2Good || !isB3Good || !isMirGood) {
-            for (int i = 0; i < vgtReflectance.length; i++) {
-                vgtReflectance[i] = Float.NaN;
+    private void checkProbavReflectanceQuality(float[] probavReflectance, Tile smFlagTile, int x, int y) {
+        final boolean isBlueGood = smFlagTile.getSampleBit(x, y, SM_F_BLUE_GOOD);
+        final boolean isRedGood = smFlagTile.getSampleBit(x, y, SM_F_RED_GOOD);
+        final boolean isNirGood = smFlagTile.getSampleBit(x, y, SM_F_NIR_GOOD);
+        final boolean isSwirGood = smFlagTile.getSampleBit(x, y, SM_F_SWIR_GOOD);
+        if (!isBlueGood || !isRedGood || !isNirGood || !isSwirGood) {
+            for (int i = 0; i < probavReflectance.length; i++) {
+                probavReflectance[i] = Float.NaN;
             }
         }
     }
@@ -234,7 +234,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoVgtClassificationOp.class);
+            super(GlobAlbedoProbavClassificationOp.class);
         }
     }
 

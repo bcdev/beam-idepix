@@ -95,12 +95,13 @@ public class IdepixUtils {
         if (!isValidMerisProduct(inputProduct) &&
                 !isValidAatsrProduct(inputProduct) &&
                 !isValidVgtProduct(inputProduct) &&
+                !isValidProbavProduct(inputProduct) &&
                 !isValidAvhrrProduct(inputProduct) &&
                 !isValidLandsat8Product(inputProduct) &&
                 !isValidModisProduct(inputProduct) &&
                 !isValidSeawifsProduct(inputProduct) &&
                 !isValidMerisAatsrSynergyProduct(inputProduct)) {
-            logErrorMessage("Input product must be either MERIS, AATSR, AVHRR, colocated MERIS/AATSR, MODIS/SeaWiFS, or VGT L1b!");
+            logErrorMessage("Input sensor must be either MERIS, AATSR, AVHRR, colocated MERIS/AATSR, MODIS/SeaWiFS, PROBA-V or VGT!");
         }
         return true;
     }
@@ -238,6 +239,10 @@ public class IdepixUtils {
         return product.getProductType().startsWith(IdepixConstants.SPOT_VGT_PRODUCT_TYPE_PREFIX);
     }
 
+    public static boolean isValidProbavProduct(Product product) {
+        return product.getProductType().startsWith(IdepixConstants.PROBAV_PRODUCT_TYPE_PREFIX);
+    }
+
     private static boolean isInputConsistent(Product sourceProduct, AlgorithmSelector algorithm) {
         if (AlgorithmSelector.IPF == algorithm ||
                 AlgorithmSelector.CoastColour == algorithm ||
@@ -254,6 +259,7 @@ public class IdepixUtils {
             return (isValidMerisProduct(sourceProduct) ||
                     isValidAatsrProduct(sourceProduct) ||
                     isValidVgtProduct(sourceProduct) ||
+                    isValidProbavProduct(sourceProduct) ||
                     isValidMerisAatsrSynergyProduct(sourceProduct));
         } else if (AlgorithmSelector.Occci == algorithm) {
             return (isValidModisProduct(sourceProduct) ||

@@ -115,23 +115,23 @@ public class GlobAlbedoOp extends BasisOp {
     double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "false",
-            label = " Apply Schiller NN for VGT cloud classification",
-            description = " Apply Schiller NN for VGT cloud classification (has only effect for VGT L1b products)")
+            label = " Apply Schiller NN for VGT/Proba-V cloud classification",
+            description = " Apply Schiller NN for VGT/Proba-V cloud classification (has only effect for VGT/Proba-V L1b products)")
     private boolean gaApplyVGTSchillerNN;
 
     @Parameter(defaultValue = "1.1",
-            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
-            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous lower boundary (VGT/Proba-V only)",
+            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud ambiguous/sure separation value (VGT/Proba-V only)",
+            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-            label = " Schiller NN cloud sure/snow separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+            label = " Schiller NN cloud sure/snow separation value (VGT/Proba-V only)",
+            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "false",
@@ -179,8 +179,9 @@ public class GlobAlbedoOp extends BasisOp {
             processGlobAlbedoMeris();
         } else if (IdepixUtils.isValidVgtProduct(sourceProduct)) {
             processGlobAlbedoVgt();
+        } else if (IdepixUtils.isValidProbavProduct(sourceProduct)) {
+            processGlobAlbedoProbav();
         }
-        renameL1bMaskNames(targetProduct);
     }
 
     private Map<String, Object> createGaVgtCloudClassificationParameters() {
@@ -199,6 +200,11 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("wmResolution", wmResolution);
 
         return gaCloudClassificationParameters;
+    }
+
+    private Map<String, Object> createGaProbavCloudClassificationParameters() {
+        // actually the same as VGT
+        return createGaVgtCloudClassificationParameters();
     }
 
     private Map<String, Object> createGaMerisCloudClassificationParameters() {
@@ -247,6 +253,7 @@ public class GlobAlbedoOp extends BasisOp {
         if (gaCopyCTP) {
             ProductUtils.copyBand("cloud_top_press", ctpProduct, targetProduct, true);
         }
+        renameL1bMaskNames(targetProduct);
     }
 
     private void computeMerisAlgorithmInputProducts(Map<String, Product> gaCloudInput) {
@@ -266,8 +273,8 @@ public class GlobAlbedoOp extends BasisOp {
                 computeGaseousCorrectionProduct(sourceProduct, rad2reflProduct, merisCloudProduct, true);
         final Product landProduct = IdepixProducts.computeLandClassificationProduct(sourceProduct, gasProduct);
         rayleighProduct = IdepixProducts.computeRayleighCorrectionProduct(sourceProduct, gasProduct, rad2reflProduct, landProduct,
-                merisCloudProduct, false,
-                LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
+                                                                          merisCloudProduct, false,
+                                                                          LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         gaCloudInput.put("rayleigh", rayleighProduct);
 
     }
@@ -281,7 +288,21 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters = createGaVgtCloudClassificationParameters();
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoVgtClassificationOp.class),
-                gaCloudClassificationParameters, gaCloudInput);
+                                           gaCloudClassificationParameters, gaCloudInput);
+
+        targetProduct = gaCloudProduct;
+    }
+
+    private void processGlobAlbedoProbav() {
+        // Cloud Classification
+        Product gaCloudProduct;
+        Map<String, Product> gaCloudInput = new HashMap<>(4);
+        gaCloudInput.put("gal1b", sourceProduct);
+
+        gaCloudClassificationParameters = createGaProbavCloudClassificationParameters();
+
+        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavClassificationOp.class),
+                                           gaCloudClassificationParameters, gaCloudInput);
 
         targetProduct = gaCloudProduct;
     }
