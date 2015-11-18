@@ -290,7 +290,9 @@ public class OccciOp extends BasisOp {
         if (ocOutputDebug) {
             copySourceBands(classifProduct, targetProduct, "_value");
         }
-        copySourceBands(classifProduct, targetProduct, OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        if (outputSchillerMerisNNValue) {
+            copySourceBands(classifProduct, targetProduct, OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        }
 
         if (ocOutputSeawifsRefl) {
             copySourceBands(classifProduct, targetProduct, "_refl");

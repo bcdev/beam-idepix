@@ -162,10 +162,13 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             return false;
         }
 
-        boolean isCloudAdditional = isCloudSnowIceFromDecisionTree();
-        boolean isCloudSureSchiller = false;
-        if (!isCloudAdditional) {
-            isCloudSureSchiller = isCloudSureSchiller();
+        final boolean isCloudAdditional = isCloudSnowIceFromDecisionTree();
+        if (isCloudAdditional) {
+            return true;
+        }
+        final boolean isCloudSureSchiller = isCloudSureSchiller();
+        if (isCloudSureSchiller) {
+            return true;
         }
 
         // Test (GK/JM 20151029): use 'old' snow/ice test as additional cloud criterion:
@@ -180,9 +183,28 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             // separation numbers from HS, 20140923
             isCloudFromOldSnowIce = nnOutput[0] > avhrracSchillerNNCloudSureSnowSeparationValue && nnOutput[0] <= 5.0;
         }
+        if (isCloudFromOldSnowIce) {
+            return true;
+        }
 
+        final boolean isResidualCloud = isResidualCloud();
+        if (isResidualCloud) {
+            return true;
+        }
+        return false;
 //        return isCloudSureSchiller || isCloudAdditional;
-        return isCloudSureSchiller || isCloudAdditional || isCloudFromOldSnowIce;
+//        return isCloudSureSchiller || isCloudAdditional || isCloudFromOldSnowIce || isResidualCloud;
+    }
+
+    private boolean isResidualCloud() {
+
+        if (isDesertArea()) {
+            return (reflCh3 < 0.18 && reflCh1>0.15 && (btCh4 / btCh3) < 0.927 && btCh4<280)
+                || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.23 && btCh4 < 302 && (btCh4 / btCh3) < 0.95 && reflCh3 < 0.38 && reflCh3 > 0.219);
+        } else {
+            return (reflCh3 < 0.18 && reflCh1>0.15 && (btCh4 / btCh3) < 0.927)
+                || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.2 && btCh4 < 302 && (btCh4 / btCh3) < 0.95 && reflCh3 < 0.4);
+        }
     }
 
     private boolean isCloudSureSchiller() {
@@ -300,10 +322,11 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     }
 
     private boolean isDesertArea() {
-        return (latitude >= 10.0 && latitude < 35.0 && longitude >= 20.0 && longitude < 30.0) ||
+        return (latitude >= 10.0 && latitude < 35.0 && longitude >= -20.0 && longitude < 30.0) ||
                 (latitude >= 5.0 && latitude < 50.0 && longitude >= 30.0 && longitude < 60.0) ||
                 (latitude >= 25.0 && latitude < 50.0 && longitude >= 60.0 && longitude < 110.0) ||
-                (latitude >= -31.0 && latitude < -19.0 && longitude >= 121.0 && longitude < 141.0);
+                (latitude >= -31.0 && latitude < 19.0 && longitude >= 121.0 && longitude < 141.0) ||
+                (latitude >= 35.0 && latitude < 50.0 && longitude >= 110.0 && longitude < 127.0);
     }
 
     private double getRgctThreshold(double ndvi) {
