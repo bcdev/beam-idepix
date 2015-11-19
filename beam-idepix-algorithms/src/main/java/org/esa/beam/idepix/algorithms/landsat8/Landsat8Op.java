@@ -162,17 +162,32 @@ public class Landsat8Op extends Operator {
             label = "Wavelength used for Dark Glint Test 2")
     private int darkGlintThreshTest2Wavelength;
 
-    @Parameter(defaultValue = "2.0",
-            label = "Alternative for first classification boundary ")
-    private double alternativeFirstClassBoundary;
-    @Parameter(defaultValue = "3.6",
-            label = "Alternative for second classification boundary ")
-    private double alternativeSecondClassBoundary;
-    @Parameter(defaultValue = "4.2",
-            label = "Alternative for third classification boundary ")
-    private double alternativeThirdClassBoundary;
+    // currently not used todo: clarify if needed
+//    @Parameter(defaultValue = "2.0",
+//            label = "Alternative for first classification boundary ")
+//    private double alternativeFirstClassBoundary;
+//    @Parameter(defaultValue = "3.6",
+//            label = "Alternative for second classification boundary ")
+//    private double alternativeSecondClassBoundary;
+//    @Parameter(defaultValue = "4.2",
+//            label = "Alternative for third classification boundary ")
+//    private double alternativeThirdClassBoundary;
 
+    @Parameter(defaultValue = "ALL", valueSet = {"ALL", "LAND",
+            "WATER", "WATER_NOTIDAL", "WATER_USE_THERMAL", "WATER_NOTIDAL_USE_THERMAL"},
+            label = "Neural Net to be applied",
+            description = "The Neural Net which will be applied.")
+    private NNSelector nnSelector;
 
+    @Parameter(defaultValue = "1.95",
+            label = "NN cloud ambiguous lower boundary ")
+    private double nnCloudAmbiguousLowerBoundaryValue;
+    @Parameter(defaultValue = "3.45",
+            label = "NN cloud ambiguous/sure separation value ")
+    private double nnCloudAmbiguousSureSeparationValue;
+    @Parameter(defaultValue = "4.3",
+            label = "NN cloud sure / snow separation value ")
+    private double nnCloudSureSnowSeparationValue;
 
     // SHIMEZ parameters:
     @Parameter(defaultValue = "true",
@@ -322,15 +337,20 @@ public class Landsat8Op extends Operator {
         classificationParameters.put("clostThresh", clostThresh);
         classificationParameters.put("applyOtsuCloudTest", applyOtsuCloudTest);
 
+        classificationParameters.put("nnSelector", nnSelector);
+        classificationParameters.put("nnCloudAmbiguousLowerBoundaryValue", nnCloudAmbiguousLowerBoundaryValue);
+        classificationParameters.put("nnCloudAmbiguousLowerBoundaryValue", nnCloudAmbiguousLowerBoundaryValue);
+        classificationParameters.put("nnCloudSureSnowSeparationValue", nnCloudSureSnowSeparationValue);
 
         classificationParameters.put("darkGlintThreshTest1", darkGlintThreshTest1);
         classificationParameters.put("darkGlintThreshTest1Wavelength", darkGlintThreshTest1Wavelength);
         classificationParameters.put("darkGlintThreshTest2", darkGlintThreshTest2);
         classificationParameters.put("darkGlintThreshTest2Wavelength", darkGlintThreshTest2Wavelength);
 
-        classificationParameters.put("alternativeFirstClassBoundary", alternativeFirstClassBoundary);
-        classificationParameters.put("alternativeSecondClassBoundary", alternativeSecondClassBoundary);
-        classificationParameters.put("alternativeThirdClassBoundary", alternativeThirdClassBoundary);
+        // currently not used todo: clarify if needed
+//        classificationParameters.put("alternativeFirstClassBoundary", alternativeFirstClassBoundary);
+//        classificationParameters.put("alternativeSecondClassBoundary", alternativeSecondClassBoundary);
+//        classificationParameters.put("alternativeThirdClassBoundary", alternativeThirdClassBoundary);
     }
 
     private void computeCloudProduct() {

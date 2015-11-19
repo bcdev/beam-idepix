@@ -19,6 +19,7 @@ import org.esa.beam.framework.gpf.ui.DefaultSingleTargetProductDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.idepix.algorithms.cawa.CawaOp;
 import org.esa.beam.idepix.algorithms.landsat8.Landsat8Op;
+import org.esa.beam.idepix.ui.IdepixLandsat8Dialog;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
 /**
@@ -29,11 +30,17 @@ import org.esa.beam.visat.actions.AbstractVisatAction;
 public class IdepixLandsat8Action extends AbstractVisatAction {
     @Override
     public void actionPerformed(CommandEvent commandEvent) {
-        final DefaultSingleTargetProductDialog dialog =
-            new DefaultSingleTargetProductDialog(OperatorSpi.getOperatorAlias(Landsat8Op.class),
-                    getAppContext(),
-                    "Idepix - Pixel Identification and Classification (Landsat8 mode)",
-                    "IdepixPlugIn");
+//        final DefaultSingleTargetProductDialog dialog =
+//            new DefaultSingleTargetProductDialog(OperatorSpi.getOperatorAlias(Landsat8Op.class),
+//                    getAppContext(),
+//                    "Idepix - Pixel Identification and Classification (Landsat8 mode)",
+//                    "IdepixPlugIn");
+
+        final IdepixLandsat8Dialog dialog =
+                new IdepixLandsat8Dialog(OperatorSpi.getOperatorAlias(Landsat8Op.class),
+                                                     getAppContext(),
+                                                     "Idepix - Pixel Identification and Classification (Landsat8 mode)",
+                                                     "IdepixPlugIn");
         System.setProperty("gpfMode", "GUI");
         dialog.setTargetProductNameSuffix("_IDEPIX");
         dialog.show();

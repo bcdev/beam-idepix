@@ -180,15 +180,32 @@ public class Landsat8ClassificationOp extends Operator {
             label = " Apply OTSU cloud test")
     private boolean applyOtsuCloudTest;
 
-    @Parameter(defaultValue = "2.0",
-            label = "Alternative for first classification boundary ")
-    private double alternativeFirstClassBoundary;
-    @Parameter(defaultValue = "3.6",
-            label = "Alternative for second classification boundary ")
-    private double alternativeSecondClassBoundary;
-    @Parameter(defaultValue = "4.2",
-            label = "Alternative for third classification boundary ")
-    private double alternativeThirdClassBoundary;
+    // currently not used todo: clarify if needed
+//    @Parameter(defaultValue = "2.0",
+//            label = "Alternative for first classification boundary ")
+//    private double alternativeFirstClassBoundary;
+//    @Parameter(defaultValue = "3.6",
+//            label = "Alternative for second classification boundary ")
+//    private double alternativeSecondClassBoundary;
+//    @Parameter(defaultValue = "4.2",
+//            label = "Alternative for third classification boundary ")
+//    private double alternativeThirdClassBoundary;
+
+    @Parameter(defaultValue = "ALL", valueSet = {"ALL", "LAND",
+            "WATER", "WATER_NOTIDAL", "WATER_USE_THERMAL", "WATER_NOTIDAL_USE_THERMAL"},
+            label = "Neural Net to be applied",
+            description = "The Neural Net which will be applied.")
+    private NNSelector nnSelector;
+
+    @Parameter(defaultValue = "1.95",
+            label = "NN cloud ambiguous lower boundary ")
+    private double nnCloudAmbiguousLowerBoundaryValue;
+    @Parameter(defaultValue = "3.45",
+            label = "NN cloud ambiguous/sure separation value ")
+    private double nnCloudAmbiguousSureSeparationValue;
+    @Parameter(defaultValue = "4.3",
+            label = "NN cloud sure / snow separation value ")
+    private double nnCloudSureSnowSeparationValue;
 
 
     @SourceProduct(alias = "l8source", description = "The source product.")
@@ -213,7 +230,7 @@ public class Landsat8ClassificationOp extends Operator {
     private String cloudFlagBandName;
 
 
-    private static final String LANDSAT8_CLOUD_NET_NAME = "8x5x3_342.3.net";
+//    private static final String LANDSAT8_CLOUD_NET_NAME = "8x5x3_342.3.net";
     private ThreadLocal<SchillerNeuralNetWrapper> landsat8CloudNet;
 
     @Override
@@ -389,6 +406,10 @@ public class Landsat8ClassificationOp extends Operator {
         l8Algorithm.setL8SpectralBandData(l8Reflectance);
         l8Algorithm.setIsLand(isLand);
 
+        l8Algorithm.setNnCloudAmbiguousLowerBoundaryValue(nnCloudAmbiguousLowerBoundaryValue);
+        l8Algorithm.setNnCloudAmbiguousSureSeparationValue(nnCloudAmbiguousSureSeparationValue);
+        l8Algorithm.setNnCloudSureSnowSeparationValue(nnCloudSureSnowSeparationValue);
+
         l8Algorithm.setApplyShimezCloudTest(applyShimezCloudTest);
         l8Algorithm.setShimezDiffThresh(shimezDiffThresh);
         l8Algorithm.setShimezMeanThresh(shimezMeanThresh);
@@ -427,7 +448,7 @@ public class Landsat8ClassificationOp extends Operator {
         return l8Algorithm;
     }
 
-    private double[] calcNeuralNetResult(float[] l8Reflectance) {
+    private double[] calcNeuralNetResultOld(float[] l8Reflectance) {
         SchillerNeuralNetWrapper neuralNetWrapper = landsat8CloudNet.get();
         double[] cloudNetInput = neuralNetWrapper.getInputVector();
         for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
@@ -443,8 +464,25 @@ public class Landsat8ClassificationOp extends Operator {
         return neuralNetWrapper.getNeuralNet().calc(cloudNetInput);
     }
 
+    private double[] calcNeuralNetResult(float[] l8Reflectance) {
+        SchillerNeuralNetWrapper neuralNetWrapper = landsat8CloudNet.get();
+        double[] cloudNetInput = neuralNetWrapper.getInputVector();
+        for (int i = 0; i < 7; i++) {
+            cloudNetInput[i] = Math.sqrt(l8Reflectance[i]);
+        }
+        cloudNetInput[7] = Math.max(Math.sqrt((double) l8Reflectance[7]), neuralNetWrapper.getNeuralNet().getInmin()[7]);
+        if (nnSelector.getLabel().endsWith("_USE_THERMAL")) {
+            cloudNetInput[8] = Math.sqrt(l8Reflectance[9]);
+            cloudNetInput[9] = Math.sqrt(l8Reflectance[10]);
+        }
+        return neuralNetWrapper.getNeuralNet().calc(cloudNetInput);
+    }
+
+
     private void initCloudNet() {
-        try (InputStream cloudNet = getClass().getResourceAsStream(LANDSAT8_CLOUD_NET_NAME)) {
+//        try (InputStream cloudNet = getClass().getResourceAsStream(LANDSAT8_CLOUD_NET_NAME)) {
+        // use selected new NN (20151119), chosen from 6 different nets:
+        try (InputStream cloudNet = getClass().getResourceAsStream(nnSelector.getNnFileName())) {
             landsat8CloudNet = SchillerNeuralNetWrapper.create(cloudNet);
         } catch (IOException e) {
             throw new OperatorException("Cannot read cloud neural net: " + e.getMessage());
