@@ -46,7 +46,7 @@ import java.util.HashMap;
                   authors = "Marco Peters",
                   copyright = "(c) 2011 by Brockmann Consult",
                   description = "Refines the cloud classification of Meris.GlobAlbedoCloudClassification operator.")
-public class GlobAlbedoPostProcessOp extends MerisBasisOp {
+public class GlobAlbedoMerisPostProcessOp extends MerisBasisOp {
 
     @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
@@ -312,7 +312,7 @@ public class GlobAlbedoPostProcessOp extends MerisBasisOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobAlbedoPostProcessOp.class);
+            super(GlobAlbedoMerisPostProcessOp.class);
         }
     }
 }

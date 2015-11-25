@@ -2,11 +2,12 @@ org.esa.beam.idepix.algorithms.coastcolour.CoastColourOp$Spi
 org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp$Spi
 org.esa.beam.idepix.algorithms.coastcolour.CoastColourPostProcessOp$Spi
 
-org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoPostProcessOp$Spi
+org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisPostProcessOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoMerisClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoVgtClassificationOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoProbavClassificationOp$Spi
+org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoProbavPostProcessOp$Spi
 org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp$Spi
 
 org.esa.beam.idepix.algorithms.ipf.IpfOp$Spi

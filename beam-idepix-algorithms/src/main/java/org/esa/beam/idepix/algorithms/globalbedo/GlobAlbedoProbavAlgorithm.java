@@ -24,7 +24,27 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     private static final float REFL835_LAND_THRESH = 0.15f;
 
     private boolean smLand;
+
+    private boolean isBlueGood;
+    private boolean isRedGood;
+    private boolean isNirGood;
+    private boolean isSwirGood;
+
+    private double elevation;
+
     private double[] nnOutput;
+
+    @Override
+    public boolean isInvalid() {
+        // GK 20151126;
+        return !(isBlueGood && isRedGood && isNirGood && isSwirGood && smLand);
+    }
+
+    @Override
+    public boolean isClearSnow() {
+        // GK 20151126;
+        return !isInvalid() && (ndsiValue() > 0.4 && refl[3] < 0.13 && elevation > 600.0) || (ndsiValue() > 0.7);
+    }
 
     @Override
     public boolean isCloud() {
@@ -88,7 +108,8 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public float ndsiValue() {
-        double value = (refl[2] - refl[3]) / (refl[2] + refl[3]);
+        // (SWIR - RED)/(SWIR + RED), GK 20151126
+        double value = (refl[3] - refl[2]) / (refl[3] + refl[2]);
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
         return (float) value;
@@ -195,12 +216,32 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
         this.smLand = smLand;
     }
 
+    public void setIsBlueGood(boolean isBlueGood) {
+        this.isBlueGood = isBlueGood;
+    }
+
+    public void setIsRedGood(boolean isRedGood) {
+        this.isRedGood = isRedGood;
+    }
+
+    public void setIsNirGood(boolean isNirGood) {
+        this.isNirGood = isNirGood;
+    }
+
+    public void setIsSwirGood(boolean isSwirGood) {
+        this.isSwirGood = isSwirGood;
+    }
+
     public void setRefl(float[] refl) {
         if (refl.length != IdepixConstants.PROBAV_WAVELENGTHS.length) {
             throw new OperatorException("PROBA-V pixel processing: Invalid number of wavelengths [" + refl.length +
                                                 "] - must be " + IdepixConstants.PROBAV_WAVELENGTHS.length);
         }
         this.refl = refl;
+    }
+
+    public void setElevation(double elevation) {
+        this.elevation = elevation;
     }
 
     public void setNnOutput(double[] nnOutput) {

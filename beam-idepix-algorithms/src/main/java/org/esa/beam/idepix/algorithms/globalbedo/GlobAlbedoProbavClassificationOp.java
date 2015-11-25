@@ -2,6 +2,10 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.dataop.dem.ElevationModel;
+import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
+import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
+import org.esa.beam.framework.dataop.resamp.Resampling;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -48,15 +52,35 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
     // VGT bands:
     private Band[] probavReflectanceBands;
 
-    private static final int SM_F_LAND = 5;
-    private static final int SM_F_SWIR_GOOD = 6;
-    private static final int SM_F_NIR_GOOD = 7;
-    private static final int SM_F_RED_GOOD = 8;
-    private static final int SM_F_BLUE_GOOD = 9;
+    protected static final int SM_F_CLEAR = 0;
+//    protected static final int SM_F_UNDEFINED = 1;
+//    protected static final int SM_F_CLOUD = 2;
+//    protected static final int SM_F_SNOWICE = 3;
+//    protected static final int SM_F_CLOUDSHADOW = 4;
+    protected static final int SM_F_LAND = 5;
+    protected static final int SM_F_SWIR_GOOD = 6;
+    protected static final int SM_F_NIR_GOOD = 7;
+    protected static final int SM_F_RED_GOOD = 8;
+    protected static final int SM_F_BLUE_GOOD = 9;
+
+    ElevationModel getasseElevationModel;
+
+    @Override
+    public void initialize() throws OperatorException {
+        super.initialize();
+
+        final String demName = "GETASSE30";
+        final ElevationModelDescriptor demDescriptor = ElevationModelRegistry.getInstance().getDescriptor(
+                demName);
+        if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
+            throw new OperatorException("DEM not installed: " + demName + ". Please install with Module Manager.");
+        }
+        getasseElevationModel = demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
+    }
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {
-        // VGT variables
+        // PROBA-V variables
         final Band smFlagBand = sourceProduct.getBand("SM_FLAGS");
         final Tile smFlagTile = getSourceTile(smFlagBand, rectangle);
 
@@ -189,14 +213,16 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
             probavReflectance[i] = probavReflectanceTiles[i].getSampleFloat(x, y);
         }
 
-        checkProbavReflectanceQuality(probavReflectance, smFlagTile, x, y);
-        float[] probavReflectanceSaturationCorrected = IdepixUtils.correctSaturatedReflectances(probavReflectance);
-        gaAlgorithm.setRefl(probavReflectanceSaturationCorrected);
+        final double altitude = computeGetasseAltitude(x, y);
+        gaAlgorithm.setElevation(altitude);
+
+        checkProbavReflectanceQuality(gaAlgorithm,probavReflectance, smFlagTile, x, y);
+        gaAlgorithm.setRefl(probavReflectance);
 
         SchillerNeuralNetWrapper nnWrapper = vgtNeuralNet.get();
         double[] inputVector = nnWrapper.getInputVector();
         for (int i = 0; i < inputVector.length; i++) {
-            inputVector[i] = Math.sqrt(probavReflectanceSaturationCorrected[i]);
+            inputVector[i] = Math.sqrt(probavReflectance[i]);
         }
         gaAlgorithm.setNnOutput(nnWrapper.getNeuralNet().calc(inputVector));
 
@@ -211,21 +237,40 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
             setIsWaterByFraction(watermaskFraction, gaAlgorithm);
         }
 
-
         return gaAlgorithm;
     }
 
-    private void checkProbavReflectanceQuality(float[] probavReflectance, Tile smFlagTile, int x, int y) {
+    private void checkProbavReflectanceQuality(GlobAlbedoProbavAlgorithm gaAlgorithm, float[] probavReflectance, Tile smFlagTile, int x, int y) {
         final boolean isBlueGood = smFlagTile.getSampleBit(x, y, SM_F_BLUE_GOOD);
         final boolean isRedGood = smFlagTile.getSampleBit(x, y, SM_F_RED_GOOD);
         final boolean isNirGood = smFlagTile.getSampleBit(x, y, SM_F_NIR_GOOD);
         final boolean isSwirGood = smFlagTile.getSampleBit(x, y, SM_F_SWIR_GOOD);
+        gaAlgorithm.setIsBlueGood(isBlueGood);
+        gaAlgorithm.setIsRedGood(isRedGood);
+        gaAlgorithm.setIsNirGood(isNirGood);
+        gaAlgorithm.setIsSwirGood(isSwirGood);
+
         if (!isBlueGood || !isRedGood || !isNirGood || !isSwirGood) {
             for (int i = 0; i < probavReflectance.length; i++) {
                 probavReflectance[i] = Float.NaN;
             }
         }
     }
+
+    private double computeGetasseAltitude(float x, float y)  {
+        final PixelPos pixelPos = new PixelPos(x + 0.5f, y + 0.5f);
+        GeoPos geoPos = sourceProduct.getGeoCoding().getGeoPos(pixelPos, null);
+        double altitude;
+        try {
+            altitude = getasseElevationModel.getElevation(geoPos);
+        } catch (Exception e) {
+            // todo
+            e.printStackTrace();
+            altitude = 0.0;
+        }
+        return altitude;
+    }
+
 
     /**
      * The Service Provider Interface (SPI) for the operator.
