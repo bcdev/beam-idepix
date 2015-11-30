@@ -53,10 +53,10 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
     private Band[] probavReflectanceBands;
 
     protected static final int SM_F_CLEAR = 0;
-//    protected static final int SM_F_UNDEFINED = 1;
-//    protected static final int SM_F_CLOUD = 2;
-//    protected static final int SM_F_SNOWICE = 3;
-//    protected static final int SM_F_CLOUDSHADOW = 4;
+    protected static final int SM_F_UNDEFINED = 1;
+    protected static final int SM_F_CLOUD = 2;
+    protected static final int SM_F_SNOWICE = 3;
+    protected static final int SM_F_CLOUDSHADOW = 4;
     protected static final int SM_F_LAND = 5;
     protected static final int SM_F_SWIR_GOOD = 6;
     protected static final int SM_F_NIR_GOOD = 7;
@@ -228,12 +228,12 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
 
         if (gaUseL1bLandWaterFlag) {
             final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND);
-            gaAlgorithm.setSmLand(isLand);
+            gaAlgorithm.setL1bLand(isLand);
             setIsWater(watermask, gaAlgorithm);
         } else {
             final boolean isLand = smFlagTile.getSampleBit(x, y, SM_F_LAND) &&
                     watermaskFraction < WATERMASK_FRACTION_THRESH;
-            gaAlgorithm.setSmLand(isLand);
+            gaAlgorithm.setL1bLand(isLand);
             setIsWaterByFraction(watermaskFraction, gaAlgorithm);
         }
 
@@ -245,12 +245,14 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
         final boolean isRedGood = smFlagTile.getSampleBit(x, y, SM_F_RED_GOOD);
         final boolean isNirGood = smFlagTile.getSampleBit(x, y, SM_F_NIR_GOOD);
         final boolean isSwirGood = smFlagTile.getSampleBit(x, y, SM_F_SWIR_GOOD);
+        final boolean isProcessingLand = smFlagTile.getSampleBit(x, y, SM_F_LAND);
         gaAlgorithm.setIsBlueGood(isBlueGood);
         gaAlgorithm.setIsRedGood(isRedGood);
         gaAlgorithm.setIsNirGood(isNirGood);
         gaAlgorithm.setIsSwirGood(isSwirGood);
+        gaAlgorithm.setProcessingLand(isProcessingLand);
 
-        if (!isBlueGood || !isRedGood || !isNirGood || !isSwirGood) {
+        if (!isBlueGood || !isRedGood || !isNirGood || !isSwirGood || !isProcessingLand) {
             for (int i = 0; i < probavReflectance.length; i++) {
                 probavReflectance[i] = Float.NaN;
             }

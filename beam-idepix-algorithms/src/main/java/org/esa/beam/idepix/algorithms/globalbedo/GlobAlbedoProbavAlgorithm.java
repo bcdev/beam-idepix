@@ -3,6 +3,7 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.util.math.MathUtils;
 
 /**
  * IDEPIX pixel identification algorithm for GlobAlbedo/PROBA-V
@@ -23,7 +24,8 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     private static final float REFL835_WATER_THRESH = 0.1f;
     private static final float REFL835_LAND_THRESH = 0.15f;
 
-    private boolean smLand;
+    private boolean l1bLand;
+    private boolean processingLand;  // land + buffer
 
     private boolean isBlueGood;
     private boolean isRedGood;
@@ -37,7 +39,7 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public boolean isInvalid() {
         // GK 20151126;
-        return !(isBlueGood && isRedGood && isNirGood && isSwirGood && smLand);
+        return !(isBlueGood && isRedGood && isNirGood && isSwirGood && processingLand);
     }
 
     @Override
@@ -138,7 +140,7 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     public float aPrioriLandValue() {
         if (isInvalid()) {
             return UNCERTAINTY_VALUE;
-        } else if (smLand) {
+        } else if (l1bLand) {
             return 1.0f;
         } else {
             return 0.0f;
@@ -149,7 +151,7 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     public float aPrioriWaterValue() {
         if (isInvalid()) {
             return UNCERTAINTY_VALUE;
-        } else if (!smLand) {
+        } else if (!l1bLand) {
             return 1.0f;
         } else {
             return 0.0f;
@@ -212,8 +214,12 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
 
     // setters for PROBA-V specific quantities
 
-    public void setSmLand(boolean smLand) {
-        this.smLand = smLand;
+    public void setL1bLand(boolean l1bLand) {
+        this.l1bLand = l1bLand;
+    }
+
+    public void setProcessingLand(boolean processingLand) {
+        this.processingLand = processingLand;
     }
 
     public void setIsBlueGood(boolean isBlueGood) {

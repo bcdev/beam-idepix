@@ -109,12 +109,11 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
-                    boolean isCloud = cloudFlagTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
                     combineFlags(x, y, cloudFlagTile, targetTile);
-
                     consolidateFlagging(x, y, smFlagTile, targetTile);
-                    isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
-                    if (isCloud) {
+                    boolean isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
+//                    if (isCloud) {
+                    if (isCloud || smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD)) {
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
                         if ((computeCloudBuffer)) {
                             CloudBuffer.computeSimpleCloudBuffer(x, y,
@@ -152,6 +151,8 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final boolean safeSnowIce = potentialCloudSnow && idepixClearSnow;
 
         final boolean safeCloud = idepixCloud && ((potentialCloudSnow && !safeSnowIce) || !safeClearWater);
+//        final boolean safeCloud = idepixCloud || ((potentialCloudSnow && !safeSnowIce) || !safeClearWater);
+//        final boolean safeCloud = idepixCloud || (potentialCloudSnow && !safeSnowIce);
 
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD, safeCloud);
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, safeClearLand);

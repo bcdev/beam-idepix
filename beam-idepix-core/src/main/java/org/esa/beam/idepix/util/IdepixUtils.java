@@ -386,7 +386,7 @@ public class IdepixUtils {
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud",
                                          F_CLOUD_DESCR_TEXT, w, h,
-                                         "cloud_classif_flags.F_CLOUD_SURE or cloud_classif_flags.F_CLOUD_AMBIGUOUS",
+                                         "cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_SURE or cloud_classif_flags.F_CLOUD_AMBIGUOUS",
                                          new Color(178, 178, 0), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("lc_cloud_ambiguous",
