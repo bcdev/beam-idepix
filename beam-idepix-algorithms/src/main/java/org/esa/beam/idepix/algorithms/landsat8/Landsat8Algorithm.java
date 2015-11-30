@@ -63,8 +63,8 @@ public class Landsat8Algorithm implements Landsat8PixelProperties {
     @Override
     public boolean isCloudAmbiguous() {
         // todo: discuss logic, then apply separation values from new NNs, 20151119:
-        // for the moment, just return the 'cloud sure' from the new NN, no other tests
-        return !isInvalid() && getNnClassification()[0] == Landsat8Algorithm.NN_CATEGORY_CLOUD;
+        // for the moment, just return the 'non clear sky' from the new NN, no other tests
+        return !isInvalid() && getNnClassification()[0] == Landsat8Algorithm.NN_CATEGORY_NON_CLEAR_SKY;
     }
 
     @Override

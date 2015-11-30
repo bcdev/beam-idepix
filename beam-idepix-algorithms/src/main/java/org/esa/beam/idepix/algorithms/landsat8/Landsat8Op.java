@@ -173,7 +173,7 @@ public class Landsat8Op extends Operator {
 //            label = "Alternative for third classification boundary ")
 //    private double alternativeThirdClassBoundary;
 
-    @Parameter(defaultValue = "ALL", valueSet = {"ALL", "LAND",
+    @Parameter(defaultValue = "ALL", valueSet = {"ALL", "LAND", "LAND_USE_THERMAL",
             "WATER", "WATER_NOTIDAL", "WATER_USE_THERMAL", "WATER_NOTIDAL_USE_THERMAL"},
             label = "Neural Net to be applied",
             description = "The Neural Net which will be applied.")
