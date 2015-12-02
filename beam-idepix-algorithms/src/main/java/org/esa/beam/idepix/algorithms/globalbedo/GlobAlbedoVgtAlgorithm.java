@@ -88,6 +88,7 @@ public class GlobAlbedoVgtAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public float ndsiValue() {
+        // NDSI (RED-SWIR)/(RED+ SWIR)
         double value = (refl[2] - refl[3]) / (refl[2] + refl[3]);
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);

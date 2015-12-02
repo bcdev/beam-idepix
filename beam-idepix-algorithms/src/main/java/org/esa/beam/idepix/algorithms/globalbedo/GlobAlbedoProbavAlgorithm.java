@@ -110,8 +110,8 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
 
     @Override
     public float ndsiValue() {
-        // (SWIR - RED)/(SWIR + RED), GK 20151126
-        double value = (refl[3] - refl[2]) / (refl[3] + refl[2]);
+        // (RED - SWIR)/(SWIR + RED), GK 20151201
+        double value = (refl[1] - refl[3]) / (refl[1] + refl[3]);
         value = Math.min(value, 1.0);
         value = Math.max(value, 0.0);
         return (float) value;

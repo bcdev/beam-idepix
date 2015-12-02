@@ -112,8 +112,9 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                     combineFlags(x, y, cloudFlagTile, targetTile);
                     consolidateFlagging(x, y, smFlagTile, targetTile);
                     boolean isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
-//                    if (isCloud) {
-                    if (isCloud || smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD)) {
+                    if (isCloud) {
+                    // GK 20151201;
+//                    if (isCloud || smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD)) {
                         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
                         if ((computeCloudBuffer)) {
                             CloudBuffer.computeSimpleCloudBuffer(x, y,
@@ -149,14 +150,21 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final boolean safeClearWater = smClear && idepixWater && idepixClearWater && !idepixClearSnow;
         final boolean potentialCloudSnow = !safeClearLand && idepixLand;
         final boolean safeSnowIce = potentialCloudSnow && idepixClearSnow;
+        // GK 20151201;
+        final boolean smCloud = smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD);
+        final boolean safeCloud = idepixCloud || (potentialCloudSnow && (!safeSnowIce && !safeClearWater));
+        final boolean safeClearWaterFinal = ((!safeClearLand && !safeSnowIce  && !safeCloud && !smCloud) && idepixWater) || safeClearWater;
+        final boolean safeClearLandFinal = ((!safeSnowIce  && !idepixCloud && !smCloud && !safeClearWaterFinal) && idepixLand) || safeClearLand;
+        final boolean safeCloudFinal = safeCloud && (!safeClearLandFinal && !safeClearWaterFinal);
 
-        final boolean safeCloud = idepixCloud && ((potentialCloudSnow && !safeSnowIce) || !safeClearWater);
-//        final boolean safeCloud = idepixCloud || ((potentialCloudSnow && !safeSnowIce) || !safeClearWater);
-//        final boolean safeCloud = idepixCloud || (potentialCloudSnow && !safeSnowIce);
 
-        targetTile.setSample(x, y, IdepixConstants.F_CLOUD, safeCloud);
-        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, safeClearLand);
-        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, safeClearWater);
+//        targetTile.setSample(x, y, IdepixConstants.F_CLOUD, safeCloud);
+//        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, safeClearLand);
+//        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, safeClearWater);
+        // GK 20151201;
+        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, safeClearLandFinal);
+        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, safeClearWaterFinal);
+        targetTile.setSample(x, y, IdepixConstants.F_CLOUD, safeCloudFinal);
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, safeSnowIce);
     }
 
