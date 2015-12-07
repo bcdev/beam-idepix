@@ -10,19 +10,18 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.idepix.util.*;
+import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
+import org.esa.beam.idepix.util.SunPosition;
+import org.esa.beam.idepix.util.SunPositionCalculator;
 import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.util.math.RsMathUtils;
 
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.TransposeDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 /**
  * Basic operator for GlobAlbedo pixel classification
@@ -208,18 +207,22 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
             default:
                 throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
         }
-        // GK: R=A (F/(100 PI W  cos(sun_zenith)  abstandkorrektur))
+
+        // GK: R=A (F/(100 PI W)  technical Albedo A  and  A_corr = R (100 PI W / (F * cos(sun_zenith) * abstandkorrektur))
         final double conversionFactor = integrSolarSpectralIrrad[bandIndex] /
-                (100.0 * Math.PI * spectralResponseWidth[bandIndex] * Math.cos(sza * MathUtils.DTOR) * getDistanceCorr());
+                (100.0 * Math.PI * spectralResponseWidth[bandIndex]);
         double result;
+        //input technical albedo output radiance
         if (mode == ALBEDO_TO_RADIANCE) {
             result = input * conversionFactor;
+            // input radiance output corrected albedo => albedo_corr= technical_albedo/(cos(sun_zenith) * abstandkorrektur)
         } else if (mode == RADIANCE_TO_ALBEDO) {
-            result = input / conversionFactor;
+            result = input / (conversionFactor * Math.cos(sza * MathUtils.DTOR) * getDistanceCorr());
         } else {
             throw new IllegalArgumentException("wrong mode " + mode + " for albedo/radance converison");
         }
         return result;
+
     }
 
 
