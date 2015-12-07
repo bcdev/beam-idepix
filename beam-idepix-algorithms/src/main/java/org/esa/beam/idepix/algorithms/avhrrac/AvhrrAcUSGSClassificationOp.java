@@ -231,11 +231,11 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
         final double albedo1 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_1].getDouble();             // %
         final double albedo2 = sourceSamples[AvhrrAcConstants.SRC_USGS_ALBEDO_2].getDouble();             // %
 
-        // GK, 20150325: convert albedo1,2 to 'normalized' albedo:
-        // norm_albedo_i = albedo_i * d^2_sun/cos(theta_sun)    , effect is a few % only
-        final double d = getDistanceCorr()/Math.cos(sza * MathUtils.DTOR);
-        final double albedo1Norm = albedo1 * d;
-        final double albedo2Norm = albedo2 * d;
+        // GK, 20150325: convert albedo1, 2 to 'normalized' albedo:
+        // norm_albedo_i = albedo_i / (d^2_sun * cos(theta_sun))    , effect is a few % only
+        final double d = getDistanceCorr() * Math.cos(sza * MathUtils.DTOR);
+        final double albedo1Norm = albedo1 / d;
+        final double albedo2Norm = albedo2 / d;
 
         int targetSamplesIndex;
         if (albedo1 >= 0.0 && albedo2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, azimuthAngles[0], azimuthAngles[1])) {
