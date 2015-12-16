@@ -144,10 +144,10 @@ public class AvhrrAcTimelineClassificationOp extends AbstractAvhrrAcClassificati
         double[] avhrrRadiance = new double[AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length];
         final double refl1 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_1].getDouble();            // %
         final double refl2 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_2].getDouble();            // %
-        final double refl3 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_3].getDouble();            // K
-        final double rad3 = sourceSamples[AvhrrAcConstants.SRC_TL_RAD_3].getDouble();              // mW*cm/(m^2*sr)
-        final double refl4 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_4].getDouble();            // K
-        final double refl5 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_5].getDouble();            // K
+        final double refl3 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_3].getDouble();            // K Brightness Temperature
+        final double rad3 = sourceSamples[AvhrrAcConstants.SRC_TL_RAD_3].getDouble();              // mW*cm/(m^2*sr) Top of atmosphere radiance
+        final double refl4 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_4].getDouble();            // K Brightness Temperature
+        final double refl5 = sourceSamples[AvhrrAcConstants.SRC_TL_REFL_5].getDouble();            // K Brightness Temperature
 
         if (refl1 >= 0.0 && refl2 >= 0.0 && !AvhrrAcUtils.anglesInvalid(sza, vza, saa, vaa)) {
 
