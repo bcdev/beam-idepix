@@ -27,6 +27,7 @@ import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
@@ -36,19 +37,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 
+//import org.esa.beam.meris.l2auxdata.Constants;
+
 /**
  * MERIS pixel classification operator for OCCCI.
  * Only water pixels are classified, following CC algorithm there, and same as current CAWA water processor.
  *
  * @author olafd
  */
-@OperatorMetadata(alias = "idepix.occci.classification.meris",
+@OperatorMetadata(alias = "idepix.occci.classification.meris.seaice",
         version = "2.2.1",
         internal = true,
         authors = "Olaf Danne",
         copyright = "(c) 2015 by Brockmann Consult",
-        description = "MERIS water pixel classification operator for OCCCI.")
-public class OccciMerisClassificationOp extends MerisBasisOp {
+        description = "MERIS water pixel classification operator for OCCCI. SeaIce CCN mode.")
+public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
     public static final double CC_RHO_TOA_442_THRESHOLD = 0.03;
     public static final double CC_DELTA_RHO_TOA_442_THRESHOLD = 0.03;
@@ -81,6 +84,8 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
     private Band lisePScattBand;
     private Band landWaterBand;
     private Band nnOutputBand;
+    private Band meris1600Band;
+    private Band merisAatsrCloudProbBand;
 
 
     @SourceProduct(alias = "l1b")
@@ -117,54 +122,28 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
             label = "Cloud screening threshold addition in case of glint")
     private double glintCloudThresholdAddition;
 
-    @Parameter(label = " Cloud Probability Feature Value", defaultValue = "false")
-    private boolean outputCloudProbabilityFeatureValue;    // Schiller
 
-    //    @Parameter(defaultValue = "true",
-//            label = " Apply Schiller NN for cloud classification",
-//            description = " Apply Schiller NN for cloud classification ")
-    private boolean applyMERISSchillerNN = true;   // seems actually the best we have
-
-    @Parameter(defaultValue = "20.0",
-            label = " Schiller 'MERIS1600' threshold (MERIS) ",
+    @Parameter(defaultValue = "5.0",
+            label = " Schiller 'MERIS1600' threshold (MERIS Sea Ice) ",
             description = " Schiller 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
 
     @Parameter(defaultValue = "0.5",
-            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS) ",
+            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
             description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
 
-    @Parameter(defaultValue = "false",
-            label = " Write Schiller NN value to the target product.",
-            description = " If applied, write Schiller NN value to the target product ")
-    private boolean outputSchillerNNValue;
-
-    @Parameter(defaultValue = "2.0",
-            label = " Schiller NN cloud ambiguous lower boundary ",
-            description = " Schiller NN cloud ambiguous lower boundary ")
-    double schillerNNCloudAmbiguousLowerBoundaryValue;
-
-    @Parameter(defaultValue = "3.7",
-            label = " Schiller NN cloud ambiguous/sure separation value ",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
-    double schillerNNCloudAmbiguousSureSeparationValue;
-
-    @Parameter(defaultValue = "4.05",
-            label = " Schiller NN cloud sure/snow separation value ",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
-    double schillerNNCloudSureSnowSeparationValue;
-
-    //    @Parameter(defaultValue = "true",
-//            label = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
-//            description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
-    boolean applyMERISSchillerNNPure = true;     // previous approach flags many coastlines and thin cloud edges as 'cloud sure'
 
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
+    public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "9_3282.3.net";  // latest 'outer' net, HS 20151206
+    //    public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "6_912.1.net";  // VZA > 14deg
+    public static final String SCHILLER_MERIS_AATSR_INNER_NET_NAME = "6_1271.6.net"; // VZA < 7deg
 
     ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisAatsrOuterNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisAatsrInnerNeuralNet;
 
 
     @Override
@@ -192,9 +171,13 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
 
     private void readSchillerNets() {
         try (InputStream isWater = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
-             InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME)) {
+             InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME);
+             InputStream isMerisAatsrOuter = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_OUTER_NET_NAME);
+             InputStream isMerisAatsrInner = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_INNER_NET_NAME)) {
             merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
             merisAllNeuralNet = SchillerNeuralNetWrapper.create(isAll);
+            merisAatsrOuterNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrOuter);
+            merisAatsrInnerNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrInner);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
         }
@@ -219,10 +202,9 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         OccciUtils.setupOccciClassifBitmask(targetProduct);
 
-        if (outputSchillerNNValue && applyMERISSchillerNN) {
-            nnOutputBand = targetProduct.addBand(OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME,
-                                                 ProductData.TYPE_FLOAT32);
-        }
+        ProductUtils.copyFlagBands(l1bProduct, targetProduct, true);
+        meris1600Band = targetProduct.addBand("meris_1600", ProductData.TYPE_FLOAT32);
+        merisAatsrCloudProbBand = targetProduct.addBand("meris_aatsr_cloud_prob", ProductData.TYPE_FLOAT32);
     }
 
     private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
@@ -327,9 +309,12 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
                             if (band == cloudFlagBand) {
                                 classifyCloud(sd, pixelInfo, targetTile, waterFraction);
                             }
-                            if (outputSchillerNNValue && applyMERISSchillerNN && band == nnOutputBand) {
-                                final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
+                            final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
+                            if (band == meris1600Band) {
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
+                            }
+                            if (band == merisAatsrCloudProbBand) {
+                                targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[1]);
                             }
                         }
                     }
@@ -431,76 +416,60 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
         }
 
         boolean isCloudSure = false;
-        boolean isCloudAmbiguous;
 
-        if (applyMERISSchillerNN) {
-            double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
-            if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
-                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
-                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, false);
-                isCloudAmbiguous = nnOutput[0] > schillerNNCloudAmbiguousLowerBoundaryValue &&
-                        nnOutput[0] <= schillerNNCloudAmbiguousSureSeparationValue;
-                if (isCloudAmbiguous) {
-                    // this would be as 'CLOUD_AMBIGUOUS'...
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, true);
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, true);
-                }
-                // check for snow_ice separation below if needed, first set all to cloud
-                isCloudSure = nnOutput[0] > schillerNNCloudAmbiguousSureSeparationValue;
-                if (isCloudSure) {
-                    // this would be as 'CLOUD_SURE'...
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, true);
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, true);
-                }
+        double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
+        if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, false);
+            final double reflMeris1600 = nnOutput[0];
+            final double merisAatsrCloudProb = nnOutput[1];
 
-                is_snow_ice = false;
-                if (checkForSeaIce) {
-                    is_snow_ice = nnOutput[0] > schillerNNCloudSureSnowSeparationValue; // old
-                }
-                if (is_snow_ice) {
-                    // this would be as 'SNOW/ICE'...
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, false);
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
-                }
-
-                if (!applyMERISSchillerNNPure && !isCloudSure && !isCloudAmbiguous) {
-                    final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
-                    isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
-                    // special case: set very bright clouds misclassified as snow_ice from NN but
-                    // outside seaice climatology range to cloud
-                    if (!checkForSeaIce && nnOutput[0] > schillerNNCloudSureSnowSeparationValue) {
-                        isCloudSure = true;
-                    }
-                    isCloudAmbiguous = !isCloudSure && cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
-
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, isCloudSure);
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
-                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
-                }
+            is_snow_ice = false;
+            if (checkForSeaIce) {
+                // new approach using 'meris1600' obtained from MERIS/AATSR-trained NN:
+//                    is_snow_ice = reflMeris1600 < schillerMeris1600Threshold &&
+//                            merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
+                is_snow_ice = merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
             }
-        } else {
-            final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
-            isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
-            isCloudAmbiguous = cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
+            if (is_snow_ice) {
+                // this would be as 'SNOW/ICE'...
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, false);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
+            }
 
-            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, isCloudSure);
-            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
-            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
-            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, is_snow_ice && !isCloudSure);
+            isCloudSure = !is_snow_ice && reflMeris1600 > schillerMeris1600Threshold &&
+                    nnOutput[1] > schillerMerisAatsrCloudIceSeparationValue;
+            if (isCloudSure) {
+                // this would be 'CLOUD_SURE'...
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, true);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, true);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, true);
+            }
+
         }
+
+        // todo: do we want to combine somehow with 'old' IPF approach??
+//        final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
+//        isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
+//        final boolean isCloudAmbiguous = cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
+//
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, isCloudSure);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, is_snow_ice && !isCloudSure);
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_GLINT_RISK, is_glint_risk && !isCloudSure);
     }
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
-        return getMerisNNOutputImpl(sd, pixelInfo, merisAllNeuralNet.get());
+        return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
     }
 
     private double[] getMerisNNOutputImpl(SourceData sd, PixelInfo pixelInfo, SchillerNeuralNetWrapper nnWrapper) {
         double[] nnInput = nnWrapper.getInputVector();
         for (int i = 0; i < nnInput.length; i++) {
-            nnInput[i] = Math.sqrt(sd.rhoToa[i][pixelInfo.index]);
+            nnInput[i] = sd.rhoToa[i][pixelInfo.index];   //  latest 'outer' NN 9_3282.3.net";
         }
         return nnWrapper.getNeuralNet().calc(nnInput);
     }
@@ -741,7 +710,7 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
 
     public static class Spi extends OperatorSpi {
         public Spi() {
-            super(OccciMerisClassificationOp.class);
+            super(OccciMerisSeaiceClassificationOp.class);
         }
     }
 

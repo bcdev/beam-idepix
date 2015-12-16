@@ -37,18 +37,18 @@ public class OccciOp extends BasisOp {
     private Product ctpProduct;
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "true",
-            label = " Use Schiller 'MERIS/AATSR' NN (MERIS) ",
-            description = " Use Schiller 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
-    private boolean useSchillerMerisAatsrNN = true;   // seems actually the best we have
+    @Parameter(defaultValue = "false",
+            label = " Process MERIS for Sea Ice CCN ",
+            description = " For Sea Ice CCN, use Schiller 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
+    private boolean processMerisSeaIce = false;
 
-    @Parameter(defaultValue = "20.0",
-            label = " Schiller 'MERIS1600' threshold (MERIS) ",
+    @Parameter(defaultValue = "5.0",
+            label = " Schiller 'MERIS1600' threshold (MERIS Sea Ice) ",
             description = " Schiller 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
 
     @Parameter(defaultValue = "0.5",
-            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS) ",
+            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
             description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
 
@@ -57,11 +57,10 @@ public class OccciOp extends BasisOp {
             description = "Write TOA radiance bands to target product (MERIS).")
     private boolean ocOutputMerisRadiance = true;
 
-//    @Parameter(defaultValue = "false",
-//            label = " Write Schiller NN value to the target product (MERIS).",
-//            description = " If applied, write Schiller NN value to the target product (MERIS)")
-//    private boolean outputSchillerMerisNNValue;
-    private boolean outputSchillerMerisNNValue = false;
+    @Parameter(defaultValue = "false",
+            label = " Write Schiller NN value to the target product (MERIS).",
+            description = " If applied, write Schiller NN value to the target product (MERIS)")
+    private boolean outputSchillerMerisNNValue;
 
 //    @Parameter(defaultValue = "2.0",
 //            label = " Schiller NN cloud ambiguous lower boundary (MERIS)",
@@ -242,31 +241,40 @@ public class OccciOp extends BasisOp {
     }
 
     private Product computeMerisClassificationProduct() {
-        setWaterClassificationParameters();
         Map<String, Product> classificationInputProducts = new HashMap<>();
         classificationInputProducts.put("l1b", sourceProduct);
         classificationInputProducts.put("rhotoa", rad2reflProduct);
         classificationInputProducts.put("pressure", ctpProduct);
         classificationInputProducts.put("pressureLise", pressureLiseProduct);
         classificationInputProducts.put("waterMask", waterMaskProduct);
-
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(OccciMerisClassificationOp.class),
-                                 waterClassificationParameters, classificationInputProducts);
+        if (processMerisSeaIce) {
+            setMerisSeaIceClassificationParameters();
+            return GPF.createProduct(OperatorSpi.getOperatorAlias(OccciMerisSeaiceClassificationOp.class),
+                                     waterClassificationParameters, classificationInputProducts);
+        } else {
+            setMerisStandardClassificationParameters();
+            return GPF.createProduct(OperatorSpi.getOperatorAlias(OccciMerisClassificationOp.class),
+                                     waterClassificationParameters, classificationInputProducts);
+        }
     }
 
-    private void setWaterClassificationParameters() {
+    private void setMerisStandardClassificationParameters() {
         waterClassificationParameters = new HashMap<>();
         waterClassificationParameters.put("copyAllTiePoints", true);
         waterClassificationParameters.put("outputSchillerNNValue", outputSchillerMerisNNValue);
-        waterClassificationParameters.put("useSchillerMerisAatsrNN", useSchillerMerisAatsrNN);
-        waterClassificationParameters.put("schillerMeris1600Threshold", schillerMeris1600Threshold);
-        waterClassificationParameters.put("schillerMerisAatsrCloudIceSeparationValue", schillerMerisAatsrCloudIceSeparationValue);
         waterClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
                                           schillerMerisNNCloudAmbiguousLowerBoundaryValue);
         waterClassificationParameters.put("ccSchillerNNCloudAmbiguousSureSeparationValue",
                                           schillerMerisNNCloudAmbiguousSureSeparationValue);
         waterClassificationParameters.put("ccSchillerNNCloudSureSnowSeparationValue",
                                           schillerMerisNNCloudSureSnowSeparationValue);
+    }
+
+    private void setMerisSeaIceClassificationParameters() {
+        waterClassificationParameters = new HashMap<>();
+        waterClassificationParameters.put("copyAllTiePoints", true);
+        waterClassificationParameters.put("schillerMeris1600Threshold", schillerMeris1600Threshold);
+        waterClassificationParameters.put("schillerMerisAatsrCloudIceSeparationValue", schillerMerisAatsrCloudIceSeparationValue);
     }
 
 

@@ -28,6 +28,7 @@ org.esa.beam.idepix.algorithms.scapem.FubScapeMLakesOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciClassificationOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciMerisClassificationOp$Spi
+org.esa.beam.idepix.algorithms.occci.OccciMerisSeaiceClassificationOp$Spi
 org.esa.beam.idepix.algorithms.occci.OccciPostProcessingOp$Spi
 
 org.esa.beam.idepix.algorithms.avhrrac.AvhrrAcOp$Spi
