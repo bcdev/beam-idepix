@@ -129,9 +129,9 @@ public class AvhrrAcConstants {
     public static final int F_COASTLINE = 9;
     public static final int F_LAND = 10;
 
-    public static double NU_CH3 = 2694.0;
-    public static double NU_CH4 = 925.0;
-    public static double NU_CH5 = 839.0;
+    public static final double NU_CH3 = 2694.0;
+    public static final double NU_CH4 = 925.0;
+    public static final double NU_CH5 = 839.0;
 
 
 
