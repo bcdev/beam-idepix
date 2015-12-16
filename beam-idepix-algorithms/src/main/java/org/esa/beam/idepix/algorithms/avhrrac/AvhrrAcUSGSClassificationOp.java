@@ -243,7 +243,6 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             avhrrRadiance[0] = convertBetweenAlbedoAndRadiance(albedo1, sza, ALBEDO_TO_RADIANCE, 0);
             avhrrRadiance[1] = convertBetweenAlbedoAndRadiance(albedo2, sza, ALBEDO_TO_RADIANCE, 1);
             avhrrRadiance[2] = sourceSamples[AvhrrAcConstants.SRC_USGS_RADIANCE_3].getDouble();           // mW*cm/(m^2*sr)
-            final double albedo3 = convertBetweenAlbedoAndRadiance(avhrrRadiance[2], sza, RADIANCE_TO_ALBEDO, 2);
             avhrrRadiance[3] = sourceSamples[AvhrrAcConstants.SRC_USGS_RADIANCE_4].getDouble();           // mW*cm/(m^2*sr)
             avhrrRadiance[4] = sourceSamples[AvhrrAcConstants.SRC_USGS_RADIANCE_5].getDouble();           // mW*cm/(m^2*sr)
             aacAlgorithm.setRadiance(avhrrRadiance);
@@ -275,7 +274,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
             aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> put here albedo_norm now!!
             aacAlgorithm.setReflCh2(albedo2Norm / 100.0); // on [0,1]
-            aacAlgorithm.setReflCh3(albedo3); // on [0,1]
+
 //            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
             final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3);     // GK,MB 20151102: use K everywhere!!
 //            aacAlgorithm.setBtCh3(btCh3 + 273.15);
@@ -285,6 +284,9 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5);
             aacAlgorithm.setBtCh5(btCh5);
             aacAlgorithm.setElevation(altitude);
+
+            final double albedo3 = calculateReflectancePartChannel3b(avhrrRadiance[2], btCh4, btCh5, sza);
+            aacAlgorithm.setReflCh3(albedo3); // on [0,1]
 
             setClassifFlag(targetSamples, aacAlgorithm);
             targetSamplesIndex = 1;

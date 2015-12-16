@@ -10,18 +10,19 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
-import org.esa.beam.idepix.util.SunPosition;
-import org.esa.beam.idepix.util.SunPositionCalculator;
+import org.esa.beam.idepix.util.*;
 import org.esa.beam.util.math.MathUtils;
+import org.esa.beam.util.math.RsMathUtils;
 
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.TransposeDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 /**
  * Basic operator for GlobAlbedo pixel classification
@@ -181,28 +182,90 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         return geoPos;
     }
 
+    double calculateReflectancePartChannel3b(double radianceCh3b,double btCh4, double btch5, double sza) {
+        // follows GK formula
+        int sensorId;
+        double frequenz;
+        double t_3b_B0;
+        double r_3b_em;
+        double b_0_3b;
+        double emissivity_3b;
+        double result;
+        // different central wave numbers for AVHRR Channel3b correspond to the temperature ranges & to NOAA11 and NOAA14
+        // NOAA 11: 180-225	2663.500, 225-275	2668.150, 275-320	2671.400, 270-310	2670.96
+        // NOAA 14: 190-230	2638.652, 230-270	2642.807, 270-310	2645.899, 290-330	2647.169
+
+
+
+        switch (noaaId) {
+            case "11":
+                // NOAA 11
+                sensorId = 0;
+                frequenz=0;
+                break;
+            case "14":
+                // NOAA 14
+                sensorId = 0;
+                frequenz=0;
+                break;
+            default:
+                throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
+        }
+
+        if ((btCh4 - btch5) > 1.) {
+            t_3b_B0 = AvhrrAcConstants.A0[sensorId]
+                    + AvhrrAcConstants.B0[sensorId] * btCh4
+                    + AvhrrAcConstants.C0[sensorId] * (btCh4 - btch5);
+        } else {
+            t_3b_B0 = btCh4;
+        }
+
+        if (btCh4  > 0.) {
+            r_3b_em = (AvhrrAcConstants.c1 * Math.pow(frequenz,3))
+                    /(Math.exp((AvhrrAcConstants.c2 * frequenz)/
+                    ((t_3b_B0-AvhrrAcConstants.a1_3b[sensorId])/(AvhrrAcConstants.a2_3b[sensorId])))-1.);
+        } else {
+            r_3b_em = 0;
+        }
+
+        if (btCh4  > 0.) {
+            emissivity_3b = radianceCh3b/r_3b_em;
+        } else {
+            emissivity_3b = 0;
+        }
+
+        if (sza  < 90. && r_3b_em > 0. && radianceCh3b > 0.) {
+            b_0_3b = 1000.0 * AvhrrAcConstants.SOLAR_3b/AvhrrAcConstants.EW_3b[sensorId];
+            result = Math.PI * (radianceCh3b - r_3b_em)/
+                    (b_0_3b * Math.cos(sza * MathUtils.DTOR) * getDistanceCorr() - Math.PI * r_3b_em );
+        } else  if (sza  > 90. && emissivity_3b > 0.) {
+            result = 1. - emissivity_3b;
+        } else {
+            result = Double.NaN;
+        }
+        return result;
+    }
+
+
+
     double convertBetweenAlbedoAndRadiance(double input, double sza, int mode, int bandIndex) {
         // follows GK formula
-        float[] integrSolarSpectralIrrad = new float[3];     // F
-        float[] spectralResponseWidth = new float[3];        // W
+        float[] integrSolarSpectralIrrad = new float[2];     // F
+        float[] spectralResponseWidth = new float[2];        // W
         switch (noaaId) {
             case "11":
                 // NOAA 11
                 integrSolarSpectralIrrad[0] = 184.1f;
                 integrSolarSpectralIrrad[1] = 241.1f;
-                integrSolarSpectralIrrad[2] = 241.1f;  // todo: we don't have this for band 3, might be useless
                 spectralResponseWidth[0] = 0.1130f;
                 spectralResponseWidth[1] = 0.229f;
-                spectralResponseWidth[2] = 0.229f;     // s.a.
                 break;
             case "14":
                 // NOAA 14
                 integrSolarSpectralIrrad[0] = 221.42f;
                 integrSolarSpectralIrrad[1] = 252.29f;
-                integrSolarSpectralIrrad[2] = 252.29f;  // s.a.
                 spectralResponseWidth[0] = 0.136f;
                 spectralResponseWidth[1] = 0.245f;
-                spectralResponseWidth[2] = 0.245f;      // s.a.
                 break;
             default:
                 throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
@@ -215,11 +278,11 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         //input technical albedo output radiance
         if (mode == ALBEDO_TO_RADIANCE) {
             result = input * conversionFactor;
-            // input radiance output corrected albedo => albedo_corr= technical_albedo/(cos(sun_zenith) * abstandkorrektur)
+        // input radiance output corrected albedo => albedo_corr= technical_albedo/(cos(sun_zenith) * abstandkorrektur)
         } else if (mode == RADIANCE_TO_ALBEDO) {
             result = input / (conversionFactor * Math.cos(sza * MathUtils.DTOR) * getDistanceCorr());
         } else {
-            throw new IllegalArgumentException("wrong mode " + mode + " for albedo/radance converison");
+            throw new IllegalArgumentException("wrong mode " + mode + " for albedo/radiance conversion");
         }
         return result;
 
