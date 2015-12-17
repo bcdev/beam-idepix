@@ -3,6 +3,7 @@ package org.esa.beam.idepix.algorithms.avhrrac;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.util.BitSetter;
 
 import java.awt.*;
@@ -159,7 +160,7 @@ public class AvhrrAcUtils {
         final double eps = 1.E-6;
 //        final boolean szaInvalid = sza < 90.0 + eps && sza > 90.0 - eps;
 //        final boolean szaInvalid = sza  > 85.0; // GK, 20150326
-        final boolean szaInvalid = sza  > 70.0; // GK, 20150922
+        final boolean szaInvalid = sza > 70.0; // GK, 20150922
 
         final boolean vzaInvalid = Double.isNaN(vza);
         final boolean saaInvalid = Double.isNaN(saa);
@@ -168,7 +169,7 @@ public class AvhrrAcUtils {
         return szaInvalid || saaInvalid || vzaInvalid || vaaInvalid;
     }
 
-    public static double convertRadianceToBt(double radiance, int channel) {
+    public static double convertRadianceToBtOld(double radiance, int channel) {
         final double c1 = 1.1910659E-5;
         final double c2 = 1.438833;
 
@@ -182,6 +183,57 @@ public class AvhrrAcUtils {
             default:
                 throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
         }
+    }
+
+    public static double convertRadianceToBt(String noaaId, AvhrrAcAuxdata.Rad2BTTable rad2BTTable, double radianceOrig, int ch, float waterFraction) {
+        final double c1 = 1.1910659E-5;
+        final double c2 = 1.438833;
+
+        double rad = rad2BTTable.getA(ch) * radianceOrig +
+                rad2BTTable.getB(ch) * radianceOrig * radianceOrig + rad2BTTable.getD(ch);
+        double nuStart = rad2BTTable.getNuMid(ch);
+        double tRef = c2 * nuStart / (Math.log(1.0 + c1 * nuStart * nuStart * nuStart / rad));
+
+        double nuFinal = nuStart;
+        switch (noaaId) {
+            case "11":
+                if (tRef < 225.0) {
+                    nuFinal = rad2BTTable.getNuLow(ch);
+                } else if (tRef >= 225.0 && tRef < 275.0) {
+                    if (waterFraction == 100.0f && tRef > 270.0) {
+                        // water
+                        nuFinal = rad2BTTable.getNuHighWater(ch);
+                    } else {
+                        nuFinal = rad2BTTable.getNuMid(ch);
+                    }
+                } else if (tRef >= 275.0 && tRef < 320.0) {
+                    if (waterFraction == 100.0f && tRef < 310.0) {
+                        // water
+                        nuFinal = rad2BTTable.getNuHighWater(ch);
+                    } else {
+                        nuFinal = rad2BTTable.getNuHighLand(ch);
+                    }
+                }
+                break;
+            case "14":
+                if (tRef < 230.0) {
+                    nuFinal = rad2BTTable.getNuLow(ch);
+                } else if (tRef >= 230.0 && tRef < 270.0) {
+                    nuFinal = rad2BTTable.getNuMid(ch);
+                } else if (tRef >= 270.0 && tRef < 330.0) {
+                    if (waterFraction == 100.0f && tRef < 310.0) {
+                        // water
+                        nuFinal = rad2BTTable.getNuHighWater(ch);
+                    } else {
+                        nuFinal = rad2BTTable.getNuHighLand(ch);
+                    }
+                }
+                break;
+            default:
+                throw new OperatorException("AVHRR version " + noaaId + " not supported.");
+        }
+
+        return c2 * nuFinal / (Math.log(1.0 + c1 * nuFinal * nuFinal * nuFinal / rad));
     }
 
     public static double convertBtToRadiance(double bt, int channel) {
@@ -207,4 +259,25 @@ public class AvhrrAcUtils {
         return new Color(rColor, gColor, bColor);
     }
 
+
+    private static class RadToBtCoeffs {
+        private double[] radCoeffs;
+        private double centralWvl;
+
+        public double getCentralWvl() {
+            return centralWvl;
+        }
+
+        public void setCentralWvl(double centralWvl) {
+            this.centralWvl = centralWvl;
+        }
+
+        public double[] getRadCoeffs() {
+            return radCoeffs;
+        }
+
+        public void setRadCoeffs(double[] radCoeffs) {
+            this.radCoeffs = radCoeffs;
+        }
+    }
 }

@@ -118,6 +118,7 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
     ThreadLocal<SchillerNeuralNetWrapper> avhrracNeuralNet;
 
     AvhrrAcAuxdata.Line2ViewZenithTable vzaTable;
+    AvhrrAcAuxdata.Rad2BTTable rad2BTTable;
 
     SunPosition sunPosition;
 

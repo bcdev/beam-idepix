@@ -300,9 +300,9 @@ public class AvhrrAcTestClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setReflCh1(reflCh1);
             aacAlgorithm.setReflCh2(reflCh2);
             aacAlgorithm.setReflCh3(reflCh3);
-            final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4) - 273.15;
+            final double btCh4 = AvhrrAcUtils.convertRadianceToBtOld(avhrrRadiance[3], 4) - 273.15;
             aacAlgorithm.setBtCh4(btCh4);
-            final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5) - 273.15;
+            final double btCh5 = AvhrrAcUtils.convertRadianceToBtOld(avhrrRadiance[4], 5) - 273.15;
             aacAlgorithm.setBtCh5(btCh5);
 
 //            aacAlgorithm.setReflCh1Thresh(reflCh1Thresh);

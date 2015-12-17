@@ -21,6 +21,9 @@ public class AvhrrAcAuxdata {
     public static final int VZA_TABLE_LENGTH = 2048;
     public static final String VZA_FILE_NAME = "view_zenith.txt";
 
+    public static final int RAD2BT_TABLE_LENGTH = 3;
+    public static final String RAD2BT_FILE_NAME_PREFIX = "rad2bt_noaa";
+
     private static AvhrrAcAuxdata instance;
 
     public static AvhrrAcAuxdata getInstance() {
@@ -56,12 +59,70 @@ public class AvhrrAcAuxdata {
                 i++;
             }
         } catch (IOException | NumberFormatException e) {
-            throw new OperatorException("Failed to load Line2ViewZenithTable Table: \n" + e.getMessage(), e);
+            throw new OperatorException("Failed to load Line2ViewZenithTable: \n" + e.getMessage(), e);
         } finally {
             inputStream.close();
         }
         return vzaTable;
     }
+
+    public Rad2BTTable createRad2BTTable(String noaaId) throws IOException {
+
+        final String filename = RAD2BT_FILE_NAME_PREFIX + noaaId + ".txt";
+        final InputStream inputStream = getClass().getResourceAsStream(filename);
+        Rad2BTTable rad2BTTable = new Rad2BTTable();
+
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        StringTokenizer st;
+        try {
+            int i = 0;
+            String line;
+            while ((line = bufferedReader.readLine()) != null && i < RAD2BT_TABLE_LENGTH) {
+                line = line.trim();
+                st = new StringTokenizer(line, "\t", false);
+
+                if (st.hasMoreTokens()) {
+                    // channel index (3, 4, 5)
+                    Integer.parseInt(st.nextToken());
+                }
+                if (st.hasMoreTokens()) {
+                    // A
+                    rad2BTTable.setA(i, Double.parseDouble(st.nextToken()));
+                }
+                if (st.hasMoreTokens()) {
+                    // B
+                    rad2BTTable.setB(i, Double.parseDouble(st.nextToken()));
+                }
+                if (st.hasMoreTokens()) {
+                    // D
+                    rad2BTTable.setD(i, Double.parseDouble(st.nextToken()));
+                }
+                if (st.hasMoreTokens()) {
+                    // nu_low
+                    rad2BTTable.setNuLow(i, Double.parseDouble(st.nextToken()));
+                }
+                if (st.hasMoreTokens()) {
+                    // nu_mid
+                    rad2BTTable.setNuMid(i, Double.parseDouble(st.nextToken()));
+                }
+                if (st.hasMoreTokens()) {
+                    // nu_high_land
+                    rad2BTTable.setNuHighland(i, Double.parseDouble(st.nextToken()));
+                }
+                if (st.hasMoreTokens()) {
+                    // nu_high_water
+                    rad2BTTable.setNuHighWater(i, Double.parseDouble(st.nextToken()));
+                }
+                i++;
+            }
+        } catch (IOException | NumberFormatException e) {
+            throw new OperatorException("Failed to load Rad2BTTable: \n" + e.getMessage(), e);
+        } finally {
+            inputStream.close();
+        }
+        return rad2BTTable;
+    }
+
 
     /**
      * Class providing a temperature-radiance conversion data table
@@ -82,5 +143,76 @@ public class AvhrrAcAuxdata {
             this.vza[index] = vza;
         }
 
+    }
+
+    /**
+     *  Class providing a radiance-to-BT coefficients table
+     */
+    public class Rad2BTTable {
+        private final int OFFSET = 3;
+
+        private double[] A = new double[RAD2BT_TABLE_LENGTH];
+        private double[] B = new double[RAD2BT_TABLE_LENGTH];
+        private double[] D = new double[RAD2BT_TABLE_LENGTH];
+        private double[] nuLow = new double[RAD2BT_TABLE_LENGTH];
+        private double[] nuMid = new double[RAD2BT_TABLE_LENGTH];
+        private double[] nuHighland = new double[RAD2BT_TABLE_LENGTH];
+        private double[] nuHighWater = new double[RAD2BT_TABLE_LENGTH];
+
+        public double getA(int index) {
+            return A[index - OFFSET];
+        }
+
+        public void setA(int index, double a) {
+            this.A[index] = a;
+        }
+
+        public double getB(int index) {
+            return B[index - OFFSET];
+        }
+
+        public void setB(int index, double b) {
+            this.B[index] = b;
+        }
+
+        public double getD(int index) {
+            return D[index - OFFSET];
+        }
+
+        public void setD(int index, double d) {
+            this.D[index] = d;
+        }
+
+        public double getNuLow(int index) {
+            return nuLow[index - OFFSET];
+        }
+
+        public void setNuLow(int index, double nuLow) {
+            this.nuLow[index] = nuLow;
+        }
+
+        public double getNuMid(int index) {
+            return nuMid[index - OFFSET];
+        }
+
+        public void setNuMid(int index, double nuMid) {
+            this.nuMid[index] = nuMid;
+        }
+
+        public double getNuHighLand(int index) {
+            return nuHighland[index - OFFSET];
+        }
+
+        public void setNuHighland(int index, double nuHighland) {
+            this.nuHighland[index] = nuHighland;
+        }
+
+        public double getNuHighWater(int index) {
+            return nuHighWater[index - OFFSET];
+        }
+
+        public void setNuHighWater(int index, double nuHighWater) {
+            this.nuHighWater[index] = nuHighWater;
+        }
     }
 }

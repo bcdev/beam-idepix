@@ -99,6 +99,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 
         try {
             vzaTable = AvhrrAcAuxdata.getInstance().createLine2ViewZenithTable();
+            rad2BTTable = AvhrrAcAuxdata.getInstance().createRad2BTTable(noaaId);
         } catch (IOException e) {
             throw new OperatorException("Failed to get VZA from auxdata - cannot proceed: ", e);
         }
@@ -275,13 +276,16 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setReflCh1(albedo1Norm / 100.0); // on [0,1]        --> put here albedo_norm now!!
             aacAlgorithm.setReflCh2(albedo2Norm / 100.0); // on [0,1]
 
-//            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
-            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[2], 3);     // GK,MB 20151102: use K everywhere!!
+//            final double btCh3 = AvhrrAcUtils.convertRadianceToBtOld(avhrrRadiance[2], 3) - 273.15;     // !! todo: K or C, make uniform!
+//            final double btCh3 = AvhrrAcUtils.convertRadianceToBtOld(avhrrRadiance[2], 3);     // GK,MB 20151102: use K everywhere!!
+            final double btCh3 = AvhrrAcUtils.convertRadianceToBt(noaaId, rad2BTTable, avhrrRadiance[2], 3, waterFraction);     // GK,MB 20151102: use K everywhere!!
 //            aacAlgorithm.setBtCh3(btCh3 + 273.15);
             aacAlgorithm.setBtCh3(btCh3);
-            final double btCh4 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[3], 4);
+//            final double btCh4 = AvhrrAcUtils.convertRadianceToBtOld(avhrrRadiance[3], 4);
+            final double btCh4 = AvhrrAcUtils.convertRadianceToBt(noaaId, rad2BTTable, avhrrRadiance[3], 4, waterFraction);
             aacAlgorithm.setBtCh4(btCh4);
-            final double btCh5 = AvhrrAcUtils.convertRadianceToBt(avhrrRadiance[4], 5);
+//            final double btCh5 = AvhrrAcUtils.convertRadianceToBtOld(avhrrRadiance[4], 5);
+            final double btCh5 = AvhrrAcUtils.convertRadianceToBt(noaaId, rad2BTTable, avhrrRadiance[4], 5, waterFraction);
             aacAlgorithm.setBtCh5(btCh5);
             aacAlgorithm.setElevation(altitude);
 
@@ -301,7 +305,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             targetSamples[targetSamplesIndex++].set(btCh5);
             targetSamples[targetSamplesIndex++].set(albedo1Norm/100.);     // GK, 20150326
             targetSamples[targetSamplesIndex++].set(albedo2Norm/100.);
-            targetSamples[targetSamplesIndex++].set(albedo3); // todo: normalize somehow?
+            targetSamples[targetSamplesIndex++].set(albedo3);
 
         } else {
             targetSamplesIndex = 0;

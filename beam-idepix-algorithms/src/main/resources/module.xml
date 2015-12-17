@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.20:</b>
+        Improved radiance-to-BT conversion in AVHRR USGS in Avhrr-Ac algorithm
         <b>Version 2.2.19:</b>
         Improved PROBA-V support in Globalbedo algorithm
         <b>Version 2.2.18:</b>
