@@ -10,19 +10,18 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.idepix.util.*;
+import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
+import org.esa.beam.idepix.util.SunPosition;
+import org.esa.beam.idepix.util.SunPositionCalculator;
 import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.util.math.RsMathUtils;
 
 import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.TransposeDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 /**
  * Basic operator for GlobAlbedo pixel classification
@@ -183,10 +182,9 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         return geoPos;
     }
 
-    double calculateReflectancePartChannel3b(double radianceCh3b,double btCh4, double btch5, double sza) {
+    double calculateReflectancePartChannel3b(double radianceCh3b,double nuFinal, double btCh4, double btch5, double sza) {
         // follows GK formula
         int sensorId;
-        double frequenz;
         double t_3b_B0;
         double r_3b_em;
         double b_0_3b;
@@ -202,12 +200,10 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
             case "11":
                 // NOAA 11
                 sensorId = 0;
-                frequenz=0;
                 break;
             case "14":
                 // NOAA 14
-                sensorId = 0;
-                frequenz=0;
+                sensorId = 1;
                 break;
             default:
                 throw new OperatorException("Cannot parse source product name " + sourceProduct.getName() + " properly.");
@@ -222,8 +218,8 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         }
 
         if (btCh4  > 0.) {
-            r_3b_em = (AvhrrAcConstants.c1 * Math.pow(frequenz,3))
-                    /(Math.exp((AvhrrAcConstants.c2 * frequenz)/
+            r_3b_em = (AvhrrAcConstants.c1 * Math.pow(nuFinal,3))
+                    /(Math.exp((AvhrrAcConstants.c2 * nuFinal)/
                     ((t_3b_B0-AvhrrAcConstants.a1_3b[sensorId])/(AvhrrAcConstants.a2_3b[sensorId])))-1.);
         } else {
             r_3b_em = 0;
