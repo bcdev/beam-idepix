@@ -308,23 +308,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-idea-plugin</artifactId>
-                <configuration>
-                    <downloadSources>true</downloadSources>
-                    <downloadJavadocs>true</downloadJavadocs>
-                    <jdkName>1.7</jdkName>
-                    <jdkLevel>1.7</jdkLevel>
-                    <exclude>target</exclude>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-eclipse-plugin</artifactId>
-                <configuration>
-                    <downloadSources>true</downloadSources>
-                    <downloadJavadocs>true</downloadJavadocs>
-                </configuration>
-            </plugin>
-            <plugin>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>2.2</version>
                 <executions>
@@ -362,6 +345,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
                 <configuration>
                     <excludePackageNames>*.internal;</excludePackageNames>
                     <quiet>true</quiet>
