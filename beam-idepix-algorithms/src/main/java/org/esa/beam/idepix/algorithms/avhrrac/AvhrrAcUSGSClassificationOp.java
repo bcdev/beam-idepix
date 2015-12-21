@@ -289,7 +289,8 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             aacAlgorithm.setBtCh5(btCh5);
             aacAlgorithm.setElevation(altitude);
 
-            final double albedo3 = calculateReflectancePartChannel3b(avhrrRadiance[2], btCh4, btCh5, sza);
+            double nuFinal = AvhrrAcUtils.getNuFinal(noaaId, rad2BTTable, avhrrRadiance[2], 3, waterFraction);
+            final double albedo3 = calculateReflectancePartChannel3b(avhrrRadiance[2], nuFinal, btCh4, btCh5, sza);
             aacAlgorithm.setReflCh3(albedo3); // on [0,1]
 
             setClassifFlag(targetSamples, aacAlgorithm);
@@ -303,8 +304,8 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
             targetSamples[targetSamplesIndex++].set(btCh3);
             targetSamples[targetSamplesIndex++].set(btCh4);
             targetSamples[targetSamplesIndex++].set(btCh5);
-            targetSamples[targetSamplesIndex++].set(albedo1Norm/100.);     // GK, 20150326
-            targetSamples[targetSamplesIndex++].set(albedo2Norm/100.);
+            targetSamples[targetSamplesIndex++].set(albedo1Norm / 100.);     // GK, 20150326
+            targetSamples[targetSamplesIndex++].set(albedo2Norm / 100.);
             targetSamples[targetSamplesIndex++].set(albedo3);
 
         } else {
@@ -330,12 +331,12 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
 //            for (int i = 0; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
             for (int i = 2; i < AvhrrAcConstants.AVHRR_AC_RADIANCE_BAND_NAMES.length; i++) {
                 // do just radiances 3-5
-                targetSamples[targetSamplesIndex + (i-2)].set(avhrrRadiance[i]);
+                targetSamples[targetSamplesIndex + (i - 2)].set(avhrrRadiance[i]);
             }
         }
     }
 
-    private double computeGetasseAltitude(float x, float y)  {
+    private double computeGetasseAltitude(float x, float y) {
         final PixelPos pixelPos = new PixelPos(x + 0.5f, y + 0.5f);
         GeoPos geoPos = sourceProduct.getGeoCoding().getGeoPos(pixelPos, null);
         double altitude;
@@ -375,7 +376,7 @@ public class AvhrrAcUSGSClassificationOp extends AbstractAvhrrAcClassificationOp
     void setNoaaId() {
         // ao11060992103109_120417.l1b
         final int productNameStartIndex = sourceProduct.getName().indexOf("ao");
-        noaaId =  sourceProduct.getName().substring(productNameStartIndex + 2, productNameStartIndex + 4);
+        noaaId = sourceProduct.getName().substring(productNameStartIndex + 2, productNameStartIndex + 4);
     }
 
     @Override

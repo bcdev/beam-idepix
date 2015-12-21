@@ -146,25 +146,6 @@ public class AvhrrAcConstants {
     public static final double c1 = 1.1910659*1.E-5; // mW/(m^2 sr cm^-4)
     public static final double c2 = 1.438833;
 
-    // different central wave numbers for AVHRR Channel3b, 4, 5 correspond to the temperature ranges & to NOAA11 and NOAA14
-    // NOAA 11_3b: 180-225	2663.500, 225-275	2668.150, 275-320	2671.400, 270-310	2670.960
-    // NOAA 11_4:  180-225	 926.810, 225-275	 927.360, 275-320	 927.830, 270-310	 927.750
-    // NOAA 11_5:  180-225	 841.400, 225-275	 841.810, 275-320	 842.200, 270-310	 842.140
-    // NOAA 14_3b: 190-230	2638.652, 230-270	2642.807, 270-310	2645.899, 290-330	2647.169
-    // NOAA 14_4:  190-230	928.2603, 230-270	928.8284, 270-310	929.3323, 290-330	929.5878
-    // NOAA 14_5:  190-230	834.4496, 230-270	834.8066, 270-310	835.1647, 290-330	 835.374
-
-
-    public static final double[] NU_NOAA11_T_RANGE =   {180, 225, 275, 320};
-    public static final double[] NU_NOAA11_3b = {2663.500, 2668.150, 2671.400, 2670.960};
-    public static final double[] NU_NOAA11_4  = { 926.810,  927.360,  927.830,  927.750};
-    public static final double[] NU_NOAA11_5  = { 841.400,  841.810,  842.200,  842.140};
-
-    public static final double[] NU_NOAA14_T_RANGE =   {190, 230, 270, 310, 330};
-    public static final double[] NU_NOAA14_3b = {2638.652, 2642.807, 2645.899, 2647.169, 2645.899};
-    public static final double[] NU_NOAA14_4  = {928.2603, 928.8284, 929.3323, 929.5878, 929.3323};
-    public static final double[] NU_NOAA14_5  = {834.4496, 834.8066, 835.1647,  835.374, 835.1647};
-
 
 //    public static final double TGCT_THRESH = 244.0;
     public static final double TGCT_THRESH = 260.0;
