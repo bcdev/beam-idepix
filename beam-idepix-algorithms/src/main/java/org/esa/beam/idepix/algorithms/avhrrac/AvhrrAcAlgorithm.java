@@ -86,6 +86,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         if (latitude > 62.0) {
             // NORTH (lat > 62N)
             // shall be:
+            // old version
 //        (( ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.95 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
 //                           and rt_3<0.054 and elevation > 300 and bt_5-bt_3 > -14 and (bt_5/bt_3) > 1.7) or
 //           ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
@@ -96,18 +97,34 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 //                           and ((bt_5/bt_3) <= 1.7 and (bt_5/bt_3) > -0.98) or
 //           ((refl_1-rt_3)/(refl_2+rt_3)) > 1.1 and bt_5-bt_3 > -8)
 //
-            final boolean condBtCh4 = -15.0 < btCh4Celsius && btCh4Celsius < 1.35;
+//            final boolean condBtCh4 = -15.0 < btCh4Celsius && btCh4Celsius < 1.35;
+//            final boolean condElevation = elevation > 300.0;
+//
+//            final boolean cond1 = condBtCh4 && reflCh1 > 0.4 && 0.95 <= ratio21 && ratio21 < 1.15
+//                    && reflCh3 < 0.054 && condElevation && diffbt53 > -14.0 && ratiobt53 > 1.7;
+//            final boolean cond2 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
+//                    && reflCh3 < 0.054 && reflCh3 > 0.026 && condElevation && diffbt53 > -13.0 && ratiobt53 <= -0.98;
+//            final boolean cond3 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
+//                    && reflCh3 < 0.054 && condElevation && diffbt53 > -11.0 && ratiobt53 <= 1.7 && ratiobt53 > -0.98;
+//            final boolean cond4 = diffrefl1rt3/sumrefl2rt3 > 1.1 && diffbt53 > -8.0;
+
+            // new version 20151221 JM
+//        ( ( ((-27.0+273.15) < bt_4 and bt_4 < (1.35+273.15)) and refl_1 > 0.4
+//                                   and (0.8 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
+//                                   and rt_3 < 0.013 and bt_5-bt_3 > -14 and altitude > 300 and (bt_5/bt_3) > 0.9486
+//                                   and (bt_5/bt_3) < 0.98 and ((refl_1-rt_3)/(refl_2+rt_3)) > 0.98) or
+//        ( ((refl_1-rt_3)/(refl_2+rt_3)) > 0.98 and bt_5-bt_3 > -8 and  refl_1>0.15))
+
+            // Changes 20151221 JM
+            final boolean condBtCh4 = -27.0 < btCh4Celsius && btCh4Celsius < 1.35;
             final boolean condElevation = elevation > 300.0;
 
-            final boolean cond1 = condBtCh4 && reflCh1 > 0.4 && 0.95 <= ratio21 && ratio21 < 1.15
-                    && reflCh3 < 0.054 && condElevation && diffbt53 > -14.0 && ratiobt53 > 1.7;
-            final boolean cond2 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
-                    && reflCh3 < 0.054 && reflCh3 > 0.026 && condElevation && diffbt53 > -13.0 && ratiobt53 <= -0.98;
-            final boolean cond3 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
-                    && reflCh3 < 0.054 && condElevation && diffbt53 > -11.0 && ratiobt53 <= 1.7 && ratiobt53 > -0.98;
-            final boolean cond4 = diffrefl1rt3/sumrefl2rt3 > 1.1 && diffbt53 > -8.0;
+            final boolean cond1 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
+                    && reflCh3 < 0.013 && condElevation && diffbt53 > -14.0 && ratiobt53 > 0.9486
+                    && ratiobt53 < 0.98 && diffrefl1rt3/sumrefl2rt3 > 0.98;
+            final boolean cond2 = diffrefl1rt3/sumrefl2rt3 > 0.98 && reflCh1 > 0.15 && diffbt53 > -8.0;
 
-            final boolean snowIceCondition = (cond1 || cond2 ||cond3 || cond4);
+            final boolean snowIceCondition = (cond1 || cond2);
 
             isSnowIce = isLand() && snowIceCondition;
 
@@ -119,16 +136,32 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 //                       and refl_1 > 0.55) and lat < -62
             isSnowIce = -27.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.75 &&
                     ratio21 > 0.85 && ratio21 < 1.15 && reflCh3 < 0.03 &&
-                    diffbt53 > -13.0 || (reflCh1-reflCh3)/(reflCh2+reflCh3) > 1.05 && reflCh1 > 0.55;
+                    diffbt53 > -13.0 || (reflCh1 - reflCh3) / (reflCh2 + reflCh3) > 1.05 && reflCh1 > 0.55;
+
+        } else if (latitude < 7.0 && latitude > -7.0){
+            // EQUATORIAL (-7S < lat < 7N)
+            // shall be:
+//        ((-15.0 + 273.15) < bt_4 and bt_4 < (1.35+273.15)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1)
+//                                 and (refl_2/ refl_1) <1.15) and rt_3 < 0.035 and bt_5-bt_3 > -14
+//                                 and pixel_classif_flags.F_LAND and (altitude > 3500 and (LAT < 7 and LAT >  -7)))
+
+            isSnowIce = isLand() && -15.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.4 &&
+                    ratio21 > 0.8 && ratio21 < 1.15 && reflCh3 < 0.035 && diffbt53 > -14.0 && elevation > 3500.0;
 
         } else {
             // CENTER (-62S < lat < 62N)
             // shall be:
+            // new version 2015121 JM
+//        ((-15.0 + 273.15) < bt_4 and bt_4 < (1.35+273.15)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1)
+//                                 and (refl_2/ refl_1) <1.15) and rt_3 < 0.035 and bt_5-bt_3 > -14
+//                                 and pixel_classif_flags.F_LAND
+//                                 and (altitude > 1000 and (LAT <= 62 and LAT >= 7 or  LAT <= -7 and LAT >= -62))
+            // old version
 //        ((-15.0) < bt_4 and bt_4 < (1.35)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1) and (refl_2/ refl_1) <1.15)
 //                        and rt_3<0.054 and bt_5-bt_3 > -14 and elevation > 1000
 //                        and pixel_classif_flags.F_LAND and (lat <= 62 and lat >= -62)
             isSnowIce = isLand() && -15.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.4 &&
-                    ratio21 > 0.8 && ratio21 < 1.15 && reflCh3 < 0.054 && diffbt53 > -14.0 && elevation > 1000.0;
+                    ratio21 > 0.8 && ratio21 < 1.15 && reflCh3 < 0.035 && diffbt53 > -14.0 && elevation > 1000.0;
         }
 
         return isSnowIce;
@@ -197,13 +230,30 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
     }
 
     private boolean isResidualCloud() {
-
+        // old version
+//        if (isDesertArea()) {
+//            return (reflCh3 < 0.18 && reflCh1>0.15 && (btCh4 / btCh3) < 0.927 && btCh4<280)
+//                || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.23 && btCh4 < 302 && (btCh4 / btCh3) < 0.95 && reflCh3 < 0.38 && reflCh3 > 0.219);
+//        } else {
+//            return (reflCh3 < 0.18 && reflCh1>0.15 && (btCh4 / btCh3) < 0.927)
+//                || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.2 && btCh4 < 302 && (btCh4 / btCh3) < 0.95 && reflCh3 < 0.4);
+//        }
+        // Adapted 20151221 JM
+        // shall be:
         if (isDesertArea()) {
-            return (reflCh3 < 0.18 && reflCh1>0.15 && (btCh4 / btCh3) < 0.927 && btCh4<280)
-                || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.23 && btCh4 < 302 && (btCh4 / btCh3) < 0.95 && reflCh3 < 0.38 && reflCh3 > 0.219);
+            // shall be:
+//       (refl_1 > 0.11 and (bt_4/bt_3) < 0.98 and bt_4 < 285) or ((refl_1 + refl_2 + rt_3)/3 > 0.23 and bt_4 < 302
+//                      and (bt_4/bt_3) < 0.965 and rt_3 > 0.105 and rt_3 < 0.27 and bt_3 < 304)
+            return (reflCh1>0.11 && (btCh4 / btCh3) < 0.98 && btCh4<285)
+                    || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.23 && btCh4 < 302 && (btCh4 / btCh3) < 0.965
+                    && reflCh3 < 0.27 && reflCh3 > 0.105 && btCh3 < 304);
         } else {
-            return (reflCh3 < 0.18 && reflCh1>0.15 && (btCh4 / btCh3) < 0.927)
-                || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.2 && btCh4 < 302 && (btCh4 / btCh3) < 0.95 && reflCh3 < 0.4);
+            //shall be:
+//       (refl_1 > 0.11 and (bt_4/bt_3) < 0.98 and bt_4 < 291) or ((refl_1 + refl_2 + rt_3)/3 > 0.17 and bt_4 < 302
+//                      and (bt_4/bt_3) < 0.96 and rt_3 > 0.105 and bt_3 < 318)
+            return (reflCh1>0.11 && (btCh4 / btCh3) < 0.98 && btCh4<291)
+                    || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.17 && btCh4 < 302 && (btCh4 / btCh3) < 0.96
+                    && reflCh3 > 0.105 && btCh3 < 318);
         }
     }
 
