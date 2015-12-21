@@ -264,25 +264,4 @@ public class AvhrrAcUtils {
         return new Color(rColor, gColor, bColor);
     }
 
-
-    private static class RadToBtCoeffs {
-        private double[] radCoeffs;
-        private double centralWvl;
-
-        public double getCentralWvl() {
-            return centralWvl;
-        }
-
-        public void setCentralWvl(double centralWvl) {
-            this.centralWvl = centralWvl;
-        }
-
-        public double[] getRadCoeffs() {
-            return radCoeffs;
-        }
-
-        public void setRadCoeffs(double[] radCoeffs) {
-            this.radCoeffs = radCoeffs;
-        }
-    }
 }
