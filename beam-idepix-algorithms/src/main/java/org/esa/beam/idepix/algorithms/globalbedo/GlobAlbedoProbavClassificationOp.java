@@ -1,6 +1,7 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.commons.lang.ArrayUtils;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.dem.ElevationModel;
 import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
@@ -17,7 +18,14 @@ import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.watermask.operator.WatermaskClassifier;
 
+import javax.media.jai.Histogram;
+import javax.media.jai.JAI;
+import javax.media.jai.RenderedOp;
 import java.awt.*;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.ParameterBlock;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,11 +35,11 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "idepix.globalbedo.classification.probav",
-                  version = "2.2",
-                  internal = true,
-                  authors = "Olaf Danne",
-                  copyright = "(c) 2008, 2012 by Brockmann Consult",
-                  description = "This operator provides cloud screening from PROBA-V data.")
+        version = "2.2",
+        internal = true,
+        authors = "Olaf Danne",
+        copyright = "(c) 2008, 2012 by Brockmann Consult",
+        description = "This operator provides cloud screening from PROBA-V data.")
 public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp {
 
     @Parameter(defaultValue = "1.1",
@@ -65,6 +73,8 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
 
     ElevationModel getasseElevationModel;
 
+    private int[] listOfPixelTimes;
+
     @Override
     public void initialize() throws OperatorException {
         super.initialize();
@@ -76,6 +86,14 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
             throw new OperatorException("DEM not installed: " + demName + ". Please install with Module Manager.");
         }
         getasseElevationModel = demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
+
+        // extract the pixel sampling times
+        // todo: clarify with GK/JM how to further use this information
+        if (isProbaVDailySynthesisProduct(sourceProduct.getName())) {
+            final Band timeBand = sourceProduct.getBand("TIME");
+            final RenderedImage timeImage = timeBand.getSourceImage().getImage(0);
+            listOfPixelTimes = getListOfPixelTimes(timeImage);
+        }
     }
 
     @Override
@@ -166,7 +184,7 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
 
     @Override
     public void setBands() {
-        probavReflectanceBands= new Band[IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length];
+        probavReflectanceBands = new Band[IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length];
         for (int i = 0; i < IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length; i++) {
             probavReflectanceBands[i] = sourceProduct.getBand(IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES[i]);
         }
@@ -186,6 +204,46 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
         if (gaApplyVGTSchillerNN) {
             targetProduct.addBand("probav_nn_value", ProductData.TYPE_FLOAT32);
         }
+    }
+
+    // package local for testing
+    static int[] getListOfPixelTimes(RenderedImage timeImage) {
+
+        // Set up the parameters for the Histogram object.
+        // bin the histogram into the minutes of one day.
+        // we consider daily products only todo: clarify
+        int[] bins = {1440};
+        double[] low = {0.0};
+        double[] high = {1440.0};
+
+        // Create the parameter block.
+        ParameterBlock pb = new ParameterBlock();
+        pb.addSource(timeImage);           // Specify the source image
+        pb.add(null);                      // No ROI
+        pb.add(1);                         // Sampling
+        pb.add(1);                         // periods
+        pb.add(bins);                      // bins
+        pb.add(low);                       // low
+        pb.add(high);                      // high
+
+        // Perform the histogram operation.
+        final RenderedOp histoImage = JAI.create("histogram", pb, null);
+
+        // Retrieve the histogram data.
+        Histogram hist = (Histogram) histoImage.getProperty("histogram");
+        final int[][] histBins = hist.getBins();
+        List<Integer> histBinList = new ArrayList();
+        for (int i = 1; i < histBins[0].length; i++) {   // skip the 0 (no data value)
+            if (histBins[0][i] > 0) {
+                histBinList.add(i);
+            }
+        }
+        return ArrayUtils.toPrimitive(histBinList.toArray(new Integer[histBinList.size()]));
+    }
+
+    private static boolean isProbaVDailySynthesisProduct(String productName) {
+        return productName.toUpperCase().startsWith("PROBAV_S1_") &&
+                productName.toUpperCase().endsWith(".HDF5");
     }
 
     private void copyProbavAnnotations() {
@@ -216,7 +274,7 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
         final double altitude = computeGetasseAltitude(x, y);
         gaAlgorithm.setElevation(altitude);
 
-        checkProbavReflectanceQuality(gaAlgorithm,probavReflectance, smFlagTile, x, y);
+        checkProbavReflectanceQuality(gaAlgorithm, probavReflectance, smFlagTile, x, y);
         gaAlgorithm.setRefl(probavReflectance);
 
         SchillerNeuralNetWrapper nnWrapper = vgtNeuralNet.get();
@@ -259,7 +317,7 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
         }
     }
 
-    private double computeGetasseAltitude(float x, float y)  {
+    private double computeGetasseAltitude(float x, float y) {
         final PixelPos pixelPos = new PixelPos(x + 0.5f, y + 0.5f);
         GeoPos geoPos = sourceProduct.getGeoCoding().getGeoPos(pixelPos, null);
         double altitude;
