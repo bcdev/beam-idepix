@@ -57,7 +57,7 @@ public class CawaOp extends BasisOp {
             description = " If applied, write Schiller NN value to the target product ")
     private boolean outputSchillerNNValue;
 
-    @Parameter(defaultValue = "2.0",
+    @Parameter(defaultValue = "3.0",
             label = " Schiller NN cloud ambiguous lower boundary (applied on WATER)",
             description = " Schiller NN cloud ambiguous lower boundary (applied on WATER)")
     double schillerWaterNNCloudAmbiguousLowerBoundaryValue;
@@ -145,6 +145,9 @@ public class CawaOp extends BasisOp {
         cloudFlagBand.setSourceImage(postProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
 
         copyOutputBands();
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);   // we need the L1b flag!
+
+//        targetProduct = waterClassificationProduct;
     }
 
     private void preProcess() {
@@ -163,6 +166,7 @@ public class CawaOp extends BasisOp {
 
     private void setLandClassificationParameters() {
         landClassificationParameters = new HashMap<>();
+        landClassificationParameters.put("copyAllTiePoints", true);
         landClassificationParameters.put("outputSchillerNNValue",
                                      outputSchillerNNValue);
         landClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
@@ -175,6 +179,7 @@ public class CawaOp extends BasisOp {
 
     private void setWaterClassificationParameters() {
         waterClassificationParameters = new HashMap<>();
+        waterClassificationParameters.put("copyAllTiePoints", true);
         waterClassificationParameters.put("outputSchillerNNValue",
                                      outputSchillerNNValue);
         waterClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
@@ -210,8 +215,10 @@ public class CawaOp extends BasisOp {
         mergeInputProducts.put("landClassif", landClassificationProduct);
         mergeInputProducts.put("waterClassif", waterClassificationProduct);
 
+        Map<String, Object> mergeClassificationParameters = new HashMap<>();
+        mergeClassificationParameters.put("copyAllTiePoints", true);
         mergedClassificationProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaMergeLandWaterOp.class),
-                                                        GPF.NO_PARAMS, mergeInputProducts);
+                                                        mergeClassificationParameters, mergeInputProducts);
     }
 
     private void postProcess() {
