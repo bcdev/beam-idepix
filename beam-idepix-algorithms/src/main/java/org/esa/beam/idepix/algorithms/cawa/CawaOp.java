@@ -57,7 +57,7 @@ public class CawaOp extends BasisOp {
             description = " If applied, write NN value to the target product ")
     private boolean outputSchillerNNValue;
 
-    @Parameter(defaultValue = "3.0",
+    @Parameter(defaultValue = "2.0",
             label = " NN cloud ambiguous lower boundary (applied on WATER)",
             description = " NN cloud ambiguous lower boundary (applied on WATER)")
     double schillerWaterNNCloudAmbiguousLowerBoundaryValue;
