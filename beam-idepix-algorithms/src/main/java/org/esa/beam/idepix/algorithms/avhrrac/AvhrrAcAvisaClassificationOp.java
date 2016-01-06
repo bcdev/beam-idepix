@@ -71,18 +71,18 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
 //    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
-            label = " Schiller NN cloud ambiguous lower boundary ",
-            description = " Schiller NN cloud ambiguous lower boundary ")
+            label = " NN cloud ambiguous lower boundary ",
+            description = " NN cloud ambiguous lower boundary ")
     double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.45",
-            label = " Schiller NN cloud ambiguous/sure separation value ",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+            label = " NN cloud ambiguous/sure separation value ",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value ")
     double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.45",
-            label = " Schiller NN cloud sure/snow separation value ",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+            label = " NN cloud sure/snow separation value ",
+            description = " NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
 
@@ -460,7 +460,7 @@ public class AvhrrAcAvisaClassificationOp extends PixelOperator {
         AvhrrAcUtils.setupAvhrrAcClassifBitmask(getTargetProduct());
 
         Band nnValueBand = productConfigurer.addBand(AvhrrAcConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
-        nnValueBand.setDescription("Schiller NN output value");
+        nnValueBand.setDescription("NN output value");
         nnValueBand.setUnit("dl");
         nnValueBand.setNoDataValue(Float.NaN);
         nnValueBand.setNoDataValueUsed(true);

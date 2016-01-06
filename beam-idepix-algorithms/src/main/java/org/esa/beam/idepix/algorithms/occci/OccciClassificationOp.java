@@ -146,7 +146,7 @@ public class OccciClassificationOp extends PixelOperator {
             modisAllNeuralNet = SchillerNeuralNetWrapper.create(isMA);
             seawifsNeuralNet = SchillerNeuralNetWrapper.create(isS);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
+            throw new OperatorException("Cannot read Neural Nets: " + e.getMessage());
         }
     }
 

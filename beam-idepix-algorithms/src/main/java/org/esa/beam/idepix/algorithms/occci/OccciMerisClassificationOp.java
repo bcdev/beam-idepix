@@ -121,43 +121,43 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
     private boolean outputCloudProbabilityFeatureValue;    // Schiller
 
     //    @Parameter(defaultValue = "true",
-//            label = " Apply Schiller NN for cloud classification",
-//            description = " Apply Schiller NN for cloud classification ")
+//            label = " Apply NN for cloud classification",
+//            description = " Apply NN for cloud classification ")
     private boolean applyMERISSchillerNN = true;   // seems actually the best we have
 
     @Parameter(defaultValue = "20.0",
-            label = " Schiller 'MERIS1600' threshold (MERIS) ",
-            description = " Schiller 'MERIS1600' threshold value ")
+            label = " 'MERIS1600' threshold (MERIS) ",
+            description = " 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
 
     @Parameter(defaultValue = "0.5",
-            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS) ",
-            description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
+            label = " 'MERIS/AATSR' cloud/ice separation value (MERIS) ",
+            description = " 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
 
     @Parameter(defaultValue = "false",
-            label = " Write Schiller NN value to the target product.",
-            description = " If applied, write Schiller NN value to the target product ")
+            label = " Write NN value to the target product.",
+            description = " If applied, write NN value to the target product ")
     private boolean outputSchillerNNValue;
 
     @Parameter(defaultValue = "2.0",
-            label = " Schiller NN cloud ambiguous lower boundary ",
-            description = " Schiller NN cloud ambiguous lower boundary ")
+            label = " NN cloud ambiguous lower boundary ",
+            description = " NN cloud ambiguous lower boundary ")
     double schillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
-            label = " Schiller NN cloud ambiguous/sure separation value ",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+            label = " NN cloud ambiguous/sure separation value ",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value ")
     double schillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
-            label = " Schiller NN cloud sure/snow separation value ",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+            label = " NN cloud sure/snow separation value ",
+            description = " NN cloud ambiguous cloud sure/snow separation value ")
     double schillerNNCloudSureSnowSeparationValue;
 
     //    @Parameter(defaultValue = "true",
-//            label = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
-//            description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+//            label = " Apply NN for MERIS cloud classification purely (not combined with previous approach)",
+//            description = " Apply NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean applyMERISSchillerNNPure = true;     // previous approach flags many coastlines and thin cloud edges as 'cloud sure'
 
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
@@ -196,7 +196,7 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
             merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
             merisAllNeuralNet = SchillerNeuralNetWrapper.create(isAll);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
+            throw new OperatorException("Cannot read Neural Nets: " + e.getMessage());
         }
     }
 

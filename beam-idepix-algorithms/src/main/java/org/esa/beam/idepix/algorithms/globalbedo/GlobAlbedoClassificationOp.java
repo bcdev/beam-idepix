@@ -69,18 +69,18 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
     boolean gaCopyAnnotations;
 
     @Parameter(defaultValue = "true",
-            label = " Apply alternative Schiller NN for MERIS cloud classification",
-            description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
+            label = " Apply alternative NN for MERIS cloud classification",
+            description = " Apply NN for MERIS cloud classification (has only effect for MERIS L1b products)")
     boolean gaApplyMERISAlternativeSchillerNN;
 
     @Parameter(defaultValue = "false",
-               label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
-               description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+               label = " Apply alternative NN for MERIS cloud classification purely (not combined with previous approach)",
+               description = " Apply NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean gaApplyMERISAlternativeSchillerNNPure;
 
     @Parameter(defaultValue = "false",
-            label = " Apply Schiller NN for VGT cloud classification",
-            description = " Apply Schiller NN for VGT cloud classification (has only effect for VGT L1b products)")
+            label = " Apply NN for VGT cloud classification",
+            description = " Apply NN for VGT cloud classification (has only effect for VGT L1b products)")
     boolean gaApplyVGTSchillerNN;
 
     @Parameter(defaultValue = "2",
@@ -143,7 +143,7 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
             merisLandNeuralNet = SchillerNeuralNetWrapper.create(merisLandIS);
             vgtNeuralNet = SchillerNeuralNetWrapper.create(vgtLandIS);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
+            throw new OperatorException("Cannot read Neural Nets: " + e.getMessage());
         }
     }
 

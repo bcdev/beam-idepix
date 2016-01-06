@@ -32,5 +32,5 @@ public class CawaConstants {
     public static final String F_COASTLINE_DESCR_TEXT = "Pixels at a coastline";
     public static final String F_LAND_DESCR_TEXT = "Land pixels";
 
-    public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "schiller_nn_value";
+    public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";
 }

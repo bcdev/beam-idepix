@@ -64,18 +64,18 @@ public class AvhrrAcTestClassificationOp extends AbstractAvhrrAcClassificationOp
 //    private boolean avhrracOutputDebug = false;
 
     @Parameter(defaultValue = "2.15",
-            label = " Schiller NN cloud ambiguous lower boundary ",
-            description = " Schiller NN cloud ambiguous lower boundary ")
+            label = " NN cloud ambiguous lower boundary ",
+            description = " NN cloud ambiguous lower boundary ")
     double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.45",
-            label = " Schiller NN cloud ambiguous/sure separation value ",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+            label = " NN cloud ambiguous/sure separation value ",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value ")
     double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.45",
-            label = " Schiller NN cloud sure/snow separation value ",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
+            label = " NN cloud sure/snow separation value ",
+            description = " NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
 

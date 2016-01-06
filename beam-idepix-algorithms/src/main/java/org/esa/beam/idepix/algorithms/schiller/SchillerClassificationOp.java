@@ -50,7 +50,7 @@ import java.io.IOException;
                   internal = true,
                   authors = "Marco Zuehlke",
                   copyright = "(c) 2012 by Brockmann Consult",
-                  description = "Computed a cloud mask using neural nets from Schiller.")
+                  description = "Computed a cloud mask using neural nets from H. Schiller.")
 public class SchillerClassificationOp extends Operator {
 
     @SourceProduct

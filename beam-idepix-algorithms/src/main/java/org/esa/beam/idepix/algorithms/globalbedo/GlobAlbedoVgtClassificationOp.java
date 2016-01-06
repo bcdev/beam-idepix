@@ -31,18 +31,18 @@ import java.util.Map;
 public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
     @Parameter(defaultValue = "1.1",
-            label = " Schiller NN cloud ambiguous lower boundary (VGT only)",
-            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
+            label = " NN cloud ambiguous lower boundary (VGT only)",
+            description = " NN cloud ambiguous lower boundary (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
+            label = " NN cloud ambiguous/sure separation value (VGT only)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-            label = " Schiller NN cloud sure/snow separation value (VGT only)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
+            label = " NN cloud sure/snow separation value (VGT only)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT L1b products)")
     private double gaSchillerNNCloudSureSnowSeparationValue;
 
     // VGT bands:
@@ -98,7 +98,7 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
-                    // apply improvement from Schiller NN approach...
+                    // apply improvement from NN approach...
                     final double[] nnOutput = ((GlobAlbedoVgtAlgorithm) globAlbedoAlgorithm).getNnOutput();
                     if (gaApplyVGTSchillerNN) {
                         if (!cloudFlagTargetTile.getSampleBit(x, y, IdepixConstants.F_INVALID)) {

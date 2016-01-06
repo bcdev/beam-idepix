@@ -16,7 +16,7 @@ class OccciConstants {
     // debug bands:
     public static final String BRIGHTNESS_BAND_NAME = "brightness_value";
     public static final String NDSI_BAND_NAME = "ndsi_value";
-    public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "schiller_nn_value";
+    public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";
 
     static final int SRC_SZA = 0;
     static final int SRC_SAA = 1;

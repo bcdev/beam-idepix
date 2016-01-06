@@ -124,13 +124,13 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
 
     @Parameter(defaultValue = "5.0",
-            label = " Schiller 'MERIS1600' threshold (MERIS Sea Ice) ",
-            description = " Schiller 'MERIS1600' threshold value ")
+            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
+            description = " 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
 
     @Parameter(defaultValue = "0.5",
-            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
-            description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
+            label = " 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
+            description = " 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
 
 

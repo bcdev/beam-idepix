@@ -63,17 +63,17 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
     boolean flipSourceImages;
 
     @Parameter(defaultValue = "2.15",
-            label = " Schiller NN cloud ambiguous lower boundary ",
+            label = " NN cloud ambiguous lower boundary ",
             description = " Schiller NN cloud ambiguous lower boundary ")
     double avhrracSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.45",
-            label = " Schiller NN cloud ambiguous/sure separation value ",
+            label = " NN cloud ambiguous/sure separation value ",
             description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
     double avhrracSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.45",
-            label = " Schiller NN cloud sure/snow separation value ",
+            label = " NN cloud sure/snow separation value ",
             description = " Schiller NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
@@ -153,7 +153,7 @@ public abstract class AbstractAvhrrAcClassificationOp extends PixelOperator {
         try (InputStream is = getClass().getResourceAsStream(SCHILLER_AVHRRAC_NET_NAME)) {
             avhrracNeuralNet = SchillerNeuralNetWrapper.create(is);
         } catch (IOException e) {
-            throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
+            throw new OperatorException("Cannot read Neural Nets: " + e.getMessage());
         }
     }
 

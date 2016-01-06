@@ -36,8 +36,8 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
     private Product waterClassifProduct;
 
     @Parameter(defaultValue = "true",
-            label = " Write Schiller NN value to the target product.",
-            description = " If applied, write Schiller NN value to the target product ")
+            label = " Write NN value to the target product.",
+            description = " If applied, write NN value to the target product ")
     private boolean outputSchillerNNValue;
 
     private Band waterClassifBand;

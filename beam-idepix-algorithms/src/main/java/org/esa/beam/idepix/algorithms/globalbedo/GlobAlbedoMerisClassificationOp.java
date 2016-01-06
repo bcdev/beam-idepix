@@ -48,18 +48,18 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     private Product pbaroProduct;
 
     @Parameter(defaultValue = "1.1",
-            label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
-            description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
+            label = " Alternative NN cloud ambiguous lower boundary (MERIS only)",
+            description = " Alternative NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
     private double gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-            label = " Alternative Schiller NN cloud ambiguous/sure separation value (MERIS only)",
-            description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
+            label = " Alternative NN cloud ambiguous/sure separation value (MERIS only)",
+            description = " Alternative NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
     private double gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-            label = " Alternative Schiller NN cloud sure/snow separation value (MERIS only)",
-            description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
+            label = " Alternative NN cloud sure/snow separation value (MERIS only)",
+            description = " Alternative NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
     private double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
 
     private static final int MERIS_L1B_F_INVALID = 7;
@@ -135,7 +135,7 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
                     setCloudFlag(cloudFlagTargetTile, y, x, globAlbedoAlgorithm);
 
-                    // apply improvement from Schiller NN approach...
+                    // apply improvement from NN approach...
                     if (gaApplyMERISAlternativeSchillerNN) {
                         final double[] nnOutput = ((GlobAlbedoMerisAlgorithm) globAlbedoAlgorithm).getNnOutput();
 

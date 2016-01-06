@@ -53,38 +53,38 @@ public class CawaOp extends BasisOp {
     private boolean outputRad2Refl = false;
 
     @Parameter(defaultValue = "false",
-            label = " Write Schiller NN value to the target product.",
-            description = " If applied, write Schiller NN value to the target product ")
+            label = " Write NN value to the target product.",
+            description = " If applied, write NN value to the target product ")
     private boolean outputSchillerNNValue;
 
     @Parameter(defaultValue = "3.0",
-            label = " Schiller NN cloud ambiguous lower boundary (applied on WATER)",
-            description = " Schiller NN cloud ambiguous lower boundary (applied on WATER)")
+            label = " NN cloud ambiguous lower boundary (applied on WATER)",
+            description = " NN cloud ambiguous lower boundary (applied on WATER)")
     double schillerWaterNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (applied on WATER)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (applied on WATER)")
+            label = " NN cloud ambiguous/sure separation value (applied on WATER)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (applied on WATER)")
     double schillerWaterNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
-            label = " Schiller NN cloud sure/snow separation value (applied on WATER)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (applied on WATER)")
+            label = " NN cloud sure/snow separation value (applied on WATER)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (applied on WATER)")
     double schillerWaterNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "1.1",
-            label = " Schiller NN cloud ambiguous lower boundary (applied on LAND)",
-            description = " Schiller NN cloud ambiguous lower boundary (applied on LAND)")
+            label = " NN cloud ambiguous lower boundary (applied on LAND)",
+            description = " NN cloud ambiguous lower boundary (applied on LAND)")
     double schillerLandNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (applied on LAND)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
+            label = " NN cloud ambiguous/sure separation value (applied on LAND)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
     double schillerLandNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-            label = " Schiller NN cloud sure/snow separation value (applied on LAND)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
+            label = " NN cloud sure/snow separation value (applied on LAND)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
     double schillerLandNNCloudSureSnowSeparationValue;
 
 

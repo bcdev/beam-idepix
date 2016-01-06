@@ -90,48 +90,48 @@ public class GlobAlbedoOp extends BasisOp {
     private boolean gaUseGetasse = false;
 
     @Parameter(defaultValue = "true",
-            label = " Apply alternative Schiller NN for MERIS cloud classification",
-            description = " Apply Schiller NN for MERIS cloud classification (has only effect for MERIS L1b products)")
+            label = " Apply alternative NN for MERIS cloud classification",
+            description = " Apply NN for MERIS cloud classification (has only effect for MERIS L1b products)")
     private boolean gaApplyMERISAlternativeSchillerNN;
 
     @Parameter(defaultValue = "false",
-               label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
-               description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+               label = " Apply alternative NN for MERIS cloud classification purely (not combined with previous approach)",
+               description = " Apply NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean gaApplyMERISAlternativeSchillerNNPure;
 
     @Parameter(defaultValue = "2.0",
-               label = " Alternative Schiller NN cloud ambiguous lower boundary (MERIS only)",
-               description = " Alternative Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
+               label = " Alternative NN cloud ambiguous lower boundary (MERIS only)",
+               description = " Alternative NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
     double gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
-               label = " Alternative Schiller NN cloud ambiguous/sure separation value (MERIS only)",
-               description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
+               label = " Alternative NN cloud ambiguous/sure separation value (MERIS only)",
+               description = " Alternative NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
     double gaAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
-               label = " Alternative Schiller NN cloud sure/snow separation value (MERIS only)",
-               description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
+               label = " Alternative NN cloud sure/snow separation value (MERIS only)",
+               description = " Alternative NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
     double gaAlternativeSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "false",
-            label = " Apply Schiller NN for VGT/Proba-V cloud classification",
-            description = " Apply Schiller NN for VGT/Proba-V cloud classification (has only effect for VGT/Proba-V L1b products)")
+            label = " Apply NN for VGT/Proba-V cloud classification",
+            description = " Apply NN for VGT/Proba-V cloud classification (has only effect for VGT/Proba-V L1b products)")
     private boolean gaApplyVGTSchillerNN;
 
     @Parameter(defaultValue = "1.1",
-            label = " Schiller NN cloud ambiguous lower boundary (VGT/Proba-V only)",
-            description = " Schiller NN cloud ambiguous lower boundary (has only effect for VGT/Proba-V L1b products)")
+            label = " NN cloud ambiguous lower boundary (VGT/Proba-V only)",
+            description = " NN cloud ambiguous lower boundary (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "2.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (VGT/Proba-V only)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT/Proba-V L1b products)")
+            label = " NN cloud ambiguous/sure separation value (VGT/Proba-V only)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.6",
-            label = " Schiller NN cloud sure/snow separation value (VGT/Proba-V only)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT/Proba-V L1b products)")
+            label = " NN cloud sure/snow separation value (VGT/Proba-V only)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (has only effect for VGT/Proba-V L1b products)")
     private double gaSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "false",

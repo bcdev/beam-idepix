@@ -59,23 +59,23 @@ public class CawaLandClassificationOp extends Operator {
     boolean applyMERISSchillerNNPure = false;    // combined approach improves 'cloud sure' detection
 
     @Parameter(defaultValue = "false",
-            label = " Write Schiller NN value to the target product.",
+            label = " Write NN value to the target product.",
             description = " If applied, write Schiller NN value to the target product ")
     private boolean outputSchillerNNValue;
 
     @Parameter(defaultValue = "2.0",
-            label = " Schiller NN cloud ambiguous lower boundary (MERIS only)",
-            description = " Schiller NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
+            label = " NN cloud ambiguous lower boundary (MERIS only)",
+            description = " NN cloud ambiguous lower boundary (has only effect for MERIS L1b products)")
     double schillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
-            label = " Schiller NN cloud ambiguous/sure separation value (MERIS only)",
-            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
+            label = " NN cloud ambiguous/sure separation value (MERIS only)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (has only effect for MERIS L1b products)")
     double schillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
-            label = " Schiller NN cloud sure/snow separation value (MERIS only)",
-            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
+            label = " NN cloud sure/snow separation value (MERIS only)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (has only effect for MERIS L1b products)")
     double schillerNNCloudSureSnowSeparationValue;
 
     @SourceProduct(alias = "l1b", description = "The source product.")

@@ -108,33 +108,33 @@ public class CoastColourOp extends BasisOp {
     private double ccGlintCloudThresholdAddition;
 
     @Parameter(defaultValue = "true",
-               label = " Apply alternative Schiller NN for cloud classification",
-               description = " Apply Schiller NN for cloud classification ")
+               label = " Apply alternative NN for cloud classification",
+               description = " Apply NN for cloud classification ")
     private boolean ccApplyMERISAlternativeSchillerNN;
 
     @Parameter(defaultValue = "true",
-               label = " Use alternative Schiller 'ALL' NN ",
-               description = " Use Schiller 'ALL' NN (instead of 'WATER' NN) ")
+               label = " Use alternative 'ALL' NN ",
+               description = " Use 'ALL' NN (instead of 'WATER' NN) ")
     private boolean ccUseMERISAlternativeSchillerAllNN;
 
     @Parameter(defaultValue = "2.0",
-               label = " Alternative Schiller NN cloud ambiguous lower boundary ",
-               description = " Alternative Schiller NN cloud ambiguous lower boundary ")
+               label = " Alternative NN cloud ambiguous lower boundary ",
+               description = " Alternative NN cloud ambiguous lower boundary ")
     double ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue;
 
     @Parameter(defaultValue = "3.7",
-               label = " Alternative Schiller NN cloud ambiguous/sure separation value ",
-               description = " Alternative Schiller NN cloud ambiguous cloud ambiguous/sure separation value ")
+               label = " Alternative NN cloud ambiguous/sure separation value ",
+               description = " Alternative NN cloud ambiguous cloud ambiguous/sure separation value ")
     double ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue;
 
     @Parameter(defaultValue = "4.05",
-               label = " Alternative Schiller NN cloud sure/snow separation value ",
-               description = " Alternative Schiller NN cloud ambiguous cloud sure/snow separation value ")
+               label = " Alternative NN cloud sure/snow separation value ",
+               description = " Alternative NN cloud ambiguous cloud sure/snow separation value ")
     double ccAlternativeSchillerNNCloudSureSnowSeparationValue;
 
     @Parameter(defaultValue = "true",
-               label = " Apply alternative Schiller NN for MERIS cloud classification purely (not combined with previous approach)",
-               description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
+               label = " Apply alternative NN for MERIS cloud classification purely (not combined with previous approach)",
+               description = " Apply NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean ccApplyMERISAlternativeSchillerNNPure;
 
 

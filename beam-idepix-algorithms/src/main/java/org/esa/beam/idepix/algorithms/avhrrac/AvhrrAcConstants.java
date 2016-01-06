@@ -87,7 +87,7 @@ public class AvhrrAcConstants {
 
 
     // debug bands:
-    public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "schiller_nn_value";
+    public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";
     public static final String EMISSIVITY3B_OUTPUT_BAND_NAME = "emissivity3b";
     public static final String RHO3B_OUTPUT_BAND_NAME = "rho3b";
     public static final String NDSI_OUTPUT_BAND_NAME = "ndsi";

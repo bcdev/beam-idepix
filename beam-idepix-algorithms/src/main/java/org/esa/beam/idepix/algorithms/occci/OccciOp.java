@@ -39,17 +39,17 @@ public class OccciOp extends BasisOp {
 
     @Parameter(defaultValue = "false",
             label = " Process MERIS for Sea Ice CCN ",
-            description = " For Sea Ice CCN, use Schiller 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
+            description = " For Sea Ice CCN, use 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
     private boolean processMerisSeaIce = false;
 
     @Parameter(defaultValue = "5.0",
-            label = " Schiller 'MERIS1600' threshold (MERIS Sea Ice) ",
-            description = " Schiller 'MERIS1600' threshold value ")
+            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
+            description = " 'MERIS1600' threshold value ")
     double schillerMeris1600Threshold;
 
     @Parameter(defaultValue = "0.5",
-            label = " Schiller 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
-            description = " Schiller 'MERIS/AATSR' cloud/ice separation value ")
+            label = " 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
+            description = " 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
 
     @Parameter(defaultValue = "true",
@@ -58,8 +58,8 @@ public class OccciOp extends BasisOp {
     private boolean ocOutputMerisRadiance = true;
 
     @Parameter(defaultValue = "false",
-            label = " Write Schiller NN value to the target product (MERIS).",
-            description = " If applied, write Schiller NN value to the target product (MERIS)")
+            label = " Write NN value to the target product (MERIS).",
+            description = " If applied, write NN value to the target product (MERIS)")
     private boolean outputSchillerMerisNNValue;
 
 //    @Parameter(defaultValue = "2.0",
