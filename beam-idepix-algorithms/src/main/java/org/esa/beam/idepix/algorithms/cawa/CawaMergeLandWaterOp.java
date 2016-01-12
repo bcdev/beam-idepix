@@ -13,6 +13,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.util.ProductUtils;
 
 import java.awt.*;
 
@@ -35,6 +36,9 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
     @SourceProduct(alias = "waterClassif")
     private Product waterClassifProduct;
 
+    @SourceProduct(optional = true)
+    private Product eraInterimProduct;
+
     @Parameter(defaultValue = "true",
             label = " Write NN value to the target product.",
             description = " If applied, write NN value to the target product ")
@@ -47,6 +51,8 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
 
     private Band mergedClassifBand;
     private Band mergedNNBand;
+
+    private Band wsBand;
 
     private boolean hasNNOutput;
 
@@ -62,6 +68,11 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
         FlagCoding flagCoding = CawaUtils.createCawaFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         mergedClassifBand.setSampleCoding(flagCoding);
         mergedClassifProduct.getFlagCodingGroup().add(flagCoding);
+
+        if (eraInterimProduct != null) {
+            ProductUtils.copyBand(CawaConstants.ERA_INTERIM_TCWV_BAND_NAME, eraInterimProduct, mergedClassifProduct, true);
+            wsBand = mergedClassifProduct.addBand(CawaConstants.ERA_INTERIM_WINDSPEED_BAND_NAME, ProductData.TYPE_FLOAT32);
+        }
 
         hasNNOutput = landClassifProduct.containsBand(CawaConstants.SCHILLER_NN_OUTPUT_BAND_NAME) &&
                 waterClassifProduct.containsBand(CawaConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
@@ -81,6 +92,13 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
         final Tile waterClassifTile = getSourceTile(waterClassifBand, rectangle);
         final Tile landClassifTile = getSourceTile(landClassifBand, rectangle);
 
+        Tile u10Tile = null;
+        Tile v10Tile = null;
+        if (eraInterimProduct != null) {
+           u10Tile = getSourceTile(eraInterimProduct.getBand(CawaConstants.ERA_INTERIM_U10_BAND_NAME), rectangle);
+           v10Tile = getSourceTile(eraInterimProduct.getBand(CawaConstants.ERA_INTERIM_V10_BAND_NAME), rectangle);
+        }
+
         Tile waterNNTile = null;
         Tile landNNTile = null;
         if (hasNNOutput) {
@@ -97,7 +115,17 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
                     targetTile.setSample(x, y, sample);
                 }
             }
-        } else if (hasNNOutput && targetBand == mergedNNBand) {
+        } else if (targetBand == wsBand) {
+            for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                checkForCancellation();
+                for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                    final float u10 = u10Tile.getSampleFloat(x, y);
+                    final float v10 = v10Tile.getSampleFloat(x, y);
+                    final float ws = (float) Math.sqrt(u10*u10 + v10*v10);
+                    targetTile.setSample(x, y, ws);
+                }
+            }
+        }else if (hasNNOutput && targetBand == mergedNNBand) {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {

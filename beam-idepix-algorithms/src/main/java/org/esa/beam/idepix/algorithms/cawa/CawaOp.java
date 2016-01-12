@@ -37,6 +37,9 @@ public class CawaOp extends BasisOp {
             description = "The MERIS L1b source product.")
     private Product sourceProduct;
 
+    @SourceProduct(optional = true)
+    private Product eraInterimProduct;
+
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
 
@@ -214,6 +217,9 @@ public class CawaOp extends BasisOp {
         Map<String, Product> mergeInputProducts = new HashMap<>();
         mergeInputProducts.put("landClassif", landClassificationProduct);
         mergeInputProducts.put("waterClassif", waterClassificationProduct);
+        if (eraInterimProduct != null) {
+            mergeInputProducts.put("eraInterimProduct", eraInterimProduct);
+        }
 
         Map<String, Object> mergeClassificationParameters = new HashMap<>();
         mergeClassificationParameters.put("copyAllTiePoints", true);

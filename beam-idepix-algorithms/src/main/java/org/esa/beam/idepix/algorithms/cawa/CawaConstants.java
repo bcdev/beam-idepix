@@ -33,4 +33,9 @@ public class CawaConstants {
     public static final String F_LAND_DESCR_TEXT = "Land pixels";
 
     public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";
+
+    public static final String ERA_INTERIM_TCWV_BAND_NAME = "tcwv";
+    public static final String ERA_INTERIM_U10_BAND_NAME = "u10";
+    public static final String ERA_INTERIM_V10_BAND_NAME = "v10";
+    public static final String ERA_INTERIM_WINDSPEED_BAND_NAME = "ws";
 }
