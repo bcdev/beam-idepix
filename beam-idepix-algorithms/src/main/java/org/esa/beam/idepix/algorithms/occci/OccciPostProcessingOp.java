@@ -322,7 +322,7 @@ public class OccciPostProcessingOp extends BasisOp {
         targetProduct = createCompatibleProduct(classifProduct, classifProduct.getName(), classifProduct.getProductType());
         ProductUtils.copyBand(OccciConstants.CLASSIF_BAND_NAME, classifProduct, targetProduct, false);
         ProductUtils.copyBand("meris_1600", classifProduct, targetProduct, true);
-        ProductUtils.copyBand("meris_aatsr_cloud_prob", classifProduct, targetProduct, true);
+        ProductUtils.copyBand("cloud_prob", classifProduct, targetProduct, true);
 
         ProductUtils.copyFlagBands(reflProduct, targetProduct, true);
 //        ProductUtils.copyTiePointGrids(classifProduct, targetProduct);

@@ -37,30 +37,33 @@ public class OccciOp extends BasisOp {
     private Product ctpProduct;
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "false",
-            label = " Process MERIS for Sea Ice CCN ",
-            description = " For Sea Ice CCN, use 'MERIS/AATSR' NN (instead of standard CC 'WATER' NN) ")
-    private boolean processMerisSeaIce = false;
+    @Parameter(defaultValue = "true",
+            label = " Process MERIS for Sea Ice ",
+            description = " Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) ")
+    private boolean processMerisSeaIce = true;
 
-    @Parameter(defaultValue = "5.0",
-            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
-            description = " 'MERIS1600' threshold value ")
-    double schillerMeris1600Threshold;
+//    @Parameter(defaultValue = "5.0",
+//            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
+//            description = " 'MERIS1600' threshold value ")
+//    double schillerMeris1600Threshold;
+    double schillerMeris1600Threshold = 5.0;
 
-    @Parameter(defaultValue = "0.5",
-            label = " 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
-            description = " 'MERIS/AATSR' cloud/ice separation value ")
-    double schillerMerisAatsrCloudIceSeparationValue;
+//    @Parameter(defaultValue = "0.5",
+//            label = " 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
+//            description = " 'MERIS/AATSR' cloud/ice separation value ")
+//    double schillerMerisAatsrCloudIceSeparationValue;
+    double schillerMerisAatsrCloudIceSeparationValue = 0.5;
 
     @Parameter(defaultValue = "true",
             label = " Radiance bands (MERIS)",
             description = "Write TOA radiance bands to target product (MERIS).")
     private boolean ocOutputMerisRadiance = true;
 
-    @Parameter(defaultValue = "false",
-            label = " Write NN value to the target product (MERIS).",
-            description = " If applied, write NN value to the target product (MERIS)")
-    private boolean outputSchillerMerisNNValue;
+//    @Parameter(defaultValue = "false",
+//            label = " Write NN value to the target product (MERIS).",
+//            description = " If applied, write NN value to the target product (MERIS)")
+//    private boolean outputSchillerMerisNNValue;
+    private boolean outputSchillerMerisNNValue = false;
 
 //    @Parameter(defaultValue = "2.0",
 //            label = " Schiller NN cloud ambiguous lower boundary (MERIS)",

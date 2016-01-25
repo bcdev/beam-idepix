@@ -204,7 +204,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
         ProductUtils.copyFlagBands(l1bProduct, targetProduct, true);
         meris1600Band = targetProduct.addBand("meris_1600", ProductData.TYPE_FLOAT32);
-        merisAatsrCloudProbBand = targetProduct.addBand("meris_aatsr_cloud_prob", ProductData.TYPE_FLOAT32);
+        merisAatsrCloudProbBand = targetProduct.addBand("cloud_prob", ProductData.TYPE_FLOAT32);
     }
 
     private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
@@ -424,13 +424,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             final double reflMeris1600 = nnOutput[0];
             final double merisAatsrCloudProb = nnOutput[1];
 
-            is_snow_ice = false;
-            if (checkForSeaIce) {
-                // new approach using 'meris1600' obtained from MERIS/AATSR-trained NN:
-//                    is_snow_ice = reflMeris1600 < schillerMeris1600Threshold &&
-//                            merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
-                is_snow_ice = merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
-            }
             if (is_snow_ice) {
                 // this would be as 'SNOW/ICE'...
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
@@ -658,14 +651,20 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             bright_f = bright_rc || bright_toa_f;
         }
 
-        final float mdsi = computeMdsi(dc.rhoToa[Constants.bb865][pixelInfo.index], dc.rhoToa[Constants.bb890][pixelInfo.index]);
-        boolean high_mdsi = (mdsi > CC_MDSI_THRESHOLD);
+        // use Schillers new seaice net instead of MDSI (CB/KS/HS, 20160105)
+        final double[] merisAatsrOuterNNOutput = getMerisNNOutput(dc, pixelInfo);
+        final double merisAatsrCloudProb = merisAatsrOuterNNOutput[1];
+        final boolean is_snow_ice = merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
+        result_flags[4] = is_snow_ice;
+
+//        final float mdsi = computeMdsi(dc.rhoToa[Constants.bb865][pixelInfo.index], dc.rhoToa[Constants.bb890][pixelInfo.index]);
+//        boolean high_mdsi = (mdsi > CC_MDSI_THRESHOLD);
+//        result_flags[4] = high_mdsi;
 
         result_flags[0] = bright_f;
         result_flags[1] = slope1_f;
         result_flags[2] = slope2_f;
         result_flags[3] = bright_toa_f;
-        result_flags[4] = high_mdsi;
         result_flags[5] = bright_rc;
     }
 
