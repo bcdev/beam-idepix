@@ -34,6 +34,8 @@ public class CawaConstants {
 
     public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";
 
+    public static final String ERA_INTERIM_T2M_BAND_NAME = "t2m";
+    public static final String ERA_INTERIM_MSLP_BAND_NAME = "msl";
     public static final String ERA_INTERIM_TCWV_BAND_NAME = "tcwv";
     public static final String ERA_INTERIM_U10_BAND_NAME = "u10";
     public static final String ERA_INTERIM_V10_BAND_NAME = "v10";

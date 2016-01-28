@@ -70,6 +70,8 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
         mergedClassifProduct.getFlagCodingGroup().add(flagCoding);
 
         if (eraInterimProduct != null) {
+            ProductUtils.copyBand(CawaConstants.ERA_INTERIM_T2M_BAND_NAME, eraInterimProduct, mergedClassifProduct, true);
+            ProductUtils.copyBand(CawaConstants.ERA_INTERIM_MSLP_BAND_NAME, eraInterimProduct, mergedClassifProduct, true);
             ProductUtils.copyBand(CawaConstants.ERA_INTERIM_TCWV_BAND_NAME, eraInterimProduct, mergedClassifProduct, true);
             wsBand = mergedClassifProduct.addBand(CawaConstants.ERA_INTERIM_WINDSPEED_BAND_NAME, ProductData.TYPE_FLOAT32);
         }
