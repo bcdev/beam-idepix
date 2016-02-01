@@ -57,7 +57,7 @@ public abstract class GlobAlbedoAlgorithm extends AbstractPixelProperties {
         } else {
             return false; // this means: if we have no information about water, we return isClearWater = false
         }
-        return (!isCloud() && waterValue > WATER_THRESH);
+        return (isWater && !isCloud() && waterValue > WATER_THRESH);
     }
 
     @Override
