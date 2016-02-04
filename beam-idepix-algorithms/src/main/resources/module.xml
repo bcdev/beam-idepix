@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.2.17-SNAPSHOT</version>
+    <version>2.2.21</version>
     <name>Idepix Algorithms</name>
     <description>
         Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical
@@ -32,7 +32,7 @@
         <b>Version 2.2.15:</b>
         Added MERIS support in OC-CCI algorithm to prepare for new MERIS/AATSR-based seaice classification.
         <b>Version 2.2.14:</b>
-        Extensionsin AVHRR algorithm.
+        Extending AVHRR algorithm.
         <b>Version 2.2.13:</b>
         Support for SeaWiFS L1C in OC-CCI algorithm.
         <b>Version 2.2.12:</b>
