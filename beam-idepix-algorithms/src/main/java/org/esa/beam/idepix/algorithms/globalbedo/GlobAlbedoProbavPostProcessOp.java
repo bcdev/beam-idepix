@@ -206,6 +206,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final double swir = swirTile.getSampleDouble(x, y);
         double [] tcValue = new double[4];
         double [] tcSlopeValue = new double[2];
+        double ndbi;
 
         tcValue[0] = 0.332* blue+ 0.603* red + 0.676* nir + 0.263* swir;
         tcValue[1] =  0.283* blue+ -0.66* red + 0.577* nir + 0.388* swir;
@@ -215,13 +216,21 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         tcSlopeValue[0] = (tcValue[3]- tcValue[2]);
         tcSlopeValue[1] = (tcValue[2]- tcValue[1]);
 
+        ndbi = (swir - nir)/(swir+nir);
+
         final boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
         final boolean isCloudBuffer = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_BUFFER);
         final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
+        final boolean urban = ndbi > 0;
 
         if (haze && (!isCloudBuffer || isLand)) {
             // set new haze mask todo
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, true);
+        }
+
+        if (urban) {
+            // set new haze mask todo
+            targetTile.setSample(x, y, IdepixConstants.F_HIGH, true);
         }
     }
 
