@@ -466,6 +466,11 @@ public class IdepixUtils {
                                          "cloud_classif_flags.F_VEG_RISK",
                                          getRandomColour(r), 0.5f);
         gaCloudProduct.getMaskGroup().add(index++, mask);
+        mask = Mask.BandMathsType.create("lc_haze",
+                                         F_HAZE_DESCR_TEXT, w, h,
+                                         "cloud_classif_flags.F_HAZE",
+                                         getRandomColour(r), 0.5f);
+        gaCloudProduct.getMaskGroup().add(index++, mask);
 
         return index;
     }
