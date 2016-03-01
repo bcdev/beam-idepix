@@ -41,6 +41,11 @@ public class GlobAlbedoOp extends BasisOp {
             description = "The MERIS or SPOT-VGT L1b product.")
     private Product sourceProduct;
 
+    @SourceProduct(alias = "probavUrbanProduct", optional = true,
+            label = "ProbaV urban product",
+            description = "The ProbaV urban product.")
+    private Product probavUrbanProduct;
+
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
 
@@ -352,6 +357,7 @@ public class GlobAlbedoOp extends BasisOp {
         HashMap<String, Product> input = new HashMap<>();
         input.put("l1b", sourceProduct);
         input.put("probavCloud", gaCloudProduct);
+        input.put("urban", probavUrbanProduct);
 
         Map<String, Object> params = new HashMap<>();
         params.put("cloudBufferWidth", gaCloudBufferWidth);

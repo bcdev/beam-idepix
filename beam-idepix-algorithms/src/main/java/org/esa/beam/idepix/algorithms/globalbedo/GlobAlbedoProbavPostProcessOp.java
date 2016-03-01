@@ -54,6 +54,11 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
     @SourceProduct(alias = "probavCloud")
     private Product probavCloudProduct;
 
+    @SourceProduct(alias = "urban", optional = true,
+            label = "ProbaV urban product",
+            description = "The ProbaV urban product.")
+    private Product probavUrbanProduct;
+
     private Band origCloudFlagBand;
     private Band origSmFlagBand;
     //JM&GK 20160212 Todo
@@ -61,6 +66,8 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
     private Band redBand;
     private Band nirBand;
     private Band swirBand;
+
+    private Band urbanBand;
 
     private RectangleExtender rectCalculator;
 
@@ -80,6 +87,10 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             redBand = probavCloudProduct.getBand("TOA_REFL_RED");
             nirBand = probavCloudProduct.getBand("TOA_REFL_NIR");
             swirBand = probavCloudProduct.getBand("TOA_REFL_SWIR");
+
+            if (probavUrbanProduct != null) {
+                urbanBand = probavUrbanProduct.getBand("urban");
+            }
 
             int extendedWidth = 64;
             int extendedHeight = 64; // todo: what do we need?
@@ -120,6 +131,11 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final Tile nirTile = getSourceTile(nirBand, srcRectangle);
         final Tile swirTile = getSourceTile(swirBand, srcRectangle);
 
+        Tile urbanTile = null;
+        if (urbanBand != null) {
+            urbanTile = getSourceTile(urbanBand, srcRectangle);
+        }
+
         for (int y = srcRectangle.y; y < srcRectangle.y + srcRectangle.height; y++) {
             checkForCancellation();
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
@@ -143,7 +159,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
 
                     consolidateFlaggingWithCloudBuffer(x, y, smFlagTile, targetTile);
                     //JM&GK 20160212 Todo
-                    refineHaze(x, y, blueTile, redTile, nirTile, swirTile, targetTile);
+                    refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
                 }
             }
         }
@@ -197,8 +213,8 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
 
     //JM&GK 20160212 Todo
     private void refineHaze(int x, int y,
-                                            Tile blueTile, Tile redTile, Tile nirTile, Tile swirTile,
-                                            Tile targetTile) {
+                            Tile blueTile, Tile redTile, Tile nirTile, Tile swirTile, Tile urbanTile,
+                            Tile targetTile) {
 
         final double blue = blueTile.getSampleDouble(x, y);
         final double red = redTile.getSampleDouble(x, y);
@@ -215,9 +231,18 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         tcSlopeValue[0] = (tcValue[3]- tcValue[2]);
         tcSlopeValue[1] = (tcValue[2]- tcValue[1]);
 
-        final boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
         final boolean isCloudBuffer = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_BUFFER);
         final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
+
+        boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
+        boolean urbanFromAuxdata;
+        if (urbanTile != null) {
+            final float urbanfromAuxdataValue = urbanTile.getSampleFloat(x, y);
+            urbanFromAuxdata = (urbanfromAuxdataValue == 1.0f);
+            if (urbanFromAuxdata) {
+                haze = tcSlopeValue[0] < -0.1 && !(tcSlopeValue[1] < -0.01);
+            }
+        }
 
         if (haze && (!isCloudBuffer || isLand)) {
             targetTile.setSample(x, y, IdepixConstants.F_HAZE, true);
