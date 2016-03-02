@@ -160,9 +160,24 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                     consolidateFlaggingWithCloudBuffer(x, y, smFlagTile, targetTile);
                     //JM&GK 20160212 Todo
                     refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
+
+                    // JM, 20160302:
+                    setCloudShadow(x, y, smFlagTile, targetTile);
                 }
             }
         }
+    }
+
+    private void setCloudShadow(int x, int y, Tile smFlagTile, Tile targetTile) {
+        // as requested by JM, 20160302:
+        final boolean smCloudShadow =
+                smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUDSHADOW);
+        final boolean safeCloudFinal = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
+        final boolean isHaze = targetTile.getSampleBit(x, y, IdepixConstants.F_HAZE);
+        final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
+
+        final boolean isCloudShadow = smCloudShadow && !safeCloudFinal && !isHaze && isLand;
+        targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, isCloudShadow);
     }
 
     private void combineFlags(int x, int y, Tile sourceFlagTile, Tile targetTile) {

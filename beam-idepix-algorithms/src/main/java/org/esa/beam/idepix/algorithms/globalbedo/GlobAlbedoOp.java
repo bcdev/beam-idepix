@@ -41,10 +41,10 @@ public class GlobAlbedoOp extends BasisOp {
             description = "The MERIS or SPOT-VGT L1b product.")
     private Product sourceProduct;
 
-    @SourceProduct(alias = "probavUrbanProduct", optional = true,
-            label = "ProbaV urban product",
-            description = "The ProbaV urban product.")
-    private Product probavUrbanProduct;
+//    @SourceProduct(alias = "probavUrbanProduct", optional = true,
+//            label = "ProbaV urban product",
+//            description = "The ProbaV urban product.")
+    private Product probavUrbanProduct = null;   //
 
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
