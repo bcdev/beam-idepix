@@ -16,6 +16,7 @@
 
 package org.esa.beam.idepix.algorithms.globalbedo;
 
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.ImageUtils;
 import org.junit.After;
@@ -27,7 +28,9 @@ import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class GlobAlbedoProbavClassificationOpTest {
 
@@ -63,5 +66,19 @@ public class GlobAlbedoProbavClassificationOpTest {
         final RenderedImage image = ImageUtils.createRenderedImage(5, 5, floatData);
         Assert.assertEquals(dbType, image.getSampleModel().getDataType());
         return image;
+    }
+
+    @Test
+    public void testIsProbavUrbanProductValid() {
+        Product sourceProduct = new Product("PROBAV_S1_TOA_X00Y01_20140621_333M_V003", "bla", 1, 1);
+
+        Product urbanProduct = new Product("bla", "bla", 1, 1);
+        assertFalse(GlobAlbedoOp.isProbavUrbanProductValid(sourceProduct, urbanProduct));
+
+        urbanProduct = new Product("urban_mask_X00Y01.nc", "bla", 1, 1);
+        assertTrue(GlobAlbedoOp.isProbavUrbanProductValid(sourceProduct, urbanProduct));
+
+        urbanProduct = new Product("urban_mask_X12Y08.nc", "bla", 1, 1);
+        assertFalse(GlobAlbedoOp.isProbavUrbanProductValid(sourceProduct, urbanProduct));
     }
 }

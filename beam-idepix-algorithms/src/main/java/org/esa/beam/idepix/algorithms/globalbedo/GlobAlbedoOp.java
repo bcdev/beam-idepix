@@ -41,10 +41,10 @@ public class GlobAlbedoOp extends BasisOp {
             description = "The MERIS or SPOT-VGT L1b product.")
     private Product sourceProduct;
 
-//    @SourceProduct(alias = "probavUrbanProduct", optional = true,
-//            label = "ProbaV urban product",
-//            description = "The ProbaV urban product.")
-    private Product probavUrbanProduct = null;   //
+    @SourceProduct(alias = "probavUrbanProduct", optional = true,
+            label = "ProbaV urban product",
+            description = "Urban product (only considered for Proba-V classification, otherwise ignored).")
+    private Product probavUrbanProduct;
 
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
@@ -357,13 +357,35 @@ public class GlobAlbedoOp extends BasisOp {
         HashMap<String, Product> input = new HashMap<>();
         input.put("l1b", sourceProduct);
         input.put("probavCloud", gaCloudProduct);
-        input.put("urban", probavUrbanProduct);
+
+        final boolean isUrbanProductValid = isProbavUrbanProductValid(sourceProduct, probavUrbanProduct);
+        final Product validUrbanProduct = isUrbanProductValid ? probavUrbanProduct : null;
+        input.put("urban", validUrbanProduct);
 
         Map<String, Object> params = new HashMap<>();
         params.put("cloudBufferWidth", gaCloudBufferWidth);
         params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
         gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
                                                     params, input);
+    }
+
+    // package local for testing
+    static boolean isProbavUrbanProductValid(Product sourceProduct, Product urbanProduct) {
+        if (urbanProduct == null) {
+            return false;
+        }
+
+        // e.g. urban_mask_X00Y01.nc
+        final String name = sourceProduct.getName();
+        final int startIndex = name.indexOf("TOA_X") + 4;
+        final String tileString = name.substring(startIndex, startIndex+6);
+
+        final boolean valid = urbanProduct.getName().matches("urban_mask_" + tileString + ".(?i)(nc)");
+        if (!valid) {
+            System.out.println("WARNING: invalid urbanProduct '" + urbanProduct.getName() + "'");
+        }
+
+        return valid;
     }
 
     /**

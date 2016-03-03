@@ -141,28 +141,31 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
-                    combineFlags(x, y, cloudFlagTile, targetTile);
-                    consolidateFlagging(x, y, smFlagTile, targetTile);
-                    boolean isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
-                    if (isCloud) {
-                    // GK 20151201;
+                    boolean isInvalid = targetTile.getSampleBit(x, y, IdepixConstants.F_INVALID);
+                    if (!isInvalid) {
+                        combineFlags(x, y, cloudFlagTile, targetTile);
+                        consolidateFlagging(x, y, smFlagTile, targetTile);
+                        boolean isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
+                        if (isCloud) {
+                            // GK 20151201;
 //                    if (isCloud || smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD)) {
-                        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
-                        if ((computeCloudBuffer)) {
-                            CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                                 targetTile, targetTile,
-                                                                 cloudBufferWidth,
-                                                                 IdepixConstants.F_CLOUD,
-                                                                 IdepixConstants.F_CLOUD_BUFFER);
+                            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
+                            if ((computeCloudBuffer)) {
+                                CloudBuffer.computeSimpleCloudBuffer(x, y,
+                                                                     targetTile, targetTile,
+                                                                     cloudBufferWidth,
+                                                                     IdepixConstants.F_CLOUD,
+                                                                     IdepixConstants.F_CLOUD_BUFFER);
+                            }
                         }
+
+                        consolidateFlaggingWithCloudBuffer(x, y, smFlagTile, targetTile);
+                        //JM&GK 20160212 Todo
+                        refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
+
+                        // JM, 20160302:
+                        setCloudShadow(x, y, smFlagTile, targetTile);
                     }
-
-                    consolidateFlaggingWithCloudBuffer(x, y, smFlagTile, targetTile);
-                    //JM&GK 20160212 Todo
-                    refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
-
-                    // JM, 20160302:
-                    setCloudShadow(x, y, smFlagTile, targetTile);
                 }
             }
         }
@@ -174,9 +177,9 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                 smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUDSHADOW);
         final boolean safeCloudFinal = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
         final boolean isHaze = targetTile.getSampleBit(x, y, IdepixConstants.F_HAZE);
-        final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
+        final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
 
-        final boolean isCloudShadow = smCloudShadow && !safeCloudFinal && !isHaze && isLand;
+        final boolean isCloudShadow = smCloudShadow && !safeCloudFinal && !isHaze && isClearLand;
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, isCloudShadow);
     }
 
@@ -246,8 +249,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         tcSlopeValue[0] = (tcValue[3]- tcValue[2]);
         tcSlopeValue[1] = (tcValue[2]- tcValue[1]);
 
-        final boolean isCloudBuffer = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_BUFFER);
-        final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
+        final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
 
         boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
         boolean urbanFromAuxdata;
@@ -259,7 +261,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             }
         }
 
-        if (haze && (!isCloudBuffer || isLand)) {
+        if (haze && isClearLand) {
             targetTile.setSample(x, y, IdepixConstants.F_HAZE, true);
         }
     }
