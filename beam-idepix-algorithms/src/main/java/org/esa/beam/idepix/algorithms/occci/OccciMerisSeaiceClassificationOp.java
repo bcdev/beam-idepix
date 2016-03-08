@@ -137,12 +137,14 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
     public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "9_3282.3.net";  // latest 'outer' net, HS 20151206
+    public static final String SCHILLER_MERIS_ALL_NET_4CLASS_NAME = "8_671.3.net";  // latest net, HS 20160303
     //    public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "6_912.1.net";  // VZA > 14deg
     public static final String SCHILLER_MERIS_AATSR_INNER_NET_NAME = "6_1271.6.net"; // VZA < 7deg
 
     ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAatsrOuterNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisAll4ClassNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAatsrInnerNeuralNet;
 
 
@@ -173,10 +175,12 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         try (InputStream isWater = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
              InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME);
              InputStream isMerisAatsrOuter = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_OUTER_NET_NAME);
+             InputStream isMerisAllNet4Class = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_4CLASS_NAME);
              InputStream isMerisAatsrInner = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_INNER_NET_NAME)) {
             merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
             merisAllNeuralNet = SchillerNeuralNetWrapper.create(isAll);
             merisAatsrOuterNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrOuter);
+            merisAll4ClassNeuralNet = SchillerNeuralNetWrapper.create(isMerisAllNet4Class);
             merisAatsrInnerNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrInner);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
@@ -203,8 +207,9 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         OccciUtils.setupOccciClassifBitmask(targetProduct);
 
         ProductUtils.copyFlagBands(l1bProduct, targetProduct, true);
-        meris1600Band = targetProduct.addBand("meris_1600", ProductData.TYPE_FLOAT32);
-        merisAatsrCloudProbBand = targetProduct.addBand("cloud_prob", ProductData.TYPE_FLOAT32);
+        nnOutputBand = targetProduct.addBand("nn_value", ProductData.TYPE_FLOAT32);
+//        meris1600Band = targetProduct.addBand("meris_1600", ProductData.TYPE_FLOAT32);
+//        merisAatsrCloudProbBand = targetProduct.addBand("cloud_prob", ProductData.TYPE_FLOAT32);
     }
 
     private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
@@ -310,12 +315,15 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                                 classifyCloud(sd, pixelInfo, targetTile, waterFraction);
                             }
                             final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
-                            if (band == meris1600Band) {
+                            if (band == nnOutputBand) {
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
                             }
-                            if (band == merisAatsrCloudProbBand) {
-                                targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[1]);
-                            }
+//                            if (band == meris1600Band) {
+//                                targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
+//                            }
+//                            if (band == merisAatsrCloudProbBand) {
+//                                targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[1]);
+//                            }
                         }
                     }
                 }
@@ -417,13 +425,26 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
         boolean isCloudSure = false;
 
-        double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
+        if (pixelInfo.x == 130 && pixelInfo.y == 180) {
+            System.out.println("pixelInfo = " + pixelInfo); // sea ice
+        }
+//        if (pixelInfo.x == 240 && pixelInfo.y == 120) {
+//            System.out.println("pixelInfo = " + pixelInfo); // cloud
+//        }
+
+        double nnOutput = getMerisNNOutput(sd, pixelInfo)[0];
+        // latest net 8_671.3.net, 20160303:
+        //  nnOutput <  0.55       : totally cloudy
+        //  0.55 < nnOutput <  1.5 : ice (clear + semi-transparent)
+        //  1.5 < nnOutput < 2.45  : spatially mixed ice/water
+        //  2.45 < nnOutput        : water (clear + semi-transparent)
+
         if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, false);
-            final double reflMeris1600 = nnOutput[0];
-            final double merisAatsrCloudProb = nnOutput[1];
+//            final double reflMeris1600 = nnOutput;
 
+            is_snow_ice = nnOutput >= 0.55 && nnOutput < 1.5;
             if (is_snow_ice) {
                 // this would be as 'SNOW/ICE'...
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
@@ -431,15 +452,15 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
             }
 
-            isCloudSure = !is_snow_ice && reflMeris1600 > schillerMeris1600Threshold &&
-                    nnOutput[1] > schillerMerisAatsrCloudIceSeparationValue;
+//            isCloudSure = !is_snow_ice && reflMeris1600 > schillerMeris1600Threshold &&
+//                    nnOutput[1] > schillerMerisAatsrCloudIceSeparationValue;
+            isCloudSure = nnOutput <  0.55;
             if (isCloudSure) {
                 // this would be 'CLOUD_SURE'...
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, true);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, true);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, true);
             }
-
         }
 
         // todo: do we want to combine somehow with 'old' IPF approach??
@@ -456,13 +477,15 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
-        return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
+//        return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
+        return getMerisNNOutputImpl(sd, pixelInfo, merisAll4ClassNeuralNet.get()); // latest net, 20160303
     }
 
     private double[] getMerisNNOutputImpl(SourceData sd, PixelInfo pixelInfo, SchillerNeuralNetWrapper nnWrapper) {
         double[] nnInput = nnWrapper.getInputVector();
         for (int i = 0; i < nnInput.length; i++) {
-            nnInput[i] = sd.rhoToa[i][pixelInfo.index];   //  latest 'outer' NN 9_3282.3.net";
+//            nnInput[i] = sd.rhoToa[i][pixelInfo.index];   //  latest 'outer' NN 9_3282.3.net";
+            nnInput[i] = Math.sqrt(sd.rhoToa[i][pixelInfo.index]);   //  latest NN 8_671.3.net";
         }
         return nnWrapper.getNeuralNet().calc(nnInput);
     }
@@ -651,11 +674,14 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             bright_f = bright_rc || bright_toa_f;
         }
 
+        // latest Schiller net, 20160303: compute snow_ice later below, not here
+        result_flags[4] = false;
+
         // use Schillers new seaice net instead of MDSI (CB/KS/HS, 20160105)
-        final double[] merisAatsrOuterNNOutput = getMerisNNOutput(dc, pixelInfo);
-        final double merisAatsrCloudProb = merisAatsrOuterNNOutput[1];
-        final boolean is_snow_ice = merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
-        result_flags[4] = is_snow_ice;
+//        final double[] merisAatsrOuterNNOutput = getMerisNNOutput(dc, pixelInfo);
+//        final double merisAatsrCloudProb = merisAatsrOuterNNOutput[1];
+//        final boolean is_snow_ice = merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
+//        result_flags[4] = is_snow_ice;
 
 //        final float mdsi = computeMdsi(dc.rhoToa[Constants.bb865][pixelInfo.index], dc.rhoToa[Constants.bb890][pixelInfo.index]);
 //        boolean high_mdsi = (mdsi > CC_MDSI_THRESHOLD);

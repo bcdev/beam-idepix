@@ -63,7 +63,7 @@ public class OccciOp extends BasisOp {
 //            label = " Write NN value to the target product (MERIS).",
 //            description = " If applied, write NN value to the target product (MERIS)")
 //    private boolean outputSchillerMerisNNValue;
-    private boolean outputSchillerMerisNNValue = false;
+    private boolean outputSchillerMerisNNValue = true;
 
 //    @Parameter(defaultValue = "2.0",
 //            label = " Schiller NN cloud ambiguous lower boundary (MERIS)",

@@ -78,6 +78,9 @@ public class GlobAlbedoProbavClassificationOpTest {
         urbanProduct = new Product("urban_mask_X00Y01.nc", "bla", 1, 1);
         assertTrue(GlobAlbedoOp.isProbavUrbanProductValid(sourceProduct, urbanProduct));
 
+        urbanProduct = new Product("urban_mask_X00Y01", "bla", 1, 1);
+        assertTrue(GlobAlbedoOp.isProbavUrbanProductValid(sourceProduct, urbanProduct));
+
         urbanProduct = new Product("urban_mask_X12Y08.nc", "bla", 1, 1);
         assertFalse(GlobAlbedoOp.isProbavUrbanProductValid(sourceProduct, urbanProduct));
     }

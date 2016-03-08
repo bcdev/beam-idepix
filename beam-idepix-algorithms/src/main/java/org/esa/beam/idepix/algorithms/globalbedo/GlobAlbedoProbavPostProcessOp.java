@@ -89,7 +89,8 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             swirBand = probavCloudProduct.getBand("TOA_REFL_SWIR");
 
             if (probavUrbanProduct != null) {
-                urbanBand = probavUrbanProduct.getBand("urban");
+//                urbanBand = probavUrbanProduct.getBand("urban");
+                urbanBand = probavUrbanProduct.getBand("band_1");
             }
 
             int extendedWidth = 64;
@@ -163,9 +164,9 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                         //JM&GK 20160212 Todo
                         refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
 
-                        // JM, 20160302:
-                        setCloudShadow(x, y, smFlagTile, targetTile);
                     }
+                    // request JM, 20160308: compute cloud shadow also for 'lc_invalid' pixels
+                    setCloudShadow(x, y, smFlagTile, targetTile);
                 }
             }
         }
@@ -251,6 +252,10 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
 
         final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
 
+        if (x == 2250 && y == 1540) {
+            System.out.println("x = " + x);
+        }
+
         boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
         boolean urbanFromAuxdata;
         if (urbanTile != null) {
@@ -263,6 +268,11 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
 
         if (haze && isClearLand) {
             targetTile.setSample(x, y, IdepixConstants.F_HAZE, true);
+            // just in case, set the following to false to avoid e.g. mismatches in LC 'status' band
+            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, false);
+            targetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
+            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false);
+            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
         }
     }
 

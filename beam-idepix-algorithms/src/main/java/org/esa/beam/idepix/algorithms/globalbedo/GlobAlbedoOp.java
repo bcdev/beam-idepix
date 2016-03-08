@@ -18,6 +18,8 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.io.FileUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -380,7 +382,8 @@ public class GlobAlbedoOp extends BasisOp {
         final int startIndex = name.indexOf("TOA_X") + 4;
         final String tileString = name.substring(startIndex, startIndex+6);
 
-        final boolean valid = urbanProduct.getName().matches("urban_mask_" + tileString + ".(?i)(nc)");
+        final String productName = FileUtils.getFilenameWithoutExtension(urbanProduct.getName());
+        final boolean valid = productName.matches("urban_mask_" + tileString);
         if (!valid) {
             System.out.println("WARNING: invalid urbanProduct '" + urbanProduct.getName() + "'");
         }
