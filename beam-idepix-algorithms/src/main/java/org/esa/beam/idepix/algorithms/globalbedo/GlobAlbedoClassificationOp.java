@@ -262,7 +262,8 @@ public abstract class GlobAlbedoClassificationOp extends Operator {
                         int BOTTOM_BORDER = Math.min(y + gaCloudBufferWidth, rectangle.y + rectangle.height - 1);
                         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                                if (!targetTile.getSampleBit(i, j, IdepixConstants.F_INVALID)) {
+                                if (!targetTile.getSampleBit(i, j, IdepixConstants.F_INVALID) &&
+                                        !targetTile.getSampleBit(i, j, IdepixConstants.F_CLOUD)) {
                                     targetTile.setSample(i, j, IdepixConstants.F_CLOUD_BUFFER, true);
                                 }
                             }

@@ -252,10 +252,6 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
 
         final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
 
-        if (x == 2250 && y == 1540) {
-            System.out.println("x = " + x);
-        }
-
         boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
         boolean urbanFromAuxdata;
         if (urbanTile != null) {
@@ -273,6 +269,10 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
+        }
+
+        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_BUFFER, false);
         }
     }
 
