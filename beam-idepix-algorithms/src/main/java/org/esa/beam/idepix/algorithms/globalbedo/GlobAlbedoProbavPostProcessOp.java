@@ -1,6 +1,7 @@
 package org.esa.beam.idepix.algorithms.globalbedo;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.collocation.CollocateOp;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
@@ -77,21 +78,29 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         if (!computeCloudBuffer && !computeCloudShadow && !refineClassificationNearCoastlines) {
             setTargetProduct(probavCloudProduct);
         } else {
+            Product finalProbavCloudProduct = probavCloudProduct;
+            if (probavUrbanProduct != null) {
+                // collocate probav (usually 3360x3360) with urban (3600x3600)
+                CollocateOp collocateOp = new CollocateOp();
+                collocateOp.setParameterDefaultValues();
+                collocateOp.setMasterProduct(probavCloudProduct);
+                collocateOp.setSlaveProduct(probavUrbanProduct);
+                collocateOp.setRenameMasterComponents(false);
+                collocateOp.setRenameSlaveComponents(false);
+                finalProbavCloudProduct = collocateOp.getTargetProduct();
+            }
+
             Product postProcessedCloudProduct = createTargetProduct(probavCloudProduct,
                                                                     "postProcessedCloud", "postProcessedCloud");
 
-            origCloudFlagBand = probavCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+            origCloudFlagBand = finalProbavCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
             origSmFlagBand = l1bProduct.getBand("SM_FLAGS");
             //JM&GK 20160212 Todo
-            blueBand = probavCloudProduct.getBand("TOA_REFL_BLUE");
-            redBand = probavCloudProduct.getBand("TOA_REFL_RED");
-            nirBand = probavCloudProduct.getBand("TOA_REFL_NIR");
-            swirBand = probavCloudProduct.getBand("TOA_REFL_SWIR");
-
-            if (probavUrbanProduct != null) {
-//                urbanBand = probavUrbanProduct.getBand("urban");
-                urbanBand = probavUrbanProduct.getBand("band_1");
-            }
+            blueBand = finalProbavCloudProduct.getBand("TOA_REFL_BLUE");
+            redBand = finalProbavCloudProduct.getBand("TOA_REFL_RED");
+            nirBand = finalProbavCloudProduct.getBand("TOA_REFL_NIR");
+            swirBand = finalProbavCloudProduct.getBand("TOA_REFL_SWIR");
+            urbanBand = finalProbavCloudProduct.getBand("band_1");
 
             int extendedWidth = 64;
             int extendedHeight = 64; // todo: what do we need?
@@ -101,7 +110,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                                                    extendedWidth, extendedHeight
             );
 
-            ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, probavCloudProduct, postProcessedCloudProduct, false);
+            ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, finalProbavCloudProduct, postProcessedCloudProduct, false);
             setTargetProduct(postProcessedCloudProduct);
         }
     }
