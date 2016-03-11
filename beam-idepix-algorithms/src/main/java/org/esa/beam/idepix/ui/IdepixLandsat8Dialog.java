@@ -17,13 +17,11 @@ import org.esa.beam.framework.gpf.internal.RasterDataNodeValues;
 import org.esa.beam.framework.gpf.ui.*;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.UIUtils;
-import org.esa.beam.idepix.algorithms.landsat8.NNSelector;
+import org.esa.beam.idepix.algorithms.landsat8.LandsatNNSelector;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
@@ -155,7 +153,7 @@ public class IdepixLandsat8Dialog extends SingleTargetProductDialog {
                         nnSelectionComboBox.addItemListener(new ItemListener() {
                             @Override
                             public void itemStateChanged(ItemEvent e) {
-                                final NNSelector nnSelector = (NNSelector) nnSelectionComboBox.getSelectedItem();
+                                final LandsatNNSelector nnSelector = (LandsatNNSelector) nnSelectionComboBox.getSelectedItem();
                                 updateSeparationDefaultValues(nnSelector, components);
                             }
                         });
@@ -165,7 +163,7 @@ public class IdepixLandsat8Dialog extends SingleTargetProductDialog {
         }
     }
 
-    private void updateSeparationDefaultValues(NNSelector nnSelector, Component[] components) {
+    private void updateSeparationDefaultValues(LandsatNNSelector nnSelector, Component[] components) {
         for (int i = 0; i < components.length - 1; i++) {
             if (components[i].getName() != null && components[i].getName().equals("nnCloudAmbiguousLowerBoundaryValue")) {
                 JTextField nnCloudAmbiguousLowerBoundaryValueTextField = (JTextField) components[i];
@@ -323,9 +321,9 @@ public class IdepixLandsat8Dialog extends SingleTargetProductDialog {
             final Component cellRendererComponent =
                     super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (cellRendererComponent instanceof JLabel && value instanceof NNSelector) {
+            if (cellRendererComponent instanceof JLabel && value instanceof LandsatNNSelector) {
                 final JLabel label = (JLabel) cellRendererComponent;
-                final NNSelector nn = (NNSelector) value;
+                final LandsatNNSelector nn = (LandsatNNSelector) value;
                 label.setText(nn.getLabel());
             }
 

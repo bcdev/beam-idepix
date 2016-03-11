@@ -6,7 +6,7 @@ package org.esa.beam.idepix.algorithms.landsat8;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public enum NNSelector {
+public enum LandsatNNSelector {
     ALL("ALL", "20x4x2_1012.9.net", new double[]{1.95, 3.45, 4.3}),
     LAND("LAND", "16x6x2_735.5.net", new double[]{2.15, 3.55, 4.4}),
     LAND_USE_THERMAL("LAND_USE_THERMAL", "18x6_509.5.net", new double[]{2.0, 3.65, 4.25}),
@@ -19,7 +19,7 @@ public enum NNSelector {
     private final String nnFileName;
     private final double[] separationValues;
 
-    NNSelector(String label, String nnFileName, double[] separationValues) {
+    LandsatNNSelector(String label, String nnFileName, double[] separationValues) {
         this.label = label;
         this.nnFileName = nnFileName;
         this.separationValues = separationValues;

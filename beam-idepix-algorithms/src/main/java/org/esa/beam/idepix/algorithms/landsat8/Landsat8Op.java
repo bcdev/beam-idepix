@@ -177,7 +177,7 @@ public class Landsat8Op extends Operator {
             "WATER", "WATER_NOTIDAL", "WATER_USE_THERMAL", "WATER_NOTIDAL_USE_THERMAL"},
             label = "Neural Net to be applied",
             description = "The Neural Net which will be applied.")
-    private NNSelector nnSelector;
+    private LandsatNNSelector nnSelector;
 
     @Parameter(defaultValue = "1.95",
             label = "NN cloud ambiguous lower boundary ")

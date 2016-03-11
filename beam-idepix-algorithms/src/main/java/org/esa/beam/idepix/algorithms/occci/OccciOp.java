@@ -38,11 +38,17 @@ public class OccciOp extends BasisOp {
     private Product pbaroProduct;
 
     @Parameter(defaultValue = "true",
-            label = " Process MERIS for Sea Ice ",
+            label = " Process MERIS for sea sce ",
             description = " Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) ")
     private boolean processMerisSeaIce = true;
 
-//    @Parameter(defaultValue = "5.0",
+    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES"},
+            label = "Neural Net for MERIS in case of sea ice classification",
+            description = "The Neural Net which will be applied.")
+    private MerisSeaiceNNSelector nnSelector;
+
+
+    //    @Parameter(defaultValue = "5.0",
 //            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
 //            description = " 'MERIS1600' threshold value ")
 //    double schillerMeris1600Threshold;
@@ -275,6 +281,7 @@ public class OccciOp extends BasisOp {
 
     private void setMerisSeaIceClassificationParameters() {
         waterClassificationParameters = new HashMap<>();
+        waterClassificationParameters.put("nnSelector", nnSelector);
         waterClassificationParameters.put("copyAllTiePoints", true);
         waterClassificationParameters.put("schillerMeris1600Threshold", schillerMeris1600Threshold);
         waterClassificationParameters.put("schillerMerisAatsrCloudIceSeparationValue", schillerMerisAatsrCloudIceSeparationValue);
