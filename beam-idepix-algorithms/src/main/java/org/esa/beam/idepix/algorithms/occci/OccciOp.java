@@ -42,7 +42,7 @@ public class OccciOp extends BasisOp {
             description = " Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) ")
     private boolean processMerisSeaIce = true;
 
-    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES"},
+    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "FOUR_CLASSES_NORTH"},
             label = "Neural Net for MERIS in case of sea ice classification",
             description = "The Neural Net which will be applied.")
     private MerisSeaiceNNSelector nnSelector;

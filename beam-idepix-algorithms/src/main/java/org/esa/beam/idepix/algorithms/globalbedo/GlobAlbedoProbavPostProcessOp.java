@@ -150,6 +150,14 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             checkForCancellation();
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
+                if (x == 930 && y == 1308) {
+                    System.out.println("x = " + x);
+                }
+                if (x == 930 && y == 1309) {
+                    System.out.println("x = " + x);
+                }
+
+
                 if (targetRectangle.contains(x, y)) {
                     boolean isInvalid = targetTile.getSampleBit(x, y, IdepixConstants.F_INVALID);
                     if (!isInvalid) {
@@ -168,16 +176,20 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                                                                      IdepixConstants.F_CLOUD_BUFFER);
                             }
                         }
-
-                        consolidateFlaggingWithCloudBuffer(x, y, smFlagTile, targetTile);
                         //JM&GK 20160212 Todo
                         refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
-
+                        consolidateCloudAndBuffer(targetTile, y, x);
                     }
                     // request JM, 20160308: compute cloud shadow also for 'lc_invalid' pixels
                     setCloudShadow(x, y, smFlagTile, targetTile);
                 }
             }
+        }
+    }
+
+    private void consolidateCloudAndBuffer(Tile targetTile, int y, int x) {
+        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_BUFFER, false);
         }
     }
 
@@ -230,9 +242,11 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, safeSnowIce);
     }
 
+    // todo: can be removed?!
     private void consolidateFlaggingWithCloudBuffer(int x, int y, Tile smFlagTile, Tile targetTile) {
         final boolean isCloudBuffer = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_BUFFER);
         if (isCloudBuffer) {
+            targetTile.setSample(x, y, IdepixConstants.F_HAZE, false);     // JM, 20160314
             targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
@@ -278,10 +292,6 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false);
             targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
-        }
-
-        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_BUFFER, false);
         }
     }
 

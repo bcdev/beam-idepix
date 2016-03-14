@@ -103,7 +103,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     @TargetProduct
     private Product targetProduct;
 
-    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES"},
+    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "FOUR_CLASSES_NORTH"},
             label = "Neural Net for MERIS in case of sea ice classification",
             description = "The Neural Net which will be applied.")
     private MerisSeaiceNNSelector nnSelector;
@@ -509,27 +509,36 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private boolean isCloudSureFromNN(double nnOutput) {
-        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES) {
-            return nnOutput <  0.55;
-        } else {
-            return nnOutput <  0.7;
-        }
+//        return nnOutput <  nnSelector.getSeparationValues()[0];
+        return nnOutput <  nnSelector.getSeparationValues()[1];    // this is not Schillers best value!
     }
 
     private boolean isCloudAmbiguousFromNN(double nnOutput) {
-        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES) {
-            return nnOutput <  0.55;
+        final double sep0 = nnSelector.getSeparationValues()[0];
+        final double sep1 = nnSelector.getSeparationValues()[1];
+        final double sep2 = nnSelector.getSeparationValues()[2];
+        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
+                nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
+//            return nnOutput <  sep0;
+            return nnOutput <  sep1;  // this is not Schillers best value!
         } else {
-            return (nnOutput >= 1.65 && nnOutput < 2.5) || (nnOutput >= 3.5 && nnOutput < 4.6);
+            final double sep3 = nnSelector.getSeparationValues()[3];
+            final double sep4 = nnSelector.getSeparationValues()[4];
+            return (nnOutput >= sep1 && nnOutput < sep2) || (nnOutput >= sep3 && nnOutput < sep4);
         }
     }
 
     private boolean isSnowIceFromNN(double nnOutput) {
-        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES) {
-//            return nnOutput >= 0.55 && nnOutput < 1.5;
-            return nnOutput >= 0.55 && nnOutput < 2.45;
+        final double sep0 = nnSelector.getSeparationValues()[0];
+        final double sep1 = nnSelector.getSeparationValues()[1];
+        final double sep2 = nnSelector.getSeparationValues()[2];
+        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
+                nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
+//            return nnOutput >= sep0 && nnOutput < sep1;
+            return nnOutput >= sep0 && nnOutput < sep2;
         } else {
-            return (nnOutput >= 0.7 && nnOutput < 1.65) || (nnOutput >= 2.8 && nnOutput < 3.5);
+            final double sep3 = nnSelector.getSeparationValues()[3];
+            return (nnOutput >= sep0 && nnOutput < sep1) || (nnOutput >= sep2 && nnOutput < sep3);
         }
     }
 
