@@ -12,6 +12,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.operators.BasisOp;
+import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 
 import java.util.HashMap;
@@ -85,36 +86,6 @@ public class AvhrrAcOp extends BasisOp {
             description = " NN cloud ambiguous cloud sure/snow separation value ")
     double avhrracSchillerNNCloudSureSnowSeparationValue;
 
-//    @Parameter(defaultValue = "0.2",
-//            label = " Reflectance 1 'brightness' threshold ",
-//            description = " Reflectance 1 'brightness' threshold ")
-//    double reflCh1Thresh;
-//
-//    @Parameter(defaultValue = "0.2",
-//            label = " Reflectance 2 'brightness' threshold ",
-//            description = " Reflectance 2 'brightness' threshold ")
-//    double reflCh2Thresh;
-//
-//    @Parameter(defaultValue = "1.0",
-//            label = " Reflectance 2/1 ratio threshold ",
-//            description = " Reflectance 2/1 ratio threshold ")
-//    double r2r1RatioThresh;
-//
-//    @Parameter(defaultValue = "1.0",
-//            label = " Reflectance 3/1 ratio threshold ",
-//            description = " Reflectance 3/1 ratio threshold ")
-//    double r3r1RatioThresh;
-//
-//    @Parameter(defaultValue = "-30.0",
-//            label = " Channel 4 brightness temperature threshold (C)",
-//            description = " Channel 4 brightness temperature threshold (C)")
-//    double btCh4Thresh;
-//
-//    @Parameter(defaultValue = "-30.0",
-//            label = " Channel 5 brightness temperature threshold (C)",
-//            description = " Channel 5 brightness temperature threshold (C)")
-//    double btCh5Thresh;
-
 
     private Map<String, Object> aacCloudClassificationParameters;
 
@@ -143,13 +114,6 @@ public class AvhrrAcOp extends BasisOp {
         aacCloudClassificationParameters.put("avhrracSchillerNNCloudSureSnowSeparationValue",
                 avhrracSchillerNNCloudSureSnowSeparationValue);
 
-//        aacCloudClassificationParameters.put("reflCh1Thresh", reflCh1Thresh);
-//        aacCloudClassificationParameters.put("reflCh2Thresh", reflCh2Thresh);
-//        aacCloudClassificationParameters.put("r2r1RatioThresh", r2r1RatioThresh);
-//        aacCloudClassificationParameters.put("r3r1RatioThresh", r3r1RatioThresh);
-//        aacCloudClassificationParameters.put("btCh4Thresh", btCh4Thresh);
-//        aacCloudClassificationParameters.put("btCh5Thresh", btCh5Thresh);
-
         return aacCloudClassificationParameters;
     }
 
@@ -160,18 +124,13 @@ public class AvhrrAcOp extends BasisOp {
         AbstractAvhrrAcClassificationOp acClassificationOp = null;
         if (IdepixUtils.isAvhrrTimelineProduct(sourceProduct)) {
             acClassificationOp = new AvhrrAcTimelineClassificationOp();
-        } else if (IdepixUtils.isAvhrrAvisaProduct(sourceProduct)) {
-//            acClassificationOp = new AvhrrAcTestClassificationOp();
-        } else if (IdepixUtils.isAvhrrUsgsProduct(sourceProduct)) {
+        }  else if (IdepixUtils.isAvhrrUsgsProduct(sourceProduct)) {
             acClassificationOp = new AvhrrAcUSGSClassificationOp();
         } else if (IdepixUtils.isAvhrrOldTestProduct(sourceProduct)) {
             acClassificationOp = new AvhrrAcTestClassificationOp();
         } else {
             throw new OperatorException("Input product is not a valid AVHRR product.");
         }
-
-        // test operator for Avisa products which contain all inputs for Schiller NN:
-//        AvhrrAcAvisaClassificationOp acClassificationOp = new AvhrrAcAvisaClassificationOp();
 
         acClassificationOp.setParameterDefaultValues();
         for (String key : aacCloudClassificationParameters.keySet()) {
@@ -180,7 +139,6 @@ public class AvhrrAcOp extends BasisOp {
         acClassificationOp.setSourceProduct("aacl1b", sourceProduct);
         acClassificationOp.setSourceProduct("waterMask", waterMaskProduct);
 
-//        setTargetProduct(acClassificationOp.getTargetProduct());
         // todo: do we want postprocessing for AVHRR?
         classificationProduct = acClassificationOp.getTargetProduct();
         postProcess();
@@ -200,11 +158,22 @@ public class AvhrrAcOp extends BasisOp {
         input.put("waterMask", waterMaskProduct);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("cloudBufferWidth", cloudBufferWidth);
-        params.put("computeCloudBuffer", computeCloudBuffer);
         params.put("computeCloudShadow", false);     // todo: we need algo
         params.put("refineClassificationNearCoastlines", refineClassificationNearCoastlines);  // always an improvement, but time consuming
-        postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AvhrrAcPostProcessOp.class), params, input);
+
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AvhrrAcPostProcessOp.class),
+                                                            params, input);
+
+        if (computeCloudBuffer) {
+            input = new HashMap<>();
+            input.put("classifiedProduct", classifiedProduct);
+            params = new HashMap<>();
+            params.put("cloudBufferWidth", cloudBufferWidth);
+            postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                                      params, input);
+        } else {
+            postProcessingProduct = classifiedProduct;
+        }
     }
 
 

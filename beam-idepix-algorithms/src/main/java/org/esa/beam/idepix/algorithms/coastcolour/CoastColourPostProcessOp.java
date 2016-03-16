@@ -2,12 +2,7 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -16,14 +11,15 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import org.esa.beam.idepix.CloudBuffer;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
+import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.HashMap;
 
 /**
@@ -37,15 +33,12 @@ import java.util.HashMap;
  * @since Idepix 1.3.1
  */
 @OperatorMetadata(alias = "idepix.coastcolour.postprocess",
-                  version = "2.2",
-                  internal = true,
-                  authors = "Marco Peters",
-                  copyright = "(c) 2011 by Brockmann Consult",
-                  description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
+        version = "2.2",
+        internal = true,
+        authors = "Marco Peters",
+        copyright = "(c) 2011 by Brockmann Consult",
+        description = "Refines the cloud classification of Meris.CoastColourCloudClassification operator.")
 public class CoastColourPostProcessOp extends MerisBasisOp {
-
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
 
     @SourceProduct(alias = "l1b")
     private Product l1bProduct;
@@ -141,24 +134,17 @@ public class CoastColourPostProcessOp extends MerisBasisOp {
             checkForCancellation();
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
                 if (targetRectangle.contains(x, y)) {
-                    if (targetRectangle.contains(x, y)) {
-                        boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
-                        combineFlags(x, y, sourceFlagTile, targetTile);
+                    boolean isCloud = sourceFlagTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
+                    combineFlags(x, y, sourceFlagTile, targetTile);
 
-                        if (isNearCoastline(x, y, sourceFlagTile, waterFractionTile, srcRectangle)) {
-                            targetTile.setSample(x, y, CoastColourClassificationOp.F_COASTLINE, true);
-                            refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
-                            if (isCloud) {
-                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
-                            }
-                        }
-                        boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
-                        if (isCloudAfterRefinement) {
-                            CloudBuffer.computeSimpleCloudBuffer(x, y, targetTile, targetTile, cloudBufferWidth,
-                                                                 CoastColourClassificationOp.F_CLOUD,
-                                                                 CoastColourClassificationOp.F_CLOUD_BUFFER);
+                    if (isNearCoastline(x, y, sourceFlagTile, waterFractionTile, srcRectangle)) {
+                        targetTile.setSample(x, y, CoastColourClassificationOp.F_COASTLINE, true);
+                        refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
+                        if (isCloud) {
+                            refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
                         }
                     }
+                    boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CoastColourClassificationOp.F_CLOUD);
                 }
             }
         }

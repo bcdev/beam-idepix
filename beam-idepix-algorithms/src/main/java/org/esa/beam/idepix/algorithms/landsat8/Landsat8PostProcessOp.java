@@ -9,7 +9,6 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.idepix.algorithms.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -35,12 +34,6 @@ import java.awt.*;
         copyright = "(c) 2015 by Brockmann Consult",
         description = "Refines the Landsat cloud classification.")
 public class Landsat8PostProcessOp extends Operator {
-
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
-
-    @Parameter(defaultValue = "false", label = " Compute a cloud buffer")
-    private boolean computeCloudBuffer;
 
     //    @Parameter(defaultValue = "true",
 //            label = " Compute cloud shadow",
@@ -71,7 +64,7 @@ public class Landsat8PostProcessOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        if (!computeCloudBuffer && !computeCloudShadow && !refineClassificationNearCoastlines) {
+        if (!computeCloudShadow && !refineClassificationNearCoastlines) {
             setTargetProduct(landsatCloudProduct);
         } else {
             Product postProcessedCloudProduct = createTargetProduct(landsatCloudProduct,
@@ -122,30 +115,6 @@ public class Landsat8PostProcessOp extends Operator {
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
-//                    boolean isCloud = sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD_SHIMEZ);
-//                    combineFlags(x, y, sourceFlagTile, targetTile);
-//
-//                    if (refineClassificationNearCoastlines) {
-//                        if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
-//                            targetTile.setSample(x, y, Landsat8Constants.F_COASTLINE, true);
-//                            refineSnowIceFlaggingForCoastlines(x, y, sourceFlagTile, targetTile);
-//                            if (isCloud) {
-//                                refineCloudFlaggingForCoastlines(x, y, sourceFlagTile, waterFractionTile, targetTile, srcRectangle);
-//                            }
-//                        }
-//                    }
-//                    boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD_SHIMEZ);
-//                    if (isCloudAfterRefinement) {
-//                        targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, false);
-//                        if ((computeCloudBuffer)) {
-//                            CloudBuffer.computeSimpleCloudBuffer(x, y,
-//                                                                 targetTile, targetTile,
-//                                                                 cloudBufferWidth,
-//                                                                 Landsat8Constants.F_CLOUD_SHIMEZ,
-//                                                                 Landsat8Constants.F_CLOUD_SHIMEZ_BUFFER);
-//                        }
-//                    }
-
                     combineFlags(x, y, sourceFlagTile, targetTile);
 
                     postProcess(x, y, targetTile, srcRectangle, sourceFlagTile, waterFractionTile,
@@ -166,46 +135,6 @@ public class Landsat8PostProcessOp extends Operator {
 
         if (computeCloudShadow) {
             // todo: we need something modified, as we have no CTP
-//            CloudShadowFronts cloudShadowFronts = new CloudShadowFronts(
-//                    geoCoding,
-//                    srcRectangle,
-//                    targetRectangle,
-//                    szaTile, saaTile, ctpTile, altTile) {
-//
-//
-//                @Override
-//                protected boolean isCloudForShadow(int x, int y) {
-//                    final boolean is_cloud_current;
-//                    if (!targetTile.getRectangle().contains(x, y)) {
-//                        is_cloud_current = sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-//                    } else {
-//                        is_cloud_current = targetTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-//                    }
-//                    if (is_cloud_current) {
-//                        final boolean isNearCoastline = isNearCoastline(x, y, waterFractionTile, srcRectangle);
-//                        if (!isNearCoastline) {
-//                            return true;
-//                        }
-//                    }
-//                    return false;
-//                }
-//
-//                @Override
-//                protected boolean isCloudFree(int x, int y) {
-//                    return !sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-//                }
-//
-//                @Override
-//                protected boolean isSurroundedByCloud(int x, int y) {
-//                    return isPixelSurrounded(x, y, sourceFlagTile, Landsat8Constants.F_CLOUD);
-//                }
-//
-//                @Override
-//                protected void setCloudShadow(int x, int y) {
-//                    targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHADOW, true);
-//                }
-//            };
-//            cloudShadowFronts.computeCloudShadow();
         }
     }
 
@@ -225,13 +154,6 @@ public class Landsat8PostProcessOp extends Operator {
         boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, cloudFlagBit);
         if (isCloudAfterRefinement) {
             targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, false);
-            if ((computeCloudBuffer)) {
-                CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                     targetTile, targetTile,
-                                                     cloudBufferWidth,
-                                                     cloudFlagBit,
-                                                     cloudBufferFlagBit);
-            }
         }
     }
 

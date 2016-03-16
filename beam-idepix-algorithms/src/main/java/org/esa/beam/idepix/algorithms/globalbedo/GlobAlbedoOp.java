@@ -14,6 +14,7 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
+import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
@@ -178,6 +179,7 @@ public class GlobAlbedoOp extends BasisOp {
     @Override
     public void initialize() throws OperatorException {
         final boolean inputProductIsValid = IdepixUtils.validateInputProduct(sourceProduct, AlgorithmSelector.GlobAlbedo);
+        sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 16); // test
         if (!inputProductIsValid) {
             throw new OperatorException(IdepixConstants.INPUT_INCONSISTENCY_ERROR_MESSAGE);
         }
@@ -310,7 +312,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
 
-        if (gaComputeCloudBuffer) {
+        if (gaComputeCloudBuffer || gaComputeCloudShadow || gaRefineClassificationNearCoastlines) {
             // Post Cloud Classification: coastline refinement, cloud shadow, cloud buffer
             computeGlobAlbedoProbavPostProcessProduct();
 
@@ -352,7 +354,19 @@ public class GlobAlbedoOp extends BasisOp {
         params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
         params.put("gaComputeCloudShadow", gaComputeCloudShadow);
         params.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
-        gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisPostProcessOp.class), params, input);
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
+                                                            params, input);
+
+        if (gaComputeCloudBuffer) {
+            input = new HashMap<>();
+            input.put("classifiedProduct", classifiedProduct);
+            params = new HashMap<>();
+            params.put("cloudBufferWidth", gaCloudBufferWidth);
+            gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                                        params, input);
+        } else {
+            gaPostProcessingProduct = classifiedProduct;
+        }
     }
 
     private void computeGlobAlbedoProbavPostProcessProduct() {
@@ -365,10 +379,19 @@ public class GlobAlbedoOp extends BasisOp {
         input.put("urban", validUrbanProduct);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("cloudBufferWidth", gaCloudBufferWidth);
-        params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
-        gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
                                                     params, input);
+
+        if (gaComputeCloudBuffer) {
+            input = new HashMap<>();
+            input.put("classifiedProduct", classifiedProduct);
+            params = new HashMap<>();
+            params.put("cloudBufferWidth", gaCloudBufferWidth);
+            gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                                        params, input);
+        } else {
+            gaPostProcessingProduct = classifiedProduct;
+        }
     }
 
     // package local for testing

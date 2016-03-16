@@ -2,6 +2,7 @@ package org.esa.beam.idepix.util;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.unmixing.Endmember;
@@ -525,6 +526,20 @@ public class IdepixUtils {
     public static boolean isLeapYear(int year) {
         return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
     }
+
+    public static void consolidateCloudAndBuffer(Tile targetTile, int x, int y) {
+        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
+            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_BUFFER, false);
+        }
+    }
+
+    public static void combineFlags(int x, int y, Tile sourceFlagTile, Tile targetTile) {
+        int sourceFlags = sourceFlagTile.getSampleInt(x, y);
+        int computedFlags = targetTile.getSampleInt(x, y);
+        targetTile.setSample(x, y, sourceFlags | computedFlags);
+    }
+
+
 
     private static Color getRandomColour(Random random) {
         int rColor = random.nextInt(256);

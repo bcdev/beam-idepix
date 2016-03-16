@@ -12,7 +12,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 //import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.CloudBuffer;
+import org.esa.beam.idepix.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
@@ -38,12 +38,6 @@ import java.util.HashMap;
         copyright = "(c) 2015 by Brockmann Consult",
         description = "Refines the CAWA cloud classification over both land and water.")
 public class CawaPostProcessOp extends MerisBasisOp {
-
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
-
-    @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
-    private boolean computeCloudBuffer;
 
     @Parameter(defaultValue = "true",
             label = " Compute cloud shadow",
@@ -143,13 +137,7 @@ public class CawaPostProcessOp extends MerisBasisOp {
                     boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, CawaConstants.F_CLOUD);
                     if (isCloudAfterRefinement) {
                         targetTile.setSample(x, y, CawaConstants.F_SNOW_ICE, false);
-                        CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                             targetTile, targetTile,
-                                                             cloudBufferWidth,
-                                                             CawaConstants.F_CLOUD,
-                                                             CawaConstants.F_CLOUD_BUFFER);
                     }
-
                 }
             }
         }

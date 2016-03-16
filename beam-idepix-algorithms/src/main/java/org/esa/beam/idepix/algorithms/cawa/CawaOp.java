@@ -13,6 +13,7 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
+import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 
@@ -234,11 +235,22 @@ public class CawaOp extends BasisOp {
         input.put("ctp", ctpProduct);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("cloudBufferWidth", cloudBufferWidth);
-        params.put("computeCloudBuffer", computeCloudBuffer);
         params.put("computeCloudShadow", computeCloudShadow);
         params.put("refineClassificationNearCoastlines", true);  // always an improvement
-        postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaPostProcessOp.class), params, input);
+
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CawaPostProcessOp.class),
+                                                            params, input);
+
+        if (computeCloudBuffer) {
+            input = new HashMap<>();
+            input.put("classifiedProduct", classifiedProduct);
+            params = new HashMap<>();
+            params.put("cloudBufferWidth", cloudBufferWidth);
+            postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                                        params, input);
+        } else {
+            postProcessingProduct = classifiedProduct;
+        }
     }
 
     private void copyOutputBands() {

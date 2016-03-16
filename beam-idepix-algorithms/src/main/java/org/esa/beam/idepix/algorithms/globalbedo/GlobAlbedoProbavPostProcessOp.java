@@ -11,8 +11,8 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.idepix.CloudBuffer;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.CloudBuffer;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
@@ -33,12 +33,6 @@ import java.awt.*;
         copyright = "(c) 2015 by Brockmann Consult",
         description = "Refines the Proba-V pixel classification.")
 public class GlobAlbedoProbavPostProcessOp extends Operator {
-
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
-
-    @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
-    private boolean computeCloudBuffer;
 
     //    @Parameter(defaultValue = "true",
 //            label = " Compute cloud shadow",
@@ -75,7 +69,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        if (!computeCloudBuffer && !computeCloudShadow && !refineClassificationNearCoastlines) {
+        if (!computeCloudShadow && !refineClassificationNearCoastlines) {
             setTargetProduct(probavCloudProduct);
         } else {
             Product finalProbavCloudProduct = probavCloudProduct;
@@ -150,47 +144,18 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             checkForCancellation();
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
 
-                if (x == 930 && y == 1308) {
-                    System.out.println("x = " + x);
-                }
-                if (x == 930 && y == 1309) {
-                    System.out.println("x = " + x);
-                }
-
-
                 if (targetRectangle.contains(x, y)) {
                     boolean isInvalid = targetTile.getSampleBit(x, y, IdepixConstants.F_INVALID);
                     if (!isInvalid) {
                         combineFlags(x, y, cloudFlagTile, targetTile);
                         consolidateFlagging(x, y, smFlagTile, targetTile);
-                        boolean isCloud = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
-                        if (isCloud) {
-                            // GK 20151201;
-//                    if (isCloud || smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD)) {
-//                            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
-                            if ((computeCloudBuffer)) {
-                                CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                                     targetTile, targetTile,
-                                                                     cloudBufferWidth,
-                                                                     IdepixConstants.F_CLOUD,
-                                                                     IdepixConstants.F_CLOUD_BUFFER);
-                            }
-                        }
+
                         //JM&GK 20160212 Todo
                         refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
-                        consolidateCloudAndBuffer(targetTile, y, x);
                         setCloudShadow(x, y, smFlagTile, targetTile);
                     }
-                    // request JM, 20160308: compute cloud shadow also for 'lc_invalid' pixels
-//                    setCloudShadow(x, y, smFlagTile, targetTile);
                 }
             }
-        }
-    }
-
-    private void consolidateCloudAndBuffer(Tile targetTile, int y, int x) {
-        if (targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD)) {
-            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_BUFFER, false);
         }
     }
 
@@ -199,8 +164,6 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final boolean smCloudShadow =
                 smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUDSHADOW);
         final boolean safeCloudFinal = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
-        final boolean isHaze = targetTile.getSampleBit(x, y, IdepixConstants.F_HAZE);
-        final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
         final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
 
         final boolean isCloudShadow = smCloudShadow && !safeCloudFinal && isLand;
@@ -229,30 +192,16 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         // GK 20151201;
         final boolean smCloud = smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD);
         final boolean safeCloud = idepixCloud || (potentialCloudSnow && (!safeSnowIce && !safeClearWater));
-        final boolean safeClearWaterFinal = ((!safeClearLand && !safeSnowIce  && !safeCloud && !smCloud) && idepixWater) || safeClearWater;
-        final boolean safeClearLandFinal = ((!safeSnowIce  && !idepixCloud && !smCloud && !safeClearWaterFinal) && idepixLand) || safeClearLand;
+        final boolean safeClearWaterFinal = ((!safeClearLand && !safeSnowIce && !safeCloud && !smCloud) && idepixWater) || safeClearWater;
+        final boolean safeClearLandFinal = ((!safeSnowIce && !idepixCloud && !smCloud && !safeClearWaterFinal) && idepixLand) || safeClearLand;
         final boolean safeCloudFinal = safeCloud && (!safeClearLandFinal && !safeClearWaterFinal);
 
 
-//        targetTile.setSample(x, y, IdepixConstants.F_CLOUD, safeCloud);
-//        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, safeClearLand);
-//        targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, safeClearWater);
         // GK 20151201;
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, safeClearLandFinal);
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, safeClearWaterFinal);
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD, safeCloudFinal);
         targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, safeSnowIce);
-    }
-
-    // todo: can be removed?!
-    private void consolidateFlaggingWithCloudBuffer(int x, int y, Tile smFlagTile, Tile targetTile) {
-        final boolean isCloudBuffer = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD_BUFFER);
-        if (isCloudBuffer) {
-            targetTile.setSample(x, y, IdepixConstants.F_HAZE, false);     // JM, 20160314
-            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, false);
-            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_WATER, false);
-            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
-        }
     }
 
     //JM&GK 20160212 Todo
@@ -264,18 +213,16 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final double red = redTile.getSampleDouble(x, y);
         final double nir = nirTile.getSampleDouble(x, y);
         final double swir = swirTile.getSampleDouble(x, y);
-        double [] tcValue = new double[4];
-        double [] tcSlopeValue = new double[2];
+        double[] tcValue = new double[4];
+        double[] tcSlopeValue = new double[2];
 
-        tcValue[0] = 0.332* blue+ 0.603* red + 0.676* nir + 0.263* swir;
-        tcValue[1] =  0.283* blue+ -0.66* red + 0.577* nir + 0.388* swir;
-        tcValue[2] =  0.9* blue+ 0.428* red + 0.0759* nir + -0.041* swir;
-        tcValue[3] =  0.016* blue+ 0.428* red + -0.452* nir + 0.882* swir;
+        tcValue[0] = 0.332 * blue + 0.603 * red + 0.676 * nir + 0.263 * swir;
+        tcValue[1] = 0.283 * blue + -0.66 * red + 0.577 * nir + 0.388 * swir;
+        tcValue[2] = 0.9 * blue + 0.428 * red + 0.0759 * nir + -0.041 * swir;
+        tcValue[3] = 0.016 * blue + 0.428 * red + -0.452 * nir + 0.882 * swir;
 
-        tcSlopeValue[0] = (tcValue[3]- tcValue[2]);
-        tcSlopeValue[1] = (tcValue[2]- tcValue[1]);
-
-        final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
+        tcSlopeValue[0] = (tcValue[3] - tcValue[2]);
+        tcSlopeValue[1] = (tcValue[2] - tcValue[1]);
 
         boolean haze = tcSlopeValue[0] < -0.07 && !(tcSlopeValue[1] < -0.01);
         boolean urbanFromAuxdata;

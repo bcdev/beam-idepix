@@ -15,6 +15,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
+import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 
@@ -370,11 +371,23 @@ public class Landsat8Op extends Operator {
         input.put("waterMask", waterMaskProduct);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("cloudBufferWidth", cloudBufferWidth);
-        params.put("computeCloudBuffer", computeCloudBuffer);
         params.put("computeCloudShadow", false);     // todo: we need algo
         params.put("refineClassificationNearCoastlines", refineClassificationNearCoastlines);  // always an improvement, but time consuming
         postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Landsat8PostProcessOp.class), params, input);
+
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Landsat8PostProcessOp.class),
+                                                            params, input);
+
+        if (computeCloudBuffer) {
+            input = new HashMap<>();
+            input.put("classifiedProduct", classifiedProduct);
+            params = new HashMap<>();
+            params.put("cloudBufferWidth", cloudBufferWidth);
+            postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                                      params, input);
+        } else {
+            postProcessingProduct = classifiedProduct;
+        }
     }
 
     private void copyOutputBands() {

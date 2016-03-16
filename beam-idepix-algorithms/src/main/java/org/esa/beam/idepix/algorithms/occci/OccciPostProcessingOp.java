@@ -10,14 +10,14 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-//import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.operators.BasisOp;
-import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.RectangleExtender;
 
 import java.awt.*;
+
+//import org.esa.beam.idepix.algorithms.coastcolour.CoastColourClassificationOp;
 
 /**
  * OC-CCI post processing operator, operating on tiles:
@@ -47,9 +47,6 @@ public class OccciPostProcessingOp extends BasisOp {
 
     @TargetProduct(description = "The target product.")
     Product targetProduct;
-
-    @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
 
     @Parameter(defaultValue = "false",
             label = " Compute cloud shadow",
@@ -81,7 +78,7 @@ public class OccciPostProcessingOp extends BasisOp {
 
         rectCalculator = new RectangleExtender(new Rectangle(reflProduct.getSceneRasterWidth(),
                                                              reflProduct.getSceneRasterHeight()),
-                                               cloudBufferWidth, cloudBufferWidth
+                                               2, 2
         );
 
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
@@ -124,10 +121,6 @@ public class OccciPostProcessingOp extends BasisOp {
                         if (isCloud) {
                             refineCloudFlaggingForCoastlines(x, y, classifFlagSourceTile, waterFractionTile, targetTile, targetRectangle);
                         }
-                    }
-
-                    if (isCloud) {
-                        computeCloudBuffer(x, y, classifFlagSourceTile, targetTile);
                     }
                 }
             }
@@ -338,24 +331,6 @@ public class OccciPostProcessingOp extends BasisOp {
         int computedFlags = targetTile.getSampleInt(x, y);
         targetTile.setSample(x, y, sourceFlags | computedFlags);
     }
-
-    private void computeCloudBuffer(int x, int y, Tile sourceFlagTile, Tile targetTile) {
-        Rectangle rectangle = targetTile.getRectangle();
-        final int LEFT_BORDER = Math.max(x - cloudBufferWidth, rectangle.x);
-        final int RIGHT_BORDER = Math.min(x + cloudBufferWidth, rectangle.x + rectangle.width - 1);
-        final int TOP_BORDER = Math.max(y - cloudBufferWidth, rectangle.y);
-        final int BOTTOM_BORDER = Math.min(y + cloudBufferWidth, rectangle.y + rectangle.height - 1);
-        for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
-            for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                boolean is_already_cloud = sourceFlagTile.getSampleBit(i, j, OccciConstants.F_CLOUD);
-                boolean is_land = sourceFlagTile.getSampleBit(i, j, OccciConstants.F_LAND);
-                if (!is_already_cloud && !is_land && rectangle.contains(i, j)) {
-                    targetTile.setSample(i, j, OccciConstants.F_CLOUD_BUFFER, true);
-                }
-            }
-        }
-    }
-
 
     /**
      * The Service Provider Interface (SPI) for the operator.

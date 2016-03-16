@@ -11,6 +11,7 @@ import org.esa.beam.idepix.AlgorithmSelector;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
+import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
 
@@ -54,7 +55,7 @@ public class OccciOp extends BasisOp {
 //    double schillerMeris1600Threshold;
     double schillerMeris1600Threshold = 5.0;
 
-//    @Parameter(defaultValue = "0.5",
+    //    @Parameter(defaultValue = "0.5",
 //            label = " 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
 //            description = " 'MERIS/AATSR' cloud/ice separation value ")
 //    double schillerMerisAatsrCloudIceSeparationValue;
@@ -65,25 +66,25 @@ public class OccciOp extends BasisOp {
             description = "Write TOA radiance bands to target product (MERIS).")
     private boolean ocOutputMerisRadiance = true;
 
-//    @Parameter(defaultValue = "false",
+    //    @Parameter(defaultValue = "false",
 //            label = " Write NN value to the target product (MERIS).",
 //            description = " If applied, write NN value to the target product (MERIS)")
 //    private boolean outputSchillerMerisNNValue;
     private boolean outputSchillerMerisNNValue = true;
 
-//    @Parameter(defaultValue = "2.0",
+    //    @Parameter(defaultValue = "2.0",
 //            label = " Schiller NN cloud ambiguous lower boundary (MERIS)",
 //            description = " Schiller NN cloud ambiguous lower boundary (MERIS)")
 //    double schillerMerisNNCloudAmbiguousLowerBoundaryValue;
     double schillerMerisNNCloudAmbiguousLowerBoundaryValue = 2.0;
 
-//    @Parameter(defaultValue = "3.7",
+    //    @Parameter(defaultValue = "3.7",
 //            label = " Schiller NN cloud ambiguous/sure separation value (MERIS)",
 //            description = " Schiller NN cloud ambiguous cloud ambiguous/sure separation value (MERIS)")
 //    double schillerMerisNNCloudAmbiguousSureSeparationValue;
     double schillerMerisNNCloudAmbiguousSureSeparationValue = 3.7;
 
-//    @Parameter(defaultValue = "4.05",
+    //    @Parameter(defaultValue = "4.05",
 //            label = " Schiller NN cloud sure/snow separation value (MERIS)",
 //            description = " Schiller NN cloud ambiguous cloud sure/snow separation value (MERIS)")
 //    double schillerMerisNNCloudSureSnowSeparationValue;
@@ -183,7 +184,6 @@ public class OccciOp extends BasisOp {
         // - cloud buffer
         // - cloud shadow todo (currently only for Meris)
         Map<String, Object> postProcessParameters = new HashMap<>();
-        postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
         Map<String, Product> postProcessInput = new HashMap<>();
         postProcessInput.put("waterMask", waterMaskProduct);
 
@@ -200,10 +200,19 @@ public class OccciOp extends BasisOp {
 
         postProcessInput.put("classif", classifProduct);
 
-        Product postProcessProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
-                                                       postProcessParameters, postProcessInput);
-        setTargetProduct(postProcessProduct);
-        addBandsToTargetProduct(postProcessProduct);
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciPostProcessingOp.class),
+                                                            postProcessParameters, postProcessInput);
+
+        postProcessInput = new HashMap<>();
+        postProcessInput.put("classifiedProduct", classifiedProduct);
+        postProcessParameters = new HashMap<>();
+        postProcessParameters.put("cloudBufferWidth", cloudBufferWidth);
+        final Product postProcessingProductWithCloudBuffer =
+                GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                  postProcessParameters, postProcessInput);
+
+        setTargetProduct(postProcessingProductWithCloudBuffer);
+        addBandsToTargetProduct(postProcessingProductWithCloudBuffer);
     }
 
     private void computeAlgorithmInputProducts(Map<String, Product> occciClassifInput) {

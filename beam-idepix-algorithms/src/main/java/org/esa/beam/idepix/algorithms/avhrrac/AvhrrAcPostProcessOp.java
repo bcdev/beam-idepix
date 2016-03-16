@@ -9,7 +9,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.idepix.algorithms.CloudBuffer;
+import org.esa.beam.idepix.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -33,11 +33,6 @@ import java.awt.*;
                   copyright = "(c) 2015 by Brockmann Consult",
                   description = "Refines the Landsat cloud classification.")
 public class AvhrrAcPostProcessOp extends Operator {
-    @Parameter(defaultValue = "2", label = "Width of cloud buffer (# of pixels)")
-    private int cloudBufferWidth;
-
-    @Parameter(defaultValue = "true", label = " Compute a cloud buffer")
-    private boolean computeCloudBuffer;
 
     //    @Parameter(defaultValue = "true",
 //            label = " Compute cloud shadow",
@@ -69,7 +64,7 @@ public class AvhrrAcPostProcessOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        if (!computeCloudBuffer && !computeCloudShadow && !refineClassificationNearCoastlines) {
+        if (computeCloudShadow && !refineClassificationNearCoastlines) {
             setTargetProduct(avhrrCloudProduct);
         } else {
             Product postProcessedCloudProduct = createTargetProduct(avhrrCloudProduct,
@@ -120,11 +115,6 @@ public class AvhrrAcPostProcessOp extends Operator {
         final Tile sourceFlagTile = getSourceTile(origCloudFlagBand, srcRectangle);
         final Tile waterFractionTile = getSourceTile(waterFractionBand, srcRectangle);
 
-        final Tile rt3Tile = getSourceTile(rt3Band, srcRectangle);
-        final Tile bt4Tile = getSourceTile(bt4Band, srcRectangle);
-        final Tile refl1Tile = getSourceTile(refl1Band, srcRectangle);
-        final Tile refl2Tile = getSourceTile(refl2Band, srcRectangle);
-
         for (int y = srcRectangle.y; y < srcRectangle.y + srcRectangle.height; y++) {
             checkForCancellation();
             for (int x = srcRectangle.x; x < srcRectangle.x + srcRectangle.width; x++) {
@@ -133,12 +123,6 @@ public class AvhrrAcPostProcessOp extends Operator {
                     boolean isCloud = sourceFlagTile.getSampleBit(x, y, AvhrrAcConstants.F_CLOUD);
                     boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, AvhrrAcConstants.F_SNOW_ICE);
                     combineFlags(x, y, sourceFlagTile, targetTile);
-
-                    // snow/ice filter refinement for AVHRR (GK 20150922):
-                    // GK/JM don't want this any more after complete snow/ice revision, 20151028
-//                    if (isSnowIce) {
-//                        refineSnowIceCloudFlagging(x, y, rt3Tile, bt4Tile, refl1Tile, refl2Tile, targetTile);
-//                    }
 
                     if (refineClassificationNearCoastlines) {
                         if (isNearCoastline(x, y, waterFractionTile, srcRectangle)) {
@@ -152,61 +136,13 @@ public class AvhrrAcPostProcessOp extends Operator {
                     boolean isCloudAfterRefinement = targetTile.getSampleBit(x, y, AvhrrAcConstants.F_CLOUD);
                     if (isCloudAfterRefinement) {
                         targetTile.setSample(x, y, AvhrrAcConstants.F_SNOW_ICE, false);
-                        if ((computeCloudBuffer)) {
-                            CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                                 targetTile, targetTile,
-                                                                 cloudBufferWidth,
-                                                                 AvhrrAcConstants.F_CLOUD,
-                                                                 AvhrrAcConstants.F_CLOUD_BUFFER);
-                        }
                     }
-
                 }
             }
         }
 
         if (computeCloudShadow) {
             // todo: we need something modified, as we have no CTP
-//            CloudShadowFronts cloudShadowFronts = new CloudShadowFronts(
-//                    geoCoding,
-//                    srcRectangle,
-//                    targetRectangle,
-//                    szaTile, saaTile, ctpTile, altTile) {
-//
-//
-//                @Override
-//                protected boolean isCloudForShadow(int x, int y) {
-//                    final boolean is_cloud_current;
-//                    if (!targetTile.getRectangle().contains(x, y)) {
-//                        is_cloud_current = sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-//                    } else {
-//                        is_cloud_current = targetTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-//                    }
-//                    if (is_cloud_current) {
-//                        final boolean isNearCoastline = isNearCoastline(x, y, waterFractionTile, srcRectangle);
-//                        if (!isNearCoastline) {
-//                            return true;
-//                        }
-//                    }
-//                    return false;
-//                }
-//
-//                @Override
-//                protected boolean isCloudFree(int x, int y) {
-//                    return !sourceFlagTile.getSampleBit(x, y, Landsat8Constants.F_CLOUD);
-//                }
-//
-//                @Override
-//                protected boolean isSurroundedByCloud(int x, int y) {
-//                    return isPixelSurrounded(x, y, sourceFlagTile, Landsat8Constants.F_CLOUD);
-//                }
-//
-//                @Override
-//                protected void setCloudShadow(int x, int y) {
-//                    targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SHADOW, true);
-//                }
-//            };
-//            cloudShadowFronts.computeCloudShadow();
         }
     }
 
@@ -296,29 +232,6 @@ public class AvhrrAcPostProcessOp extends Operator {
     private void refineSnowIceFlaggingForCoastlines(int x, int y, Tile sourceFlagTile, Tile targetTile) {
         final boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, AvhrrAcConstants.F_SNOW_ICE);
         if (isSnowIce) {
-            targetTile.setSample(x, y, AvhrrAcConstants.F_SNOW_ICE, false);
-        }
-    }
-
-    private void refineSnowIceCloudFlagging(int x, int y,
-                                            Tile rt3Tile, Tile bt4Tile, Tile refl1Tile, Tile refl2Tile,
-                                            Tile targetTile) {
-
-        final double rt3 = rt3Tile.getSampleDouble(x, y);
-        final double bt4 = bt4Tile.getSampleDouble(x, y);
-        final double refl1 = refl1Tile.getSampleDouble(x, y);
-        final double refl2 = refl2Tile.getSampleDouble(x, y);
-        final double ratio21 = refl2/refl1;
-
-        final boolean firstCrit = rt3 > 0.08;
-        final boolean secondCrit = (-40.15 < bt4 && bt4 < 1.35) &&
-                refl1 > 0.25 && (0.85 < ratio21 && ratio21 < 1.15) && rt3 < 0.02;
-
-        if (firstCrit || !secondCrit) {
-            // reset snow_ice to cloud todo: check with a test product from GK if this makes sense at all
-            targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD, true);
-            targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD_SURE, true);
-            targetTile.setSample(x, y, AvhrrAcConstants.F_CLOUD_AMBIGUOUS, false);
             targetTile.setSample(x, y, AvhrrAcConstants.F_SNOW_ICE, false);
         }
     }

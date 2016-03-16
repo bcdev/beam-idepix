@@ -18,8 +18,8 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import org.esa.beam.idepix.CloudBuffer;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.CloudBuffer;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.CloudClassificationOp;
@@ -161,13 +161,13 @@ public class GlobAlbedoMerisPostProcessOp extends MerisBasisOp {
 
                         if (gaComputeCloudBuffer && !gaLcCloudBuffer) {
                             CloudBuffer.computeSimpleCloudBuffer(x, y,
-                                                                 targetTile, targetTile,
+                                                                 targetTile,
+                                                                 srcRectangle,
                                                                  cloudBufferWidth,
-                                                                 IdepixConstants.F_CLOUD,
                                                                  IdepixConstants.F_CLOUD_BUFFER);
                         }
                     }
-
+                    IdepixUtils.consolidateCloudAndBuffer(targetTile, x, y);
                 }
             }
         }
