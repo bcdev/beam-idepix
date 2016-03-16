@@ -167,7 +167,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                         if (isCloud) {
                             // GK 20151201;
 //                    if (isCloud || smFlagTile.getSampleBit(x, y, GlobAlbedoProbavClassificationOp.SM_F_CLOUD)) {
-                            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
+//                            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
                             if ((computeCloudBuffer)) {
                                 CloudBuffer.computeSimpleCloudBuffer(x, y,
                                                                      targetTile, targetTile,
@@ -179,9 +179,10 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                         //JM&GK 20160212 Todo
                         refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
                         consolidateCloudAndBuffer(targetTile, y, x);
+                        setCloudShadow(x, y, smFlagTile, targetTile);
                     }
                     // request JM, 20160308: compute cloud shadow also for 'lc_invalid' pixels
-                    setCloudShadow(x, y, smFlagTile, targetTile);
+//                    setCloudShadow(x, y, smFlagTile, targetTile);
                 }
             }
         }
@@ -200,8 +201,9 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
         final boolean safeCloudFinal = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
         final boolean isHaze = targetTile.getSampleBit(x, y, IdepixConstants.F_HAZE);
         final boolean isClearLand = targetTile.getSampleBit(x, y, IdepixConstants.F_CLEAR_LAND);
+        final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
 
-        final boolean isCloudShadow = smCloudShadow && !safeCloudFinal && !isHaze && isClearLand;
+        final boolean isCloudShadow = smCloudShadow && !safeCloudFinal && isLand;
         targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, isCloudShadow);
     }
 
@@ -285,13 +287,10 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
             }
         }
 
-        if (haze && isClearLand) {
+        final boolean safeCloudFinal = targetTile.getSampleBit(x, y, IdepixConstants.F_CLOUD);
+        final boolean isLand = targetTile.getSampleBit(x, y, IdepixConstants.F_LAND);
+        if (haze && isLand && !safeCloudFinal) {
             targetTile.setSample(x, y, IdepixConstants.F_HAZE, true);
-            // just in case, set the following to false to avoid e.g. mismatches in LC 'status' band
-            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_LAND, false);
-            targetTile.setSample(x, y, IdepixConstants.F_CLOUD, false);
-            targetTile.setSample(x, y, IdepixConstants.F_CLOUD_SHADOW, false);
-            targetTile.setSample(x, y, IdepixConstants.F_CLEAR_SNOW, false);
         }
     }
 
