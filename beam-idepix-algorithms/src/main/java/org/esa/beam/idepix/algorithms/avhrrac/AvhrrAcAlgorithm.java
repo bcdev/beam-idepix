@@ -1,7 +1,6 @@
 package org.esa.beam.idepix.algorithms.avhrrac;
 
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.util.math.MathUtils;
 
 /**
  * IDEPIX instrument-specific pixel identification algorithm for GlobAlbedo: abstract superclass
@@ -79,7 +78,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         final double btCh5Celsius = btCh5 - 273.15;
         final double ratio21 = reflCh2 / reflCh1;
         final double diffbt53 = btCh5Celsius - btCh3Celsius;
-        final double ratiobt53 = btCh5Celsius/btCh3Celsius;
+        final double ratiobt53 = btCh5Celsius / btCh3Celsius;
         final double diffrefl1rt3 = reflCh1 - reflCh3;
         final double sumrefl2rt3 = reflCh2 + reflCh3;
 
@@ -121,8 +120,8 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 
             final boolean cond1 = condBtCh4 && reflCh1 > 0.4 && 0.8 <= ratio21 && ratio21 < 1.15
                     && reflCh3 < 0.013 && condElevation && diffbt53 > -14.0 && ratiobt53 > 0.9486
-                    && ratiobt53 < 0.98 && diffrefl1rt3/sumrefl2rt3 > 0.98;
-            final boolean cond2 = diffrefl1rt3/sumrefl2rt3 > 0.98 && reflCh1 > 0.15 && diffbt53 > -8.0;
+                    && ratiobt53 < 0.98 && diffrefl1rt3 / sumrefl2rt3 > 0.98;
+            final boolean cond2 = diffrefl1rt3 / sumrefl2rt3 > 0.98 && reflCh1 > 0.15 && diffbt53 > -8.0;
 
             final boolean snowIceCondition = (cond1 || cond2);
 
@@ -138,7 +137,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
                     ratio21 > 0.85 && ratio21 < 1.15 && reflCh3 < 0.03 &&
                     diffbt53 > -13.0 || (reflCh1 - reflCh3) / (reflCh2 + reflCh3) > 1.05 && reflCh1 > 0.55;
 
-        } else if (latitude < 7.0 && latitude > -7.0){
+        } else if (latitude < 7.0 && latitude > -7.0) {
             // EQUATORIAL (-7S < lat < 7N)
             // shall be:
 //        ((-15.0 + 273.15) < bt_4 and bt_4 < (1.35+273.15)) and refl_1>0.4 and (0.80 <= (refl_2/ refl_1)
@@ -244,9 +243,18 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             // shall be:
 //       (refl_1 > 0.11 and (bt_4/bt_3) < 0.98 and bt_4 < 285) or ((refl_1 + refl_2 + rt_3)/3 > 0.23 and bt_4 < 302
 //                      and (bt_4/bt_3) < 0.965 and rt_3 > 0.105 and rt_3 < 0.27 and bt_3 < 304)
-            return (reflCh1>0.11 && (btCh4 / btCh3) < 0.98 && btCh4<285)
+//            return (reflCh1>0.11 && (btCh4 / btCh3) < 0.98 && btCh4<285)
+//                    || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.23 && btCh4 < 302 && (btCh4 / btCh3) < 0.965
+//                    && reflCh3 < 0.27 && reflCh3 > 0.105 && btCh3 < 304);
+
+            // now we want this (JM 20160322):
+            return (reflCh1 > 0.11 && (btCh4 / btCh3) < 0.98 && btCh4 < 285)
                     || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.23 && btCh4 < 302 && (btCh4 / btCh3) < 0.965
-                    && reflCh3 < 0.27 && reflCh3 > 0.105 && btCh3 < 304);
+                    && reflCh3 < 0.27 && reflCh3 > 0.105 && btCh3 < 304) ||
+                    ((((2 * reflCh1 + reflCh2) / 3 > 0.09) && (btCh5 < 294) &&
+                            !((reflCh2 - reflCh1) / (reflCh2 + reflCh1) > 0.52)) ||
+                            ((((2 * reflCh1 + reflCh2) / 3) > 0.09) && (btCh5 < 297.15) &&
+                                    !((reflCh2 - reflCh1) / (reflCh2 + reflCh1) > 0.29)));
         } else {
             //shall be:
 //       (refl_1 > 0.11 and (bt_4/bt_3) < 0.98 and bt_4 < 291) or ((refl_1 + refl_2 + rt_3)/3 > 0.17 and bt_4 < 302
@@ -256,8 +264,13 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 //                    && reflCh3 > 0.105 && btCh3 < 318);
 
             // now we want this (JM 20160322):
-            return ((((2*reflCh1+reflCh2)/3 > 0.09) && (btCh5 < 294) && !((reflCh2-reflCh1)/(reflCh2+reflCh1) > 0.52)) ||
-                    ((((2*reflCh1+reflCh2)/3) > 0.09) && (btCh5 < 297.15) && !((reflCh2-reflCh1)/(reflCh2+reflCh1) > 0.29)));
+            return (reflCh1 > 0.11 && (btCh4 / btCh3) < 0.98 && btCh4 < 291)
+                    || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.17 && btCh4 < 302 && (btCh4 / btCh3) < 0.96
+                    && reflCh3 > 0.105 && btCh3 < 318) ||
+                    ((((2 * reflCh1 + reflCh2) / 3 > 0.09) && (btCh5 < 294) &&
+                            !((reflCh2 - reflCh1) / (reflCh2 + reflCh1) > 0.52)) ||
+                            ((((2 * reflCh1 + reflCh2) / 3) > 0.09) && (btCh5 < 297.15) &&
+                                    !((reflCh2 - reflCh1) / (reflCh2 + reflCh1) > 0.29)));
         }
     }
 
