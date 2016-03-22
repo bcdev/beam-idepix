@@ -57,7 +57,12 @@ public class CloudBufferOp extends Operator {
                                                cloudBufferWidth, cloudBufferWidth);
 
         origClassifFlagBand = classifiedProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
-        ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, classifiedProduct, cloudBufferProduct, false);
+        if (origClassifFlagBand != null) {
+            ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, classifiedProduct, cloudBufferProduct, false);
+        } else {
+            origClassifFlagBand = classifiedProduct.getBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS);
+            ProductUtils.copyBand(IdepixUtils.IDEPIX_PIXEL_CLASSIF_FLAGS, classifiedProduct, cloudBufferProduct, false);
+        }
         setTargetProduct(cloudBufferProduct);
     }
 

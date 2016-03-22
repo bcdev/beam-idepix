@@ -354,7 +354,7 @@ public class GlobAlbedoOp extends BasisOp {
         params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
         params.put("gaComputeCloudShadow", gaComputeCloudShadow);
         params.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
-        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisPostProcessOp.class),
                                                             params, input);
 
         if (gaComputeCloudBuffer) {

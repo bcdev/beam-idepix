@@ -251,9 +251,13 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             //shall be:
 //       (refl_1 > 0.11 and (bt_4/bt_3) < 0.98 and bt_4 < 291) or ((refl_1 + refl_2 + rt_3)/3 > 0.17 and bt_4 < 302
 //                      and (bt_4/bt_3) < 0.96 and rt_3 > 0.105 and bt_3 < 318)
-            return (reflCh1>0.11 && (btCh4 / btCh3) < 0.98 && btCh4<291)
-                    || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.17 && btCh4 < 302 && (btCh4 / btCh3) < 0.96
-                    && reflCh3 > 0.105 && btCh3 < 318);
+//            return (reflCh1>0.11 && (btCh4 / btCh3) < 0.98 && btCh4<291)
+//                    || ((reflCh1 + reflCh2 + reflCh3) / 3 > 0.17 && btCh4 < 302 && (btCh4 / btCh3) < 0.96
+//                    && reflCh3 > 0.105 && btCh3 < 318);
+
+            // now we want this (JM 20160322):
+            return ((((2*reflCh1+reflCh2)/3 > 0.09) && (btCh5 < 294) && !((reflCh2-reflCh1)/(reflCh2+reflCh1) > 0.52)) ||
+                    ((((2*reflCh1+reflCh2)/3) > 0.09) && (btCh5 < 297.15) && !((reflCh2-reflCh1)/(reflCh2+reflCh1) > 0.29)));
         }
     }
 

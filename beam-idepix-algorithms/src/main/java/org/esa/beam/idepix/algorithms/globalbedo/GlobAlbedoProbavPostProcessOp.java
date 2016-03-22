@@ -50,8 +50,8 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
     private Product probavCloudProduct;
 
     @SourceProduct(alias = "urban", optional = true,
-            label = "ProbaV urban product",
-            description = "The ProbaV urban product.")
+            label = "ProbaV urban product (ignored for all other sensors than Proba-V)",
+            description = "The ProbaV urban product (ignored for all other sensors than Proba-V).")
     private Product probavUrbanProduct;
 
     private Band origCloudFlagBand;
