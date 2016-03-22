@@ -154,6 +154,14 @@ public class CawaOp extends BasisOp {
 //        targetProduct = waterClassificationProduct;
     }
 
+    private boolean isCawaEraInterimProductValid() {
+        return eraInterimProduct != null &&
+                eraInterimProduct.getSceneRasterWidth() == sourceProduct.getSceneRasterWidth() &&
+                eraInterimProduct.containsBand("tcwv") &&
+                eraInterimProduct.containsBand("u10") &&
+                eraInterimProduct.containsBand("v10");
+    }
+
     private void preProcess() {
         rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
         ctpProduct = IdepixProducts.computeCloudTopPressureProduct(sourceProduct);
@@ -172,26 +180,26 @@ public class CawaOp extends BasisOp {
         landClassificationParameters = new HashMap<>();
         landClassificationParameters.put("copyAllTiePoints", true);
         landClassificationParameters.put("outputSchillerNNValue",
-                                     outputSchillerNNValue);
+                                         outputSchillerNNValue);
         landClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
-                                     schillerLandNNCloudAmbiguousLowerBoundaryValue);
+                                         schillerLandNNCloudAmbiguousLowerBoundaryValue);
         landClassificationParameters.put("ccSchillerNNCloudAmbiguousSureSeparationValue",
-                                     schillerLandNNCloudAmbiguousSureSeparationValue);
+                                         schillerLandNNCloudAmbiguousSureSeparationValue);
         landClassificationParameters.put("ccSchillerNNCloudSureSnowSeparationValue",
-                                     schillerLandNNCloudSureSnowSeparationValue);
+                                         schillerLandNNCloudSureSnowSeparationValue);
     }
 
     private void setWaterClassificationParameters() {
         waterClassificationParameters = new HashMap<>();
         waterClassificationParameters.put("copyAllTiePoints", true);
         waterClassificationParameters.put("outputSchillerNNValue",
-                                     outputSchillerNNValue);
+                                          outputSchillerNNValue);
         waterClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
-                                     schillerWaterNNCloudAmbiguousLowerBoundaryValue);
+                                          schillerWaterNNCloudAmbiguousLowerBoundaryValue);
         waterClassificationParameters.put("ccSchillerNNCloudAmbiguousSureSeparationValue",
-                                     schillerWaterNNCloudAmbiguousSureSeparationValue);
+                                          schillerWaterNNCloudAmbiguousSureSeparationValue);
         waterClassificationParameters.put("ccSchillerNNCloudSureSnowSeparationValue",
-                                     schillerWaterNNCloudSureSnowSeparationValue);
+                                          schillerWaterNNCloudSureSnowSeparationValue);
     }
 
     private void computeWaterCloudProduct() {
@@ -218,8 +226,11 @@ public class CawaOp extends BasisOp {
         Map<String, Product> mergeInputProducts = new HashMap<>();
         mergeInputProducts.put("landClassif", landClassificationProduct);
         mergeInputProducts.put("waterClassif", waterClassificationProduct);
-        if (eraInterimProduct != null) {
+        if (eraInterimProduct != null && isCawaEraInterimProductValid()) {
             mergeInputProducts.put("eraInterimProduct", eraInterimProduct);
+        } else {
+            System.out.println("WARNING: ERA Interim product not available or invalid - will use default values.");
+            mergeInputProducts.put("eraInterimProduct", null);
         }
 
         Map<String, Object> mergeClassificationParameters = new HashMap<>();
@@ -247,7 +258,7 @@ public class CawaOp extends BasisOp {
             params = new HashMap<>();
             params.put("cloudBufferWidth", cloudBufferWidth);
             postProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
-                                                        params, input);
+                                                      params, input);
         } else {
             postProcessingProduct = classifiedProduct;
         }

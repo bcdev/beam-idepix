@@ -103,7 +103,8 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     @TargetProduct
     private Product targetProduct;
 
-    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "FOUR_CLASSES_NORTH"},
+    @Parameter(defaultValue = "SIX_CLASSES",
+            valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "SIX_CLASSES_NORTH", "FOUR_CLASSES_NORTH"},
             label = "Neural Net for MERIS in case of sea ice classification",
             description = "The Neural Net which will be applied.")
     private MerisSeaiceNNSelector nnSelector;
@@ -149,7 +150,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAatsrOuterNeuralNet;
-    ThreadLocal<SchillerNeuralNetWrapper> merisAll4ClassNeuralNet;
+    ThreadLocal<SchillerNeuralNetWrapper> merisSeaIceNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAatsrInnerNeuralNet;
 
 
@@ -177,18 +178,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private void readSchillerNets() {
-
-//        private void initCloudNet() {
-////        try (InputStream cloudNet = getClass().getResourceAsStream(LANDSAT8_CLOUD_NET_NAME)) {
-//            // use selected new NN (20151119), chosen from 6 different nets:
-//            try (InputStream cloudNet = getClass().getResourceAsStream(nnSelector.getNnFileName())) {
-//                landsat8CloudNet = SchillerNeuralNetWrapper.create(cloudNet);
-//            } catch (IOException e) {
-//                throw new OperatorException("Cannot read cloud neural net: " + e.getMessage());
-//            }
-//        }
-
-
         try (InputStream isWater = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
              InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME);
              InputStream isMerisAatsrOuter = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_OUTER_NET_NAME);
@@ -198,7 +187,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
             merisAllNeuralNet = SchillerNeuralNetWrapper.create(isAll);
             merisAatsrOuterNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrOuter);
-            merisAll4ClassNeuralNet = SchillerNeuralNetWrapper.create(isMerisSeaIceNet);
+            merisSeaIceNeuralNet = SchillerNeuralNetWrapper.create(isMerisSeaIceNet);
             merisAatsrInnerNeuralNet = SchillerNeuralNetWrapper.create(isMerisAatsrInner);
         } catch (IOException e) {
             throw new OperatorException("Cannot read Schiller neural nets: " + e.getMessage());
@@ -544,7 +533,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
 //        return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
-        return getMerisNNOutputImpl(sd, pixelInfo, merisAll4ClassNeuralNet.get()); // latest net, 20160303
+        return getMerisNNOutputImpl(sd, pixelInfo, merisSeaIceNeuralNet.get()); // latest net, 20160303
     }
 
     private double[] getMerisNNOutputImpl(SourceData sd, PixelInfo pixelInfo, SchillerNeuralNetWrapper nnWrapper) {

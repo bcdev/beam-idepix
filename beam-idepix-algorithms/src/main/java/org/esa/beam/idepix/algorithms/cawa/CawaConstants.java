@@ -12,14 +12,14 @@ public class CawaConstants {
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;
-//    public static final int F_CLOUD_AMBIGUOUS = 2;
-//    public static final int F_CLOUD_SURE = 3;
-    public static final int F_CLOUD_BUFFER = 2;
-    public static final int F_CLOUD_SHADOW = 3;
-    public static final int F_SNOW_ICE = 4;
-    public static final int F_GLINTRISK = 5;
-    public static final int F_COASTLINE = 6;
-    public static final int F_LAND = 7;
+    public static final int F_CLOUD_AMBIGUOUS = 2;
+    public static final int F_CLOUD_SURE = 3;
+    public static final int F_CLOUD_BUFFER = 4;
+    public static final int F_CLOUD_SHADOW = 5;
+    public static final int F_SNOW_ICE = 6;
+    public static final int F_GLINTRISK = 7;
+    public static final int F_COASTLINE = 8;
+    public static final int F_LAND = 9;
 
     public static final String F_INVALID_DESCR_TEXT = "Invalid pixels";
     public static final String F_CLOUD_DESCR_TEXT = "Pixels which are either cloud_sure or cloud_ambiguous";

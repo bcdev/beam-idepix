@@ -121,8 +121,15 @@ public class CawaMergeLandWaterOp extends MerisBasisOp {
             for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
                 checkForCancellation();
                 for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                    final float u10 = u10Tile.getSampleFloat(x, y);
-                    final float v10 = v10Tile.getSampleFloat(x, y);
+                    float u10;
+                    float v10;
+                    if (u10Tile != null&& v10Tile != null) {
+                        u10 = u10Tile.getSampleFloat(x, y);
+                        v10 = v10Tile.getSampleFloat(x, y);
+                    } else {
+                        u10 = 10.0f;
+                        v10 = 10.0f;
+                    }
                     final float ws = (float) Math.sqrt(u10*u10 + v10*v10);
                     targetTile.setSample(x, y, ws);
                 }

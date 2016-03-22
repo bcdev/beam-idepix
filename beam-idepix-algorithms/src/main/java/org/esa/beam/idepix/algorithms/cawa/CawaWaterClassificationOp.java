@@ -208,8 +208,8 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
     private void createTargetProduct() {
         targetProduct = createCompatibleProduct(l1bProduct, "MER", "MER_L2");
 
-//        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
-        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT8);
+        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT16);
+//        cloudFlagBand = targetProduct.addBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, ProductData.TYPE_INT8);
         FlagCoding flagCoding = CawaUtils.createCawaFlagCoding(IdepixUtils.IDEPIX_CLOUD_FLAGS);
         cloudFlagBand.setSampleCoding(flagCoding);
         targetProduct.getFlagCodingGroup().add(flagCoding);
@@ -433,22 +433,22 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
         if (applyMERISSchillerNN) {
             double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
             if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
-//                targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
-//                targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, false);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, false);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, false);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_SNOW_ICE, false);
                 isCloudAmbiguous = nnOutput[0] > schillerNNCloudAmbiguousLowerBoundaryValue &&
                         nnOutput[0] <= schillerNNCloudAmbiguousSureSeparationValue;
                 if (isCloudAmbiguous) {
                     // this would be as 'CLOUD_AMBIGUOUS'...
-//                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, true);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, true);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, true);
                 }
                 // check for snow_ice separation below if needed, first set all to cloud
                 isCloudSure = nnOutput[0] > schillerNNCloudAmbiguousSureSeparationValue;
                 if (isCloudSure) {
                     // this would be as 'CLOUD_SURE'...
-//                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, true);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, true);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, true);
                 }
 
@@ -459,7 +459,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
                 if (is_snow_ice) {
                     // this would be as 'SNOW/ICE'...
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_SNOW_ICE, true);
-//                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, false);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, false);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, false);
                 }
 
@@ -473,8 +473,8 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
                     }
                     isCloudAmbiguous = !isCloudSure && cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
 
-//                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, isCloudSure);
-//                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, isCloudSure);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
                 }
             }
@@ -483,8 +483,8 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
             isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
             isCloudAmbiguous = cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
 
-//            targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, isCloudSure);
-//            targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_SURE, isCloudSure);
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_SNOW_ICE, is_snow_ice && !isCloudSure);
         }

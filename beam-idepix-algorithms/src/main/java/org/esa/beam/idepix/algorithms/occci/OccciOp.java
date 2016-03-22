@@ -43,7 +43,8 @@ public class OccciOp extends BasisOp {
             description = " Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) ")
     private boolean processMerisSeaIce = true;
 
-    @Parameter(defaultValue = "SIX_CLASSES", valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "FOUR_CLASSES_NORTH"},
+    @Parameter(defaultValue = "SIX_CLASSES",
+            valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "SIX_CLASSES_NORTH", "FOUR_CLASSES_NORTH"},
             label = "Neural Net for MERIS in case of sea ice classification",
             description = "The Neural Net which will be applied.")
     private MerisSeaiceNNSelector nnSelector;
@@ -213,6 +214,7 @@ public class OccciOp extends BasisOp {
 
         setTargetProduct(postProcessingProductWithCloudBuffer);
         addBandsToTargetProduct(postProcessingProductWithCloudBuffer);
+//        OccciUtils.setupOccciClassifBitmask(postProcessingProductWithCloudBuffer);
     }
 
     private void computeAlgorithmInputProducts(Map<String, Product> occciClassifInput) {
@@ -299,6 +301,9 @@ public class OccciOp extends BasisOp {
 
     private void addBandsToTargetProduct(Product targetProduct) {
 //        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
+
+        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+        ProductUtils.copyFlagBands(classifProduct, targetProduct, true);
 
         if (ocOutputMerisRadiance) {
             copySourceBands(sourceProduct, targetProduct, "radiance_");

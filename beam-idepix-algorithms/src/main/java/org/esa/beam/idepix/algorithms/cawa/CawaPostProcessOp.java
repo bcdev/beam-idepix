@@ -263,8 +263,8 @@ public class CawaPostProcessOp extends MerisBasisOp {
 
         if (removeCloudFlag) {
             targetTile.setSample(x, y, CawaConstants.F_CLOUD, false);
-//            targetTile.setSample(x, y, CawaConstants.F_CLOUD_SURE, false);
-//            targetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
+            targetTile.setSample(x, y, CawaConstants.F_CLOUD_SURE, false);
+            targetTile.setSample(x, y, CawaConstants.F_CLOUD_AMBIGUOUS, false);
         }
     }
 
