@@ -9,9 +9,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.idepix.CloudBuffer;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.ProductUtils;
@@ -37,7 +35,7 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
     //    @Parameter(defaultValue = "true",
 //            label = " Compute cloud shadow",
 //            description = " Compute cloud shadow with latest 'fronts' algorithm")
-    private boolean computeCloudShadow = false;   // todo: we have no info at all for this (pressure, height, temperature)
+    private boolean computeCloudShadow = true;   // always done currently
 
     //    @Parameter(defaultValue = "true",
 //               label = " Refine pixel classification near coastlines",
@@ -69,44 +67,40 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        if (!computeCloudShadow && !refineClassificationNearCoastlines) {
-            setTargetProduct(probavCloudProduct);
-        } else {
-            Product finalProbavCloudProduct = probavCloudProduct;
-            if (probavUrbanProduct != null) {
-                // collocate probav (usually 3360x3360) with urban (3600x3600)
-                CollocateOp collocateOp = new CollocateOp();
-                collocateOp.setParameterDefaultValues();
-                collocateOp.setMasterProduct(probavCloudProduct);
-                collocateOp.setSlaveProduct(probavUrbanProduct);
-                collocateOp.setRenameMasterComponents(false);
-                collocateOp.setRenameSlaveComponents(false);
-                finalProbavCloudProduct = collocateOp.getTargetProduct();
-            }
-
-            Product postProcessedCloudProduct = createTargetProduct(probavCloudProduct,
-                                                                    "postProcessedCloud", "postProcessedCloud");
-
-            origCloudFlagBand = finalProbavCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
-            origSmFlagBand = l1bProduct.getBand("SM_FLAGS");
-            //JM&GK 20160212 Todo
-            blueBand = finalProbavCloudProduct.getBand("TOA_REFL_BLUE");
-            redBand = finalProbavCloudProduct.getBand("TOA_REFL_RED");
-            nirBand = finalProbavCloudProduct.getBand("TOA_REFL_NIR");
-            swirBand = finalProbavCloudProduct.getBand("TOA_REFL_SWIR");
-            urbanBand = finalProbavCloudProduct.getBand("band_1");
-
-            int extendedWidth = 64;
-            int extendedHeight = 64; // todo: what do we need?
-
-            rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                                 l1bProduct.getSceneRasterHeight()),
-                                                   extendedWidth, extendedHeight
-            );
-
-            ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, finalProbavCloudProduct, postProcessedCloudProduct, false);
-            setTargetProduct(postProcessedCloudProduct);
+        Product finalProbavCloudProduct = probavCloudProduct;
+        if (probavUrbanProduct != null) {
+            // collocate probav (usually 3360x3360) with urban (3600x3600)
+            CollocateOp collocateOp = new CollocateOp();
+            collocateOp.setParameterDefaultValues();
+            collocateOp.setMasterProduct(probavCloudProduct);
+            collocateOp.setSlaveProduct(probavUrbanProduct);
+            collocateOp.setRenameMasterComponents(false);
+            collocateOp.setRenameSlaveComponents(false);
+            finalProbavCloudProduct = collocateOp.getTargetProduct();
         }
+
+        Product postProcessedCloudProduct = createTargetProduct(probavCloudProduct,
+                                                                "postProcessedCloud", "postProcessedCloud");
+
+        origCloudFlagBand = finalProbavCloudProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+        origSmFlagBand = l1bProduct.getBand("SM_FLAGS");
+        //JM&GK 20160212 Todo
+        blueBand = finalProbavCloudProduct.getBand("TOA_REFL_BLUE");
+        redBand = finalProbavCloudProduct.getBand("TOA_REFL_RED");
+        nirBand = finalProbavCloudProduct.getBand("TOA_REFL_NIR");
+        swirBand = finalProbavCloudProduct.getBand("TOA_REFL_SWIR");
+        urbanBand = finalProbavCloudProduct.getBand("band_1");
+
+        int extendedWidth = 64;
+        int extendedHeight = 64; // todo: what do we need?
+
+        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
+                                                             l1bProduct.getSceneRasterHeight()),
+                                               extendedWidth, extendedHeight
+        );
+
+        ProductUtils.copyBand(IdepixUtils.IDEPIX_CLOUD_FLAGS, finalProbavCloudProduct, postProcessedCloudProduct, false);
+        setTargetProduct(postProcessedCloudProduct);
     }
 
     private Product createTargetProduct(Product sourceProduct, String name, String type) {
