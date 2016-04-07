@@ -19,7 +19,6 @@ import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.LandClassificationOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
 
 import java.util.HashMap;
@@ -85,6 +84,11 @@ public class GlobAlbedoOp extends BasisOp {
             label = " Write Feature Values to the target product",
             description = " Write all Feature Values to the target product")
     private boolean gaCopyFeatureValues = false;
+
+//    @Parameter(defaultValue = "true",
+//            label = " Use forward view for cloud flagging (AATSR only)",
+//            description = " Use forward view for cloud flagging (AATSR only)")
+    boolean gaUseAatsrFwardForClouds = true;
 
     @Parameter(defaultValue = "false",
             label = " Write input annotation bands to the target product (VGT only)",
@@ -186,6 +190,8 @@ public class GlobAlbedoOp extends BasisOp {
 
         if (IdepixUtils.isValidMerisProduct(sourceProduct)) {
             processGlobAlbedoMeris();
+        }  else if (IdepixUtils.isValidAatsrProduct(sourceProduct)) {
+            processGlobAlbedoAatsr();
         } else if (IdepixUtils.isValidVgtProduct(sourceProduct)) {
             processGlobAlbedoVgt();
         } else if (IdepixUtils.isValidProbavProduct(sourceProduct)) {
@@ -216,7 +222,7 @@ public class GlobAlbedoOp extends BasisOp {
         return createGaVgtCloudClassificationParameters();
     }
 
-    private Map<String, Object> createGaMerisCloudClassificationParameters() {
+    private Map<String, Object> createGaMerisAndAatsrCloudClassificationParameters() {
         Map<String, Object> gaCloudClassificationParameters = new HashMap<>(1);
         gaCloudClassificationParameters.put("gaCopyRadiances", gaCopyRadiances);
         gaCloudClassificationParameters.put("gaCopyToaReflectances", gaCopyToaReflectances);
@@ -224,6 +230,7 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudClassificationParameters.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
         gaCloudClassificationParameters.put("gaUseGetasse", gaUseGetasse);
         gaCloudClassificationParameters.put("gaCopyAnnotations", gaCopyAnnotations);
+        gaCloudClassificationParameters.put("gaUseAatsrFwardForClouds", gaUseAatsrFwardForClouds);
         gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNN", gaApplyMERISAlternativeSchillerNN);
         gaCloudClassificationParameters.put("gaApplyMERISAlternativeSchillerNNPure", gaApplyMERISAlternativeSchillerNNPure);
         gaCloudClassificationParameters.put("gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue", gaAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue);
@@ -239,7 +246,7 @@ public class GlobAlbedoOp extends BasisOp {
         Map<String, Product> gaCloudInput = new HashMap<>(4);
         computeMerisAlgorithmInputProducts(gaCloudInput);
 
-        gaCloudClassificationParameters = createGaMerisCloudClassificationParameters();
+        gaCloudClassificationParameters = createGaMerisAndAatsrCloudClassificationParameters();
 
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoMerisClassificationOp.class),
                 gaCloudClassificationParameters, gaCloudInput);
@@ -286,6 +293,19 @@ public class GlobAlbedoOp extends BasisOp {
                                                                           LandClassificationOp.LAND_FLAGS + ".F_LANDCONS");
         gaCloudInput.put("rayleigh", rayleighProduct);
 
+    }
+
+    private void processGlobAlbedoAatsr() {
+        // Cloud Classification
+        gaCloudClassificationParameters = createGaMerisAndAatsrCloudClassificationParameters();
+        Product gaCloudProduct;
+        Map<String, Product> gaCloudInput = new HashMap<String, Product>(4);
+        gaCloudInput.put("gal1b", sourceProduct);
+
+        gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoAatsrClassificationOp.class),
+                                           gaCloudClassificationParameters, gaCloudInput);
+
+        targetProduct = gaCloudProduct;
     }
 
     private void processGlobAlbedoVgt() {

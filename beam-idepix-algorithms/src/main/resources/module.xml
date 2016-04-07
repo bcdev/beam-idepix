@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.2.28</version>
+    <version>2.2.29</version>
     <name>Idepix Algorithms</name>
     <description>
         Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical
@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.29:</b>
+        Taken AATSR back on board in GlobAlbedo algorithm
         <b>Version 2.2.28:</b>
         Fix in post-processing in Proba-V algorithm
         <b>Version 2.2.22 - 2.2.27:</b>
