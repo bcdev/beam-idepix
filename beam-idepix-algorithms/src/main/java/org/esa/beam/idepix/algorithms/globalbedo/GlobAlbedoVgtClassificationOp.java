@@ -48,11 +48,14 @@ public class GlobAlbedoVgtClassificationOp extends GlobAlbedoClassificationOp {
     // VGT bands:
     private Band[] vgtReflectanceBands;
 
-    private static final int SM_F_LAND = 3;
-    private static final int SM_F_MIR_GOOD = 4;
-    private static final int SM_F_B3_GOOD = 5;
-    private static final int SM_F_B2_GOOD = 6;
-    private static final int SM_F_B0_GOOD = 7;
+    public static final int SM_F_CLOUD_1 = 0;
+    public static final int SM_F_CLOUD_2 = 1;
+    public static final int SM_F_ICE_SNOW = 2;
+    public static final int SM_F_LAND = 3;
+    public static final int SM_F_MIR_GOOD = 4;
+    public static final int SM_F_B3_GOOD = 5;
+    public static final int SM_F_B2_GOOD = 6;
+    public static final int SM_F_B0_GOOD = 7;
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle rectangle, ProgressMonitor pm) throws OperatorException {

@@ -43,10 +43,10 @@ public class GlobAlbedoOp extends BasisOp {
             description = "The MERIS or SPOT-VGT L1b product.")
     private Product sourceProduct;
 
-    @SourceProduct(alias = "probavUrbanProduct", optional = true,
-            label = "ProbaV urban product",
-            description = "Urban product (only considered for Proba-V classification, otherwise ignored).")
-    private Product probavUrbanProduct;
+    @SourceProduct(alias = "urbanProduct", optional = true,
+            label = "ProbaV or VGT urban product",
+            description = "Urban product (only considered for Proba-V and VGT classification, otherwise ignored).")
+    private Product urbanProduct;
 
     @TargetProduct(description = "The target product.")
     private Product targetProduct;
@@ -310,7 +310,6 @@ public class GlobAlbedoOp extends BasisOp {
 
     private void processGlobAlbedoVgt() {
         // Cloud Classification
-        Product gaCloudProduct;
         Map<String, Product> gaCloudInput = new HashMap<>(4);
         gaCloudInput.put("gal1b", sourceProduct);
 
@@ -319,7 +318,19 @@ public class GlobAlbedoOp extends BasisOp {
         gaCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoVgtClassificationOp.class),
                                            gaCloudClassificationParameters, gaCloudInput);
 
-        targetProduct = gaCloudProduct;
+//        targetProduct = gaCloudProduct;
+        // introduce post-processing as for Proba-V (request GK/JM 20160416)
+        if (gaComputeCloudBuffer || gaComputeCloudShadow || gaRefineClassificationNearCoastlines) {
+            // Post Cloud Classification: coastline refinement, cloud shadow, cloud buffer
+            computeGlobAlbedoVgtPostProcessProduct();
+
+            targetProduct = IdepixUtils.cloneProduct(gaCloudProduct);
+
+            Band cloudFlagBand = targetProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS);
+            cloudFlagBand.setSourceImage(gaPostProcessingProduct.getBand(IdepixUtils.IDEPIX_CLOUD_FLAGS).getSourceImage());
+        } else {
+            targetProduct = gaCloudProduct;
+        }
     }
 
     private void processGlobAlbedoProbav() {
@@ -389,17 +400,17 @@ public class GlobAlbedoOp extends BasisOp {
         }
     }
 
-    private void computeGlobAlbedoProbavPostProcessProduct() {
+    private void computeGlobAlbedoVgtPostProcessProduct() {
         HashMap<String, Product> input = new HashMap<>();
         input.put("l1b", sourceProduct);
-        input.put("probavCloud", gaCloudProduct);
+        input.put("vgtCloud", gaCloudProduct);
 
-        final boolean isUrbanProductValid = isProbavUrbanProductValid(sourceProduct, probavUrbanProduct);
-        final Product validUrbanProduct = isUrbanProductValid ? probavUrbanProduct : null;
+        final boolean isUrbanProductValid = isVgtUrbanProductValid(sourceProduct, urbanProduct);
+        final Product validUrbanProduct = isUrbanProductValid ? urbanProduct : null;
         input.put("urban", validUrbanProduct);
 
         Map<String, Object> params = new HashMap<>();
-        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoVgtPostProcessOp.class),
                                                     params, input);
 
         if (gaComputeCloudBuffer) {
@@ -412,6 +423,37 @@ public class GlobAlbedoOp extends BasisOp {
         } else {
             gaPostProcessingProduct = classifiedProduct;
         }
+    }
+
+    private void computeGlobAlbedoProbavPostProcessProduct() {
+        HashMap<String, Product> input = new HashMap<>();
+        input.put("l1b", sourceProduct);
+        input.put("probavCloud", gaCloudProduct);
+
+        final boolean isUrbanProductValid = isProbavUrbanProductValid(sourceProduct, urbanProduct);
+        final Product validUrbanProduct = isUrbanProductValid ? urbanProduct : null;
+        input.put("urban", validUrbanProduct);
+
+        Map<String, Object> params = new HashMap<>();
+        final Product classifiedProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoProbavPostProcessOp.class),
+                                                            params, input);
+
+        if (gaComputeCloudBuffer) {
+            input = new HashMap<>();
+            input.put("classifiedProduct", classifiedProduct);
+            params = new HashMap<>();
+            params.put("cloudBufferWidth", gaCloudBufferWidth);
+            gaPostProcessingProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CloudBufferOp.class),
+                                                        params, input);
+        } else {
+            gaPostProcessingProduct = classifiedProduct;
+        }
+    }
+
+    // package local for testing
+    static boolean isVgtUrbanProductValid(Product sourceProduct, Product urbanProduct) {
+        // todo: tbd
+        return false;
     }
 
     // package local for testing
@@ -439,17 +481,6 @@ public class GlobAlbedoOp extends BasisOp {
      * It provides operator meta-data and is a factory for new operator instances.
      */
     public static class Spi extends OperatorSpi {
-
-//        public Spi() {
-//            // this is deprecated:
-////            super(GlobAlbedoOp.class, "idepix.globalbedo");
-//
-//
-//            super(new AnnotationOperatorDescriptor(GlobAlbedoOp.class,
-//                                                   GlobAlbedoOp.class.getAnnotation(OperatorMetadata.class)));
-//        }
-
-        // this is preliminary //todo: to be discussed what to use finally
         public Spi() {
             super(GlobAlbedoOp.class);
         }
