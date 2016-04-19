@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.2.30</version>
+    <version>2.2.31</version>
     <name>Idepix Algorithms</name>
     <description>
         Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical
@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.31:</b>
+        Introduced VIIRS instrument in OC-CCI algorithm
         <b>Version 2.2.30:</b>
         Introduced post-processing for VGT in GlobAlbedo algorithm
         <b>Version 2.2.29:</b>
@@ -178,7 +180,7 @@
         <action>
             <id>modisSeawifsAlgo</id>
             <class>org.esa.beam.idepix.ui.actions.IdepixModisSeawifsAction</class>
-            <text>OC-CCI (MERIS, MODIS, SeaWiFS)...</text>
+            <text>OC-CCI (MERIS, MODIS, SeaWiFS, VIIRS)...</text>
             <shortDescr>Pixel classification with OC-CCI algorithm (Schiller NNs).</shortDescr>
             <mnemonic>O</mnemonic>
             <parent>idepix</parent>

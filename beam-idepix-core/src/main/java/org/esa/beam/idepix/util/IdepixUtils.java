@@ -102,8 +102,9 @@ public class IdepixUtils {
                 !isValidLandsat8Product(inputProduct) &&
                 !isValidModisProduct(inputProduct) &&
                 !isValidSeawifsProduct(inputProduct) &&
+                !isValidViirsProduct(inputProduct) &&
                 !isValidMerisAatsrSynergyProduct(inputProduct)) {
-            logErrorMessage("Input sensor must be either MERIS, AATSR, AVHRR, colocated MERIS/AATSR, MODIS/SeaWiFS, PROBA-V or VGT!");
+            logErrorMessage("Input sensor must be either MERIS, AATSR, AVHRR, colocated MERIS/AATSR, MODIS/SeaWiFS/VIIRS, PROBA-V or VGT!");
         }
         return true;
     }
@@ -216,6 +217,10 @@ public class IdepixUtils {
                 product.getName().matches("S[0-9]{13}.(?i)(L1C)"));
     }
 
+    public static boolean isValidViirsProduct(Product product) {
+//        e.g. V2012024230521.L1C
+        return (product.getName().matches("V[0-9]{13}.(?i)(L1C)"));
+    }
 
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
         // todo: needs to be more strict, but for the moment we assume this is enough...
@@ -266,6 +271,7 @@ public class IdepixUtils {
         } else if (AlgorithmSelector.Occci == algorithm) {
             return (isValidModisProduct(sourceProduct) ||
                     isValidMerisProduct(sourceProduct) ||
+                    isValidViirsProduct(sourceProduct) ||
                     isValidSeawifsProduct(sourceProduct));
         } else {
             return AlgorithmSelector.AvhrrAc == algorithm && (isValidAvhrrProduct(sourceProduct));

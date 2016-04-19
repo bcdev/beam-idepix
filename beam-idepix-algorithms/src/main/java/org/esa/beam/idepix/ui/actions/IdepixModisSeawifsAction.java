@@ -17,7 +17,7 @@ public class IdepixModisSeawifsAction extends AbstractVisatAction {
         final IdepixDefaultDialog dialog =
                 new IdepixDefaultDialog(OperatorSpi.getOperatorAlias(OccciOp.class),
                                         getAppContext(),
-                                        "IDEPIX Pixel Identification Tool - MODIS/SeaWiFS" +
+                                        "IDEPIX Pixel Identification Tool - MODIS/SeaWiFS/VIIRS" +
                                                 " Algorithm",
                                         "idepixChain","");
         dialog.show();

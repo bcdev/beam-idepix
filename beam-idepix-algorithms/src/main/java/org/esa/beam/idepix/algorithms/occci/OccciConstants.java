@@ -25,6 +25,7 @@ class OccciConstants {
     static final int MODIS_SRC_RAD_OFFSET = 22;
     static final int MODIS_NN_INPUT_LENGTH = 10;
     static final int SEAWIFS_SRC_RAD_OFFSET = 8;
+    static final int VIIRS_SRC_RAD_OFFSET = 0;
 
     public static final int F_INVALID = 0;
     public static final int F_CLOUD = 1;

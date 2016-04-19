@@ -146,6 +146,12 @@ public class OccciOp extends BasisOp {
             description = "Prefix of input radiance or reflectance bands (SeaWiFS)")
     private String ocSeawifsRadianceBandPrefix;
 
+    @Parameter(defaultValue = "true",
+            label = " RhoTOA bands (VIIRS)",
+            description = "Write RhoTOA bands to target product (VIIRS).")
+    private boolean ocOutputViirsRhoToa = true;
+
+
     @Parameter(defaultValue = "false",
             label = " Debug bands",
             description = "Write further useful bands to target product.")
@@ -195,6 +201,10 @@ public class OccciOp extends BasisOp {
             postProcessParameters.put("computeCloudShadow", true);
         } else {
             postProcessInput.put("refl", rad2reflProduct);
+            if (IdepixUtils.isValidViirsProduct(sourceProduct)) {
+                // our VIIRS L1C products have the type 'Level 2'...
+                occciCloudClassificationParameters.put("productTypeString", "VIIRS Level 1C");
+            }
             classifProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(OccciClassificationOp.class),
                                                occciCloudClassificationParameters, occciClassifInput);
         }
@@ -214,7 +224,6 @@ public class OccciOp extends BasisOp {
 
         setTargetProduct(postProcessingProductWithCloudBuffer);
         addBandsToTargetProduct(postProcessingProductWithCloudBuffer);
-//        OccciUtils.setupOccciClassifBitmask(postProcessingProductWithCloudBuffer);
     }
 
     private void computeAlgorithmInputProducts(Map<String, Product> occciClassifInput) {
@@ -229,7 +238,7 @@ public class OccciOp extends BasisOp {
                                                                             false, false, true, false, false, true);
             pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, false);
         } else {
-            // MODIS, SeaWIFS: we will convert pixelwise later, for MODIS inputs are TOA reflectances anyway
+            // MODIS, SeaWIFS, VIIRS: we will convert pixelwise later, for MODIS/VIIRS inputs are TOA reflectances anyway
             rad2reflProduct = sourceProduct;
         }
         occciClassifInput.put("refl", rad2reflProduct);
@@ -328,6 +337,10 @@ public class OccciOp extends BasisOp {
 
         if (ocOutputSeawifsRefl) {
             copySourceBands(classifProduct, targetProduct, "_refl");
+        }
+
+        if (ocOutputViirsRhoToa) {
+            copySourceBands(sourceProduct, targetProduct, "rhot");
         }
 
         if (ocOutputGeometry) {
