@@ -3,6 +3,7 @@ package org.esa.beam.idepix.algorithms.occci;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.idepix.IdepixConstants;
 
 /**
  * VIIRS sensor context implementation
@@ -16,29 +17,7 @@ class ViirsSensorContext implements SensorContext {
     };
     private static final int[] NN_OUTPUT_INDICES = new int[]{0};
 
-    private final static String VIIRS_REFLECTANCE_1_BAND_NAME = "rhot_410";
-    private final static String VIIRS_REFLECTANCE_2_BAND_NAME = "rhot_443";
-    private final static String VIIRS_REFLECTANCE_3_BAND_NAME = "rhot_486";
-    private final static String VIIRS_REFLECTANCE_4_BAND_NAME = "rhot_551";
-    private final static String VIIRS_REFLECTANCE_5_BAND_NAME = "rhot_671";
-    private final static String VIIRS_REFLECTANCE_6_BAND_NAME = "rhot_745";
-    private final static String VIIRS_REFLECTANCE_7_BAND_NAME = "rhot_862";
-    private final static String VIIRS_REFLECTANCE_8_BAND_NAME = "rhot_1238";
-    private final static String VIIRS_REFLECTANCE_9_BAND_NAME = "rhot_1601";
-    private final static String VIIRS_REFLECTANCE_10_BAND_NAME = "rhot_2257";
-
-    private final static String[] VIIRS_SPECTRAL_BAND_NAMES = {
-            VIIRS_REFLECTANCE_1_BAND_NAME,
-            VIIRS_REFLECTANCE_2_BAND_NAME,
-            VIIRS_REFLECTANCE_3_BAND_NAME,
-            VIIRS_REFLECTANCE_4_BAND_NAME,
-            VIIRS_REFLECTANCE_5_BAND_NAME,
-            VIIRS_REFLECTANCE_6_BAND_NAME,
-            VIIRS_REFLECTANCE_7_BAND_NAME,
-            VIIRS_REFLECTANCE_8_BAND_NAME,
-            VIIRS_REFLECTANCE_9_BAND_NAME,
-            VIIRS_REFLECTANCE_10_BAND_NAME,
-    };
+    private static String[] VIIRS_SPECTRAL_BAND_NAMES = IdepixConstants.VIIRS_SPECTRAL_BAND_NAMES;
     private final static int VIIRS_L1B_NUM_SPECTRAL_BANDS = VIIRS_SPECTRAL_BAND_NAMES.length;
 
     @Override

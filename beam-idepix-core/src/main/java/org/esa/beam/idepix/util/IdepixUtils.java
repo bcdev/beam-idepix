@@ -102,7 +102,7 @@ public class IdepixUtils {
                 !isValidLandsat8Product(inputProduct) &&
                 !isValidModisProduct(inputProduct) &&
                 !isValidSeawifsProduct(inputProduct) &&
-                !isValidViirsProduct(inputProduct) &&
+                !isValidViirsProduct(inputProduct, IdepixConstants.VIIRS_SPECTRAL_BAND_NAMES) &&
                 !isValidMerisAatsrSynergyProduct(inputProduct)) {
             logErrorMessage("Input sensor must be either MERIS, AATSR, AVHRR, colocated MERIS/AATSR, MODIS/SeaWiFS/VIIRS, PROBA-V or VGT!");
         }
@@ -118,7 +118,8 @@ public class IdepixUtils {
     }
 
     public static boolean isValidAatsrProduct(Product product) {
-        return product.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+        return product.getProductType().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME) ||
+                product.getName().startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
     }
 
     public static boolean isValidAvhrrProduct(Product product) {
@@ -217,9 +218,18 @@ public class IdepixUtils {
                 product.getName().matches("S[0-9]{13}.(?i)(L1C)"));
     }
 
-    public static boolean isValidViirsProduct(Product product) {
+    public static boolean isValidViirsProduct(Product product, String[] expectedBandNames) {
+        // first check expected bands
+        if (expectedBandNames != null) {
+            for (String expectedBandName : expectedBandNames) {
+                if (!product.containsBand(expectedBandName)) {
+                    return false;
+                }
+            }
+        }
+
 //        e.g. V2012024230521.L1C
-        return (product.getName().matches("V[0-9]{13}.(?i)(L1C)"));
+        return (product.getName().matches("V[0-9]{13}.(?i)(L1C)") || product.getName().matches("V[0-9]{13}.(?i)(L2)"));
     }
 
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
@@ -271,7 +281,7 @@ public class IdepixUtils {
         } else if (AlgorithmSelector.Occci == algorithm) {
             return (isValidModisProduct(sourceProduct) ||
                     isValidMerisProduct(sourceProduct) ||
-                    isValidViirsProduct(sourceProduct) ||
+                    isValidViirsProduct(sourceProduct, IdepixConstants.VIIRS_SPECTRAL_BAND_NAMES) ||
                     isValidSeawifsProduct(sourceProduct));
         } else {
             return AlgorithmSelector.AvhrrAc == algorithm && (isValidAvhrrProduct(sourceProduct));

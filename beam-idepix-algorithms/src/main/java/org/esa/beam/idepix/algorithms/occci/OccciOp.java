@@ -201,7 +201,7 @@ public class OccciOp extends BasisOp {
             postProcessParameters.put("computeCloudShadow", true);
         } else {
             postProcessInput.put("refl", rad2reflProduct);
-            if (IdepixUtils.isValidViirsProduct(sourceProduct)) {
+            if (IdepixUtils.isValidViirsProduct(sourceProduct, IdepixConstants.VIIRS_SPECTRAL_BAND_NAMES)) {
                 // our VIIRS L1C products have the type 'Level 2'...
                 occciCloudClassificationParameters.put("productTypeString", "VIIRS Level 1C");
             }
