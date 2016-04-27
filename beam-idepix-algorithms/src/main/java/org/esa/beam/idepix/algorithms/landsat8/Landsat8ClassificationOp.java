@@ -371,7 +371,7 @@ public class Landsat8ClassificationOp extends Operator {
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_OTSU_BUFFER, false); // not computed here
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_CLOST, applyClostCloudTest && l8Algorithm.isCloudClost());
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_CLOST_BUFFER, false); // not computed here
-        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SURE, l8Algorithm.isCloud());
+        targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_SURE, l8Algorithm.isCloudSure());
         targetTile.setSample(x, y, Landsat8Constants.F_CLOUD_AMBIGUOUS, l8Algorithm.isCloudAmbiguous());
         targetTile.setSample(x, y, Landsat8Constants.F_SNOW_ICE, l8Algorithm.isSnowIce());
         targetTile.setSample(x, y, Landsat8Constants.F_BRIGHT, l8Algorithm.isBright());
