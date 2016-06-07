@@ -447,13 +447,13 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         //  1.5 < nnOutput < 2.45  : spatially mixed ice/water           --> F_SNOW_ICE or ignore // todo
         //  2.45 < nnOutput        : water (clear + semi-transparent)    ignore
 
-        // latestlatest net 8_593.8.net (6 CLASSES), 20160304:
+        // latest net 9x6_935.4.net (6 CLASSES), 20160531:
         //  nnOutput <  0.7       : totally cloudy                       --> F_CLOUD_SURE
-        //  0.7 < nnOutput <  1.65 : clear ice                           --> F_SNOW_ICE
+        //  0.45 < nnOutput <  1.65 : clear ice                           --> F_SNOW_ICE
         //  1.65 < nnOutput <  2.5 : semi-transparent clouds over ice    --> F_CLOUD_AMBIGUOUS
-        //  2.5 < nnOutput <  3.5 : spatially mixed ice/water            --> F_SNOW_ICE or ignore // todo
-        //  3.5 < nnOutput < 4.6  : semi-transparent clouds over water   --> F_CLOUD_AMBIGUOUS
-        //  4.6 < nnOutput        : clear water                           ignore
+        //  2.45 < nnOutput <  3.5 : spatially mixed ice/water            --> F_SNOW_ICE or ignore // todo
+        //  3.35 < nnOutput < 4.6  : semi-transparent clouds over water   --> F_CLOUD_AMBIGUOUS
+        //  4.5 < nnOutput        : clear water                           ignore
 
         if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
@@ -533,14 +533,14 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
 //        return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
-        return getMerisNNOutputImpl(sd, pixelInfo, merisSeaIceNeuralNet.get()); // latest net, 20160303
+        return getMerisNNOutputImpl(sd, pixelInfo, merisSeaIceNeuralNet.get()); // latest net, 20160531
     }
 
     private double[] getMerisNNOutputImpl(SourceData sd, PixelInfo pixelInfo, SchillerNeuralNetWrapper nnWrapper) {
         double[] nnInput = nnWrapper.getInputVector();
         for (int i = 0; i < nnInput.length; i++) {
 //            nnInput[i] = sd.rhoToa[i][pixelInfo.index];   //  latest 'outer' NN 9_3282.3.net";
-            nnInput[i] = Math.sqrt(sd.rhoToa[i][pixelInfo.index]);   //  latest NN 8_671.3.net";
+            nnInput[i] = Math.sqrt(sd.rhoToa[i][pixelInfo.index]);   //  latest NN 9x6_935.4.net";
         }
         return nnWrapper.getNeuralNet().calc(nnInput);
     }

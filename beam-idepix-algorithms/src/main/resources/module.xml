@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.33:</b>
+        Added new Schiller NN in OC-CCI sea ice algorithm
         <b>Version 2.2.32:</b>
         Fixed cloud sure/ambiguous separation in Landsat8 algorithm
         <b>Version 2.2.31:</b>
