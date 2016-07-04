@@ -145,7 +145,8 @@ public class GlobAlbedoProbavPostProcessOp extends Operator {
                         consolidateFlagging(x, y, smFlagTile, targetTile);
 
                         //JM&GK 20160212 Todo
-                        refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
+                        // JM, 20160630:deactivate!
+                        // refineHaze(x, y, blueTile, redTile, nirTile, swirTile, urbanTile, targetTile);
                         setCloudShadow(x, y, smFlagTile, targetTile);
                     }
                 }

@@ -183,6 +183,12 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
     }
 
     @Override
+    void setCloudFlag(Tile targetTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
+        super.setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
+        targetTile.setSample(x, y, IdepixConstants.F_HAZE, ((GlobAlbedoProbavAlgorithm) globAlbedoAlgorithm).isHaze());
+    }
+
+    @Override
     public void setBands() {
         probavReflectanceBands = new Band[IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length];
         for (int i = 0; i < IdepixConstants.PROBAV_REFLECTANCE_BAND_NAMES.length; i++) {

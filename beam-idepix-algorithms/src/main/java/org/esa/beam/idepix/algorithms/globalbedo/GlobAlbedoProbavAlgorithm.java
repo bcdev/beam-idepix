@@ -3,7 +3,6 @@ package org.esa.beam.idepix.algorithms.globalbedo;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.util.math.MathUtils;
 
 /**
  * IDEPIX pixel identification algorithm for GlobAlbedo/PROBA-V
@@ -45,16 +44,30 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public boolean isClearSnow() {
         // GK 20151126;
-        return !isInvalid() && (ndsiValue() > 0.4 && refl[3] < 0.13 && elevation > 600.0) || (ndsiValue() > 0.7);
+        // return !isInvalid() && (ndsiValue() > 0.4 && refl[3] < 0.13 && elevation > 600.0) || (ndsiValue() > 0.7);
+
+        // JM, 20160630:
+        return !isInvalid() && ((ndsiValue() > 0.4 && refl[3] < 0.13 && tc1Value() > 0.3) ||
+                (ndsiValue() > 0.7 && tc1Value() > 0.5)) && elevation > 650.0;
     }
 
     @Override
     public boolean isCloud() {
+//        if (!isInvalid()) {
+//            if (((whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && !isClearSnow())) {
+//                return true;
+//            }
+//        }
+//        return false;
+
+        // JM, 20160630:
+        // Combine the previous 4 cloud masks
         if (!isInvalid()) {
-            if (((whiteValue() + brightValue() + pressureValue() + temperatureValue() > CLOUD_THRESH) && !isClearSnow())) {
+            if (isGeneralCloud() || isHaze() || isComplexHaze() || isBorderCloud()) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -210,6 +223,86 @@ public class GlobAlbedoProbavAlgorithm extends GlobAlbedoAlgorithm {
     @Override
     public float getPressureThreshold() {
         return PRESSURE_THRESH;
+    }
+
+    // new features (JM 20160630):
+    public boolean isGeneralCloud() {
+        // ((TC4-TC3) < -0.2) and not ((TC3-TC2) < 0)
+        if (!isInvalid()) {
+            if ((tcSlope1Value() < -0.2 && !(tcSlope2Value() < 0)) && !isClearSnow()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isHaze() {
+        // (((TC4-TC3) < -0.07) and not ((TC3-TC2) < -0.01) and (TC1 > 0.3) and (BLUE > 0.21)
+        if (!isInvalid()) {
+            if (((tcSlope1Value() < -0.07 && !(tcSlope2Value() < -0.01)) && tc1Value() > 0.3 && refl[0] > 0.21) &&
+                    !isClearSnow() && !isGeneralCloud()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isComplexHaze() {
+        // ((BNIR_diff > -0.192 and BNIR_diff<0.1) and (TC1 > 0.42) and (NIRSWIR_diff < -0.03) and (NIRR_diff>RB_diff) and (BLUE >0.194))
+        if (!isInvalid()) {
+            if (((bnDiffValue() > -0.192 && bnDiffValue()<0.1) && tc1Value() >0.42 && nswirDiffValue() < 0.03 &&
+                    (refl[2]-refl[1] > refl[1]-refl[0]) && refl[0] > 0.194) && !isClearSnow() && !isGeneralCloud() && !isHaze()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isBorderCloud() {
+        // (RED-BLUE > 0) and (NIR-RED > 0) and (SWIR-NIR >0) and (BLUE > 0.25) and ((RED-BUE)+(NIR-RED)+(SWIR-NIR) < 0.326)
+        if (!isInvalid()) {
+            if (((refl[1]-refl[0] > 0) && (refl[2]-refl[1] > 0) && (refl[3]-refl[2] > 0) && refl[0] > 0.25 &&
+                    (((refl[1]-refl[0])+ (refl[2]-refl[1]) + (refl[3]-refl[2])) < 0.326)) && !isClearSnow() &&
+                    !isGeneralCloud() && !isHaze() && !isComplexHaze()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // new feature values (JM 20160630):
+    public float tc1Value() {
+        // 0.332*BLUE + 0.603*RED + 0.676*NIR + 0.263*SWIR
+        double value = 0.332 * refl[0] + 0.603 * refl[1] + 0.676 * refl[2] + 0.263 * refl[3];
+        return (float) value;
+    }
+
+    public float tcSlope1Value() {
+        // TC4-TC3
+        // (0.016 * blue + 0.428 * red + -0.452 * nir + 0.882 * swir) – (0.9 * blue + 0.428 * red + 0.0759 * nir + -0.041 * swir)
+        double value = (0.016 * refl[0] + 0.428 * refl[1] - 0.452 * refl[2] + 0.882 * refl[3]) -
+                (0.9 * refl[0] + 0.428 * refl[1] + 0.0759 * refl[2] - 0.041 * refl[3]);
+        return (float) value;
+    }
+
+    public float tcSlope2Value() {
+        // TC3-TC2
+        // (0.9 * blue + 0.428 * red + 0.0759 * nir + -0.041 * swir) – (0.283 * blue + -0.66 * red + 0.577 * nir + 0.388 * swir)
+        double value = (0.9 * refl[0] + 0.428 * refl[1] + 0.0759 * refl[2] - 0.041 * refl[3]) -
+                (0.283 * refl[0] - 0.66 * refl[1] + 0.577 * refl[2] + 0.388 * refl[3]);
+        return (float) value;
+    }
+
+    public float bnDiffValue() {
+        // (BLUE – NIR)/(BLUE+NIR)
+        double value = (refl[0] - refl[2]) / (refl[0] + refl[2]);
+        return (float) value;
+    }
+
+    public float nswirDiffValue() {
+        // (NIR – SWIR)/(NIR+SWIR)
+        double value = (refl[2] - refl[3]) / (refl[2] + refl[3]);
+        return (float) value;
     }
 
     // setters for PROBA-V specific quantities
