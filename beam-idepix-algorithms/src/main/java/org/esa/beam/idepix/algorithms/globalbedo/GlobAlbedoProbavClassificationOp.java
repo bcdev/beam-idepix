@@ -185,7 +185,8 @@ public class GlobAlbedoProbavClassificationOp extends GlobAlbedoClassificationOp
     @Override
     void setCloudFlag(Tile targetTile, int y, int x, GlobAlbedoAlgorithm globAlbedoAlgorithm) {
         super.setCloudFlag(targetTile, y, x, globAlbedoAlgorithm);
-        targetTile.setSample(x, y, IdepixConstants.F_HAZE, ((GlobAlbedoProbavAlgorithm) globAlbedoAlgorithm).isHaze());
+        // currently DO NOT set haze flag (JM 20160707)
+        // targetTile.setSample(x, y, IdepixConstants.F_HAZE, ((GlobAlbedoProbavAlgorithm) globAlbedoAlgorithm).isHaze());
     }
 
     @Override
