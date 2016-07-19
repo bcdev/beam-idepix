@@ -19,6 +19,7 @@ package org.esa.beam.idepix.algorithms.coastcolour;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -29,6 +30,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.IdepixConstants;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
+import org.esa.beam.idepix.operators.BarometricPressureOp;
 import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.seaice.SeaIceClassification;
@@ -53,13 +55,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Calendar;
+import java.util.Collections;
+
+import static org.esa.beam.meris.l2auxdata.Constants.bb753;
+import static org.esa.beam.meris.l2auxdata.Constants.bb775;
 
 
 /**
  * This class provides the Mepix QWG cloud classification.
  */
 @OperatorMetadata(alias = "idepix.coastcolour.classification",
-                  version = "2.1",
+                  version = "2.1.3.1",
                   internal = true,
                   authors = "Marco Zühlke, Olaf Danne",
                   copyright = "(c) 2007 by Brockmann Consult",
@@ -213,6 +219,20 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean ccApplyMERISAlternativeSchillerNNPure;
 
+    @Parameter(description = "If 'true' no neural net will be used. Only threshold based tests. Usefull for 2002.",
+            defaultValue = "false")
+    private boolean noNN;
+
+//    @Parameter(description = "User Defined RhoTOA753 Threshold.", defaultValue = "0.1")
+    private static final double userDefinedRhoToa753Threshold = 0.1;
+//    @Parameter(description = "User Defined RhoTOA Ratio 753/775 Threshold.", defaultValue = "0.15")
+    private static final double userDefinedRhoToaRatio753775Threshold = 0.15;
+//    @Parameter(description = "User Defined P1 Pressure Threshold.", defaultValue = "125.0")
+    private static final double userDefinedP1PressureThreshold = 125.0;
+//    @Parameter(description = "User Defined PScatt Pressure Threshold.", defaultValue = "700.0")
+    private static final double userDefinedPScattPressureThreshold = 700;
+
+
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
 
@@ -220,6 +240,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     String merisAllNeuralNetString;
     NNffbpAlphaTabFast merisWaterNeuralNet;
     NNffbpAlphaTabFast merisAllNeuralNet;
+    private Band pbaroBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -242,6 +263,13 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
         lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
+
+        if (noNN) {
+            // Barometric Pressure
+            String operatorAlias = OperatorSpi.getOperatorAlias(BarometricPressureOp.class);
+            Product pbaroProduct = GPF.createProduct(operatorAlias, Collections.EMPTY_MAP, l1bProduct);
+            pbaroBand = pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC);
+        }
     }
 
     private void readSchillerNets() {
@@ -452,6 +480,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
             final SourceData sd = loadSourceTiles(sourceRectangle);
 
             final Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
+            Tile pbaroTile = null;
+            if (noNN) {
+                pbaroTile = getSourceTile(pbaroBand, sourceRectangle);
+            }
             final Tile liseP1Tile = getSourceTile(liseP1Band, sourceRectangle);
             final Tile lisePScattTile = getSourceTile(lisePScattBand, sourceRectangle);
             final Tile waterFractionTile = getSourceTile(landWaterBand, sourceRectangle);
@@ -495,6 +527,9 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                                                                                            auxData.press_scale_height);
                         } else {
                             pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
+                        }
+                        if (noNN) {
+                            pixelInfo.pbaroPressure = pbaroTile.getSampleFloat(x, y);
                         }
                         pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
                         pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
@@ -567,7 +602,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     }
 
     public void setCloudPressureSurface(SourceData sd, PixelInfo pixelInfo, Tile targetTile) {
-        PixelId.Pressure press = pixelId.computePressure(sd.rhoToa[Constants.bb753][pixelInfo.index],
+        PixelId.Pressure press = pixelId.computePressure(sd.rhoToa[bb753][pixelInfo.index],
                                                          sd.rhoToa[Constants.bb760][pixelInfo.index],
                                                          pixelInfo.airMass,
                                                          sd.detectorIndex[pixelInfo.index]);
@@ -622,6 +657,28 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         } else {
             // over land
             is_snow_ice = (high_mdsi && bright_f);
+        }
+        if (noNN) {
+            // new #2.1.8:
+            if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
+                boolean is_cloud;
+                if (!land_coast) {
+                    boolean low_p_p1 = (pixelInfo.p1Pressure < pixelInfo.pbaroPressure - userDefinedP1PressureThreshold) &&
+                            (sd.rhoToa[bb753][pixelInfo.index] > userDefinedRhoToa753Threshold);
+                    is_cloud = (bright_f || low_p_p1) && (!high_mdsi);
+                } else {
+                    float rhoToaRatio = sd.rhoToa[bb753][pixelInfo.index] / sd.rhoToa[bb775][pixelInfo.index];
+                    boolean low_p_pscatt = (pixelInfo.pscattPressure < userDefinedPScattPressureThreshold) &&
+                            (rhoToaRatio > userDefinedRhoToaRatio753775Threshold);
+                    is_cloud = (bright_f || low_p_pscatt) && (!(high_mdsi && bright_f));
+                }
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_SURE, is_cloud);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD_AMBIGUOUS, is_cloud);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, F_CLOUD, is_cloud);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, F_SNOW_ICE, is_snow_ice && !is_cloud);
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, F_GLINTRISK, is_glint_risk && !is_cloud);
+            }
+            return;
         }
 
         double ambiguousThresh = cloudScreeningAmbiguous;
@@ -982,6 +1039,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
         int y;
         double airMass;
         float ecmwfPressure;
+        float pbaroPressure;
         float p1Pressure;
         float pscattPressure;
         float ctp;

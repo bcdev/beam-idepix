@@ -138,6 +138,9 @@ public class CoastColourOp extends BasisOp {
                description = " Apply Schiller NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean ccApplyMERISAlternativeSchillerNNPure;
 
+    @Parameter(description = "If 'true' no neural net will be used. Only threshold based tests. Usefull for 2002.",
+            defaultValue = "false")
+    private boolean noNN;
 
     private static final int CC_LAND_MASK_RESOLUTION = 50;
     private static final int CC_OVERSAMPLING_FACTOR_X = 3;
@@ -219,6 +222,7 @@ public class CoastColourOp extends BasisOp {
         cloudClassificationParameters.put("ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue", ccAlternativeSchillerNNCloudAmbiguousSureSeparationValue);
         cloudClassificationParameters.put("ccAlternativeSchillerNNCloudSureSnowSeparationValue", ccAlternativeSchillerNNCloudSureSnowSeparationValue);
         cloudClassificationParameters.put("ccApplyMERISAlternativeSchillerNNPure", ccApplyMERISAlternativeSchillerNNPure);
+        cloudClassificationParameters.put("noNN", noNN);
         merisCloudProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CoastColourClassificationOp.class),
                                               cloudClassificationParameters, cloudInputProducts);
     }
