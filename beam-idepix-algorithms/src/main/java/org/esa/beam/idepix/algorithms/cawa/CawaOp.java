@@ -52,9 +52,15 @@ public class CawaOp extends BasisOp {
     private boolean outputRadiance = false;
 
     @Parameter(defaultValue = "false",
-            description = "Write TOA reflectances to the target product.",
-            label = " Write TOA Reflectances to the target product")
-    private boolean outputRad2Refl = false;
+            description = "Write all TOA reflectances to the target product.",
+            label = " Write all TOA Reflectances to the target product")
+    private boolean outputAllRad2Refl = false;
+
+    @Parameter(defaultValue = "false",
+            description = "Write CAWA TOA reflectances (bands 13-15) to the target product.",
+            label = " Write CAWA TOA Reflectances (bands 13-15) to the target product")
+    private boolean outputCawaRad2Refl = false;
+
 
     @Parameter(defaultValue = "false",
             label = " Write NN value to the target product.",
@@ -272,8 +278,12 @@ public class CawaOp extends BasisOp {
         if (outputRadiance) {
             IdepixProducts.addRadianceBands(sourceProduct, targetProduct);
         }
-        if (outputRad2Refl) {
+        if (outputAllRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
+        }
+
+        if (!outputAllRad2Refl && outputCawaRad2Refl) {
+            IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct, 13, 15);
         }
     }
 
