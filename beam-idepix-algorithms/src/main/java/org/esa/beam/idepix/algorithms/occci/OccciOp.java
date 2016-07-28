@@ -1,6 +1,7 @@
 package org.esa.beam.idepix.algorithms.occci;
 
-import org.esa.beam.framework.datamodel.Product;
+import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -13,6 +14,7 @@ import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
+import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
@@ -42,6 +44,16 @@ public class OccciOp extends BasisOp {
             label = " Process MERIS for sea sce ",
             description = " Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) ")
     private boolean processMerisSeaIce = true;
+
+    @Parameter(defaultValue = "false",
+            label = " Process MERIS for sea ice in Antarctic regions ",
+            description = " Use experimental 'sea ice' mode for MERIS in Antarctic rather than Arctic regions ")
+    private boolean processMerisSeaIceAntarctic = false;
+
+    @Parameter(defaultValue = "1.2",
+            label = " Wet ice threshold for MERIS sea ice classification",
+            description = " Wet ice threshold ")
+    double wetIceThreshold;
 
     @Parameter(defaultValue = "SIX_CLASSES",
             valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "SIX_CLASSES_NORTH", "FOUR_CLASSES_NORTH"},
@@ -305,6 +317,32 @@ public class OccciOp extends BasisOp {
         waterClassificationParameters.put("copyAllTiePoints", true);
         waterClassificationParameters.put("schillerMeris1600Threshold", schillerMeris1600Threshold);
         waterClassificationParameters.put("schillerMerisAatsrCloudIceSeparationValue", schillerMerisAatsrCloudIceSeparationValue);
+
+        if (!productContainsPolarRegions()) {
+            throw new OperatorException("Max latitude in product is < 50N and > 50S - not suitable for sea ice classification");
+        }
+
+        // provide histograms for wet ice (described in 'nn5.pdf', MPa 21.7.2016)
+        final Band refl3 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_3");
+        final Band refl14 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_14");
+        final Band refl15 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_15");
+        final double[] refl3AB =
+                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl3, processMerisSeaIceAntarctic);
+        final double[] refl4AB =
+                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl14, processMerisSeaIceAntarctic);
+        final double[] refl5AB =
+                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl15, processMerisSeaIceAntarctic);
+        waterClassificationParameters.put("refl3AB", refl3AB);
+        waterClassificationParameters.put("refl4AB", refl4AB);
+        waterClassificationParameters.put("refl5AB", refl5AB);
+        waterClassificationParameters.put("wetIceThreshold", wetIceThreshold);
+    }
+
+    private boolean productContainsPolarRegions() {
+        final TiePointGrid latTpg = sourceProduct.getTiePointGrid("latitude");
+        final Stx stxLat = new StxFactory().create(latTpg, ProgressMonitor.NULL);
+        return (processMerisSeaIceAntarctic && stxLat.getMinimum() < -50.0) ||
+                (!processMerisSeaIceAntarctic && stxLat.getMaximum() > 50.0);
     }
 
 

@@ -128,7 +128,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             label = "Cloud screening threshold addition in case of glint")
     private double glintCloudThresholdAddition;
 
-
     @Parameter(defaultValue = "5.0",
             label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
             description = " 'MERIS1600' threshold value ")
@@ -138,6 +137,18 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             label = " 'MERIS/AATSR' cloud/ice separation value (MERIS Sea Ice) ",
             description = " 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
+
+    @Parameter(description = " 95 percent histogram interval for reflectance band 3 ")
+    double[] refl3AB;
+
+    @Parameter(description = " 95 percent histogram interval for reflectance band 14 ")
+    double[] refl14AB;
+
+    @Parameter(description = " 95 percent histogram interval for reflectance band 14 ")
+    double[] refl15AB;
+
+    @Parameter(description = " Wet ice threshold ")
+    double wetIceThreshold;
 
 
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
@@ -152,7 +163,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     ThreadLocal<SchillerNeuralNetWrapper> merisAatsrOuterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisSeaIceNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAatsrInnerNeuralNet;
-
 
     @Override
     public void initialize() throws OperatorException {
@@ -482,7 +492,18 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, true);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, true);
             }
+
+            // wet ice classification (MPa, 21.07.2016):
+            final float rhoToa3 = sd.rhoToa[2][pixelInfo.index];
+            final float rhoToa14 = sd.rhoToa[13][pixelInfo.index];
+            final float rhoToa15 = sd.rhoToa[14][pixelInfo.index];
+            final boolean isWetIce =
+                    OccciMerisSeaiceAlgorithm.isWetIce(rhoToa3, rhoToa14, rhoToa15, refl3AB, refl14AB, refl15AB, wetIceThreshold);
+            if (isWetIce) {
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
+            }
         }
+
 
         // todo: do we want to combine somehow with 'old' IPF approach??
 //        final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
@@ -499,7 +520,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
     private boolean isCloudSureFromNN(double nnOutput) {
 //        return nnOutput <  nnSelector.getSeparationValues()[0];
-        return nnOutput <  nnSelector.getSeparationValues()[1];    // this is not Schillers best value!
+        return nnOutput < nnSelector.getSeparationValues()[1];    // this is not Schillers best value!
     }
 
     private boolean isCloudAmbiguousFromNN(double nnOutput) {
@@ -509,7 +530,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
                 nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
 //            return nnOutput <  sep0;
-            return nnOutput <  sep1;  // this is not Schillers best value!
+            return nnOutput < sep1;  // this is not Schillers best value!
         } else {
             final double sep3 = nnSelector.getSeparationValues()[3];
             final double sep4 = nnSelector.getSeparationValues()[4];
@@ -777,7 +798,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private static class PixelInfo {
-
         int index;
         int x;
         int y;
