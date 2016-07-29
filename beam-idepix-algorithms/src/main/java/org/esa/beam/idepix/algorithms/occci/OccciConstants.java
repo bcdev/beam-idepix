@@ -23,7 +23,7 @@ class OccciConstants {
     static final int SRC_VZA = 2;
     static final int SRC_VAA = 3;
     static final int MODIS_SRC_RAD_OFFSET = 22;
-    static final int MODIS_NN_INPUT_LENGTH = 10;
+//    static final int MODIS_NN_INPUT_LENGTH = 10;
     static final int SEAWIFS_SRC_RAD_OFFSET = 8;
     static final int VIIRS_SRC_RAD_OFFSET = 0;
 
@@ -34,10 +34,12 @@ class OccciConstants {
     public static final int F_CLOUD_BUFFER = 4;
     public static final int F_CLOUD_SHADOW = 5;
     public static final int F_SNOW_ICE = 6;
-    public static final int F_MIXED_PIXEL = 7;
-    public static final int F_GLINT_RISK = 8;
-    public static final int F_COASTLINE = 9;
-    public static final int F_LAND = 10;
-    public static final int F_BRIGHT = 11;
+    public static final int F_WHITE_ICE = 7;
+    public static final int F_WET_ICE = 8;
+    public static final int F_MIXED_PIXEL = 9;
+    public static final int F_GLINT_RISK = 10;
+    public static final int F_COASTLINE = 11;
+    public static final int F_LAND = 12;
+    public static final int F_BRIGHT = 13;
 
 }

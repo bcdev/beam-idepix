@@ -29,6 +29,8 @@ public class OccciUtils {
         flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, OccciConstants.F_CLOUD_BUFFER), null);
         flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, OccciConstants.F_CLOUD_SHADOW), null);
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, OccciConstants.F_SNOW_ICE), null);
+        flagCoding.addFlag("F_WHITE_ICE", BitSetter.setFlag(0, OccciConstants.F_WHITE_ICE), null);
+        flagCoding.addFlag("F_WET_ICE", BitSetter.setFlag(0, OccciConstants.F_WET_ICE), null);
         flagCoding.addFlag("F_MIXED_PIXEL", BitSetter.setFlag(0, OccciConstants.F_MIXED_PIXEL), null);
         flagCoding.addFlag("F_GLINT_RISK", BitSetter.setFlag(0, OccciConstants.F_GLINT_RISK), null);
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, OccciConstants.F_COASTLINE), null);
@@ -79,6 +81,16 @@ public class OccciUtils {
 
         mask = Mask.BandMathsType.create("F_SNOW_ICE", "Snow/ice pixel", w, h,
                                          "pixel_classif_flags.F_SNOW_ICE",
+                                         getRandomColour(r), 0.5f);
+        occciProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_WHITE_ICE", "White ice pixel", w, h,
+                                         "pixel_classif_flags.F_WHITE_ICE",
+                                         getRandomColour(r), 0.5f);
+        occciProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_WET_ICE", "Wetice pixel", w, h,
+                                         "pixel_classif_flags.F_WET_ICE",
                                          getRandomColour(r), 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 

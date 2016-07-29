@@ -27,10 +27,10 @@ import java.awt.*;
  * @author olafd
  */
 @OperatorMetadata(alias = "idepix.occci.classification.post",
-                  version = "2.2",
-                  copyright = "(c) 2014 by Brockmann Consult",
-                  description = "OC-CCI post processing operator.",
-                  internal = true)
+        version = "2.2",
+        copyright = "(c) 2014 by Brockmann Consult",
+        description = "OC-CCI post processing operator.",
+        internal = true)
 public class OccciPostProcessingOp extends BasisOp {
 
     @SourceProduct(alias = "refl", description = "MODIS/SeaWiFS L1b reflectance product")
@@ -42,7 +42,7 @@ public class OccciPostProcessingOp extends BasisOp {
     @SourceProduct(alias = "waterMask")
     private Product waterMaskProduct;
 
-    @SourceProduct(alias = "ctp", optional=true)
+    @SourceProduct(alias = "ctp", optional = true)
     private Product ctpProduct;
 
     @TargetProduct(description = "The target product.")
@@ -65,16 +65,6 @@ public class OccciPostProcessingOp extends BasisOp {
     @Override
     public void initialize() throws OperatorException {
         createTargetProduct();
-
-        int extendedWidth;
-        int extendedHeight;
-        if (reflProduct.getProductType().startsWith("MER_F")) {
-            extendedWidth = 64;
-            extendedHeight = 64;
-        } else {
-            extendedWidth = 16;
-            extendedHeight = 16;
-        }
 
         rectCalculator = new RectangleExtender(new Rectangle(reflProduct.getSceneRasterWidth(),
                                                              reflProduct.getSceneRasterHeight()),
@@ -203,7 +193,7 @@ public class OccciPostProcessingOp extends BasisOp {
                 }
             }
             // also consider reduced boxes at product edge
-            return (count >= 4 && landCount >= Math.max(count-6, 1) && landCount <= count - 3);
+            return (count >= 4 && landCount >= Math.max(count - 6, 1) && landCount <= count - 3);
         }
 
         return false;
@@ -231,17 +221,9 @@ public class OccciPostProcessingOp extends BasisOp {
         } else {
             for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                 for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                    if (i < 0 || j < 0) {
-                        System.out.println("i,j = " + i + "," + j);
-                    }
                     if (rectangle.contains(i, j)) {
-                        boolean isAlreadyCoastline = false;
+                        boolean isAlreadyCoastline;
                         isAlreadyCoastline = sourceFlagTile.getSampleBit(i, j, OccciConstants.F_COASTLINE);
-//                        try {
-//                            isAlreadyCoastline = sourceFlagTile.getSampleBit(i, j, OccciConstants.F_COASTLINE);
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
                         if (isAlreadyCoastline) {
                             return true;
                         }
@@ -291,6 +273,8 @@ public class OccciPostProcessingOp extends BasisOp {
         final boolean isSnowIce = sourceFlagTile.getSampleBit(x, y, OccciConstants.F_SNOW_ICE);
         if (isSnowIce) {
             targetTile.setSample(x, y, OccciConstants.F_SNOW_ICE, false);
+            targetTile.setSample(x, y, OccciConstants.F_WHITE_ICE, false);
+            targetTile.setSample(x, y, OccciConstants.F_WET_ICE, false);
         }
     }
 

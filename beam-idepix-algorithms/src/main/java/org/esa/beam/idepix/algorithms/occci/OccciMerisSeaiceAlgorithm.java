@@ -15,9 +15,19 @@ import java.awt.*;
  */
 public class OccciMerisSeaiceAlgorithm {
 
-    public static boolean isWetIce(float reflR, float reflG, float reflB, double[] abR, double[] abG, double[] abB,
-                                   double wetIceThreshold) {
-
+    /**
+     * Provides a 'wet ice' value from R,G,B reflectances as described by M.Paperin (nn5.pdf, 20160721)
+     *
+     * @param reflR - red reflectance
+     * @param reflG - green reflectance
+     * @param reflB - blue reflectance
+     * @param abR - red reflectance histogram 95% lower and upper boundary
+     * @param abG - green reflectance histogram 95% lower and upper boundary
+     * @param abB - blue reflectance histogram 95% lower and upper boundary
+     *
+     * @return wetIceValue
+     */
+    public static float getWetIceValue(float reflR, float reflG, float reflB, double[] abR, double[] abG, double[] abB) {
         final float aR = (float) abR[0];
         final float bR = (float) abR[1];
         final float aG = (float) abG[0];
@@ -28,41 +38,53 @@ public class OccciMerisSeaiceAlgorithm {
         final float virtReflR = getHistogramNormalizedRefl(reflR, aR, bR);
         final float virtReflG = getHistogramNormalizedRefl(reflG, aG, bG);
         final float virtReflB = getHistogramNormalizedRefl(reflB, aB, bB);
-        final float wetIceValue = getWetIceValue(virtReflR, virtReflG, virtReflB);
-        return wetIceValue > wetIceThreshold;
+
+        return getWetIceValue(virtReflR, virtReflG, virtReflB);
     }
 
-    public static float getWetIceValue(float reflR, float reflG, float reflB) {
-        return reflR*reflR/(reflB*reflG);
-    }
-
+    /**
+     * Provides a reflectance mapping into [0, 255] range, with normalization to histogram boundaries
+     *
+     * @param refl - input reflectance
+     * @param a - histogram lower boundary
+     * @param b - histogram upper boundary
+     *
+     * @return  mapped reflectance in [0, 255]
+     */
     public static float getHistogramNormalizedRefl(float refl, float a, float b) {
         return Math.max(0.0f, Math.min(255.0f, 255.0f * (refl - a)/(b - a)));
     }
 
-    public static double[] computeHistogram95PercentInterval(Band band, boolean antarctic) {
-        final String roiExpr = antarctic ? "latitude < -50.0" : "latitude > 50.0";
-        Mask highLatMask = Mask.BandMathsType.create("highLatMask",
-                                                     "latitudes > 50deg only",
-                                                     band.getSceneRasterWidth(),
-                                                     band.getSceneRasterHeight(),
-                                                     roiExpr,
-                                                     Color.cyan, 0.5);
-
+    /**
+     * Provides lower and upper boundaries a and b of 95% histogram for a given input band
+     *
+     * @param band - input band
+     * @param roiExpr - a ROI expression (e.g. consider latitudes in polar regions only)
+     *
+     * @return double[]{a, b}
+     */
+    public static double[] computeHistogram95PercentInterval(Band band, String roiExpr) {
+        final Mask highLatMask =
+                band.getProduct().addMask("highLatMask", roiExpr, "latitudes > 50deg only", Color.gray, Double.NaN);
         final Stx stx = new StxFactory().create(new Mask[]{highLatMask},
                                                 new RasterDataNode[]{band},
                                                 ProgressMonitor.NULL);
 
-        final double highValue = stx.getHistogram().getHighValue()[0];    // stx.getHistogram() is a JAI histogram!
-        final double lowValue = stx.getHistogram().getLowValue()[0];
-
-        final Histogram beamHistogram = new Histogram(stx.getHistogram().getBins(0),
-                                                      band.scaleInverse(lowValue),
-                                                      band.scaleInverse(highValue));
+        final Histogram beamHistogram = new Histogram(stx.getHistogram().getBins(0),   // stx.getHistogram() is a JAI histogram!
+                                                      stx.getMinimum(),
+                                                      stx.getMaximum());
         final Range rangeFor95Percent = beamHistogram.findRangeFor95Percent();
         final double a = rangeFor95Percent.getMin();
         final double b = rangeFor95Percent.getMax();
 
         return new double[]{a, b};
+    }
+
+    private static float getWetIceValue(float reflR, float reflG, float reflB) {
+        if (reflR > 0.0 && reflG > 0.0 && reflB > 0.0) {
+            return reflR * reflR / (reflB * reflG);
+        } else {
+            return Float.NaN;
+        }
     }
 }

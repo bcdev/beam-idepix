@@ -84,6 +84,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     private Band lisePScattBand;
     private Band landWaterBand;
     private Band nnOutputBand;
+    private Band wetIceOutputBand;
     private Band meris1600Band;
     private Band merisAatsrCloudProbBand;
 
@@ -142,10 +143,10 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     double[] refl3AB;
 
     @Parameter(description = " 95 percent histogram interval for reflectance band 14 ")
-    double[] refl14AB;
+    double[] refll4AB;
 
-    @Parameter(description = " 95 percent histogram interval for reflectance band 14 ")
-    double[] refl15AB;
+    @Parameter(description = " 95 percent histogram interval for reflectance band 15 ")
+    double[] refll5AB;
 
     @Parameter(description = " Wet ice threshold ")
     double wetIceThreshold;
@@ -225,6 +226,9 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
         ProductUtils.copyFlagBands(l1bProduct, targetProduct, true);
         nnOutputBand = targetProduct.addBand("nn_value", ProductData.TYPE_FLOAT32);
+        wetIceOutputBand = targetProduct.addBand("wet_ice_value", ProductData.TYPE_FLOAT32);
+        wetIceOutputBand.setNoDataValue(Float.NaN);
+        wetIceOutputBand.setNoDataValueUsed(true);
 //        meris1600Band = targetProduct.addBand("meris_1600", ProductData.TYPE_FLOAT32);
 //        merisAatsrCloudProbBand = targetProduct.addBand("cloud_prob", ProductData.TYPE_FLOAT32);
     }
@@ -323,24 +327,21 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, Float.NaN);
                             }
                         } else {
-                            pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
-                            pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
-                            pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
-                            pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
-
                             if (band == cloudFlagBand) {
+                                pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
+                                pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
+                                pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
+                                pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
                                 classifyCloud(sd, pixelInfo, targetTile, waterFraction);
                             }
-                            final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
                             if (band == nnOutputBand) {
+                                final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
                             }
-//                            if (band == meris1600Band) {
-//                                targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
-//                            }
-//                            if (band == merisAatsrCloudProbBand) {
-//                                targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[1]);
-//                            }
+                            if (band == wetIceOutputBand) {
+                                final float wetIceValue = getWetIceValue(sd, pixelInfo);
+                                targetTile.setSample(pixelInfo.x, pixelInfo.y, wetIceValue);
+                            }
                         }
                     }
                 }
@@ -415,7 +416,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         final boolean high_mdsi = resultFlags[4];
         final boolean bright_rc = resultFlags[5];    // bright_1
 
-        boolean is_snow_ice = false;
+        boolean isSnowIce = false;
         boolean is_glint_risk = !isCoastline && isGlintRisk(sd, pixelInfo);
         boolean checkForSeaIce = false;
         if (!isCoastline) {
@@ -423,7 +424,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             final GeoPos geoPos = getGeoPos(pixelInfo);
             checkForSeaIce = ignoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
             if (checkForSeaIce) {
-                is_snow_ice = bright_rc && high_mdsi;
+                isSnowIce = bright_rc && high_mdsi;
             }
 
             // glint makes sense only if we have no sea ice
@@ -431,7 +432,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
         } else {
             // over land
-            is_snow_ice = (high_mdsi && bright_f);
+            isSnowIce = (high_mdsi && bright_f);
         }
 
         double sureThresh = cloudScreeningSure;
@@ -468,9 +469,11 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         if (!targetTile.getSampleBit(pixelInfo.x, pixelInfo.y, IdepixConstants.F_INVALID)) {
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, false);
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WHITE_ICE, false);
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WET_ICE, false);
 
-            is_snow_ice = isSnowIceFromNN(nnOutput);
-            if (is_snow_ice) {
+            isSnowIce = isSnowIceFromNN(nnOutput);
+            if (isSnowIce) {
                 // this would be as 'SNOW/ICE'...
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, false);
@@ -493,15 +496,16 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, true);
             }
 
-            // wet ice classification (MPa, 21.07.2016):
-            final float rhoToa3 = sd.rhoToa[2][pixelInfo.index];
-            final float rhoToa14 = sd.rhoToa[13][pixelInfo.index];
-            final float rhoToa15 = sd.rhoToa[14][pixelInfo.index];
-            final boolean isWetIce =
-                    OccciMerisSeaiceAlgorithm.isWetIce(rhoToa3, rhoToa14, rhoToa15, refl3AB, refl14AB, refl15AB, wetIceThreshold);
-            if (isWetIce) {
-                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
+            // white/wet ice classification (MPa, 21.07.2016):
+            if (checkForSeaIce) {  // only within sea ice climatology
+                final boolean isWhiteIce = nnOutput > 0.0 && nnOutput < 1.45;
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WHITE_ICE, isWhiteIce);
+                final boolean isWetIce = getWetIceValue(sd, pixelInfo) > wetIceThreshold;
+                if (!isWhiteIce && isWetIce) {
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WET_ICE, true);
+                }
             }
+            // end white/wet ice classification
         }
 
 
@@ -513,9 +517,16 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 //        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, isCloudSure);
 //        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
 //        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
-//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, is_snow_ice && !isCloudSure);
+//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, isSnowIce && !isCloudSure);
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_GLINT_RISK, is_glint_risk && !isCloudSure);
+    }
+
+    private float getWetIceValue(SourceData sd, PixelInfo pixelInfo) {
+        final float rhoToa3 = sd.rhoToa[2][pixelInfo.index];
+        final float rhoToa14 = sd.rhoToa[13][pixelInfo.index];
+        final float rhoToa15 = sd.rhoToa[14][pixelInfo.index];
+        return OccciMerisSeaiceAlgorithm.getWetIceValue(rhoToa3, rhoToa14, rhoToa15, refl3AB, refll4AB, refll5AB);
     }
 
     private boolean isCloudSureFromNN(double nnOutput) {

@@ -61,7 +61,6 @@ public class OccciOp extends BasisOp {
             description = "The Neural Net which will be applied.")
     private MerisSeaiceNNSelector nnSelector;
 
-
     //    @Parameter(defaultValue = "5.0",
 //            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
 //            description = " 'MERIS1600' threshold value ")
@@ -164,10 +163,10 @@ public class OccciOp extends BasisOp {
     private boolean ocOutputViirsRhoToa = true;
 
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             label = " Debug bands",
             description = "Write further useful bands to target product.")
-    private boolean ocOutputDebug = false;
+    private boolean ocOutputDebug = true;
 
     @Parameter(label = " Product type",
             description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
@@ -326,15 +325,18 @@ public class OccciOp extends BasisOp {
         final Band refl3 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_3");
         final Band refl14 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_14");
         final Band refl15 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_15");
+
+        final String roiExpr = processMerisSeaIceAntarctic ? "latitude < -50.0" : "latitude > 50.0";
         final double[] refl3AB =
-                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl3, processMerisSeaIceAntarctic);
-        final double[] refl4AB =
-                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl14, processMerisSeaIceAntarctic);
-        final double[] refl5AB =
-                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl15, processMerisSeaIceAntarctic);
+                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl3, roiExpr);
+        final double[] refll4AB =
+                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl14, roiExpr);
+        final double[] refll5AB =
+                OccciMerisSeaiceAlgorithm.computeHistogram95PercentInterval(refl15, roiExpr);
+
         waterClassificationParameters.put("refl3AB", refl3AB);
-        waterClassificationParameters.put("refl4AB", refl4AB);
-        waterClassificationParameters.put("refl5AB", refl5AB);
+        waterClassificationParameters.put("refll4AB", refll4AB);
+        waterClassificationParameters.put("refll5AB", refll5AB);
         waterClassificationParameters.put("wetIceThreshold", wetIceThreshold);
     }
 
@@ -347,8 +349,6 @@ public class OccciOp extends BasisOp {
 
 
     private void addBandsToTargetProduct(Product targetProduct) {
-//        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
-
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         ProductUtils.copyFlagBands(classifProduct, targetProduct, true);
 
