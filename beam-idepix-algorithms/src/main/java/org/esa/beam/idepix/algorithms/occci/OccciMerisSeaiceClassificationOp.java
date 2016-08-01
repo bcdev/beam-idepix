@@ -148,9 +148,11 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     @Parameter(description = " 95 percent histogram interval for reflectance band 15 ")
     double[] refll5AB;
 
-    @Parameter(description = " Wet ice threshold ")
-    double wetIceThreshold;
-
+    @Parameter(defaultValue = "true",
+            description = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice.",
+            label = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice."
+    )
+    private boolean applyBlueFilter;
 
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
@@ -472,13 +474,14 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WHITE_ICE, false);
             targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WET_ICE, false);
 
-            isSnowIce = isSnowIceFromNN(nnOutput);
-            if (isSnowIce) {
-                // this would be as 'SNOW/ICE'...
-                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
-                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, false);
-                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
-            }
+            // deactivate for the moment, apply MPa wetIce, dryIce instead...
+//            isSnowIce = isSnowIceFromNN(nnOutput);
+//            if (isSnowIce) {
+//                // this would be as 'SNOW/ICE'...
+//                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, true);
+//                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, false);
+//                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
+//            }
 
             isCloudSure = isCloudSureFromNN(nnOutput);
             if (isCloudSure) {
@@ -500,9 +503,22 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             if (checkForSeaIce) {  // only within sea ice climatology
                 final boolean isWhiteIce = nnOutput > 0.0 && nnOutput < 1.45;
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WHITE_ICE, isWhiteIce);
-                final boolean isWetIce = getWetIceValue(sd, pixelInfo) > wetIceThreshold;
+                final boolean isBlueIce = applyBlueFilter &&
+                        OccciMerisSeaiceAlgorithm.isBlueIce(sd.getRhoToa(), pixelInfo.index);
+//                final boolean isWetIce = isBlueIce;
+                final boolean isWetIce = isBlueIce ||
+                        OccciMerisSeaiceAlgorithm.isWetIce(sd.getRhoToa(), pixelInfo.index, refl3AB, refll4AB, refll5AB,
+                                                           applyBlueFilter);
                 if (!isWhiteIce && isWetIce) {
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WET_ICE, true);
+                }
+                final boolean isWhiteOrWetIce = isWetIce || isWhiteIce;
+                targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, isWhiteOrWetIce);
+                // set clouds to false is there is white or wet ice...
+                if (isWhiteOrWetIce) {
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, false);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, false);
+                    targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, false);
                 }
             }
             // end white/wet ice classification
@@ -530,8 +546,17 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private boolean isCloudSureFromNN(double nnOutput) {
-//        return nnOutput <  nnSelector.getSeparationValues()[0];
-        return nnOutput < nnSelector.getSeparationValues()[1];    // this is not Schillers best value!
+        final double sep1 = nnSelector.getSeparationValues()[1];
+        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
+                nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
+            // FOUR_CLASSES("FOUR_CLASSES", "8_671.3.net", new double[]{0.55, 1.5, 2.45}),
+            return nnOutput < sep1;  // this is not Schillers best value!
+        } else {
+            // SIX_CLASSES("SIX_CLASSES", "9x6_935.4.net", new double[]{0.45, 1.65, 2.45, 3.35, 4.5});
+            final double sep2 = nnSelector.getSeparationValues()[2];
+            final double sep3 = nnSelector.getSeparationValues()[3];
+            return nnOutput >= sep2 && nnOutput < sep3;
+        }
     }
 
     private boolean isCloudAmbiguousFromNN(double nnOutput) {
@@ -540,12 +565,13 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         final double sep2 = nnSelector.getSeparationValues()[2];
         if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
                 nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
-//            return nnOutput <  sep0;
+            // FOUR_CLASSES("FOUR_CLASSES", "8_671.3.net", new double[]{0.55, 1.5, 2.45}),
             return nnOutput < sep1;  // this is not Schillers best value!
         } else {
+            // SIX_CLASSES("SIX_CLASSES", "9x6_935.4.net", new double[]{0.45, 1.65, 2.45, 3.35, 4.5});
             final double sep3 = nnSelector.getSeparationValues()[3];
             final double sep4 = nnSelector.getSeparationValues()[4];
-            return (nnOutput >= sep1 && nnOutput < sep2) || (nnOutput >= sep3 && nnOutput < sep4);
+            return (nnOutput >= sep3 && nnOutput < sep4);
         }
     }
 
@@ -789,7 +815,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         return sd.radiance[radianceBandId].getSampleFloat(x, y) > auxData.Saturation_L[bandId];
     }
 
-    private static class SourceData {
+    private class SourceData {
 
         private float[][] rhoToa;
         private Tile[] radiance;
@@ -806,6 +832,10 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         private float[] windv;
         private float[] ecmwfPressure;
         private Tile l1Flags;
+
+        public float[][] getRhoToa() {
+            return rhoToa;
+        }
     }
 
     private static class PixelInfo {

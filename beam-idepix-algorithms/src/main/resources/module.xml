@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.36:</b>
+        Implemented new sea ice detection proposed by M.Paperin
         <b>Version 2.2.35:</b>
         Disabled new haze flag in Proba-V cloud classification
         <b>Version 2.2.34:</b>

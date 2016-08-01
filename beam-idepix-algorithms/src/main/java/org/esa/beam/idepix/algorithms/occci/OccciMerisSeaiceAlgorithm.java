@@ -42,6 +42,46 @@ public class OccciMerisSeaiceAlgorithm {
         return getWetIceValue(virtReflR, virtReflG, virtReflB);
     }
 
+    public static boolean isWetIce(float[][] rhoToaArray, int pixelIndex,
+                                   double[] abR, double[] abG, double[] abB, boolean applyBlueFilter) {
+        final float reflR = rhoToaArray[2][pixelIndex];
+        final float reflG = rhoToaArray[13][pixelIndex];
+        final float reflB = rhoToaArray[14][pixelIndex];
+
+        final float aR = (float) abR[0];
+        final float bR = (float) abR[1];
+        final float aG = (float) abG[0];
+        final float bG = (float) abG[1];
+        final float aB = (float) abB[0];
+        final float bB = (float) abB[1];
+
+        final float virtReflR = getHistogramNormalizedRefl(reflR, aR, bR);
+        final float virtReflG = getHistogramNormalizedRefl(reflG, aG, bG);
+        final float virtReflB = getHistogramNormalizedRefl(reflB, aB, bB);
+
+        final float wetIceValue = getWetIceValue(virtReflR, virtReflG, virtReflB);
+
+        if (virtReflR < 1.0 && virtReflR > 0.5 && wetIceValue > 1.5 && virtReflR > 1.3*virtReflG &&
+                virtReflR > 1.3*virtReflB && virtReflG > 0.0 && virtReflB > 0.0 && wetIceValue < 100.0) {
+            return true;
+        } else if (virtReflR > 1.0 && wetIceValue > 1.2 && virtReflR > 1.1*virtReflG
+                && virtReflR > 1.1*virtReflB && virtReflG > 0.0 && virtReflB > 0.0 && wetIceValue < 100) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isBlueIce(float[][] rhoToaArray, int pixelIndex) {
+        final float refl1 = rhoToaArray[0][pixelIndex];
+        final float refl4 = rhoToaArray[3][pixelIndex];
+        final float refl5 = rhoToaArray[4][pixelIndex];
+        final float refl3 = rhoToaArray[12][pixelIndex];
+
+        return refl5*refl5/(refl1*refl3) < 1.4 && refl5*refl4/(refl1* refl3) > 1.0 &&
+                refl1 > 0.12 && refl5 > 0.12 && refl3 > 0.20 && refl1 < 0.8 && refl5 < 0.8 && refl3 < 0.8;
+    }
+
+
     /**
      * Provides a reflectance mapping into [0, 255] range, with normalization to histogram boundaries
      *

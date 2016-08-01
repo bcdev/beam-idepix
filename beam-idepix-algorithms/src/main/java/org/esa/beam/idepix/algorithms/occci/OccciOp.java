@@ -50,16 +50,19 @@ public class OccciOp extends BasisOp {
             description = " Use experimental 'sea ice' mode for MERIS in Antarctic rather than Arctic regions ")
     private boolean processMerisSeaIceAntarctic = false;
 
-    @Parameter(defaultValue = "1.2",
-            label = " Wet ice threshold for MERIS sea ice classification",
-            description = " Wet ice threshold ")
-    double wetIceThreshold;
+    @Parameter(defaultValue = "true",
+            description = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice.",
+            label = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice."
+    )
+    private boolean applyBlueFilter;
 
-    @Parameter(defaultValue = "SIX_CLASSES",
-            valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "SIX_CLASSES_NORTH", "FOUR_CLASSES_NORTH"},
-            label = "Neural Net for MERIS in case of sea ice classification",
-            description = "The Neural Net which will be applied.")
-    private MerisSeaiceNNSelector nnSelector;
+    // disable for the moment (20160801)
+//    @Parameter(defaultValue = "SIX_CLASSES",
+//            valueSet = {"SIX_CLASSES", "FOUR_CLASSES", "SIX_CLASSES_NORTH", "FOUR_CLASSES_NORTH"},
+//            label = "Neural Net for MERIS in case of sea ice classification",
+//            description = "The Neural Net which will be applied.")
+//    private MerisSeaiceNNSelector nnSelector;
+    private MerisSeaiceNNSelector nnSelector = MerisSeaiceNNSelector.SIX_CLASSES;
 
     //    @Parameter(defaultValue = "5.0",
 //            label = " 'MERIS1600' threshold (MERIS Sea Ice) ",
@@ -337,7 +340,8 @@ public class OccciOp extends BasisOp {
         waterClassificationParameters.put("refl3AB", refl3AB);
         waterClassificationParameters.put("refll4AB", refll4AB);
         waterClassificationParameters.put("refll5AB", refll5AB);
-        waterClassificationParameters.put("wetIceThreshold", wetIceThreshold);
+
+        waterClassificationParameters.put("applyBlueFilter", applyBlueFilter);
     }
 
     private boolean productContainsPolarRegions() {
