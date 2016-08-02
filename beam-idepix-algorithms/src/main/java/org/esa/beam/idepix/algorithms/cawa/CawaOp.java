@@ -56,10 +56,10 @@ public class CawaOp extends BasisOp {
             label = " Write all TOA Reflectances to the target product")
     private boolean outputAllRad2Refl = false;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             description = "Write CAWA TOA reflectances (bands 13-15) to the target product.",
             label = " Write CAWA TOA Reflectances (bands 13-15) to the target product")
-    private boolean outputCawaRad2Refl = false;
+    private boolean outputCawaRad2Refl = true;
 
 
     @Parameter(defaultValue = "false",
