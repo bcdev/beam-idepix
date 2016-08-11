@@ -1068,9 +1068,9 @@ public class LisePressureOp extends BasisOp {
             Tile vaa = getSourceTile(sourceProduct.getTiePointGrid(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME),
                                      rectangle);
 
-            Tile rhoToa10 = getSourceTile(rhoToaProduct.getBand("rho_toa_10"), rectangle);
-            Tile rhoToa11 = getSourceTile(rhoToaProduct.getBand("rho_toa_11"), rectangle);
-            Tile rhoToa12 = getSourceTile(rhoToaProduct.getBand("rho_toa_12"), rectangle);
+            Tile rhoToa10 = getSourceTile(rhoToaProduct.getBand("reflec_10"), rectangle);
+            Tile rhoToa11 = getSourceTile(rhoToaProduct.getBand("reflec_11"), rectangle);
+            Tile rhoToa12 = getSourceTile(rhoToaProduct.getBand("reflec_12"), rectangle);
 
             Raster isInvalid = null;
 

@@ -14,7 +14,6 @@ import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.util.ProductUtils;
 
 import java.util.HashMap;
@@ -76,10 +75,15 @@ public class OccciOp extends BasisOp {
 //    double schillerMerisAatsrCloudIceSeparationValue;
     double schillerMerisAatsrCloudIceSeparationValue = 0.5;
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             label = " Radiance bands (MERIS)",
             description = "Write TOA radiance bands to target product (MERIS).")
-    private boolean ocOutputMerisRadiance = true;
+    private boolean ocOutputMerisRadiance = false;
+
+    @Parameter(defaultValue = "true",
+            label = " Reflectance bands (MERIS)",
+            description = "Write TOA reflectance bands to target product (MERIS).")
+    private boolean ocOutputMerisRefl = true;
 
     //    @Parameter(defaultValue = "false",
 //            label = " Write NN value to the target product (MERIS).",
@@ -325,9 +329,12 @@ public class OccciOp extends BasisOp {
         }
 
         // provide histograms for wet ice (described in 'nn5.pdf', MPa 21.7.2016)
-        final Band refl3 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_3");
-        final Band refl14 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_14");
-        final Band refl15 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_15");
+//        final Band refl3 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_3");
+//        final Band refl14 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_14");
+//        final Band refl15 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_15");
+        final Band refl3 = rad2reflProduct.getBand("reflec_3");
+        final Band refl14 = rad2reflProduct.getBand("reflec_14");
+        final Band refl15 = rad2reflProduct.getBand("reflec_15");
 
         final String roiExpr = processMerisSeaIceAntarctic ? "latitude < -50.0" : "latitude > 50.0";
         final double[] refl3AB =
@@ -358,6 +365,10 @@ public class OccciOp extends BasisOp {
 
         if (ocOutputMerisRadiance) {
             copySourceBands(sourceProduct, targetProduct, "radiance_");
+        }
+        if (ocOutputMerisRefl) {
+            copySourceBands(rad2reflProduct, targetProduct, "reflec");
+            targetProduct.setAutoGrouping("radiance:rho_toa");
         }
         if (ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB");

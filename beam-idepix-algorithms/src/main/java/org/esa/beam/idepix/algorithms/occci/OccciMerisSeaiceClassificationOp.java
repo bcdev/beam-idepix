@@ -12,17 +12,12 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.IdepixConstants;
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
-import org.esa.beam.idepix.operators.LisePressureOp;
 import org.esa.beam.idepix.operators.MerisClassificationOp;
 import org.esa.beam.idepix.seaice.SeaIceClassification;
 import org.esa.beam.idepix.seaice.SeaIceClassifier;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.meris.brr.HelperFunctions;
-import org.esa.beam.meris.brr.Rad2ReflOp;
-import org.esa.beam.meris.brr.RayleighCorrection;
-import org.esa.beam.meris.dpm.PixelId;
 import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
@@ -68,25 +63,16 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     private static final int CC_RHO_AG_REFERENCE_WAVELENGTH_INDEX = 12; // 865nm;
 
     private static final double CC_P1_SCALED_THRESHOLD = 1000.0;
-    private static final double CC_MDSI_THRESHOLD = 0.01;
     private static final double CC_NDVI_THRESHOLD = 0.1;
     private static final double CC_SEA_ICE_THRESHOLD = 10.0;
 
-    private SchillerAlgorithm landWaterNN;
     private L2AuxData auxData;
-    private PixelId pixelId;
-    private RayleighCorrection rayleighCorrection;
 
     private Band cloudFlagBand;
     private SeaIceClassifier seaIceClassifier;
-    private Band ctpBand;
-    private Band liseP1Band;
-    private Band lisePScattBand;
     private Band landWaterBand;
     private Band nnOutputBand;
     private Band wetIceOutputBand;
-    private Band meris1600Band;
-    private Band merisAatsrCloudProbBand;
 
 
     @SourceProduct(alias = "l1b")
@@ -157,7 +143,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     public static final String SCHILLER_MERIS_WATER_NET_NAME = "11x8x5x3_876.8_water.net";
     public static final String SCHILLER_MERIS_ALL_NET_NAME = "11x8x5x3_1409.7_all.net";
     public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "9_3282.3.net";  // latest 'outer' net, HS 20151206
-    public static final String SCHILLER_MERIS_ALL_NET_4CLASS_NAME = "8_671.3.net";  // latest net, HS 20160303
+//    public static final String SCHILLER_MERIS_ALL_NET_4CLASS_NAME = "8_671.3.net";  // latest net, HS 20160303
     //    public static final String SCHILLER_MERIS_AATSR_OUTER_NET_NAME = "6_912.1.net";  // VZA > 14deg
     public static final String SCHILLER_MERIS_AATSR_INNER_NET_NAME = "6_1271.6.net"; // VZA < 7deg
 
@@ -177,16 +163,10 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
         readSchillerNets();
 
-        landWaterNN = new SchillerAlgorithm(SchillerAlgorithm.Net.ALL);
-        pixelId = new PixelId(auxData);
-        rayleighCorrection = new RayleighCorrection(auxData);
         createTargetProduct();
 
         initSeaIceClassifier();
 
-        ctpBand = ctpProduct.getBand("cloud_top_press");
-        liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
-        lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
     }
 
@@ -194,7 +174,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         try (InputStream isWater = getClass().getResourceAsStream(SCHILLER_MERIS_WATER_NET_NAME);
              InputStream isAll = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_NAME);
              InputStream isMerisAatsrOuter = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_OUTER_NET_NAME);
-//             InputStream isMerisSeaIceNet = getClass().getResourceAsStream(SCHILLER_MERIS_ALL_NET_4CLASS_NAME);
              InputStream isMerisSeaIceNet = getClass().getResourceAsStream(nnSelector.getNnFileName());
              InputStream isMerisAatsrInner = getClass().getResourceAsStream(SCHILLER_MERIS_AATSR_INNER_NET_NAME)) {
             merisWaterNeuralNet = SchillerNeuralNetWrapper.create(isWater);
@@ -231,8 +210,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         wetIceOutputBand = targetProduct.addBand("wet_ice_value", ProductData.TYPE_FLOAT32);
         wetIceOutputBand.setNoDataValue(Float.NaN);
         wetIceOutputBand.setNoDataValueUsed(true);
-//        meris1600Band = targetProduct.addBand("meris_1600", ProductData.TYPE_FLOAT32);
-//        merisAatsrCloudProbBand = targetProduct.addBand("cloud_prob", ProductData.TYPE_FLOAT32);
     }
 
     private SourceData loadSourceTiles(Rectangle rectangle) throws OperatorException {
@@ -243,7 +220,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             sd.rhoToa[i] = (float[]) getSourceTile(
-                    rhoToaProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)),
+                    rhoToaProduct.getBand("reflec_" + (i + 1)),
                     rectangle).getRawSamples().getElems();
         }
         sd.radiance[BAND_BRIGHT_N] = getSourceTile(
@@ -285,9 +262,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             sd.deltaAzimuth[i] = (float) HelperFunctions.computeAzimuthDifference(sd.vaa[i], sd.saa[i]);
         }
 
-        sd.ecmwfPressure = (float[]) getSourceTile(l1bProduct.getTiePointGrid("atm_press"),
-                                                   rectangle).getRawSamples().getElems();
-
         sd.windu = (float[]) getSourceTile(l1bProduct.getTiePointGrid("zonal_wind"),
                                            rectangle).getRawSamples().getElems();
 
@@ -305,9 +279,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             final Rectangle sourceRectangle = createSourceRectangle(band, targetRectangle);
             final SourceData sd = loadSourceTiles(sourceRectangle);
 
-            final Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
-            final Tile liseP1Tile = getSourceTile(liseP1Band, sourceRectangle);
-            final Tile lisePScattTile = getSourceTile(lisePScattBand, sourceRectangle);
             final Tile waterFractionTile = getSourceTile(landWaterBand, sourceRectangle);
 
             final PixelInfo pixelInfo = new PixelInfo();
@@ -330,10 +301,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                             }
                         } else {
                             if (band == cloudFlagBand) {
-                                pixelInfo.ecmwfPressure = sd.ecmwfPressure[i];
-                                pixelInfo.p1Pressure = liseP1Tile.getSampleFloat(x, y);
-                                pixelInfo.pscattPressure = lisePScattTile.getSampleFloat(x, y);
-                                pixelInfo.ctp = ctpTile.getSampleFloat(x, y);
                                 classifyCloud(sd, pixelInfo, targetTile, waterFraction);
                             }
                             if (band == nnOutputBand) {
@@ -404,54 +371,22 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile, int waterFraction) {
-        final boolean[] resultFlags = new boolean[6];
-
-        // Compute slopes- step 2.1.7
-        spec_slopes(sd, pixelInfo, resultFlags, false);
-        final boolean bright_f = resultFlags[0];
-
-        // table-driven classification- step 2.1.8
-        // DPM #2.1.8-1
         final boolean isCoastline = isCoastlinePixel(pixelInfo, waterFraction);
         targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_COASTLINE, isCoastline);
 
-        final boolean high_mdsi = resultFlags[4];
-        final boolean bright_rc = resultFlags[5];    // bright_1
-
-        boolean isSnowIce = false;
         boolean is_glint_risk = !isCoastline && isGlintRisk(sd, pixelInfo);
         boolean checkForSeaIce = false;
         if (!isCoastline) {
             // over water
             final GeoPos geoPos = getGeoPos(pixelInfo);
             checkForSeaIce = ignoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
-            if (checkForSeaIce) {
-                isSnowIce = bright_rc && high_mdsi;
-            }
 
             // glint makes sense only if we have no sea ice
             is_glint_risk = is_glint_risk && !isPixelClassifiedAsSeaice(geoPos);
-
-        } else {
-            // over land
-            isSnowIce = (high_mdsi && bright_f);
-        }
-
-        double sureThresh = cloudScreeningSure;
-        // this seems to avoid false cloud flagging in glint regions:
-        if (is_glint_risk) {
-            sureThresh += glintCloudThresholdAddition;
         }
 
         boolean isCloudSure = false;
-        boolean isCloudAmbiguous = false;
-
-        if (pixelInfo.x == 130 && pixelInfo.y == 180) {
-            System.out.println("pixelInfo = " + pixelInfo); // sea ice
-        }
-//        if (pixelInfo.x == 240 && pixelInfo.y == 120) {
-//            System.out.println("pixelInfo = " + pixelInfo); // cloud
-//        }
+        boolean isCloudAmbiguous;
 
         double nnOutput = getMerisNNOutput(sd, pixelInfo)[0];
         // latest net 8_671.3.net (4 CLASSES), 20160303:
@@ -505,7 +440,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                 targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WHITE_ICE, isWhiteIce);
                 final boolean isBlueIce = applyBlueFilter &&
                         OccciMerisSeaiceAlgorithm.isBlueIce(sd.getRhoToa(), pixelInfo.index);
-//                final boolean isWetIce = isBlueIce;
                 final boolean isWetIce = isBlueIce ||
                         OccciMerisSeaiceAlgorithm.isWetIce(sd.getRhoToa(), pixelInfo.index, refl3AB, refll4AB, refll5AB,
                                                            applyBlueFilter);
@@ -523,18 +457,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
             }
             // end white/wet ice classification
         }
-
-
-        // todo: do we want to combine somehow with 'old' IPF approach??
-//        final float cloudProbValue = computeCloudProbabilityValue(landWaterNN, sd, pixelInfo);
-//        isCloudSure = cloudProbValue > cloudScreeningAmbiguous;
-//        final boolean isCloudAmbiguous = cloudProbValue > cloudScreeningAmbiguous && cloudProbValue < sureThresh;
-//
-//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_SURE, isCloudSure);
-//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD_AMBIGUOUS, isCloudAmbiguous);
-//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_CLOUD, isCloudAmbiguous || isCloudSure);
-//        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_SNOW_ICE, isSnowIce && !isCloudSure);
-
         targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_GLINT_RISK, is_glint_risk && !isCloudSure);
     }
 
@@ -560,9 +482,9 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private boolean isCloudAmbiguousFromNN(double nnOutput) {
-        final double sep0 = nnSelector.getSeparationValues()[0];
+//        final double sep0 = nnSelector.getSeparationValues()[0];
         final double sep1 = nnSelector.getSeparationValues()[1];
-        final double sep2 = nnSelector.getSeparationValues()[2];
+//        final double sep2 = nnSelector.getSeparationValues()[2];
         if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
                 nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
             // FOUR_CLASSES("FOUR_CLASSES", "8_671.3.net", new double[]{0.55, 1.5, 2.45}),
@@ -575,19 +497,19 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         }
     }
 
-    private boolean isSnowIceFromNN(double nnOutput) {
-        final double sep0 = nnSelector.getSeparationValues()[0];
-        final double sep1 = nnSelector.getSeparationValues()[1];
-        final double sep2 = nnSelector.getSeparationValues()[2];
-        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
-                nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
-//            return nnOutput >= sep0 && nnOutput < sep1;
-            return nnOutput >= sep0 && nnOutput < sep2;
-        } else {
-            final double sep3 = nnSelector.getSeparationValues()[3];
-            return (nnOutput >= sep0 && nnOutput < sep1) || (nnOutput >= sep2 && nnOutput < sep3);
-        }
-    }
+//    private boolean isSnowIceFromNN(double nnOutput) {
+//        final double sep0 = nnSelector.getSeparationValues()[0];
+//        final double sep1 = nnSelector.getSeparationValues()[1];
+//        final double sep2 = nnSelector.getSeparationValues()[2];
+//        if (nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES ||
+//                nnSelector == MerisSeaiceNNSelector.FOUR_CLASSES_NORTH) {
+////            return nnOutput >= sep0 && nnOutput < sep1;
+//            return nnOutput >= sep0 && nnOutput < sep2;
+//        } else {
+//            final double sep3 = nnSelector.getSeparationValues()[3];
+//            return (nnOutput >= sep0 && nnOutput < sep1) || (nnOutput >= sep2 && nnOutput < sep3);
+//        }
+//    }
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
 //        return getMerisNNOutputImpl(sd, pixelInfo, merisAatsrOuterNeuralNet.get());
@@ -629,26 +551,9 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
     }
 
     private boolean isGlintRisk(SourceData sd, PixelInfo pixelInfo) {
-        double p1Scaled = 1.0 - pixelInfo.p1Pressure / 1000.0;
-        boolean is_glint = p1Scaled < CC_P1_SCALED_THRESHOLD;
-
         final float rhoGlint = (float) computeRhoGlint(sd, pixelInfo);
-        final boolean is_glint_2 =
-                (rhoGlint >= CC_GLINT_THRESHOLD * sd.rhoToa[Constants.bb865][pixelInfo.index]);
-
-        return is_glint && is_glint_2;
+        return (rhoGlint >= CC_GLINT_THRESHOLD * sd.rhoToa[Constants.bb865][pixelInfo.index]);
     }
-
-
-    private float computeCloudProbabilityValue(SchillerAlgorithm schillerAlgorithm, final SourceData sd, final PixelInfo pixelInfo) {
-        return schillerAlgorithm.compute(new SchillerAlgorithm.Accessor() {
-            @Override
-            public double get(int index) {
-                return sd.rhoToa[index][pixelInfo.index];
-            }
-        });
-    }
-
 
     private GeoPos getGeoPos(PixelInfo pixelInfo) {
         final GeoPos geoPos = new GeoPos();
@@ -698,123 +603,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         return Interp.interpolate(auxData.rog.getJavaArray(), rogIndex);
     }
 
-    private double calcScatteringAngle(SourceData dc, PixelInfo pixelInfo) {
-        final double sins = dc.sins[pixelInfo.index];
-        final double sinv = dc.sinv[pixelInfo.index];
-        final double coss = dc.coss[pixelInfo.index];
-        final double cosv = dc.cosv[pixelInfo.index];
-
-        // delta azimuth in degree
-        final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
-
-        // Compute the geometric conditions
-        final double cosphi = Math.cos(deltaAzimuth * MathUtils.DTOR);
-
-        // scattering angle in degree
-        return MathUtils.RTOD * Math.acos(-coss * cosv - sins * sinv * cosphi);
-    }
-
-    private double calcRhoToa442ThresholdTerm(SourceData dc, PixelInfo pixelInfo) {
-        final double thetaScatt = calcScatteringAngle(dc, pixelInfo) * MathUtils.DTOR;
-        double cosThetaScatt = Math.cos(thetaScatt);
-        return CC_RHO_TOA_442_THRESHOLD + CC_DELTA_RHO_TOA_442_THRESHOLD *
-                cosThetaScatt * cosThetaScatt;
-    }
-
-    /**
-     * Computes the slope of Rayleigh-corrected reflectance.
-     *
-     * @param pixelInfo    the pixel structure
-     * @param result_flags the return values, <code>resultFlags[0]</code> contains low NN pressure flag (low_P_nn),
-     *                     <code>resultFlags[1]</code> contains low polynomial pressure flag (low_P_poly),
-     *                     <code>resultFlags[2]</code> contains pressure range flag (delta_p).
-     * @param isLand       land/water flag
-     */
-    private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags, boolean isLand) {
-        final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
-
-        //Rayleigh phase function coefficients, PR in DPM
-        final double[] phaseR = new double[Constants.RAYSCATT_NUM_SER];
-        //Rayleigh optical thickness, tauR0 in DPM
-        final double[] tauR = new double[Constants.L1_BAND_NUM];
-        //Rayleigh correction
-        final double[] rhoRay = new double[Constants.L1_BAND_NUM];
-
-        final double sins = dc.sins[pixelInfo.index];
-        final double sinv = dc.sinv[pixelInfo.index];
-        final double coss = dc.coss[pixelInfo.index];
-        final double cosv = dc.cosv[pixelInfo.index];
-
-        /* Rayleigh phase function Fourier decomposition */
-        rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
-
-        double press = pixelInfo.ecmwfPressure; /* DPM #2.1.7-1 v1.1 */
-
-        /* Rayleigh optical thickness */
-        rayleighCorrection.tau_rayleigh(press, tauR); /* DPM #2.1.7-2 */
-
-        /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
-        rayleighCorrection.ref_rayleigh(deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
-                                        coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
-        /* DPM #2.1.7-4 */
-        double[] rhoAg = new double[Constants.L1_BAND_NUM];
-        for (int band = Constants.bb412; band <= Constants.bb900; band++) {
-            rhoAg[band] = (dc.rhoToa[band][pixelInfo.index] - rhoRay[band]);
-        }
-
-        /* Interpolate threshold on rayleigh corrected reflectance - DPM #2.1.7-9 */
-        double rhorc_442_thr = pixelId.getRhoRC442thr(dc.sza[pixelInfo.index], dc.vza[pixelInfo.index], deltaAzimuth, isLand);
-
-
-        /* Derive bright flag by reflectance comparison to threshold - DPM #2.1.7-10 */
-        boolean bright_f;
-
-        /* Spectral slope processor.brr 1 */
-        boolean slope1_f = pixelId.isSpectraSlope1Flag(rhoAg, dc.radiance[BAND_SLOPE_N_1].getSampleFloat(pixelInfo.x, pixelInfo.y));
-        /* Spectral slope processor.brr 2 */
-        boolean slope2_f = pixelId.isSpectraSlope2Flag(rhoAg, dc.radiance[BAND_SLOPE_N_2].getSampleFloat(pixelInfo.x, pixelInfo.y));
-
-        boolean bright_toa_f = false;
-        boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
-        if (isLand) {   /* land pixel */
-            bright_f = bright_rc && slope1_f && slope2_f;
-        } else {
-            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
-            final double ndvi = (rhoAg[Constants.bb10] - rhoAg[Constants.bb7]) / (rhoAg[Constants.bb10] + rhoAg[Constants.bb7]);
-            bright_toa_f = (rhoAg[CC_RHO_AG_REFERENCE_WAVELENGTH_INDEX] > rhoThreshOffsetTerm) &&
-                    ndvi > CC_NDVI_THRESHOLD;
-            bright_f = bright_rc || bright_toa_f;
-        }
-
-        // latest Schiller net, 20160303: compute snow_ice later below, not here
-        result_flags[4] = false;
-
-        // use Schillers new seaice net instead of MDSI (CB/KS/HS, 20160105)
-//        final double[] merisAatsrOuterNNOutput = getMerisNNOutput(dc, pixelInfo);
-//        final double merisAatsrCloudProb = merisAatsrOuterNNOutput[1];
-//        final boolean is_snow_ice = merisAatsrCloudProb < schillerMerisAatsrCloudIceSeparationValue;
-//        result_flags[4] = is_snow_ice;
-
-//        final float mdsi = computeMdsi(dc.rhoToa[Constants.bb865][pixelInfo.index], dc.rhoToa[Constants.bb890][pixelInfo.index]);
-//        boolean high_mdsi = (mdsi > CC_MDSI_THRESHOLD);
-//        result_flags[4] = high_mdsi;
-
-        result_flags[0] = bright_f;
-        result_flags[1] = slope1_f;
-        result_flags[2] = slope2_f;
-        result_flags[3] = bright_toa_f;
-        result_flags[5] = bright_rc;
-    }
-
-    private float computeMdsi(float rhoToa865, float rhoToa885) {
-        return (rhoToa865 - rhoToa885) / (rhoToa865 + rhoToa885);
-    }
-
-    private boolean isSaturated(SourceData sd, int x, int y, int radianceBandId, int bandId) {
-        return sd.radiance[radianceBandId].getSampleFloat(x, y) > auxData.Saturation_L[bandId];
-    }
-
     private class SourceData {
 
         private float[][] rhoToa;
@@ -830,7 +618,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         private float[] deltaAzimuth;
         private float[] windu;
         private float[] windv;
-        private float[] ecmwfPressure;
         private Tile l1Flags;
 
         public float[][] getRhoToa() {
@@ -842,11 +629,6 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
         int index;
         int x;
         int y;
-        double airMass;
-        float ecmwfPressure;
-        float p1Pressure;
-        float pscattPressure;
-        float ctp;
     }
 
     public static class Spi extends OperatorSpi {

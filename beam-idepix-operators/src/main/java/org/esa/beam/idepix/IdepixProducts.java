@@ -15,6 +15,7 @@ import org.esa.beam.meris.brr.operator.BrrOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
+import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.unmixing.SpectralUnmixingOp;
 import org.esa.beam.util.ProductUtils;
@@ -30,7 +31,10 @@ import java.util.Map;
 public class IdepixProducts {
 
     public static Product computeRadiance2ReflectanceProduct(Product sourceProduct) {
-        return GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS, sourceProduct);
+//        return GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS, sourceProduct);
+        Map<String, Object> params = new HashMap<String, Object>(1);
+        params.put("doRadToRefl", true);
+        return GPF.createProduct("Meris.CorrectRadiometry", params, sourceProduct);
     }
 
     public static Product computeCloudTopPressureProduct(Product sourceProduct) {

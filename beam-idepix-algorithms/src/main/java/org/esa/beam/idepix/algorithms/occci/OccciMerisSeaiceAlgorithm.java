@@ -61,13 +61,21 @@ public class OccciMerisSeaiceAlgorithm {
 
         final float wetIceValue = getWetIceValue(virtReflR, virtReflG, virtReflB);
 
-        if (virtReflR < 1.0 && virtReflR > 0.5 && wetIceValue > 1.5 && virtReflR > 1.3*virtReflG &&
+//        if (virtReflR < 1.0 && virtReflR > 0.5 && wetIceValue > 1.5 && virtReflR > 1.3*virtReflG &&
+//                virtReflR > 1.3*virtReflB && virtReflG > 0.0 && virtReflB > 0.0 && wetIceValue < 100.0) {
+//            return true;
+//        } else if (virtReflR > 1.0 && wetIceValue > 1.2 && virtReflR > 1.1*virtReflG
+//                && virtReflR > 1.1*virtReflB && virtReflG > 0.0 && virtReflB > 0.0 && wetIceValue < 100) {
+//            return true;
+//        }
+        if (virtReflR < 100.0 && virtReflR > 50.0 && wetIceValue > 1.5 && virtReflR > 1.3*virtReflG &&
                 virtReflR > 1.3*virtReflB && virtReflG > 0.0 && virtReflB > 0.0 && wetIceValue < 100.0) {
             return true;
-        } else if (virtReflR > 1.0 && wetIceValue > 1.2 && virtReflR > 1.1*virtReflG
+        } else if (virtReflR > 100.0 && wetIceValue > 1.2 && virtReflR > 1.1*virtReflG
                 && virtReflR > 1.1*virtReflB && virtReflG > 0.0 && virtReflB > 0.0 && wetIceValue < 100) {
             return true;
         }
+
         return false;
     }
 
