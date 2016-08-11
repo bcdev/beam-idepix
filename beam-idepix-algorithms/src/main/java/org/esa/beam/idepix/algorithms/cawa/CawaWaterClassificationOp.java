@@ -27,6 +27,7 @@ import org.esa.beam.meris.l2auxdata.Constants;
 import org.esa.beam.meris.l2auxdata.L2AuxData;
 import org.esa.beam.meris.l2auxdata.L2AuxDataException;
 import org.esa.beam.meris.l2auxdata.L2AuxDataProvider;
+import org.esa.beam.util.RectangleExtender;
 import org.esa.beam.util.math.FractIndex;
 import org.esa.beam.util.math.Interp;
 import org.esa.beam.util.math.MathUtils;
@@ -150,7 +151,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
             description = " NN cloud ambiguous cloud sure/snow separation value ")
     double schillerNNCloudSureSnowSeparationValue;
 
-//    @Parameter(defaultValue = "true",
+    //    @Parameter(defaultValue = "true",
 //            label = " Apply NN for MERIS cloud classification purely (not combined with previous approach)",
 //            description = " Apply NN for MERIS cloud classification purely (not combined with previous approach)")
     boolean applyMERISSchillerNNPure = true;     // previous approach flags many coastlines and thin cloud edges as 'cloud sure'
@@ -160,6 +161,8 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
 
     ThreadLocal<SchillerNeuralNetWrapper> merisWaterNeuralNet;
     ThreadLocal<SchillerNeuralNetWrapper> merisAllNeuralNet;
+
+    private RectangleExtender rectExtender;
 
 
     @Override
@@ -183,6 +186,9 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
         liseP1Band = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
         lisePScattBand = lisePressureProduct.getBand(LisePressureOp.PRESSURE_LISE_PSCATT);
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
+
+        rectExtender = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
+                                                           l1bProduct.getSceneRasterHeight()), 1, 1);
     }
 
     private void readSchillerNets() {
@@ -287,7 +293,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
     public void computeTile(Band band, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         Rectangle targetRectangle = targetTile.getRectangle();
         try {
-            final Rectangle sourceRectangle = createSourceRectangle(band, targetRectangle);
+            final Rectangle sourceRectangle = rectExtender.extend(targetRectangle);
             final SourceData sd = loadSourceTiles(sourceRectangle);
 
             final Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
@@ -361,70 +367,55 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
         return getGeoPos(pixelInfo).lat > -58f && waterFraction <= 100 && waterFraction < 100 && waterFraction > 0;
     }
 
-    private Rectangle createSourceRectangle(Band band, Rectangle rectangle) {
-        int x = rectangle.x;
-        int y = rectangle.y;
-        int w = rectangle.width;
-        int h = rectangle.height;
-        if (x > 0) {
-            x -= 1;
-            w += 2;
-        } else {
-            w += 1;
-        }
-        if (x + w > band.getRasterWidth()) {
-            w = band.getRasterWidth() - x;
-        }
-        if (y > 0) {
-            y -= 1;
-            h += 2;
-        } else {
-            h += 1;
-        }
-        if (y + h > band.getRasterHeight()) {
-            h = band.getRasterHeight() - y;
-        }
-        return new Rectangle(x, y, w, h);
-    }
-
     public void classifyCloud(SourceData sd, PixelInfo pixelInfo, Tile targetTile, int waterFraction) {
-        final boolean[] resultFlags = new boolean[6];
 
-        // Compute slopes- step 2.1.7
-        spec_slopes(sd, pixelInfo, resultFlags, false);
-        final boolean bright_f = resultFlags[0];
-
-        // table-driven classification- step 2.1.8
-        // DPM #2.1.8-1
-        final boolean isCoastline = isCoastlinePixel(pixelInfo, waterFraction);
-        targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_COASTLINE, isCoastline);
-
-        final boolean high_mdsi = resultFlags[4];
-        final boolean bright_rc = resultFlags[5];    // bright_1
-
+        double sureThresh = cloudScreeningSure;
         boolean is_snow_ice = false;
-        boolean is_glint_risk = !isCoastline && isGlintRisk(sd, pixelInfo);
+        final boolean isCoastline = isCoastlinePixel(pixelInfo, waterFraction);
         boolean checkForSeaIce = false;
+        boolean is_glint_risk = false;
+
+        if (pixelInfo.x == 220 && pixelInfo.y == 290) {
+            System.out.println("x = " + pixelInfo.x);
+        }
+
         if (!isCoastline) {
             // over water
             final GeoPos geoPos = getGeoPos(pixelInfo);
             checkForSeaIce = ignoreSeaIceClimatology || isPixelClassifiedAsSeaice(geoPos);
-            if (checkForSeaIce) {
-                is_snow_ice = bright_rc && high_mdsi;
-            }
-
             // glint makes sense only if we have no sea ice
-            is_glint_risk = is_glint_risk && !isPixelClassifiedAsSeaice(geoPos);
-
-        } else {
-            // over land
-            is_snow_ice = (high_mdsi && bright_f);
+            is_glint_risk = isGlintRisk(sd, pixelInfo) && !isPixelClassifiedAsSeaice(geoPos);
         }
 
-        double sureThresh = cloudScreeningSure;
-        // this seems to avoid false cloud flagging in glint regions:
-        if (is_glint_risk) {
-            sureThresh += glintCloudThresholdAddition;
+        if (!applyMERISSchillerNN || !applyMERISSchillerNNPure) {
+            // we only need this if we do not want to use purely NN (which is the CAWA default)
+            final boolean[] resultFlags = new boolean[6];
+
+            // Compute slopes- step 2.1.7
+            spec_slopes(sd, pixelInfo, resultFlags, false);
+            final boolean bright_f = resultFlags[0];
+
+            // table-driven classification- step 2.1.8
+            // DPM #2.1.8-1
+            targetTile.setSample(pixelInfo.x, pixelInfo.y, CawaConstants.F_COASTLINE, isCoastline);
+
+            final boolean high_mdsi = resultFlags[4];
+            final boolean bright_rc = resultFlags[5];    // bright_1
+
+            if (!isCoastline) {
+                // over water
+                if (checkForSeaIce) {
+                    is_snow_ice = bright_rc && high_mdsi;
+                }
+            } else {
+                // over land
+                is_snow_ice = (high_mdsi && bright_f);
+            }
+
+            // this seems to avoid false cloud flagging in glint regions:
+            if (is_glint_risk) {
+                sureThresh += glintCloudThresholdAddition;
+            }
         }
 
         boolean isCloudSure = false;

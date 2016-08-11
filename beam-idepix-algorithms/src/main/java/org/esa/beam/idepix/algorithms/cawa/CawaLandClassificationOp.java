@@ -35,7 +35,7 @@ import java.util.Map;
 
 /**
  * MERIS pixel classification operator for CAWA.
- * Only land pixels are classified, following CC algorithm there.
+ * Only land pixels are classified, following GA algorithm there.
  *
  * @author olafd
  */

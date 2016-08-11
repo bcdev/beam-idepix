@@ -202,10 +202,10 @@ public class IdepixProducts {
 
     public static void addRadiance2ReflectanceBands(Product rad2reflProduct, Product targetProduct, int minBand, int maxBand) {
         for (int i = minBand; i <= maxBand; i++) {
-            final String bandIndex = String.format("%d", i);
             for (String bandname : rad2reflProduct.getBandNames()) {
-                if (!targetProduct.containsBand(bandname) && bandname.startsWith(Rad2ReflOp.RHO_TOA_BAND_PREFIX) &&
-                        bandname.endsWith(bandIndex)) {
+                if (!targetProduct.containsBand(bandname) &&
+                        bandname.startsWith(Rad2ReflOp.RHO_TOA_BAND_PREFIX) &&
+                        bandname.endsWith("_" + String.valueOf(i))) {
                     System.out.println("adding band: " + bandname);
                     ProductUtils.copyBand(bandname, rad2reflProduct, targetProduct, true);
                     targetProduct.getBand(bandname).setUnit("dl");
