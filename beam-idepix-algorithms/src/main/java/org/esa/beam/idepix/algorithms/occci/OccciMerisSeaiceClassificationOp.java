@@ -441,8 +441,7 @@ public class OccciMerisSeaiceClassificationOp extends MerisBasisOp {
                 final boolean isBlueIce = applyBlueFilter &&
                         OccciMerisSeaiceAlgorithm.isBlueIce(sd.getRhoToa(), pixelInfo.index);
                 final boolean isWetIce = isBlueIce ||
-                        OccciMerisSeaiceAlgorithm.isWetIce(sd.getRhoToa(), pixelInfo.index, refl3AB, refll4AB, refll5AB,
-                                                           applyBlueFilter);
+                        OccciMerisSeaiceAlgorithm.isWetIce(sd.getRhoToa(), pixelInfo.index, refl3AB, refll4AB, refll5AB);
                 if (!isWhiteIce && isWetIce) {
                     targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WET_ICE, true);
                 }
