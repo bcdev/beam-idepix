@@ -114,11 +114,8 @@ public class OccciMerisSeaiceAlgorithm {
     public static double[] computeHistogram95PercentInterval(Band band, String roiExpr) {
         final Mask highLatMask =
                 band.getProduct().addMask("highLatMask", roiExpr, "latitudes > 50deg only", Color.gray, Double.NaN);
-        final Stx stx = new StxFactory().create(new Mask[]{highLatMask},
-                                                new RasterDataNode[]{band},
-                                                ProgressMonitor.NULL);
-
-        final Histogram beamHistogram = new Histogram(stx.getHistogram().getBins(0),   // stx.getHistogram() is a JAI histogram!
+        final Stx stx = new StxFactory().withRoiMask(highLatMask).create(band, ProgressMonitor.NULL);
+        final Histogram beamHistogram = new Histogram(stx.getHistogramBins(),   // stx.getHistogram() is a JAI histogram!
                                                       stx.getMinimum(),
                                                       stx.getMaximum());
         final Range rangeFor95Percent = beamHistogram.findRangeFor95Percent();

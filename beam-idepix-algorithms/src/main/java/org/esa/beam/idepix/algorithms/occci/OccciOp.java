@@ -329,9 +329,6 @@ public class OccciOp extends BasisOp {
         }
 
         // provide histograms for wet ice (described in 'nn5.pdf', MPa 21.7.2016)
-//        final Band refl3 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_3");
-//        final Band refl14 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_14");
-//        final Band refl15 = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_15");
         final Band refl3 = rad2reflProduct.getBand("reflec_3");
         final Band refl14 = rad2reflProduct.getBand("reflec_14");
         final Band refl15 = rad2reflProduct.getBand("reflec_15");
