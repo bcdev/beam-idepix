@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.38:</b>
+        Fixes and cleanup of Rad2Refl conversion usage
         <b>Version 2.2.37:</b>
         Fixes and cleanup in MERIS sea ice detection proposed by M.Paperin
         <b>Version 2.2.36:</b>

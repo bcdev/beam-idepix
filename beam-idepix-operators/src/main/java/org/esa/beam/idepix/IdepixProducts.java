@@ -15,7 +15,6 @@ import org.esa.beam.meris.brr.operator.BrrOp;
 import org.esa.beam.meris.cloud.BlueBandOp;
 import org.esa.beam.meris.cloud.CloudProbabilityOp;
 import org.esa.beam.meris.cloud.CombinedCloudOp;
-import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.unmixing.Endmember;
 import org.esa.beam.unmixing.SpectralUnmixingOp;
 import org.esa.beam.util.ProductUtils;
@@ -208,8 +207,7 @@ public class IdepixProducts {
         for (int i = minBand; i <= maxBand; i++) {
             for (String bandname : rad2reflProduct.getBandNames()) {
                 if (!targetProduct.containsBand(bandname) &&
-                        bandname.startsWith(Rad2ReflOp.RHO_TOA_BAND_PREFIX) &&
-                        bandname.endsWith("_" + String.valueOf(i))) {
+                        (bandname.equals("reflec_" + String.valueOf(i)) || bandname.equals("rho_toa_" + String.valueOf(i)))) {
                     System.out.println("adding band: " + bandname);
                     ProductUtils.copyBand(bandname, rad2reflProduct, targetProduct, true);
                     targetProduct.getBand(bandname).setUnit("dl");

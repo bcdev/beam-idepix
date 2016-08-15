@@ -234,7 +234,7 @@ public class CawaWaterClassificationOp extends MerisBasisOp {
 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             sd.rhoToa[i] = (float[]) getSourceTile(
-                    rhoToaProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)),
+                    rhoToaProduct.getBand("reflec_" + (i + 1)),
                     rectangle).getRawSamples().getElems();
         }
         sd.radiance[BAND_BRIGHT_N] = getSourceTile(

@@ -17,6 +17,7 @@ import org.esa.beam.idepix.operators.BasisOp;
 import org.esa.beam.idepix.operators.CloudBufferOp;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.meris.brr.LandClassificationOp;
+import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.io.FileUtils;
@@ -274,7 +275,8 @@ public class GlobAlbedoOp extends BasisOp {
 
     private void computeMerisAlgorithmInputProducts(Map<String, Product> gaCloudInput) {
         gaCloudInput.put("gal1b", sourceProduct);
-        rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
+//        rad2reflProduct = IdepixProducts.computeRadiance2ReflectanceProduct(sourceProduct);
+        rad2reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS, sourceProduct);
         gaCloudInput.put("refl", rad2reflProduct);
         pbaroProduct = IdepixProducts.computeBarometricPressureProduct(sourceProduct, gaUseGetasse);
         gaCloudInput.put("pbaro", pbaroProduct);

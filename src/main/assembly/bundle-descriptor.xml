@@ -568,6 +568,37 @@
 
             <parameterDescriptors>
                 <parameterDescriptor>
+                    <name>processMerisSeaIce</name>
+                    <type>boolean</type>
+                    <description>Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) (MERIS).</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>processMerisSeaIceAntarctic</name>
+                    <type>boolean</type>
+                    <description>Use experimental 'sea ice' mode for MERIS in Antarctic rather than Arctic regions (MERIS).</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>applyBlueFilter</name>
+                    <type>boolean</type>
+                    <description>Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice (MERIS).</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputMerisRadiance</name>
+                    <type>boolean</type>
+                    <description>Write TOA radiance bands to target product (MERIS).</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputMerisRadiance</name>
+                    <type>boolean</type>
+                    <description>Write TOA reflectance bands to target product (MERIS).</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+
+                <parameterDescriptor>
                     <name>ocOutputRad2Refl</name>
                     <type>boolean</type>
                     <description>Write TOA reflective solar bands (RefSB) to target product (MODIS).</description>
@@ -625,6 +656,13 @@
                     <description>Prefix of input radiance or reflectance bands (SeaWiFS)</description>
                     <defaultValue>L_</defaultValue>
                     <valueSet>L_,Lt_,rhot_</valueSet>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ocOutputViirsRhoToa</name>
+                    <type>boolean</type>
+                    <description>Write RhoTOA bands to target product (VIIRS) (SeaWiFS).
+                    </description>
+                    <defaultValue>true</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
                     <name>ocOutputDebug</name>

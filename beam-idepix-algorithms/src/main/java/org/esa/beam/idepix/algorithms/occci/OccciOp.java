@@ -39,10 +39,10 @@ public class OccciOp extends BasisOp {
     private Product ctpProduct;
     private Product pbaroProduct;
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             label = " Process MERIS for sea sce ",
             description = " Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) ")
-    private boolean processMerisSeaIce = true;
+    private boolean processMerisSeaIce = false;
 
     @Parameter(defaultValue = "false",
             label = " Process MERIS for sea ice in Antarctic regions ",

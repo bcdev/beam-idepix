@@ -136,7 +136,7 @@ public class CawaLandClassificationOp extends Operator {
     public void setBands() {
         merisReflBands = new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            merisReflBands[i] = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1));
+            merisReflBands[i] = rad2reflProduct.getBand("reflec_" + (i + 1));
         }
         p1Band = pressureProduct.getBand(LisePressureOp.PRESSURE_LISE_P1);
         pbaroBand = pbaroProduct.getBand(BarometricPressureOp.PRESSURE_BAROMETRIC);

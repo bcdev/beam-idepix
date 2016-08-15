@@ -173,8 +173,13 @@ public class IdepixRayleighCorrectionOp extends MerisBasisOp implements Constant
 
             Tile[] rad2ReflTile = new Tile[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
             for (int bandId : BANDS_TO_CORRECT) {
-                Band band = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (bandId + 1));
-                rad2ReflTile[bandId] = getSourceTile(band, rectangle);
+                Band band = rad2reflProduct.getBand("reflec_" + (bandId + 1));
+                if (band != null) {
+                    rad2ReflTile[bandId] = getSourceTile(band, rectangle);
+                } else {
+                    band = rad2reflProduct.getBand("rho_toa_" + (bandId + 1));
+                    rad2ReflTile[bandId] = getSourceTile(band, rectangle);
+                }
             }
 
             Tile isLandCons = getSourceTile(isLandBand, rectangle);

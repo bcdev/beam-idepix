@@ -233,7 +233,8 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
     public void setBands() {
         merisReflBands = new Band[EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS];
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            merisReflBands[i] = rad2reflProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1));
+//            merisReflBands[i] = rad2reflProduct.getBand("reflec_" + (i + 1));
+            merisReflBands[i] = rad2reflProduct.getBand("rho_toa_" + (i + 1));
         }
         brr442Band = rayleighProduct.getBand("brr_2");
         merisBrrBands = new Band[IdepixConstants.MERIS_BRR_BAND_NAMES.length];
@@ -272,9 +273,14 @@ public class GlobAlbedoMerisClassificationOp extends GlobAlbedoClassificationOp 
 
     private void copyReflectances() {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-            ProductUtils.copyBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1), rad2reflProduct,
-                                  targetProduct, true);
-            targetProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)).setUnit("dl");
+            String reflecBandName = "reflec_" + (i + 1);
+            if (rad2reflProduct.containsBand(reflecBandName)) {
+                ProductUtils.copyBand(reflecBandName, rad2reflProduct, targetProduct, true);
+            } else {
+                reflecBandName = "rho_toa_" + (i + 1);
+                ProductUtils.copyBand(reflecBandName, rad2reflProduct, targetProduct, true);
+            }
+            targetProduct.getBand(reflecBandName).setUnit("dl");
         }
     }
 

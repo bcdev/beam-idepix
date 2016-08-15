@@ -35,7 +35,6 @@ import org.esa.beam.idepix.seaice.SeaIceClassification;
 import org.esa.beam.idepix.seaice.SeaIceClassifier;
 import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.meris.brr.HelperFunctions;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.meris.dpm.PixelId;
 import org.esa.beam.meris.l2auxdata.Constants;
@@ -51,6 +50,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+
+//import org.esa.beam.meris.brr.Rad2ReflOp;
 
 
 /**
@@ -338,7 +339,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             sd.rhoToa[i] = (float[]) getSourceTile(
-                    rhoToaProduct.getBand(Rad2ReflOp.RHO_TOA_BAND_PREFIX + "_" + (i + 1)),
+                    rhoToaProduct.getBand("reflec_" + (i + 1)),
                     rectangle).getRawSamples().getElems();
         }
         sd.radiance[BAND_BRIGHT_N] = getSourceTile(
