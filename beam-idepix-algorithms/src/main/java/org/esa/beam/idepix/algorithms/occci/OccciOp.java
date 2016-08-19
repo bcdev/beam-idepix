@@ -49,7 +49,7 @@ public class OccciOp extends BasisOp {
             description = " Use experimental 'sea ice' mode for MERIS in Antarctic rather than Arctic regions ")
     private boolean processMerisSeaIceAntarctic = false;
 
-    @Parameter(defaultValue = "true",
+    @Parameter(defaultValue = "false",
             description = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice.",
             label = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice."
     )

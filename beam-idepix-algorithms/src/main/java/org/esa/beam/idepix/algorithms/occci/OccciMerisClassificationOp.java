@@ -20,7 +20,6 @@ import org.esa.beam.idepix.seaice.SeaIceClassifier;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.idepix.util.SchillerNeuralNetWrapper;
 import org.esa.beam.meris.brr.HelperFunctions;
-import org.esa.beam.meris.brr.Rad2ReflOp;
 import org.esa.beam.meris.brr.RayleighCorrection;
 import org.esa.beam.meris.dpm.PixelId;
 import org.esa.beam.meris.l2auxdata.Constants;
