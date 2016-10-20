@@ -85,6 +85,11 @@ public class OccciOp extends BasisOp {
             description = "Write TOA reflectance bands to target product (MERIS).")
     private boolean ocOutputMerisRefl = true;
 
+    @Parameter(defaultValue = "true",
+            label = " Cloud Top Pressure (MERIS)",
+            description = "Write CTP band to target product (MERIS).")
+    private boolean ocOutputCtp = true;
+
     //    @Parameter(defaultValue = "false",
 //            label = " Write NN value to the target product (MERIS).",
 //            description = " If applied, write NN value to the target product (MERIS)")
@@ -370,6 +375,11 @@ public class OccciOp extends BasisOp {
         if (ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB");
         }
+
+        if (ocOutputCtp && ctpProduct != null) {
+            copySourceBands(ctpProduct, targetProduct, "cloud_top_press");
+        }
+
         if (ocOutputEmissive) {
             copySourceBands(rad2reflProduct, targetProduct, "Emissive");
         }

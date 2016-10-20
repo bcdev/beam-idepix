@@ -229,7 +229,10 @@ public class IdepixUtils {
         }
 
 //        e.g. V2012024230521.L1C
-        return (product.getName().matches("V[0-9]{13}.(?i)(L1C)") || product.getName().matches("V[0-9]{13}.(?i)(L2)"));
+        return (product.getName().matches("V[0-9]{13}.(?i)(L1C)") ||
+                product.getName().matches("V[0-9]{13}.(?i)(L1C.nc)") ||
+                product.getName().matches("V[0-9]{13}.(?i)(L2)") ||
+                product.getName().matches("V[0-9]{13}.(?i)(L2.nc)"));
     }
 
     public static boolean isValidMerisAatsrSynergyProduct(Product product) {
