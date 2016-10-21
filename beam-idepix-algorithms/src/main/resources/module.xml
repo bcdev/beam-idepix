@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.40:</b>
+        Fixed a flag shifting introduced in v2.2.38-SNAPSHOT (cloud shadow flag was overwritten by cloud buffer)
         <b>Version 2.2.39:</b>
         Added user option to write CTP band to Idepix product
         <b>Version 2.2.38:</b>

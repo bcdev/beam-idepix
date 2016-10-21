@@ -73,16 +73,18 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     public static final String MDSI = MerisClassificationOp.MDSI;
     public static final String CLOUD_PROBABILITY_VALUE = MerisClassificationOp.CLOUD_PROBABILITY_VALUE;
 
-    public static final int F_CLOUD = 0;
-    public static final int F_CLOUD_AMBIGUOUS = 1;
-    public static final int F_CLOUD_SURE = 2;
-    public static final int F_CLOUD_BUFFER = 3;
-    public static final int F_CLOUD_SHADOW = 4;
-    public static final int F_SNOW_ICE = 5;
-    public static final int F_MIXED_PIXEL = 6;
-    public static final int F_GLINTRISK = 7;
-    public static final int F_COASTLINE = 8;
-    public static final int F_LAND = 9;
+    public static final int F_INVALID = 0;
+    public static final int F_CLOUD = 1;
+    public static final int F_CLOUD_AMBIGUOUS = 2;
+    public static final int F_CLOUD_SURE = 3;
+    public static final int F_CLOUD_BUFFER = 4;
+    public static final int F_CLOUD_SHADOW = 5;  // must be the same as IdepixConstants.F_CLOUD_SHADOW.
+                                                 // TODO: bad design! fix and simplify globally
+    public static final int F_SNOW_ICE = 6;
+    public static final int F_MIXED_PIXEL = 7;
+    public static final int F_GLINTRISK = 8;
+    public static final int F_COASTLINE = 9;
+    public static final int F_LAND = 10;
 
     private static final int BAND_BRIGHT_N = MerisClassificationOp.BAND_BRIGHT_N;
     private static final int BAND_SLOPE_N_1 = MerisClassificationOp.BAND_SLOPE_N_1;
@@ -102,6 +104,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private static final double CC_NDVI_THRESHOLD = 0.1;
     private static final double CC_SEA_ICE_THRESHOLD = 10.0;
 
+    public static final String F_INVALID_DESCR_TEXT = "Invalid pixels";
     public static final String F_CLOUD_DESCR_TEXT = "Pixels which are either cloud_sure or cloud_ambiguous";
     public static final String F_CLOUD_AMBIGUOUS_DESCR_TEXT = "Semi transparent clouds, or clouds where the detection level is uncertain";
     public static final String F_CLOUD_SURE_DESCR_TEXT = "Fully opaque clouds with full confidence of their detection";
@@ -275,6 +278,7 @@ public class CoastColourClassificationOp extends MerisBasisOp {
 
     public static FlagCoding createFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
+        flagCoding.addFlag("F_INVALID", BitSetter.setFlag(0, F_INVALID), F_INVALID_DESCR_TEXT);
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, F_CLOUD), F_CLOUD_DESCR_TEXT);
         flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, F_CLOUD_AMBIGUOUS), F_CLOUD_AMBIGUOUS_DESCR_TEXT);
         flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, F_CLOUD_SURE), F_CLOUD_SURE_DESCR_TEXT);
@@ -291,6 +295,10 @@ public class CoastColourClassificationOp extends MerisBasisOp {
     private static void createBitmaskDefs(ProductNodeGroup<Mask> maskGroup) {
         int w = maskGroup.getProduct().getSceneRasterWidth();
         int h = maskGroup.getProduct().getSceneRasterHeight();
+        maskGroup.add(Mask.BandMathsType.create("cc_invalid",
+                                                F_INVALID_DESCR_TEXT, w, h,
+                                                CLOUD_FLAGS + ".F_INVALID",
+                                                new Color(99, 78, 200), 0.5f));
         maskGroup.add(Mask.BandMathsType.create("cc_cloud",
                                                 F_CLOUD_DESCR_TEXT, w, h,
                                                 CLOUD_FLAGS + ".F_CLOUD",
@@ -493,6 +501,8 @@ public class CoastColourClassificationOp extends MerisBasisOp {
                             final float seaIceMaxValue = computeSeaiceClimatologyValue(pixelInfo);
                             targetTile.setSample(pixelInfo.x, pixelInfo.y, seaIceMaxValue);
                         }
+                    } else {
+                        targetTile.setSample(pixelInfo.x, pixelInfo.y, CoastColourClassificationOp.F_INVALID, true);
                     }
                 }
             }

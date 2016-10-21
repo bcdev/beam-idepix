@@ -365,14 +365,14 @@ public class OccciOp extends BasisOp {
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         ProductUtils.copyFlagBands(classifProduct, targetProduct, true);
 
-        if (ocOutputMerisRadiance) {
+        if (IdepixUtils.isValidMerisProduct(sourceProduct) && ocOutputMerisRadiance) {
             copySourceBands(sourceProduct, targetProduct, "radiance_");
         }
-        if (ocOutputMerisRefl) {
+        if (IdepixUtils.isValidMerisProduct(sourceProduct) && ocOutputMerisRefl) {
             copySourceBands(rad2reflProduct, targetProduct, "reflec");
             targetProduct.setAutoGrouping("radiance:rho_toa");
         }
-        if (ocOutputRad2Refl) {
+        if (IdepixUtils.isValidModisProduct(sourceProduct) && ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB");
         }
 
@@ -380,10 +380,10 @@ public class OccciOp extends BasisOp {
             copySourceBands(ctpProduct, targetProduct, "cloud_top_press");
         }
 
-        if (ocOutputEmissive) {
+        if (IdepixUtils.isValidModisProduct(sourceProduct) && ocOutputEmissive) {
             copySourceBands(rad2reflProduct, targetProduct, "Emissive");
         }
-        if (ocOutputSeawifsRadiance) {
+        if (IdepixUtils.isValidSeawifsProduct(sourceProduct) && ocOutputSeawifsRadiance) {
 //            copySourceBands(rad2reflProduct, targetProduct, "L_");
             copySourceBands(rad2reflProduct, targetProduct, "Lt_");
         }
@@ -395,7 +395,7 @@ public class OccciOp extends BasisOp {
             copySourceBands(classifProduct, targetProduct, OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
         }
 
-        if (ocOutputSeawifsRefl) {
+        if (IdepixUtils.isValidSeawifsProduct(sourceProduct) && ocOutputSeawifsRefl) {
             copySourceBands(classifProduct, targetProduct, "_refl");
         }
 
