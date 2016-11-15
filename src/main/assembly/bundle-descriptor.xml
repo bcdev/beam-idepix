@@ -1,13 +1,13 @@
 <bundleDescriptor>
     <bundleName>beam-idepix</bundleName>
-    <bundleVersion>${pom.version}</bundleVersion>
+    <bundleVersion>2.2.41-SNAPSHOT</bundleVersion>
 
     <processorDescriptors>
 
         <processorDescriptor>
             <executableName>Idepix.Water</executableName>
             <processorName>Idepix (Water Pixel Classification for MERIS)</processorName>
-            <processorVersion>${pom.version}</processorVersion>
+            <processorVersion>2.2.41-SNAPSHOT</processorVersion>
 
             <parameterDescriptors>
                 <parameterDescriptor>
@@ -92,7 +92,7 @@
                     <name>ccUseMERISAlternativeSchillerAllNN</name>
                     <type>boolean</type>
                     <description>Use alternative Schiller 'ALL' NN</description>
-                    <defaultValue>false</defaultValue>
+                    <defaultValue>true</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
                     <name>ccAlternativeSchillerNNCloudAmbiguousLowerBoundaryValue</name>
@@ -140,7 +140,7 @@
                 ]]>
             </descriptionHtml>
             <inputProductTypes>MERIS_L1B</inputProductTypes>
-            <outputProductType>IDEPIX_L2</outputProductType>
+            <outputProductType>MERIS_MASKED</outputProductType>
             <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
 
             <jobConfig>
@@ -156,6 +156,18 @@
                 <jobParameter>
                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
                     <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.useAlternatePixelGeoCoding</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.calvalus.bundle</name>
+                    <value>calvalus-2.7-portal</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.snap.bundle</name>
+                    <value>beam-5.0.1-portal</value>
                 </jobParameter>
             </jobConfig>
 
@@ -255,7 +267,7 @@
         <processorDescriptor>
             <executableName>Idepix.Land</executableName>
             <processorName>Idepix (Land Pixel Classification)</processorName>
-            <processorVersion>${pom.version}</processorVersion>
+            <processorVersion>2.2.41-SNAPSHOT</processorVersion>
 
             <parameterDescriptors>
                 <parameterDescriptor>
@@ -368,7 +380,7 @@
                 ]]>
             </descriptionHtml>
             <inputProductTypes>MERIS_L1B</inputProductTypes>
-            <outputProductType>IDEPIX_L2</outputProductType>
+            <outputProductType>MERIS_MASKED</outputProductType>
             <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
 
             <jobConfig>
@@ -384,6 +396,18 @@
                 <jobParameter>
                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
                     <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.useAlternatePixelGeoCoding</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.calvalus.bundle</name>
+                    <value>calvalus-2.7-portal</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.snap.bundle</name>
+                    <value>beam-5.0.1-portal</value>
                 </jobParameter>
             </jobConfig>
 
@@ -558,16 +582,16 @@
 
         <processorDescriptor>
              <executableName>idepix.occci</executableName>
-             <processorName>Idepix (OC-CCI Algorithm for MODIS and SeaWiFS)</processorName>
-             <processorVersion>${pom.version}</processorVersion>
+             <processorName>Idepix (OC-CCI Algorithm for MERIS, MODIS and SeaWiFS)</processorName>
+             <processorVersion>2.2.41-SNAPSHOT</processorVersion>
 
-             <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
-             <descriptionHtml>
-                 <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MODIS and SeaWiFS.</p>]]>
-             </descriptionHtml>
-             <inputProductTypes>MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
-             <outputProductType>IDEPIX_L2</outputProductType>
-             <validMaskExpression></validMaskExpression>
+            <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
+            <descriptionHtml>
+                <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MERIS, MODIS and SeaWiFS.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+            <outputProductType>MASKED</outputProductType>
+            <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
 
             <parameterDescriptors>
                 <parameterDescriptor>
@@ -586,7 +610,7 @@
                     <name>applyBlueFilter</name>
                     <type>boolean</type>
                     <description>Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice (MERIS).</description>
-                    <defaultValue>true</defaultValue>
+                    <defaultValue>false</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
                     <name>ocOutputMerisRadiance</name>
@@ -595,12 +619,11 @@
                     <defaultValue>false</defaultValue>
                 </parameterDescriptor>
                 <parameterDescriptor>
-                    <name>ocOutputMerisRadiance</name>
+                    <name>ocOutputMerisRefl</name>
                     <type>boolean</type>
                     <description>Write TOA reflectance bands to target product (MERIS).</description>
                     <defaultValue>true</defaultValue>
                 </parameterDescriptor>
-
                 <parameterDescriptor>
                     <name>ocOutputRad2Refl</name>
                     <type>boolean</type>
@@ -663,7 +686,7 @@
                 <parameterDescriptor>
                     <name>ocOutputViirsRhoToa</name>
                     <type>boolean</type>
-                    <description>Write RhoTOA bands to target product (VIIRS) (SeaWiFS).
+                    <description>Write RhoTOA bands to target product (VIIRS, SeaWiFS).
                     </description>
                     <defaultValue>true</defaultValue>
                 </parameterDescriptor>
@@ -694,37 +717,48 @@
                 </parameterDescriptor>
             </parameterDescriptors>
 
-             <jobConfig>
-                 <jobParameter>
-                     <name>calvalus.hadoop.mapred.child.java.opts</name>
-                     <value>-Xmx1500M</value>
-                 </jobParameter>
-                 <jobParameter>
-                     <name>calvalus.system.beam.envisat.usePixelGeoCoding</name>
-                     <value>true</value>
-                 </jobParameter>
-                 <jobParameter>
-                     <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
-                     <value>true</value>
-                 </jobParameter>
-                 <jobParameter>
-                     <name>calvalus.auxdata.modis_geo</name>
-                     <value>'/calvalus/eodata/MODISA_GEO/v1/'yyyy'/'MM'/'dd'/'</value>
-                 </jobParameter>
-             </jobConfig>
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.hadoop.mapred.child.java.opts</name>
+                    <value>-Xmx1500M</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.envisat.usePixelGeoCoding</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.useAlternatePixelGeoCoding</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.pixelGeoCoding.fractionAccuracy</name>
+                    <value>true</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.auxdata.modis_geo</name>
+                    <value>'/calvalus/eodata/MODISA_GEO/v1/'yyyy'/'MM'/'dd'/'</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.calvalus.bundle</name>
+                    <value>calvalus-2.7-portal</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.snap.bundle</name>
+                    <value>beam-5.0.1-portal</value>
+                </jobParameter>
+            </jobConfig>
 
-
-             <outputVariables>
-                 <outputVariable>
-                     <name>schiller_cloud_value</name>
-                     <defaultAggregator>AVG</defaultAggregator>
-                     <defaultWeightCoeff>1.0</defaultWeightCoeff>
-                 </outputVariable>
-                 <outputVariable>
-                     <name>cloud_classif_flags</name>
-                 </outputVariable>
-             </outputVariables>
-         </processorDescriptor>
+            <outputVariables>
+                <outputVariable>
+                    <name>schiller_cloud_value</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>cloud_classif_flags</name>
+                </outputVariable>
+            </outputVariables>
+        </processorDescriptor>
 
     </processorDescriptors>
 </bundleDescriptor>

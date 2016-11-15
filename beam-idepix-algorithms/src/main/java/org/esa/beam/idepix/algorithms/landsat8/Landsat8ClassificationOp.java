@@ -448,22 +448,6 @@ public class Landsat8ClassificationOp extends Operator {
         return l8Algorithm;
     }
 
-    private double[] calcNeuralNetResultOld(float[] l8Reflectance) {
-        SchillerNeuralNetWrapper neuralNetWrapper = landsat8CloudNet.get();
-        double[] cloudNetInput = neuralNetWrapper.getInputVector();
-        for (int i = 0; i < Landsat8Constants.LANDSAT8_NUM_SPECTRAL_BANDS; i++) {
-            double sqrtRefl = Math.sqrt(l8Reflectance[i]);
-            if (i == 8) {
-                // cirrus band can have negative values
-                // --> not allowing values lower as the net minimum
-                cloudNetInput[8] = Math.max(sqrtRefl, neuralNetWrapper.getNeuralNet().getInmin()[8]);
-            } else {
-                cloudNetInput[i] = sqrtRefl;
-            }
-        }
-        return neuralNetWrapper.getNeuralNet().calc(cloudNetInput);
-    }
-
     private double[] calcNeuralNetResult(float[] l8Reflectance) {
         SchillerNeuralNetWrapper neuralNetWrapper = landsat8CloudNet.get();
         double[] cloudNetInput = neuralNetWrapper.getInputVector();

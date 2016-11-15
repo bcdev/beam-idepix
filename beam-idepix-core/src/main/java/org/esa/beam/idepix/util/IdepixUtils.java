@@ -114,7 +114,11 @@ public class IdepixUtils {
         // accept also ICOL L1N products...
         final boolean merisIcolTypePatternMatches = isValidMerisIcolL1NProduct(product);
         final boolean merisCCL1PTypePatternMatches = isValidMerisCCL1PProduct(product);
-        return merisL1TypePatternMatches || merisIcolTypePatternMatches || merisCCL1PTypePatternMatches;
+
+        final boolean isMerisSeaIceExtentProduct = product.getName().toLowerCase().startsWith("floatingseaice");
+
+        return merisL1TypePatternMatches || merisIcolTypePatternMatches ||
+                merisCCL1PTypePatternMatches || isMerisSeaIceExtentProduct;
     }
 
     public static boolean isValidAatsrProduct(Product product) {

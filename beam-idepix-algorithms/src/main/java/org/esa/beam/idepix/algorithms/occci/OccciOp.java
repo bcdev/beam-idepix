@@ -50,6 +50,19 @@ public class OccciOp extends BasisOp {
     private boolean processMerisSeaIceAntarctic = false;
 
     @Parameter(defaultValue = "false",
+            label = " Retrieve MERIS sea ice edge from L3 ",
+            description = "Retrieve MERIS sea ice edge from a specific L3 product containing sea ice extent ")
+    private boolean retrieveMerisSeaIceEdge = false;
+
+    @Parameter(label = " Sea ice buffer width for ice edge determination ",
+            defaultValue = "1")
+    private int seaiceBufferWidth;
+
+    @Parameter(label = " Minimum number of sea ice neighbours to classify water pixel as sea ice edge ('MIZ') ",
+            defaultValue = "2")
+    private int numSeaIceNeighboursThresh;
+
+    @Parameter(defaultValue = "false",
             description = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice.",
             label = "Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice."
     )
@@ -119,6 +132,13 @@ public class OccciOp extends BasisOp {
             label = " Reflective solar bands (MODIS)",
             description = "Write TOA reflective solar bands (RefSB) to target product (MODIS).")
     private boolean ocOutputRad2Refl = true;
+
+    // DO NOT add this parameter to bundle descriptor!
+    // todo: if still needed, copy all OCCCI stuff needed for MODIS also into CAWA part
+    @Parameter(defaultValue = "true",
+            description = "Write CAWA RefSB (bands 2, 5, 17-19) to the target product.",
+            label = " Write CAWA RefSB (bands 2, 5, 17-19) to the target product")
+    private boolean ocOutputCawaRefSB = true;
 
     @Parameter(defaultValue = "false",
             label = " Emissive bands (MODIS)",
@@ -207,6 +227,11 @@ public class OccciOp extends BasisOp {
     }
 
     private void processOccci(Map<String, Object> occciCloudClassificationParameters) {
+        if (retrieveMerisSeaIceEdge) {
+            processOccciMerisSeaIceEdge();
+            return;
+        }
+
         Map<String, Product> occciClassifInput = new HashMap<>(4);
         computeAlgorithmInputProducts(occciClassifInput);
 
@@ -247,6 +272,16 @@ public class OccciOp extends BasisOp {
 
         setTargetProduct(postProcessingProductWithCloudBuffer);
         addBandsToTargetProduct(postProcessingProductWithCloudBuffer);
+    }
+
+    private void processOccciMerisSeaIceEdge() {
+        OccciMerisSeaiceEdgeOp seaiceEdgeOp = new OccciMerisSeaiceEdgeOp();
+        seaiceEdgeOp.setSourceProduct("l3", sourceProduct);
+        seaiceEdgeOp.setParameterDefaultValues();
+        seaiceEdgeOp.setParameter("seaiceBufferWidth", seaiceBufferWidth);
+        seaiceEdgeOp.setParameter("numSeaIceNeighboursThresh", numSeaIceNeighboursThresh);
+
+        setTargetProduct(seaiceEdgeOp.getTargetProduct());
     }
 
     private void computeAlgorithmInputProducts(Map<String, Product> occciClassifInput) {
@@ -372,6 +407,23 @@ public class OccciOp extends BasisOp {
             copySourceBands(rad2reflProduct, targetProduct, "reflec");
             targetProduct.setAutoGrouping("radiance:rho_toa");
         }
+        if (IdepixUtils.isValidModisProduct(sourceProduct) && ocOutputCawaRefSB) {
+            ocOutputRad2Refl = false;
+            ocOutputEmissive = false;
+            copySourceBands(sourceProduct, targetProduct, "EV_250_Aggr1km_RefSB_2");
+            copySourceBands(sourceProduct, targetProduct, "EV_500_Aggr1km_RefSB_5");
+            copySourceBands(sourceProduct, targetProduct, "EV_1KM_RefSB_17");
+            copySourceBands(sourceProduct, targetProduct, "EV_1KM_RefSB_18");
+            copySourceBands(sourceProduct, targetProduct, "EV_1KM_RefSB_19");
+//            for (int i = 0; i < sourceProduct.getNumTiePointGrids(); i++) {
+//                TiePointGrid srcTPG = sourceProduct.getTiePointGridAt(i);
+//                if ((srcTPG.getName().contains("Zenith") || srcTPG.getName().contains("Azimuth")) &&
+//                        !targetProduct.containsTiePointGrid(srcTPG.getName())) {
+//                    targetProduct.addTiePointGrid(srcTPG.cloneTiePointGrid());
+//                }
+//            }
+        }
+
         if (IdepixUtils.isValidModisProduct(sourceProduct) && ocOutputRad2Refl) {
             copySourceBands(rad2reflProduct, targetProduct, "RefSB");
         }
@@ -383,6 +435,11 @@ public class OccciOp extends BasisOp {
         if (IdepixUtils.isValidModisProduct(sourceProduct) && ocOutputEmissive) {
             copySourceBands(rad2reflProduct, targetProduct, "Emissive");
         }
+
+        if (ocOutputCtp && ctpProduct != null) {
+            copySourceBands(ctpProduct, targetProduct, "cloud_top_press");
+        }
+
         if (IdepixUtils.isValidSeawifsProduct(sourceProduct) && ocOutputSeawifsRadiance) {
 //            copySourceBands(rad2reflProduct, targetProduct, "L_");
             copySourceBands(rad2reflProduct, targetProduct, "Lt_");
