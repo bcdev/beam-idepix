@@ -1,9 +1,7 @@
 package org.esa.beam.idepix.algorithms.occci;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -96,8 +94,14 @@ public class OccciMerisSeaiceEdgeOp extends Operator {
         final Rectangle extendedRectangle = rectCalculator.extend(targetRectangle);
 
         final Tile seaiceSourceTile = getSourceTile(seaiceSourceBand, extendedRectangle);
-        final Tile latTile = getSourceTile(latBand, extendedRectangle);
-        final Tile lonTile = getSourceTile(lonBand, extendedRectangle);
+        Tile latTile = null;
+        if (latBand != null) {
+            latTile = getSourceTile(latBand, extendedRectangle);
+        }
+        Tile lonTile = null;
+        if (lonBand != null) {
+            lonTile = getSourceTile(lonBand, extendedRectangle);
+        }
 
         for (int y = extendedRectangle.y; y < extendedRectangle.y + extendedRectangle.height; y++) {
             checkForCancellation();
@@ -131,8 +135,19 @@ public class OccciMerisSeaiceEdgeOp extends Operator {
             }
         }
 
-        final float lat = latTile.getSampleFloat(x, y);
-        final float lon = lonTile.getSampleFloat(x, y);
+        float lat = 0.0f;
+        float lon = 0.0f;
+        if (latTile != null && lonTile != null) {
+            lat = latTile.getSampleFloat(x, y);
+            lon = lonTile.getSampleFloat(x, y);
+        } else {
+            final GeoCoding geoCoding = l3Product.getGeoCoding();
+            if (geoCoding != null && geoCoding.canGetGeoPos()) {
+                final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x, y), null);
+                lat = geoPos.getLat();
+                lon = geoPos.getLon();
+            }
+        }
         if (surroundingPixelCount >= numSeaIceNeighboursThresh && Math.abs(lat) < 86.0 && Math.abs(lon) < 179.9) {
             targetTile.setSample(x, y, 1);
         } else {

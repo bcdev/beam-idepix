@@ -115,7 +115,9 @@ public class IdepixUtils {
         final boolean merisIcolTypePatternMatches = isValidMerisIcolL1NProduct(product);
         final boolean merisCCL1PTypePatternMatches = isValidMerisCCL1PProduct(product);
 
-        final boolean isMerisSeaIceExtentProduct = product.getName().toLowerCase().startsWith("floatingseaice");
+        final boolean isMerisSeaIceExtentProduct =
+                product.getName().toLowerCase().startsWith("floatingseaice") ||
+                        product.getName().toLowerCase().contains("ice-extent");
 
         return merisL1TypePatternMatches || merisIcolTypePatternMatches ||
                 merisCCL1PTypePatternMatches || isMerisSeaIceExtentProduct;
