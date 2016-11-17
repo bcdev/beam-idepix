@@ -62,7 +62,7 @@ public class OccciMerisSeaiceEdgeOp extends Operator {
 
 
     private void createTargetProduct() {
-        targetProduct = new Product(l3Product.getName() + "sea_ice_edge", l3Product.getProductType(),
+        targetProduct = new Product(l3Product.getName() + "_with_marginal_ice_zone", l3Product.getProductType(),
                                     l3Product.getSceneRasterWidth(), l3Product.getSceneRasterHeight());
 
         ProductUtils.copyMasks(l3Product, targetProduct);
@@ -82,7 +82,7 @@ public class OccciMerisSeaiceEdgeOp extends Operator {
         }
         latBand = l3Product.getBand("lat");
         lonBand = l3Product.getBand("lon");
-        seaiceEdgeBand = targetProduct.addBand("sea_ice_edge", ProductData.TYPE_UINT8);
+        seaiceEdgeBand = targetProduct.addBand("marginal_ice_zone", ProductData.TYPE_UINT8);
         seaiceEdgeBand.setNoDataValue(Float.NaN);
         seaiceEdgeBand.setNoDataValueUsed(true);
     }
