@@ -80,6 +80,21 @@ public class OccciClassificationOp extends PixelOperator {
             description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisGlintThresh859 = 0.15;
 
+    @Parameter(defaultValue = "2.0",
+            label = " NN cloud ambiguous lower boundary (MODIS)",
+            description = " NN cloud ambiguous lower boundary (MODIS)")
+    double ocModisNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "3.35",
+            label = " NN cloud ambiguous/sure separation value (MODIS)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (MODIS)")
+    double ocModisNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.2",
+            label = " NN cloud sure/snow separation value (MODIS)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (MODIS)")
+    double ocModisNNCloudSureSnowSeparationValue;
+
 
     private SensorContext sensorContext;
 
@@ -190,6 +205,11 @@ public class OccciClassificationOp extends PixelOperator {
                 setModisBrightnessThreshCloudAmbiguous(ocModisBrightnessThreshCloudAmbiguous);
         ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859(ocModisGlintThresh859);
         ((OccciModisAlgorithm) occciAlgorithm).setModisApplyOrLogicInCloudTest(ocModisApplyOrLogicInCloudTest);
+
+        ((OccciModisAlgorithm) occciAlgorithm).setNnCloudAmbiguousLowerBoundaryValue(ocModisNNCloudAmbiguousLowerBoundaryValue);
+        ((OccciModisAlgorithm) occciAlgorithm).setNnCloudAmbiguousSureSeparationValue(ocModisNNCloudAmbiguousSureSeparationValue);
+        ((OccciModisAlgorithm) occciAlgorithm).setNnCloudSureSnowSeparationValue(ocModisNNCloudSureSnowSeparationValue);
+
 
         double[] modisNeuralNetInput = modisAllNeuralNet.get().getInputVector();
         modisNeuralNetInput[0] = Math.sqrt(sourceSamples[0].getFloat());    // EV_250_Aggr1km_RefSB.1 (645nm)

@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.43:</b>
+        Added NN thresholds as user option in MODIS part
         <b>Version 2.2.42:</b>
         Supports sea ice edge computation noq also from L3 product on latlon grid
         <b>Version 2.2.41:</b>

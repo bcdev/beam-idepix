@@ -170,6 +170,22 @@ public class OccciOp extends BasisOp {
 //               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
 
+    @Parameter(defaultValue = "2.0",
+            label = " NN cloud ambiguous lower boundary (MODIS)",
+            description = " NN cloud ambiguous lower boundary (MODIS)")
+    double ocModisNNCloudAmbiguousLowerBoundaryValue;
+
+    @Parameter(defaultValue = "3.35",
+            label = " NN cloud ambiguous/sure separation value (MODIS)",
+            description = " NN cloud ambiguous cloud ambiguous/sure separation value (MODIS)")
+    double ocModisNNCloudAmbiguousSureSeparationValue;
+
+    @Parameter(defaultValue = "4.2",
+            label = " NN cloud sure/snow separation value (MODIS)",
+            description = " NN cloud ambiguous cloud sure/snow separation value (MODIS)")
+    double ocModisNNCloudSureSnowSeparationValue;
+
+
     @Parameter(defaultValue = "false",
             label = " Radiance bands (SeaWiFS)",
             description = "Write TOA radiance bands to target product (SeaWiFS).")
@@ -323,6 +339,9 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);
         occciCloudClassificationParameters.put("ocModisGlintThresh859", ocModisGlintThresh859);
         occciCloudClassificationParameters.put("ocModisApplyOrLogicInCloudTest", ocModisApplyOrLogicInCloudTest);
+        occciCloudClassificationParameters.put("ocModisNNCloudAmbiguousLowerBoundaryValue", ocModisNNCloudAmbiguousLowerBoundaryValue);
+        occciCloudClassificationParameters.put("ocModisNNCloudAmbiguousSureSeparationValue", ocModisNNCloudAmbiguousSureSeparationValue);
+        occciCloudClassificationParameters.put("ocModisNNCloudSureSnowSeparationValue", ocModisNNCloudSureSnowSeparationValue);
 
         return occciCloudClassificationParameters;
     }

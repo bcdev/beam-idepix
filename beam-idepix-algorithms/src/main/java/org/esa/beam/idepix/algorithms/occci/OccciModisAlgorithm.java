@@ -22,6 +22,10 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     private double modisGlintThresh859;
     private boolean modisApplyOrLogicInCloudTest;
 
+    private double nnCloudAmbiguousLowerBoundaryValue;
+    private double nnCloudAmbiguousSureSeparationValue;
+    private double nnCloudSureSnowSeparationValue;
+
     @Override
     public boolean isSnowIce() {
 
@@ -33,7 +37,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         // 4.2 < x : clear snow/ice
         boolean isSnowIceFromNN;
         if (nnOutput != null) {
-            isSnowIceFromNN = nnOutput[0] > 4.2 && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
+            isSnowIceFromNN = nnOutput[0] > nnCloudSureSnowSeparationValue && nnOutput[0] <= 5.0;    // separation numbers from HS, 20140923
         } else {
             // fallback
             // needs ndsi and brightness
@@ -88,7 +92,8 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         final boolean isCloudAmbiguousFromBrightness = modisApplyBrightnessTest &&
                 brightValue() > modisBrightnessThreshCloudAmbiguous;
         if (nnOutput != null) {
-            isCloudAmbiguousFromNN = nnOutput[0] > 2.0 && nnOutput[0] <= 3.35;    // separation numbers from HS, 20140923
+            isCloudAmbiguousFromNN = nnOutput[0] > nnCloudAmbiguousLowerBoundaryValue &&
+                    nnOutput[0] <= nnCloudAmbiguousSureSeparationValue;    // separation numbers from HS, 20140923
             isCloudAmbiguousFromNN = isCloudAmbiguousFromNN && refl[1] > modisGlintThresh859;
         } else {
             // fallback
@@ -140,7 +145,8 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         final boolean isCloudSureFromBrightness = modisApplyBrightnessTest &&
                 brightValue() > Math.max(modisBrightnessThreshCloudSure, modisBrightnessThreshCloudAmbiguous);
         if (nnOutput != null) {
-            isCloudSureFromNN = nnOutput[0] > 3.35 && nnOutput[0] <= 4.2;   // ALL NN separation numbers from HS, 20140923
+            isCloudSureFromNN = nnOutput[0] > nnCloudAmbiguousSureSeparationValue &&
+                    nnOutput[0] <= nnCloudSureSnowSeparationValue;   // ALL NN separation numbers from HS, 20140923
             isCloudSureFromNN = isCloudSureFromNN && refl[1] > modisGlintThresh859;
         } else {
             // fallback
@@ -250,5 +256,17 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 
     public void setModisApplyOrLogicInCloudTest(boolean modisApplyOrLogicInCloudTest) {
         this.modisApplyOrLogicInCloudTest = modisApplyOrLogicInCloudTest;
+    }
+
+    public void setNnCloudAmbiguousLowerBoundaryValue(double nnCloudAmbiguousLowerBoundaryValue) {
+        this.nnCloudAmbiguousLowerBoundaryValue = nnCloudAmbiguousLowerBoundaryValue;
+    }
+
+    public void setNnCloudAmbiguousSureSeparationValue(double nnCloudAmbiguousSureSeparationValue) {
+        this.nnCloudAmbiguousSureSeparationValue = nnCloudAmbiguousSureSeparationValue;
+    }
+
+    public void setNnCloudSureSnowSeparationValue(double nnCloudSureSnowSeparationValue) {
+        this.nnCloudSureSnowSeparationValue = nnCloudSureSnowSeparationValue;
     }
 }
