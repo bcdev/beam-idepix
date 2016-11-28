@@ -76,9 +76,19 @@ public class OccciClassificationOp extends PixelOperator {
     private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
 
     @Parameter(defaultValue = "0.15",
-            label = " 'Dark glint' threshold at 859nm (MODIS)",
-            description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
-    private double ocModisGlintThresh859 = 0.15;
+            label = " 'B_NIR' threshold at 859nm (MODIS)",
+            description = "'B_NIR' threshold: 'Cloud B_NIR' set if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisBNirThresh859 = 0.15;
+
+    @Parameter(defaultValue = "0.15",
+            label = " 'Dark glint' threshold at 859nm for 'cloud sure' (MODIS)",
+            description = "'Dark glint' threshold: 'Cloud sure' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisGlintThresh859forCloudSure = 0.15;
+
+    @Parameter(defaultValue = "0.15",
+            label = " 'Dark glint' threshold at 859nm for 'cloud ambiguous' (MODIS)",
+            description = "'Dark glint' threshold: 'Cloud ambiguous' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisGlintThresh859forCloudAmbiguous = 0.15;
 
     @Parameter(defaultValue = "2.0",
             label = " NN cloud ambiguous lower boundary (MODIS)",
@@ -162,6 +172,7 @@ public class OccciClassificationOp extends PixelOperator {
     }
 
     private void setClassifFlag(WritableSample[] targetSamples, OccciAlgorithm algorithm) {
+        // common flags for OC-CCI sensors:
         targetSamples[0].set(OccciConstants.F_INVALID, algorithm.isInvalid());
         targetSamples[0].set(OccciConstants.F_CLOUD, algorithm.isCloud());
         targetSamples[0].set(OccciConstants.F_CLOUD_AMBIGUOUS, algorithm.isCloudAmbiguous());
@@ -203,7 +214,9 @@ public class OccciClassificationOp extends PixelOperator {
         ((OccciModisAlgorithm) occciAlgorithm).setModisBrightnessThreshCloudSure(ocModisBrightnessThreshCloudSure);
         ((OccciModisAlgorithm) occciAlgorithm).
                 setModisBrightnessThreshCloudAmbiguous(ocModisBrightnessThreshCloudAmbiguous);
-        ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859(ocModisGlintThresh859);
+        ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859forCloudSure(ocModisGlintThresh859forCloudSure);
+        ((OccciModisAlgorithm) occciAlgorithm).setModisBNirThresh859(ocModisBNirThresh859);
+        ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859forCloudAmbiguous(ocModisGlintThresh859forCloudAmbiguous);
         ((OccciModisAlgorithm) occciAlgorithm).setModisApplyOrLogicInCloudTest(ocModisApplyOrLogicInCloudTest);
 
         ((OccciModisAlgorithm) occciAlgorithm).setNnCloudAmbiguousLowerBoundaryValue(ocModisNNCloudAmbiguousLowerBoundaryValue);
@@ -231,6 +244,9 @@ public class OccciClassificationOp extends PixelOperator {
 
         occciAlgorithm.setNnOutput(neuralNetOutput);
         targetSamples[3].set(neuralNetOutput[0]);
+
+        // new MODIS specific test:
+        targetSamples[0].set(OccciConstants.F_CLOUD_SURE, ((OccciModisAlgorithm) occciAlgorithm).isCloudBNir());
 
         return occciAlgorithm;
     }

@@ -151,9 +151,19 @@ public class OccciOp extends BasisOp {
     private double ocModisBrightnessThreshCloudSure = 0.15;
 
     @Parameter(defaultValue = "0.15",
-            label = " 'Dark glint' threshold at 859nm (MODIS)",
-            description = "'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
-    private double ocModisGlintThresh859 = 0.15;
+            label = " 'B_NIR' threshold at 859nm (MODIS)",
+            description = "'B_NIR' threshold: 'Cloud B_NIR' set if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisBNirThresh859 = 0.15;
+
+    @Parameter(defaultValue = "0.15",
+            label = " 'Dark glint' threshold at 859nm for 'cloud sure' (MODIS)",
+            description = "'Dark glint' threshold: 'Cloud sure' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisGlintThresh859forCloudSure = 0.15;
+
+    @Parameter(defaultValue = "0.15",
+            label = " 'Dark glint' threshold at 859nm for 'cloud ambiguous' (MODIS)",
+            description = "'Dark glint' threshold: 'Cloud ambiguous' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
+    private double ocModisGlintThresh859forCloudAmbiguous = 0.15;
 
     @Parameter(defaultValue = "true",
             label = " Apply brightness test (MODIS)",
@@ -337,7 +347,9 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("ocModisApplyBrightnessTest", ocModisApplyBrightnessTest);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudSure", ocModisBrightnessThreshCloudSure);
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);
-        occciCloudClassificationParameters.put("ocModisGlintThresh859", ocModisGlintThresh859);
+        occciCloudClassificationParameters.put("ocModisGlintThresh859forCloudSure", ocModisGlintThresh859forCloudSure);
+        occciCloudClassificationParameters.put("ocModisBNirThresh859", ocModisBNirThresh859);
+        occciCloudClassificationParameters.put("ocModisGlintThresh859forCloudAmbiguous", ocModisGlintThresh859forCloudAmbiguous);
         occciCloudClassificationParameters.put("ocModisApplyOrLogicInCloudTest", ocModisApplyOrLogicInCloudTest);
         occciCloudClassificationParameters.put("ocModisNNCloudAmbiguousLowerBoundaryValue", ocModisNNCloudAmbiguousLowerBoundaryValue);
         occciCloudClassificationParameters.put("ocModisNNCloudAmbiguousSureSeparationValue", ocModisNNCloudAmbiguousSureSeparationValue);

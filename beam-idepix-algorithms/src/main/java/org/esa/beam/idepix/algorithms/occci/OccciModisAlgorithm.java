@@ -19,7 +19,9 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
     private boolean modisApplyBrightnessTest;
     private double modisBrightnessThreshCloudSure;
     private double modisBrightnessThreshCloudAmbiguous;
-    private double modisGlintThresh859;
+    private double modisBNirThresh859;
+    private double modisGlintThresh859forCloudSure;
+    private double modisGlintThresh859forCloudAmbiguous;
     private boolean modisApplyOrLogicInCloudTest;
 
     private double nnCloudAmbiguousLowerBoundaryValue;
@@ -94,7 +96,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         if (nnOutput != null) {
             isCloudAmbiguousFromNN = nnOutput[0] > nnCloudAmbiguousLowerBoundaryValue &&
                     nnOutput[0] <= nnCloudAmbiguousSureSeparationValue;    // separation numbers from HS, 20140923
-            isCloudAmbiguousFromNN = isCloudAmbiguousFromNN && refl[1] > modisGlintThresh859;
+            isCloudAmbiguousFromNN = isCloudAmbiguousFromNN && refl[1] > modisGlintThresh859forCloudAmbiguous;
         } else {
             // fallback
             isCloudAmbiguousFromNN = isCloudAmbiguousFromBrightness;
@@ -120,7 +122,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         } else {
             isCloudAmbiguousFromWhitenesses = m > 0.3 && c1 > 0.6 && c2 > 0.74 && c3 > 0.9;
         }
-        isCloudAmbiguousFromWhitenesses = isCloudAmbiguousFromWhitenesses && refl[1] > modisGlintThresh859;
+        isCloudAmbiguousFromWhitenesses = isCloudAmbiguousFromWhitenesses && refl[1] > modisGlintThresh859forCloudAmbiguous;
 
         if (modisApplyOrLogicInCloudTest) {
             return isCloudAmbiguousFromNN || isCloudAmbiguousFromBrightness || isCloudAmbiguousFromWhitenesses;
@@ -147,7 +149,7 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         if (nnOutput != null) {
             isCloudSureFromNN = nnOutput[0] > nnCloudAmbiguousSureSeparationValue &&
                     nnOutput[0] <= nnCloudSureSnowSeparationValue;   // ALL NN separation numbers from HS, 20140923
-            isCloudSureFromNN = isCloudSureFromNN && refl[1] > modisGlintThresh859;
+            isCloudSureFromNN = isCloudSureFromNN && refl[1] > modisGlintThresh859forCloudSure;
         } else {
             // fallback
             isCloudSureFromNN = isCloudSureFromBrightness;
@@ -175,13 +177,18 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
 //            isCloudSureFromWhitenesses = m > 0.3 && c1 > 0.87 && c2 > 0.9 && c3 > 0.97;
             isCloudSureFromWhitenesses = c1 > 0.87 && c2 > 0.9 && c3 > 0.97;
         }
-        isCloudSureFromWhitenesses = isCloudSureFromWhitenesses && refl[1] > modisGlintThresh859;
+        isCloudSureFromWhitenesses = isCloudSureFromWhitenesses && refl[1] > modisGlintThresh859forCloudSure;
 
         if (modisApplyOrLogicInCloudTest) {
             return isCloudSureFromNN || isCloudSureFromBrightness || isCloudSureFromWhitenesses;
         } else {
             return isCloudSureFromNN || (isCloudSureFromBrightness && isCloudSureFromWhitenesses);
         }
+    }
+
+    public boolean isCloudBNir() {
+        // a new MODIS only test  (CB/CL, 20161128)
+        return refl[1] > modisBNirThresh859;
     }
 
     @Override
@@ -246,12 +253,20 @@ public class OccciModisAlgorithm extends OccciAlgorithm {
         this.modisBrightnessThreshCloudSure = modisBrightnessThresh;
     }
 
+    public void setModisBNirThresh859(double modisBNirThresh859) {
+        this.modisBNirThresh859 = modisBNirThresh859;
+    }
+
     public void setModisBrightnessThreshCloudAmbiguous(double modisBrightnessThreshCloudAmbiguous) {
         this.modisBrightnessThreshCloudAmbiguous = modisBrightnessThreshCloudAmbiguous;
     }
 
-    public void setModisGlintThresh859(double modisGlintThresh859) {
-        this.modisGlintThresh859 = modisGlintThresh859;
+    public void setModisGlintThresh859forCloudSure(double modisGlintThresh859forCloudSure) {
+        this.modisGlintThresh859forCloudSure = modisGlintThresh859forCloudSure;
+    }
+
+    public void setModisGlintThresh859forCloudAmbiguous(double modisGlintThresh859forCloudAmbiguous) {
+        this.modisGlintThresh859forCloudAmbiguous = modisGlintThresh859forCloudAmbiguous;
     }
 
     public void setModisApplyOrLogicInCloudTest(boolean modisApplyOrLogicInCloudTest) {

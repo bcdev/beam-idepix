@@ -26,6 +26,7 @@ public class OccciUtils {
         flagCoding.addFlag("F_CLOUD", BitSetter.setFlag(0, OccciConstants.F_CLOUD), null);
         flagCoding.addFlag("F_CLOUD_AMBIGUOUS", BitSetter.setFlag(0, OccciConstants.F_CLOUD_AMBIGUOUS), null);
         flagCoding.addFlag("F_CLOUD_SURE", BitSetter.setFlag(0, OccciConstants.F_CLOUD_SURE), null);
+        flagCoding.addFlag("F_CLOUD_B_NIR", BitSetter.setFlag(0, OccciConstants.F_CLOUD_B_NIR), null);
         flagCoding.addFlag("F_CLOUD_BUFFER", BitSetter.setFlag(0, OccciConstants.F_CLOUD_BUFFER), null);
         flagCoding.addFlag("F_CLOUD_SHADOW", BitSetter.setFlag(0, OccciConstants.F_CLOUD_SHADOW), null);
         flagCoding.addFlag("F_SNOW_ICE", BitSetter.setFlag(0, OccciConstants.F_SNOW_ICE), null);
@@ -66,6 +67,11 @@ public class OccciUtils {
 
         mask = Mask.BandMathsType.create("F_CLOUD_SURE", "Cloudy pixel (sure)", w, h,
                                          "pixel_classif_flags.F_CLOUD_SURE",
+                                         Color.red, 0.5f);
+        occciProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_CLOUD_B_NIR", "Cloudy pixel ('b_nir' test, MODIS only)", w, h,
+                                         "pixel_classif_flags.F_CLOUD_B_NIR",
                                          Color.red, 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 

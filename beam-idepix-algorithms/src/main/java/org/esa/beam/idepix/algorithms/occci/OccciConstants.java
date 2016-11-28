@@ -31,15 +31,16 @@ class OccciConstants {
     public static final int F_CLOUD = 1;
     public static final int F_CLOUD_AMBIGUOUS = 2;
     public static final int F_CLOUD_SURE = 3;
-    public static final int F_CLOUD_BUFFER = 4;
-    public static final int F_CLOUD_SHADOW = 5;
-    public static final int F_SNOW_ICE = 6;
-    public static final int F_WHITE_ICE = 7;
-    public static final int F_WET_ICE = 8;
-    public static final int F_MIXED_PIXEL = 9;
-    public static final int F_GLINT_RISK = 10;
-    public static final int F_COASTLINE = 11;
-    public static final int F_LAND = 12;
-    public static final int F_BRIGHT = 13;
+    public static final int F_CLOUD_B_NIR = 4;
+    public static final int F_CLOUD_BUFFER = 5;
+    public static final int F_CLOUD_SHADOW = 6;
+    public static final int F_SNOW_ICE = 7;
+    public static final int F_WHITE_ICE = 8;
+    public static final int F_WET_ICE = 9;
+    public static final int F_MIXED_PIXEL = 10;
+    public static final int F_GLINT_RISK = 11;
+    public static final int F_COASTLINE = 12;
+    public static final int F_LAND = 13;
+    public static final int F_BRIGHT = 14;
 
 }

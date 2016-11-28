@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-operators</symbolicName>
-    <version>2.2.43-SNAPSHOT</version>
+    <version>2.2.44-SNAPSHOT</version>
     <name>Idepix Operators</name>
     <description>
         Idepix internal operators. Idepix is a generic pixel identification and classification algorithm for optical Earth observation sensors.

@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.44:</b>
+        Dark glint threshold now as separate user options for cloud sure and cloud ambiguous in MODIS part
         <b>Version 2.2.43:</b>
         Added NN thresholds as user option in MODIS part
         <b>Version 2.2.42:</b>
