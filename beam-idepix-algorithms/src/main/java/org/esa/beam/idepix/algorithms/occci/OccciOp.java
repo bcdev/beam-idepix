@@ -150,20 +150,20 @@ public class OccciOp extends BasisOp {
 //               description = "Brightness test threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private double ocModisBrightnessThreshCloudSure = 0.15;
 
-    @Parameter(defaultValue = "0.15",
+    @Parameter(defaultValue = "0.027",
             label = " 'B_NIR' threshold at 859nm (MODIS)",
             description = "'B_NIR' threshold: 'Cloud B_NIR' set if EV_250_Aggr1km_RefSB_2 > THRESH.")
-    private double ocModisBNirThresh859 = 0.15;
+    private double ocModisBNirThresh859;
 
     @Parameter(defaultValue = "0.15",
             label = " 'Dark glint' threshold at 859nm for 'cloud sure' (MODIS)",
             description = "'Dark glint' threshold: 'Cloud sure' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
-    private double ocModisGlintThresh859forCloudSure = 0.15;
+    private double ocModisGlintThresh859forCloudSure;
 
     @Parameter(defaultValue = "0.15",
             label = " 'Dark glint' threshold at 859nm for 'cloud ambiguous' (MODIS)",
             description = "'Dark glint' threshold: 'Cloud ambiguous' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
-    private double ocModisGlintThresh859forCloudAmbiguous = 0.15;
+    private double ocModisGlintThresh859forCloudAmbiguous;
 
     @Parameter(defaultValue = "true",
             label = " Apply brightness test (MODIS)",
