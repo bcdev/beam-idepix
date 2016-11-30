@@ -31,9 +31,9 @@ class OccciConstants {
     public static final int F_CLOUD = 1;
     public static final int F_CLOUD_AMBIGUOUS = 2;
     public static final int F_CLOUD_SURE = 3;
-    public static final int F_CLOUD_B_NIR = 4;
-    public static final int F_CLOUD_BUFFER = 5;
-    public static final int F_CLOUD_SHADOW = 6;
+    public static final int F_CLOUD_BUFFER = 4;
+    public static final int F_CLOUD_SHADOW = 5;
+    public static final int F_CLOUD_B_NIR = 6;
     public static final int F_SNOW_ICE = 7;
     public static final int F_WHITE_ICE = 8;
     public static final int F_WET_ICE = 9;
@@ -42,5 +42,26 @@ class OccciConstants {
     public static final int F_COASTLINE = 12;
     public static final int F_LAND = 13;
     public static final int F_BRIGHT = 14;
+
+    // IdepixConstants:
+//    public static final int F_INVALID = 0;
+//    public static final int F_CLOUD = 1;
+//    public static final int F_CLOUD_AMBIGUOUS = 2;
+//    public static final int F_CLOUD_SURE = 3;
+//    public static final int F_CLOUD_BUFFER = 4;
+//    public static final int F_CLOUD_SHADOW = 5;
+//    public static final int F_COASTLINE = 6;
+//    public static final int F_CLEAR_SNOW = 7;
+//    public static final int F_CLEAR_LAND = 8;
+//    public static final int F_CLEAR_WATER = 9;
+//    public static final int F_LAND = 10;
+//    public static final int F_WATER = 11;
+//    public static final int F_BRIGHT = 12;
+//    public static final int F_WHITE = 13;
+//    public static final int F_BRIGHTWHITE = 14;
+//    public static final int F_HIGH = 15;
+//    public static final int F_VEG_RISK = 16;
+//    public static final int F_SEAICE = 17;
+//    public static final int F_HAZE = 18;
 
 }

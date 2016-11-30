@@ -246,7 +246,7 @@ public class OccciClassificationOp extends PixelOperator {
         targetSamples[3].set(neuralNetOutput[0]);
 
         // new MODIS specific test:
-        targetSamples[0].set(OccciConstants.F_CLOUD_SURE, ((OccciModisAlgorithm) occciAlgorithm).isCloudBNir());
+        targetSamples[0].set(OccciConstants.F_CLOUD_B_NIR, ((OccciModisAlgorithm) occciAlgorithm).isCloudBNir());
 
         return occciAlgorithm;
     }
