@@ -581,141 +581,140 @@
         </processorDescriptor>
 
         <processorDescriptor>
-             <executableName>idepix.occci</executableName>
-             <processorName>Idepix (OC-CCI Algorithm for MERIS, MODIS and SeaWiFS)</processorName>
+          <executableName>idepix.occci</executableName>
+          <processorName>Idepix (OC-CCI Algorithm for MERIS, MODIS and SeaWiFS)</processorName>
              <processorVersion>2.2.45-SNAPSHOT</processorVersion>
 
-            <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
-            <descriptionHtml>
-                <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MERIS, MODIS and SeaWiFS.</p>]]>
-            </descriptionHtml>
-            <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
-            <outputProductType>MASKED</outputProductType>
-            <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
+          <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
+          <descriptionHtml>
+            <![CDATA[<p>Performs Idepix pixel identification with OC-CCI algorithm on MERIS, MODIS and SeaWiFS.</p>]]>
+          </descriptionHtml>
+          <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+          <outputProductType>MASKED</outputProductType>
+          <validMaskExpression>!l1b_flags.INVALID</validMaskExpression>
 
-            <parameterDescriptors>
-                <parameterDescriptor>
+          <parameterDescriptors>
+            <parameterDescriptor>
                     <name>processMerisSeaIce</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Use experimental 'sea ice' mode for MERIS (instead of standard CC 'WATER' approach) (MERIS).</description>
-                    <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+              <defaultValue>false</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>processMerisSeaIceAntarctic</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Use experimental 'sea ice' mode for MERIS in Antarctic rather than Arctic regions (MERIS).</description>
                     <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>applyBlueFilter</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Apply 'Blue Filter' for wet ice in case of processing MERIS for sea ice (MERIS).</description>
                     <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocOutputMerisRadiance</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Write TOA radiance bands to target product (MERIS).</description>
                     <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocOutputMerisRefl</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Write TOA reflectance bands to target product (MERIS).</description>
-                    <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+              <defaultValue>true</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocOutputRad2Refl</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Write TOA reflective solar bands (RefSB) to target product (MODIS).</description>
-                    <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
-                    <name>ocOutputEmissive</name>
-                    <type>boolean</type>
-                    <description>Write 'Emissive' bands to target product (MODIS).
-                    </description>
-                    <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+              <defaultValue>true</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
+              <name>ocOutputEmissive</name>
+              <type>boolean</type>
+              <description>Write 'Emissive' bands to target product (MODIS).</description>
+              <defaultValue>false</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocModisGlintThresh859</name>
                     <type>string</type>
                     <description>'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.
                     </description>
                     <defaultValue>0.15</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocModisApplyBrightnessTest</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Apply brightness test: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).
                     </description>
-                    <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+              <defaultValue>true</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocModisApplyOrLogicInCloudTest</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Apply 'OR' logic instead of 'AND' logic in cloud test (MODIS).</description>
-                    <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
-                    <name>ocOutputSeawifsRadiance</name>
-                    <type>boolean</type>
-                    <description>Write TOA radiance bands to target product (SeaWiFS).</description>
-                    <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
-                    <name>ocOutputSeawifsRefl</name>
-                    <type>boolean</type>
-                    <description>Write TOA reflectance bands to target product (SeaWiFS).
-                    </description>
-                    <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+              <defaultValue>true</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
+              <name>ocOutputSeawifsRadiance</name>
+              <type>boolean</type>
+              <description>Write TOA radiance bands to target product (SeaWiFS).</description>
+              <defaultValue>false</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
+              <name>ocOutputSeawifsRefl</name>
+              <type>boolean</type>
+              <description>Write TOA reflectance bands to target product (SeaWiFS).</description>
+              <defaultValue>true</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocOutputGeometry</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Write geometry bands to target product (SeaWiFS).</description>
-                    <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
-                    <name>ocSeawifsRadianceBandPrefix</name>
-                    <type>string</type>
+              <defaultValue>true</defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
+              <name>ocSeawifsRadianceBandPrefix</name>
+              <type>string</type>
                     <description>Prefix of input radiance or reflectance bands (SeaWiFS)</description>
-                    <defaultValue>L_</defaultValue>
+              <defaultValue>L_</defaultValue>
                     <valueSet>L_,Lt_,rhot_</valueSet>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocOutputViirsRhoToa</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Write RhoTOA bands to target product (VIIRS, SeaWiFS).
                     </description>
                     <defaultValue>true</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocOutputDebug</name>
-                    <type>boolean</type>
+              <type>boolean</type>
                     <description>Write further useful bands to target product.</description>
-                    <defaultValue>false</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
-                    <name>productTypeString</name>
-                    <type>string</type>
-                    <description>Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.</description>
-                    <defaultValue></defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+              <defaultValue>false</defaultValue>
+            </parameterDescriptor>
+
+            <parameterDescriptor>
+              <name>productTypeString</name>
+              <type>string</type>
+              <description>Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.</description>
+              <defaultValue></defaultValue>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>cloudBufferWidth</name>
                     <type>string</type>
                     <description>Width of cloud buffer (# of pixels)</description>
                     <defaultValue>1</defaultValue>
-                </parameterDescriptor>
-                <parameterDescriptor>
+            </parameterDescriptor>
+            <parameterDescriptor>
                     <name>ocWaterMaskResolution</name>
                     <type>string</type>
                     <description>Resolution of used land-water mask in m/pixel</description>
                     <defaultValue>50</defaultValue>
                     <valueSet>50,150</valueSet>
-                </parameterDescriptor>
-            </parameterDescriptors>
+            </parameterDescriptor>
+          </parameterDescriptors>
 
             <jobConfig>
                 <jobParameter>
