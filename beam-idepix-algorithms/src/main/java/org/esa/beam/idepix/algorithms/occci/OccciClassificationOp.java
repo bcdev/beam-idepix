@@ -37,7 +37,7 @@ public class OccciClassificationOp extends PixelOperator {
     @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
     private int cloudBufferWidth;
 
-    @Parameter(defaultValue = "50", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
+    @Parameter(defaultValue = "150", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
             description = "Resolution in m/pixel")
     private int wmResolution;
 
@@ -75,7 +75,7 @@ public class OccciClassificationOp extends PixelOperator {
 //               description = "Brightness test 'cloud ambiguous' threshold: EV_250_Aggr1km_RefSB_1 > THRESH (MODIS).")
     private double ocModisBrightnessThreshCloudAmbiguous = 0.125;
 
-    @Parameter(defaultValue = "0.027",
+    @Parameter(defaultValue = "0.08",
             label = " 'B_NIR' threshold at 859nm (MODIS)",
             description = "'B_NIR' threshold: 'Cloud B_NIR' set if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisBNirThresh859;
@@ -85,12 +85,12 @@ public class OccciClassificationOp extends PixelOperator {
             description = "'Dark glint' threshold: 'Cloud sure' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisGlintThresh859forCloudSure;
 
-    @Parameter(defaultValue = "0.15",
+    @Parameter(defaultValue = "0.06",
             label = " 'Dark glint' threshold at 859nm for 'cloud ambiguous' (MODIS)",
             description = "'Dark glint' threshold: 'Cloud ambiguous' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.")
     private double ocModisGlintThresh859forCloudAmbiguous;
 
-    @Parameter(defaultValue = "2.0",
+    @Parameter(defaultValue = "1.035",
             label = " NN cloud ambiguous lower boundary (MODIS)",
             description = " NN cloud ambiguous lower boundary (MODIS)")
     double ocModisNNCloudAmbiguousLowerBoundaryValue;
