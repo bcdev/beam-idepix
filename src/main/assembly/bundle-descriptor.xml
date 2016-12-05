@@ -637,12 +637,23 @@
               <defaultValue>false</defaultValue>
             </parameterDescriptor>
             <parameterDescriptor>
-                    <name>ocModisGlintThresh859</name>
-                    <type>string</type>
-                    <description>'Dark glint' threshold: Cloud possible only if EV_250_Aggr1km_RefSB_2 > THRESH.
-                    </description>
-                    <defaultValue>0.15</defaultValue>
+                <name>ocModisBNirThresh859</name>
+                <type>string</type>
+                <description>'B_NIR' threshold: 'Cloud B_NIR' set if EV_250_Aggr1km_RefSB_2 > THRESH.</description>
+                <defaultValue>0.08</defaultValue>
             </parameterDescriptor>
+              <parameterDescriptor>
+                  <name>ocModisGlintThresh859forCloudSure</name>
+                  <type>string</type>
+                  <description>'Dark glint' threshold: 'Cloud sure' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.</description>
+                  <defaultValue>0.15</defaultValue>
+              </parameterDescriptor>
+              <parameterDescriptor>
+                  <name>ocModisGlintThresh859forCloudAmbiguous</name>
+                  <type>string</type>
+                  <description>'Dark glint' threshold: 'Cloud ambiguous' possible only if EV_250_Aggr1km_RefSB_2 > THRESH.</description>
+                  <defaultValue>0.06</defaultValue>
+              </parameterDescriptor>
             <parameterDescriptor>
                     <name>ocModisApplyBrightnessTest</name>
               <type>boolean</type>
