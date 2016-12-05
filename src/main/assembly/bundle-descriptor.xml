@@ -704,14 +704,14 @@
             <parameterDescriptor>
                     <name>cloudBufferWidth</name>
                     <type>string</type>
-                    <description>Width of cloud buffer (# of pixels)</description>
+                    <description>Width of cloud buffer (# of pixels) For MODIS 2 should be used.</description>
                     <defaultValue>1</defaultValue>
             </parameterDescriptor>
             <parameterDescriptor>
                     <name>ocWaterMaskResolution</name>
                     <type>string</type>
                     <description>Resolution of used land-water mask in m/pixel</description>
-                    <defaultValue>50</defaultValue>
+                    <defaultValue>150</defaultValue>
                     <valueSet>50,150</valueSet>
             </parameterDescriptor>
           </parameterDescriptors>

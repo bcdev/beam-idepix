@@ -230,7 +230,7 @@ public class OccciOp extends BasisOp {
             description = "Defines the product type to use. If the parameter is not set, the product type defined by the input file is used.")
     String productTypeString;
 
-    @Parameter(defaultValue = "2", label = " Width of cloud buffer (# of pixels)")
+    @Parameter(defaultValue = "1", label = " Width of cloud buffer (# of pixels) For MODIS 2 should be used.")
     private int cloudBufferWidth;
 
     @Parameter(defaultValue = "150", valueSet = {"50", "150"}, label = " Resolution of used land-water mask in m/pixel",
