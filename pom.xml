@@ -7,7 +7,7 @@
     <name>Idepix</name>
     <groupId>org.esa.beam.idepix</groupId>
     <artifactId>beam-idepix</artifactId>
-    <version>2.2.45</version>
+    <version>2.2.46-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <description>Generic classification of pixels (cloud, snow, ice, land, water) originating from optical sensors.
@@ -191,8 +191,8 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <!--<version>${beamVersion}</version>-->
-                <version>5.0.5-SNAPSHOT</version>
+                <version>${beamVersion}</version>
+                <!--<version>5.0.5-SNAPSHOT</version>-->
             </dependency>
 
             <dependency>

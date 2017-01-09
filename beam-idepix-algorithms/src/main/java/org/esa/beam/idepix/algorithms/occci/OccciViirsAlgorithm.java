@@ -9,6 +9,7 @@ package org.esa.beam.idepix.algorithms.occci;
 public class OccciViirsAlgorithm extends OccciAlgorithm {
 
     private static final double THRESH_BRIGHT = 0.15;
+    private double bNirThresh862;
 
     @Override
     public boolean isSnowIce() {
@@ -59,6 +60,12 @@ public class OccciViirsAlgorithm extends OccciAlgorithm {
         return nnOutput[0] > 3.7 && nnOutput[0] <= 4.2;
     }
 
+    public boolean isCloudBNir() {
+        // a new MODIS and VIIRS test  (CB/CL, 20161128, 20170109)
+        return refl[6] > bNirThresh862;    // refl[6] = 862nm
+    }
+
+
     @Override
     public boolean isCloudBuffer() {
         // is applied in post processing!
@@ -105,4 +112,8 @@ public class OccciViirsAlgorithm extends OccciAlgorithm {
         return 0.5f; // not yet needed
     }
 
+
+    public void setbNirThresh862(double bNirThresh862) {
+        this.bNirThresh862 = bNirThresh862;
+    }
 }

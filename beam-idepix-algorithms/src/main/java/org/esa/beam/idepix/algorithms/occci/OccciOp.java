@@ -215,6 +215,11 @@ public class OccciOp extends BasisOp {
             description = "Prefix of input radiance or reflectance bands (SeaWiFS)")
     private String ocSeawifsRadianceBandPrefix;
 
+    @Parameter(defaultValue = "0.08",
+            label = " 'B_NIR' threshold at 862nm (VIIRS)",
+            description = "'B_NIR' threshold: 'Cloud B_NIR' set if refl_862 > THRESH.")
+    private double ocViirsBNirThresh862;
+
     @Parameter(defaultValue = "true",
             label = " RhoTOA bands (VIIRS)",
             description = "Write RhoTOA bands to target product (VIIRS).")
@@ -349,6 +354,7 @@ public class OccciOp extends BasisOp {
         occciCloudClassificationParameters.put("ocModisBrightnessThreshCloudAmbiguous", ocModisBrightnessThreshCloudAmbiguous);
         occciCloudClassificationParameters.put("ocModisGlintThresh859forCloudSure", ocModisGlintThresh859forCloudSure);
         occciCloudClassificationParameters.put("ocModisBNirThresh859", ocModisBNirThresh859);
+        occciCloudClassificationParameters.put("ocViirsBNirThresh865", ocViirsBNirThresh862);
         occciCloudClassificationParameters.put("ocModisGlintThresh859forCloudAmbiguous", ocModisGlintThresh859forCloudAmbiguous);
         occciCloudClassificationParameters.put("ocModisApplyOrLogicInCloudTest", ocModisApplyOrLogicInCloudTest);
         occciCloudClassificationParameters.put("ocModisNNCloudAmbiguousLowerBoundaryValue", ocModisNNCloudAmbiguousLowerBoundaryValue);
@@ -446,13 +452,13 @@ public class OccciOp extends BasisOp {
             copySourceBands(sourceProduct, targetProduct, "EV_1KM_RefSB_17");
             copySourceBands(sourceProduct, targetProduct, "EV_1KM_RefSB_18");
             copySourceBands(sourceProduct, targetProduct, "EV_1KM_RefSB_19");
-//            for (int i = 0; i < sourceProduct.getNumTiePointGrids(); i++) {
-//                TiePointGrid srcTPG = sourceProduct.getTiePointGridAt(i);
-//                if ((srcTPG.getName().contains("Zenith") || srcTPG.getName().contains("Azimuth")) &&
-//                        !targetProduct.containsTiePointGrid(srcTPG.getName())) {
-//                    targetProduct.addTiePointGrid(srcTPG.cloneTiePointGrid());
-//                }
-//            }
+            for (int i = 0; i < sourceProduct.getNumTiePointGrids(); i++) {
+                TiePointGrid srcTPG = sourceProduct.getTiePointGridAt(i);
+                if ((srcTPG.getName().contains("Zenith") || srcTPG.getName().contains("Azimuth")) &&
+                        !targetProduct.containsTiePointGrid(srcTPG.getName())) {
+                    targetProduct.addTiePointGrid(srcTPG.cloneTiePointGrid());
+                }
+            }
         }
 
         if (IdepixUtils.isValidModisProduct(sourceProduct) && ocOutputRad2Refl) {

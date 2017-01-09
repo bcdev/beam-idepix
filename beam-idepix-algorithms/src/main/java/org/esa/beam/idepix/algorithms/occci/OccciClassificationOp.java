@@ -78,7 +78,7 @@ public class OccciClassificationOp extends PixelOperator {
     @Parameter(defaultValue = "0.08",
             label = " 'B_NIR' threshold at 859nm (MODIS)",
             description = "'B_NIR' threshold: 'Cloud B_NIR' set if EV_250_Aggr1km_RefSB_2 > THRESH.")
-    private double ocModisBNirThresh859;
+    private double ocModisBNirThresh;
 
     @Parameter(defaultValue = "0.15",
             label = " 'Dark glint' threshold at 859nm for 'cloud sure' (MODIS)",
@@ -104,6 +104,11 @@ public class OccciClassificationOp extends PixelOperator {
             label = " NN cloud sure/snow separation value (MODIS)",
             description = " NN cloud ambiguous cloud sure/snow separation value (MODIS)")
     double ocModisNNCloudSureSnowSeparationValue;
+
+    @Parameter(defaultValue = "0.08",
+            label = " 'B_NIR' threshold at 862nm (VIIRS)",
+            description = "'B_NIR' threshold: 'Cloud B_NIR' set if refl_862 > THRESH.")
+    private double ocViirsBNirThresh862;
 
 
     private SensorContext sensorContext;
@@ -215,7 +220,7 @@ public class OccciClassificationOp extends PixelOperator {
         ((OccciModisAlgorithm) occciAlgorithm).
                 setModisBrightnessThreshCloudAmbiguous(ocModisBrightnessThreshCloudAmbiguous);
         ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859forCloudSure(ocModisGlintThresh859forCloudSure);
-        ((OccciModisAlgorithm) occciAlgorithm).setModisBNirThresh859(ocModisBNirThresh859);
+        ((OccciModisAlgorithm) occciAlgorithm).setModisBNirThresh859(ocModisBNirThresh);
         ((OccciModisAlgorithm) occciAlgorithm).setModisGlintThresh859forCloudAmbiguous(ocModisGlintThresh859forCloudAmbiguous);
         ((OccciModisAlgorithm) occciAlgorithm).setModisApplyOrLogicInCloudTest(ocModisApplyOrLogicInCloudTest);
 
@@ -306,6 +311,7 @@ public class OccciClassificationOp extends PixelOperator {
                     sourceSamples[OccciConstants.VIIRS_SRC_RAD_OFFSET + sensorContext.getNumSpectralInputBands() + 1].getFloat();
         }
         occciAlgorithm.setWaterFraction(waterFraction);
+        ((OccciViirsAlgorithm) occciAlgorithm).setbNirThresh862(ocViirsBNirThresh862);
 
         double[] viirsNeuralNetInput = viirsNeuralNet.get().getInputVector();
         for (int i = 0; i < viirsNeuralNetInput.length; i++) {
@@ -317,6 +323,9 @@ public class OccciClassificationOp extends PixelOperator {
         occciAlgorithm.setNnOutput(neuralNetOutput);
 
         targetSamples[3].set(neuralNetOutput[0]);
+
+        // new VIIRS specific test:
+        targetSamples[0].set(OccciConstants.F_CLOUD_B_NIR, ((OccciViirsAlgorithm) occciAlgorithm).isCloudBNir());
 
         return occciAlgorithm;
     }
