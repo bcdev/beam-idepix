@@ -37,6 +37,7 @@ public class OccciUtils {
         flagCoding.addFlag("F_COASTLINE", BitSetter.setFlag(0, OccciConstants.F_COASTLINE), null);
         flagCoding.addFlag("F_LAND", BitSetter.setFlag(0, OccciConstants.F_LAND), null);
         flagCoding.addFlag("F_BRIGHT", BitSetter.setFlag(0, OccciConstants.F_BRIGHT), null);
+        flagCoding.addFlag("F_WHITE_SCATTER", BitSetter.setFlag(0, OccciConstants.F_WHITE_SCATTER), null);
 
         return flagCoding;
     }
@@ -122,6 +123,11 @@ public class OccciUtils {
 
         mask = Mask.BandMathsType.create("F_BRIGHT", "Bright pixel", w, h,
                                          "pixel_classif_flags.F_BRIGHT",
+                                         getRandomColour(r), 0.5f);
+        occciProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("F_WHITE_SCATTER", "'White scatter' pixel", w, h,
+                                         "pixel_classif_flags.F_WHITE_SCATTER",
                                          getRandomColour(r), 0.5f);
         occciProduct.getMaskGroup().add(index++, mask);
 

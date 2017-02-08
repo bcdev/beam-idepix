@@ -17,6 +17,7 @@ class OccciConstants {
     public static final String BRIGHTNESS_BAND_NAME = "brightness_value";
     public static final String NDSI_BAND_NAME = "ndsi_value";
     public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";
+    public static final String WHITE_SCATTERER_BAND_NAME = "white_scatterer";
 
     static final int SRC_SZA = 0;
     static final int SRC_SAA = 1;
@@ -42,6 +43,7 @@ class OccciConstants {
     public static final int F_COASTLINE = 12;
     public static final int F_LAND = 13;
     public static final int F_BRIGHT = 14;
+    public static final int F_WHITE_SCATTER = 14;
 
     // IdepixConstants:
 //    public static final int F_INVALID = 0;

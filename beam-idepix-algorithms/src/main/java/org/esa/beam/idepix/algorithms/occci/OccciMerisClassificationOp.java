@@ -74,6 +74,7 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
     private RayleighCorrection rayleighCorrection;
 
     private Band cloudFlagBand;
+    private Band whiteScattererBand;
     private SeaIceClassifier seaIceClassifier;
     private Band ctpBand;
     private Band liseP1Band;
@@ -133,6 +134,16 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
             label = " 'MERIS/AATSR' cloud/ice separation value (MERIS) ",
             description = " 'MERIS/AATSR' cloud/ice separation value ")
     double schillerMerisAatsrCloudIceSeparationValue;
+
+    @Parameter(defaultValue = "false",
+            label = " Write 'white scatterer' value to the target product",
+            description = " If applied, write 'white scatterer' value to the target product ")
+    private boolean outputWhiteScattererBand;
+
+    @Parameter(defaultValue = "2.0",
+            label = " 'White scatter' threshold ",
+            description = " If 'white scatterer' value exceeds this threshold, pixel is flagged as 'white scatter' ")
+    double whiteScatterThreshold;
 
     @Parameter(defaultValue = "false",
             label = " Write NN value to the target product.",
@@ -218,9 +229,11 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
         targetProduct.getFlagCodingGroup().add(flagCoding);
         OccciUtils.setupOccciClassifBitmask(targetProduct);
 
+        if (outputWhiteScattererBand) {
+            whiteScattererBand = targetProduct.addBand(OccciConstants.WHITE_SCATTERER_BAND_NAME, ProductData.TYPE_FLOAT32);
+        }
         if (outputSchillerNNValue && applyMERISSchillerNN) {
-            nnOutputBand = targetProduct.addBand(OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME,
-                                                 ProductData.TYPE_FLOAT32);
+            nnOutputBand = targetProduct.addBand(OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME, ProductData.TYPE_FLOAT32);
         }
     }
 
@@ -329,6 +342,11 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
                             if (outputSchillerNNValue && applyMERISSchillerNN && band == nnOutputBand) {
                                 final double[] nnOutput = getMerisNNOutput(sd, pixelInfo);
                                 targetTile.setSample(pixelInfo.x, pixelInfo.y, nnOutput[0]);
+                            }
+
+                            if (outputWhiteScattererBand && band == whiteScattererBand) {
+                                final double whiteScattererValue = getWhiteScattererValue(sd, pixelInfo);
+                                targetTile.setSample(pixelInfo.x, pixelInfo.y, whiteScattererValue);
                             }
                         }
                     }
@@ -490,10 +508,67 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
         }
 
         targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_GLINT_RISK, is_glint_risk && !isCloudSure);
+
+        final double whiteScatterValue = getWhiteScattererValue(sd, pixelInfo);
+        final boolean isWhiteScatter = whiteScatterValue > whiteScatterThreshold;
+        targetTile.setSample(pixelInfo.x, pixelInfo.y, OccciConstants.F_WHITE_SCATTER, isWhiteScatter);
     }
 
     private double[] getMerisNNOutput(SourceData sd, PixelInfo pixelInfo) {
         return getMerisNNOutputImpl(sd, pixelInfo, merisAllNeuralNet.get());
+    }
+
+    private double getWhiteScattererValue(SourceData sd, PixelInfo pixelInfo) {
+        // rayleigh down transmittance, T_R_thetas_4x4
+        final double[] transRs = new double[Constants.L1_BAND_NUM];
+
+        //Rayleigh optical thickness, tauR0 in DPM
+        final double[] tauR = new double[Constants.L1_BAND_NUM];
+
+        //Rayleigh phase function coefficients, PR in DPM
+        final double[] phaseR = new double[Constants.RAYSCATT_NUM_SER];
+
+        //Rayleigh correction
+        final double[] rhoRay = new double[Constants.L1_BAND_NUM];
+
+        final double deltaAzimuth = sd.deltaAzimuth[pixelInfo.index];
+
+        final double sins = sd.sins[pixelInfo.index];
+        final double sinv = sd.sinv[pixelInfo.index];
+        final double coss = sd.coss[pixelInfo.index];
+        final double cosv = sd.cosv[pixelInfo.index];
+
+        pixelInfo.airMass = HelperFunctions.calculateAirMass(sd.vza[pixelInfo.index], sd.sza[pixelInfo.index]);
+        double press = pixelInfo.ecmwfPressure; /* DPM #2.1.7-1 v1.1 */
+
+        /* Rayleigh phase function Fourier decomposition */
+        rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
+
+        /* Rayleigh optical thickness */
+        rayleighCorrection.tau_rayleigh(press, tauR); /* DPM #2.1.7-2 */
+
+        /* Rayleigh transmittance */
+        rayleighCorrection.trans_rayleigh(coss, tauR, transRs);
+
+        /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
+        rayleighCorrection.ref_rayleigh(deltaAzimuth, sd.sza[pixelInfo.index], sd.vza[pixelInfo.index],
+                                        coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
+
+        final double td620 = transRs[5]; // 620nm
+        final double td709 = transRs[8]; // use 705nm
+        final double brr620 = sd.rhoToa[5][pixelInfo.index] - rhoRay[5]; // 620nm
+        final double brr709 = sd.rhoToa[8][pixelInfo.index] - rhoRay[8]; // use 705nm
+
+        return calcWhiteScattererValue(td620, td709, brr620, brr709);
+    }
+
+    private double calcWhiteScattererValue(double td620, double td709, double brr620, double brr709) {
+        final double aw620 = 0.2755;
+        final double aw7075 = 0.756;
+        final double aw710 = 0.826;
+        final double aw709 = aw7075 + 0.6*(aw710 - aw7075);
+
+        return Math.log( (td709/td620) * ((aw620*brr620)/(aw709*brr709)) ) / Math.log(620.0/709.0);
     }
 
     private double[] getMerisNNOutputImpl(SourceData sd, PixelInfo pixelInfo, SchillerNeuralNetWrapper nnWrapper) {
@@ -631,8 +706,8 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
      *                     <code>resultFlags[2]</code> contains pressure range flag (delta_p).
      * @param isLand       land/water flag
      */
-    private void spec_slopes(SourceData dc, PixelInfo pixelInfo, boolean[] result_flags, boolean isLand) {
-        final double deltaAzimuth = dc.deltaAzimuth[pixelInfo.index];
+    private void spec_slopes(SourceData sd, PixelInfo pixelInfo, boolean[] result_flags, boolean isLand) {
+        final double deltaAzimuth = sd.deltaAzimuth[pixelInfo.index];
 
         //Rayleigh phase function coefficients, PR in DPM
         final double[] phaseR = new double[Constants.RAYSCATT_NUM_SER];
@@ -641,10 +716,10 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
         //Rayleigh correction
         final double[] rhoRay = new double[Constants.L1_BAND_NUM];
 
-        final double sins = dc.sins[pixelInfo.index];
-        final double sinv = dc.sinv[pixelInfo.index];
-        final double coss = dc.coss[pixelInfo.index];
-        final double cosv = dc.cosv[pixelInfo.index];
+        final double sins = sd.sins[pixelInfo.index];
+        final double sinv = sd.sinv[pixelInfo.index];
+        final double coss = sd.coss[pixelInfo.index];
+        final double cosv = sd.cosv[pixelInfo.index];
 
         /* Rayleigh phase function Fourier decomposition */
         rayleighCorrection.phase_rayleigh(coss, cosv, sins, sinv, phaseR);
@@ -655,40 +730,40 @@ public class OccciMerisClassificationOp extends MerisBasisOp {
         rayleighCorrection.tau_rayleigh(press, tauR); /* DPM #2.1.7-2 */
 
         /* Rayleigh reflectance - DPM #2.1.7-3 - v1.3 */
-        rayleighCorrection.ref_rayleigh(deltaAzimuth, dc.sza[pixelInfo.index], dc.vza[pixelInfo.index],
+        rayleighCorrection.ref_rayleigh(deltaAzimuth, sd.sza[pixelInfo.index], sd.vza[pixelInfo.index],
                                         coss, cosv, pixelInfo.airMass, phaseR, tauR, rhoRay);
         /* DPM #2.1.7-4 */
         double[] rhoAg = new double[Constants.L1_BAND_NUM];
         for (int band = Constants.bb412; band <= Constants.bb900; band++) {
-            rhoAg[band] = (dc.rhoToa[band][pixelInfo.index] - rhoRay[band]);
+            rhoAg[band] = (sd.rhoToa[band][pixelInfo.index] - rhoRay[band]);
         }
 
         /* Interpolate threshold on rayleigh corrected reflectance - DPM #2.1.7-9 */
-        double rhorc_442_thr = pixelId.getRhoRC442thr(dc.sza[pixelInfo.index], dc.vza[pixelInfo.index], deltaAzimuth, isLand);
+        double rhorc_442_thr = pixelId.getRhoRC442thr(sd.sza[pixelInfo.index], sd.vza[pixelInfo.index], deltaAzimuth, isLand);
 
 
         /* Derive bright flag by reflectance comparison to threshold - DPM #2.1.7-10 */
         boolean bright_f;
 
         /* Spectral slope processor.brr 1 */
-        boolean slope1_f = pixelId.isSpectraSlope1Flag(rhoAg, dc.radiance[BAND_SLOPE_N_1].getSampleFloat(pixelInfo.x, pixelInfo.y));
+        boolean slope1_f = pixelId.isSpectraSlope1Flag(rhoAg, sd.radiance[BAND_SLOPE_N_1].getSampleFloat(pixelInfo.x, pixelInfo.y));
         /* Spectral slope processor.brr 2 */
-        boolean slope2_f = pixelId.isSpectraSlope2Flag(rhoAg, dc.radiance[BAND_SLOPE_N_2].getSampleFloat(pixelInfo.x, pixelInfo.y));
+        boolean slope2_f = pixelId.isSpectraSlope2Flag(rhoAg, sd.radiance[BAND_SLOPE_N_2].getSampleFloat(pixelInfo.x, pixelInfo.y));
 
         boolean bright_toa_f = false;
         boolean bright_rc = (rhoAg[auxData.band_bright_n] > rhorc_442_thr)
-                || isSaturated(dc, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
+                || isSaturated(sd, pixelInfo.x, pixelInfo.y, BAND_BRIGHT_N, auxData.band_bright_n);
         if (isLand) {   /* land pixel */
             bright_f = bright_rc && slope1_f && slope2_f;
         } else {
-            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(dc, pixelInfo);
+            final double rhoThreshOffsetTerm = calcRhoToa442ThresholdTerm(sd, pixelInfo);
             final double ndvi = (rhoAg[Constants.bb10] - rhoAg[Constants.bb7]) / (rhoAg[Constants.bb10] + rhoAg[Constants.bb7]);
             bright_toa_f = (rhoAg[CC_RHO_AG_REFERENCE_WAVELENGTH_INDEX] > rhoThreshOffsetTerm) &&
                     ndvi > CC_NDVI_THRESHOLD;
             bright_f = bright_rc || bright_toa_f;
         }
 
-        final float mdsi = computeMdsi(dc.rhoToa[Constants.bb865][pixelInfo.index], dc.rhoToa[Constants.bb890][pixelInfo.index]);
+        final float mdsi = computeMdsi(sd.rhoToa[Constants.bb865][pixelInfo.index], sd.rhoToa[Constants.bb890][pixelInfo.index]);
         boolean high_mdsi = (mdsi > CC_MDSI_THRESHOLD);
 
         result_flags[0] = bright_f;

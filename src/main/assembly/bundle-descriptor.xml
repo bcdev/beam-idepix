@@ -1,13 +1,13 @@
 <bundleDescriptor>
     <bundleName>beam-idepix</bundleName>
-    <bundleVersion>2.2.46-SNAPSHOT</bundleVersion>
+    <bundleVersion>2.2.47-SNAPSHOT</bundleVersion>
 
     <processorDescriptors>
 
         <processorDescriptor>
             <executableName>Idepix.Water</executableName>
             <processorName>Idepix (Water Pixel Classification for MERIS)</processorName>
-            <processorVersion>2.2.46-SNAPSHOT</processorVersion>
+            <processorVersion>2.2.47-SNAPSHOT</processorVersion>
 
             <parameterDescriptors>
                 <parameterDescriptor>
@@ -267,7 +267,7 @@
         <processorDescriptor>
             <executableName>Idepix.Land</executableName>
             <processorName>Idepix (Land Pixel Classification)</processorName>
-            <processorVersion>2.2.46-SNAPSHOT</processorVersion>
+            <processorVersion>2.2.47-SNAPSHOT</processorVersion>
 
             <parameterDescriptors>
                 <parameterDescriptor>
@@ -583,7 +583,7 @@
         <processorDescriptor>
           <executableName>idepix.occci</executableName>
           <processorName>Idepix (OC-CCI Algorithm for MERIS, MODIS and SeaWiFS)</processorName>
-             <processorVersion>2.2.46-SNAPSHOT</processorVersion>
+             <processorVersion>2.2.47-SNAPSHOT</processorVersion>
 
           <outputFormats>BEAM-DIMAP,NetCDF</outputFormats>
           <descriptionHtml>

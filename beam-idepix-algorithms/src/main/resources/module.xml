@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-idepix-algorithms</symbolicName>
-    <version>2.2.46-SNAPSHOT</version>
+    <version>2.2.47-SNAPSHOT</version>
     <name>Idepix Algorithms</name>
     <description>
         Idepix algorithms module. Idepix is a generic pixel identification and classification algorithm for optical
@@ -17,6 +17,8 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
+        <b>Version 2.2.47:</b>
+        Added 'white scatterer' band/flag in MERIS OC algorithm.
         <b>Version 2.2.46:</b>
         Added MODIS B_NIR test also in VIIRS algorithm.
         <b>Version 2.2.45:</b>

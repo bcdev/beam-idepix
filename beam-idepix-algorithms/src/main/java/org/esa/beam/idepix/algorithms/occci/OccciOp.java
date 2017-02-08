@@ -103,6 +103,16 @@ public class OccciOp extends BasisOp {
             description = "Write CTP band to target product (MERIS).")
     private boolean ocOutputCtp = true;
 
+    @Parameter(defaultValue = "false",
+            label = " Write 'white scatterer' value to the target product",
+            description = " If applied, write 'white scatterer' value to the target product ")
+    private boolean outputWhiteScattererBand;
+
+    @Parameter(defaultValue = "4.8",
+            label = " 'White scatter' threshold ",
+            description = " If 'white scatterer' value exceeds this threshold, pixel is flagged as 'white scatter' ")
+    double whiteScatterThreshold;
+
     //    @Parameter(defaultValue = "false",
 //            label = " Write NN value to the target product (MERIS).",
 //            description = " If applied, write NN value to the target product (MERIS)")
@@ -385,6 +395,8 @@ public class OccciOp extends BasisOp {
     private void setMerisStandardClassificationParameters() {
         waterClassificationParameters = new HashMap<>();
         waterClassificationParameters.put("copyAllTiePoints", true);
+        waterClassificationParameters.put("whiteScatterThreshold", whiteScatterThreshold);
+        waterClassificationParameters.put("outputWhiteScattererBand", outputWhiteScattererBand);
         waterClassificationParameters.put("outputSchillerNNValue", outputSchillerMerisNNValue);
         waterClassificationParameters.put("ccSchillerNNCloudAmbiguousLowerBoundaryValue",
                                           schillerMerisNNCloudAmbiguousLowerBoundaryValue);
@@ -487,6 +499,10 @@ public class OccciOp extends BasisOp {
         }
         if (outputSchillerMerisNNValue) {
             copySourceBands(classifProduct, targetProduct, OccciConstants.SCHILLER_NN_OUTPUT_BAND_NAME);
+        }
+
+        if (outputWhiteScattererBand) {
+            copySourceBands(classifProduct, targetProduct, OccciConstants.WHITE_SCATTERER_BAND_NAME);
         }
 
         if (IdepixUtils.isValidSeawifsProduct(sourceProduct) && ocOutputSeawifsRefl) {
