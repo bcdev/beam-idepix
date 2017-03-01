@@ -199,6 +199,20 @@ public class IdepixProducts {
         }
     }
 
+    public static void addRadianceBands(Product l1bProduct, Product targetProduct, int minBand, int maxBand) {
+        for (int i = minBand; i <= maxBand; i++) {
+            for (String bandname : l1bProduct.getBandNames()) {
+                if (!targetProduct.containsBand(bandname) &&
+                        bandname.equals(Rad2ReflOp.RADIANCE_BAND_PREFIX + "_" + String.valueOf(i))) {
+                    System.out.println("adding band: " + bandname);
+                    ProductUtils.copyBand(bandname, l1bProduct, targetProduct, true);
+                    final String unit = l1bProduct.getBand(bandname).getUnit();
+                    targetProduct.getBand(bandname).setUnit(unit);
+                }
+            }
+        }
+    }
+
     public static void addRadiance2ReflectanceBands(Product rad2reflProduct, Product targetProduct) {
         addRadiance2ReflectanceBands(rad2reflProduct, targetProduct, 1, 15);
     }

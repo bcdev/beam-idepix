@@ -51,6 +51,11 @@ public class CawaOp extends BasisOp {
             label = " Write TOA radiances to the target product")
     private boolean outputRadiance = false;
 
+    @Parameter(defaultValue = "true",
+            description = "Write CAWA TOA radiances for CTP (bands 10, 11) to the target product.",
+            label = " Write CAWA TOA radiances for CTP (bands 10, 11) to the target product")
+    private boolean outputCawaCtpRadiance = true;
+
     @Parameter(defaultValue = "false",
             description = "Write all TOA reflectances to the target product.",
             label = " Write all TOA Reflectances to the target product")
@@ -278,6 +283,12 @@ public class CawaOp extends BasisOp {
         if (outputRadiance) {
             IdepixProducts.addRadianceBands(sourceProduct, targetProduct);
         }
+
+        if (outputCawaCtpRadiance) {
+            IdepixProducts.addRadianceBands(sourceProduct, targetProduct, 10, 11);
+            ProductUtils.copyBand("detector_index", sourceProduct, targetProduct, true);
+        }
+
         if (outputAllRad2Refl) {
             IdepixProducts.addRadiance2ReflectanceBands(rad2reflProduct, targetProduct);
         }
