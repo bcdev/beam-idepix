@@ -132,6 +132,7 @@ public class IdepixUtils {
         return product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_PRODUCT_TYPE) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_AVISA_PRODUCT_TYPE) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_UNIDATA_PRODUCT_TYPE) ||
+                isAvhrrNceiProduct(product) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_USGS_PRODUCT_TYPE);
     }
 
@@ -177,7 +178,11 @@ public class IdepixUtils {
     }
 
     public static boolean isAvhrrUsgsProduct(Product product) {
-        return true;  // todo
+        return product.getName().contains("ao") && product.getName().contains("l1b");  // todo
+    }
+
+    public static boolean isAvhrrNceiProduct(Product product) {
+        return product.getName().contains(IdepixConstants.AVHRR_L1b_NCEI_PRODUCT_NAME_ROOT);
     }
 
     public static boolean isAvhrrOldTestProduct(Product product) {

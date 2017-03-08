@@ -37,6 +37,7 @@ public class IdepixConstants {
 
     public static final String AVHRR_L1b_PRODUCT_TYPE = "AVHRR";
     public static final String AVHRR_L1b_USGS_PRODUCT_TYPE = "NOAA_POD_AVHRR_HRPT";
+    public static final String AVHRR_L1b_NCEI_PRODUCT_NAME_ROOT = "AVHRR-Land_v004";
     public static final String AVHRR_L1b_AVISA_PRODUCT_TYPE = "AVHRR_3_L1B";
     public static final String AVHRR_L1b_UNIDATA_PRODUCT_TYPE = "CF-1.6, Unidata Observation Dataset v1.1";
 

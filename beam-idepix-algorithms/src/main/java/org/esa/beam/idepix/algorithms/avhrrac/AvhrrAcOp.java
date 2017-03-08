@@ -128,7 +128,9 @@ public class AvhrrAcOp extends BasisOp {
             acClassificationOp = new AvhrrAcUSGSClassificationOp();
         } else if (IdepixUtils.isAvhrrOldTestProduct(sourceProduct)) {
             acClassificationOp = new AvhrrAcTestClassificationOp();
-        } else {
+        } else if (IdepixUtils.isAvhrrNceiProduct(sourceProduct)) {
+            acClassificationOp = new AvhrrAcNCEIClassificationOp();
+        }else {
             throw new OperatorException("Input product is not a valid AVHRR product.");
         }
 
