@@ -11,6 +11,7 @@ import org.esa.beam.util.ProductUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Random;
 
@@ -133,6 +134,7 @@ public class IdepixUtils {
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_AVISA_PRODUCT_TYPE) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_UNIDATA_PRODUCT_TYPE) ||
                 isAvhrrNceiProduct(product) ||
+                isAvhrrLtdr02C1Product(product) ||
                 product.getProductType().equalsIgnoreCase(IdepixConstants.AVHRR_L1b_USGS_PRODUCT_TYPE);
     }
 
@@ -183,6 +185,11 @@ public class IdepixUtils {
 
     public static boolean isAvhrrNceiProduct(Product product) {
         return product.getName().contains(IdepixConstants.AVHRR_L1b_NCEI_PRODUCT_NAME_ROOT);
+    }
+
+    public static boolean isAvhrrLtdr02C1Product(Product product) {
+        return product.getProductType().startsWith("AVHRR LTDR") &&
+                product.getName().contains(IdepixConstants.AVHRR_L1b_LTDR_02C1_PRODUCT_NAME_ROOT);
     }
 
     public static boolean isAvhrrOldTestProduct(Product product) {
@@ -553,6 +560,24 @@ public class IdepixUtils {
         return doy;
     }
 
+    /**
+     * Converts a day of year to a datestring
+     *
+     * @param year - the year
+     * @param doy  - the day of year
+     * @param dateFormat  - the date format (such as yyyyMMdd or yyyy-MM-dd)
+     * @return String - the datestring
+     */
+    public static String getDateFromDoy(int year, int doy, String dateFormat) {
+        final SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_YEAR, doy);
+        calendar.set(Calendar.YEAR, year);
+        return sdf.format(calendar.getTime());
+    }
+
+
     public static boolean isLeapYear(int year) {
         return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
     }
@@ -568,7 +593,6 @@ public class IdepixUtils {
         int computedFlags = targetTile.getSampleInt(x, y);
         targetTile.setSample(x, y, sourceFlags | computedFlags);
     }
-
 
 
     private static Color getRandomColour(Random random) {

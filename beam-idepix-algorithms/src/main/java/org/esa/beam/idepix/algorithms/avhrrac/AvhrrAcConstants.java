@@ -84,7 +84,8 @@ public class AvhrrAcConstants {
             AVHRR_AC_REFL_5_TL_BAND_NAME
     };
 
-
+    public static final double[] SPECTRAL_RESPONSE_WIDTH_NOAA_14 = {0.136, 0.245}; // bands 1, 2
+    public static final double[] INTEGR_SOLAR_SPECTRAL_IRRAD_NOAA_14 = {221.42, 252.29}; // bands 1, 2
 
     // debug bands:
     public static final String SCHILLER_NN_OUTPUT_BAND_NAME = "nn_value";

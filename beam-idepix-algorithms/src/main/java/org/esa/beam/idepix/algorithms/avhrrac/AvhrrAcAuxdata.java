@@ -66,9 +66,15 @@ public class AvhrrAcAuxdata {
         return vzaTable;
     }
 
-    public Rad2BTTable createRad2BTTable(String noaaId) throws IOException {
-
-        final String filename = RAD2BT_FILE_NAME_PREFIX + noaaId + ".txt";
+    public Rad2BTTable createRad2BTTable(String noaaIdStringFromProduct) throws IOException {
+        final int noaaId = Integer.parseInt(noaaIdStringFromProduct);
+        String noaaIdString;
+        if (noaaId <= 11) {
+            noaaIdString = "11";
+        } else {
+            noaaIdString = "14";
+        }
+        final String filename = RAD2BT_FILE_NAME_PREFIX + noaaIdString + ".txt";
         final InputStream inputStream = getClass().getResourceAsStream(filename);
         Rad2BTTable rad2BTTable = new Rad2BTTable();
 
@@ -146,7 +152,7 @@ public class AvhrrAcAuxdata {
     }
 
     /**
-     *  Class providing a radiance-to-BT coefficients table
+     * Class providing a radiance-to-BT coefficients table
      */
     public class Rad2BTTable {
         private final int OFFSET = 3;

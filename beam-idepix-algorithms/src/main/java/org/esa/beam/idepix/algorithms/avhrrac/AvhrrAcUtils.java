@@ -58,84 +58,84 @@ public class AvhrrAcUtils {
         Random r = new Random();
 
         mask = Mask.BandMathsType.create("F_INVALID", "Invalid pixel", w, h,
-                "pixel_classif_flags.F_INVALID",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_INVALID",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_CLOUD", "Cloudy pixel (sure or ambiguous)", w, h,
-                "pixel_classif_flags.F_CLOUD",
-                Color.yellow, 0.5f);
+                                         "pixel_classif_flags.F_CLOUD",
+                                         Color.yellow, 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_CLOUD_AMBIGUOUS", "Cloudy pixel (ambiguous)", w, h,
-                "pixel_classif_flags.F_CLOUD_AMBIGUOUS",
-                Color.blue, 0.5f);
+                                         "pixel_classif_flags.F_CLOUD_AMBIGUOUS",
+                                         Color.blue, 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_CLOUD_SURE", "Cloudy pixel (sure)", w, h,
-                "pixel_classif_flags.F_CLOUD_SURE",
-                Color.red, 0.5f);
+                                         "pixel_classif_flags.F_CLOUD_SURE",
+                                         Color.red, 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_CLOUD_BUFFER", "Cloud buffer pixel", w, h,
-                "pixel_classif_flags.F_CLOUD_BUFFER",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_CLOUD_BUFFER",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_CLOUD_SHADOW", "Cloud shadow pixel", w, h,
-                "pixel_classif_flags.F_CLOUD_SHADOW",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_CLOUD_SHADOW",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_SNOW_ICE", "Snow/ice pixel", w, h,
-                "pixel_classif_flags.F_SNOW_ICE",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_SNOW_ICE",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_GLINT_RISK", "Glint risk pixel", w, h,
-                "pixel_classif_flags.F_GLINT_RISK",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_GLINT_RISK",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_COASTLINE", "Coastline pixel", w, h,
-                "pixel_classif_flags.F_COASTLINE",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_COASTLINE",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_LAND", "Land pixel", w, h,
-                "pixel_classif_flags.F_LAND",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_LAND",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         // tests:
         mask = Mask.BandMathsType.create("F_REFL1_ABOVE_THRESH", "TOA reflectance Channel 1 above threshold", w, h,
-                "pixel_classif_flags.F_REFL1_ABOVE_THRESH",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_REFL1_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_REFL2_ABOVE_THRESH", "TOA reflectance Channel 2 above threshold", w, h,
-                "pixel_classif_flags.F_REFL2_ABOVE_THRESH",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_REFL2_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_RATIO_REFL21_ABOVE_THRESH", "Ratio of TOA reflectance Channel 2/1 above threshold", w, h,
-                "pixel_classif_flags.F_RATIO_REFL21_ABOVE_THRESH",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_RATIO_REFL21_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_RATIO_REFL31_ABOVE_THRESH", "Ratio of TOA reflectance Channel 3/1 above threshold", w, h,
-                "pixel_classif_flags.F_RATIO_REFL31_ABOVE_THRESH",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_RATIO_REFL31_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_BT4_ABOVE_THRESH", "Brightness temperature Channel 4 above threshold", w, h,
-                "pixel_classif_flags.F_BT4_ABOVE_THRESH",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_BT4_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         mask = Mask.BandMathsType.create("F_BT5_ABOVE_THRESH", "Brightness temperature Channel 5 above threshold", w, h,
-                "pixel_classif_flags.F_BT5_ABOVE_THRESH",
-                getRandomColour(r), 0.5f);
+                                         "pixel_classif_flags.F_BT5_ABOVE_THRESH",
+                                         getRandomColour(r), 0.5f);
         avhrracProduct.getMaskGroup().add(index++, mask);
 
         return index;
@@ -160,7 +160,8 @@ public class AvhrrAcUtils {
         final double eps = 1.E-6;
 //        final boolean szaInvalid = sza < 90.0 + eps && sza > 90.0 - eps;
 //        final boolean szaInvalid = sza  > 85.0; // GK, 20150326
-        final boolean szaInvalid = sza > 70.0; // GK, 20150922
+//        final boolean szaInvalid = sza > 70.0; // GK, 20150922
+        final boolean szaInvalid = sza > 85.0; // test OD, 20170309
 
         final boolean vzaInvalid = Double.isNaN(vza);
         final boolean saaInvalid = Double.isNaN(saa);
@@ -201,42 +202,37 @@ public class AvhrrAcUtils {
         double tRef = AvhrrAcConstants.c2 * nuStart / (Math.log(1.0 + AvhrrAcConstants.c1 * nuStart * nuStart * nuStart / nlcRadiance));
 
         double nuFinal = nuStart;
-        switch (noaaId) {
-            case "11":
-                if (tRef < 225.0) {
-                    nuFinal = rad2BTTable.getNuLow(ch);
-                } else if (tRef >= 225.0 && tRef < 275.0) {
-                    if (waterFraction == 100.0f && tRef > 270.0) {
-                        // water
-                        nuFinal = rad2BTTable.getNuHighWater(ch);
-                    } else {
-                        nuFinal = rad2BTTable.getNuMid(ch);
-                    }
-                } else if (tRef >= 275.0 && tRef < 320.0) {
-                    if (waterFraction == 100.0f && tRef < 310.0) {
-                        // water
-                        nuFinal = rad2BTTable.getNuHighWater(ch);
-                    } else {
-                        nuFinal = rad2BTTable.getNuHighLand(ch);
-                    }
-                }
-                break;
-            case "14":
-                if (tRef < 230.0) {
-                    nuFinal = rad2BTTable.getNuLow(ch);
-                } else if (tRef >= 230.0 && tRef < 270.0) {
+        if (Integer.parseInt(noaaId) <= 11) {
+            if (tRef < 225.0) {
+                nuFinal = rad2BTTable.getNuLow(ch);
+            } else if (tRef >= 225.0 && tRef < 275.0) {
+                if (waterFraction == 100.0f && tRef > 270.0) {
+                    // water
+                    nuFinal = rad2BTTable.getNuHighWater(ch);
+                } else {
                     nuFinal = rad2BTTable.getNuMid(ch);
-                } else if (tRef >= 270.0 && tRef < 330.0) {
-                    if (waterFraction == 100.0f && tRef < 310.0) {
-                        // water
-                        nuFinal = rad2BTTable.getNuHighWater(ch);
-                    } else {
-                        nuFinal = rad2BTTable.getNuHighLand(ch);
-                    }
                 }
-                break;
-            default:
-                throw new OperatorException("AVHRR version " + noaaId + " not supported.");
+            } else if (tRef >= 275.0 && tRef < 320.0) {
+                if (waterFraction == 100.0f && tRef < 310.0) {
+                    // water
+                    nuFinal = rad2BTTable.getNuHighWater(ch);
+                } else {
+                    nuFinal = rad2BTTable.getNuHighLand(ch);
+                }
+            }
+        } else {
+            if (tRef < 230.0) {
+                nuFinal = rad2BTTable.getNuLow(ch);
+            } else if (tRef >= 230.0 && tRef < 270.0) {
+                nuFinal = rad2BTTable.getNuMid(ch);
+            } else if (tRef >= 270.0 && tRef < 330.0) {
+                if (waterFraction == 100.0f && tRef < 310.0) {
+                    // water
+                    nuFinal = rad2BTTable.getNuHighWater(ch);
+                } else {
+                    nuFinal = rad2BTTable.getNuHighLand(ch);
+                }
+            }
         }
         return nuFinal;
     }
@@ -247,11 +243,11 @@ public class AvhrrAcUtils {
 
         switch (channel) {
             case 3:
-                return c1 * Math.pow(AvhrrAcConstants.NU_CH3, 3.0) / Math.exp(c2 * AvhrrAcConstants.NU_CH3 / bt);
+                return c1 * Math.pow(AvhrrAcConstants.NU_CH3, 3.0) / (Math.exp(c2 * AvhrrAcConstants.NU_CH3 / bt) - 1.0);
             case 4:
-                return c1 * Math.pow(AvhrrAcConstants.NU_CH4, 3.0) / Math.exp(c2 * AvhrrAcConstants.NU_CH4 / bt);
+                return c1 * Math.pow(AvhrrAcConstants.NU_CH4, 3.0) / (Math.exp(c2 * AvhrrAcConstants.NU_CH4 / bt) - 1.0);
             case 5:
-                return c1 * Math.pow(AvhrrAcConstants.NU_CH5, 3.0) / Math.exp(c2 * AvhrrAcConstants.NU_CH5 / bt);
+                return c1 * Math.pow(AvhrrAcConstants.NU_CH5, 3.0) / (Math.exp(c2 * AvhrrAcConstants.NU_CH5 / bt) - 1.0);
             default:
                 throw new IllegalArgumentException("wrong channel " + channel + " for radiance to BT conversion");
         }
@@ -264,4 +260,17 @@ public class AvhrrAcUtils {
         return new Color(rColor, gColor, bColor);
     }
 
+    public static double getLToaFromRhoToc(double lPath, double eg0, double alb, double trans,
+                                           double rhoToc) {
+        return lPath + (eg0 * trans * rhoToc) / ((1.0 - alb * rhoToc) * Math.PI);
+    }
+
+//    public static double getRhoToaFromRhoToc(double lPath, double eg0, double alb, double trans,
+//                                             double rhoToc, int bandIndex) {
+//        final double srw = AvhrrAcConstants.SPECTRAL_RESPONSE_WIDTH_NOAA_14[bandIndex-1];
+//        final double issi = AvhrrAcConstants.INTEGR_SOLAR_SPECTRAL_IRRAD_NOAA_14[bandIndex-1];
+//        final double lToa = lPath + (eg0 * trans * rhoToc) / ((1.0 - alb*rhoToc)*Math.PI);
+//
+//        return (10000 * Math.PI * lToa * srw) / issi;
+//    }
 }

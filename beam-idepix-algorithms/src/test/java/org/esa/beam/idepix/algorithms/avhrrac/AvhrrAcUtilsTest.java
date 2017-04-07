@@ -113,4 +113,33 @@ public class AvhrrAcUtilsTest {
 
     }
 
+    @Test
+    public void testGetLToaFromRhoToc() throws Exception {
+        // lPath, eg0, alb, trans are obtained from AVHRR-AC LUT with the following inputs
+        // they are assumed to be constant
+//        # model_type: 0
+//        # aerosol_type: 0
+//        # aerosol_depth: 0.1
+//        # water_vapour: 500
+//        # ozone_content: 0.33176
+//        # co2_mixing_ratio: 380
+//        # altitude: 0.5
+//        # sun_zenith_angle: 60.0
+//        # view_zenith_angle: 40.0
+//        # relative_azimuth: 20.0
+
+        double[] lPath = {0.001, 2.7E-4};
+        double[] eg0 = {0.153, 0.099};
+        double[] alb = {0.0445, 0.0213};
+        double[] trans = {0.8836, 0.895};
+
+        double[] rhoToc = {0.1, 0.2};
+        double[] lToa = new double[2];
+
+        lToa[0] = AvhrrAcUtils.getLToaFromRhoToc(lPath[0], eg0[0], alb[0], trans[0], rhoToc[0]);
+        lToa[1] = AvhrrAcUtils.getLToaFromRhoToc(lPath[1], eg0[1], alb[1], trans[1], rhoToc[1]);
+        System.out.println("lToa_1 = " + lToa[0]);
+        System.out.println("lToa_2 = " + lToa[1]);
+
+    }
 }

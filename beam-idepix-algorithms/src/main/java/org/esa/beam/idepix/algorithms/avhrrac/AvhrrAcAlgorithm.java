@@ -53,8 +53,7 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         return isCloudAmbiguous() || isCloudSure();
     }
 
-    @Override
-    public boolean isSnowIce() {
+    public boolean isSnowIce_onlyNN() {
 
 //        boolean isSnowIce = isCloudSureSchiller() && emissivity3b < AvhrrAcConstants.EMISSIVITY_THRESH;
         // todo: also consider NDSI?!
@@ -70,9 +69,12 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
             // separation numbers from HS, 20140923
             isSnowIce = nnOutput[0] > avhrracSchillerNNCloudSureSnowSeparationValue && nnOutput[0] <= 5.0;
         }
+        return isSnowIce;
+    }
 
-        // forget all the old stuff, completely new test now (GK/JM, 20151028):
-        isSnowIce = false;
+    @Override
+    public boolean isSnowIce() {
+        boolean isSnowIce = false;
         final double btCh3Celsius = btCh3 - 273.15;
         final double btCh4Celsius = btCh4 - 273.15;
         final double btCh5Celsius = btCh5 - 273.15;
@@ -81,6 +83,8 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
         final double ratiobt53 = btCh5Celsius / btCh3Celsius;
         final double diffrefl1rt3 = reflCh1 - reflCh3;
         final double sumrefl2rt3 = reflCh2 + reflCh3;
+
+        ndsi = (reflCh3 - reflCh1)/(reflCh3 + reflCh1);
 
         if (latitude > 62.0) {
             // NORTH (lat > 62N)
@@ -160,7 +164,10 @@ public class AvhrrAcAlgorithm implements AvhrrAcPixelProperties {
 //                        and rt_3<0.054 and bt_5-bt_3 > -14 and elevation > 1000
 //                        and pixel_classif_flags.F_LAND and (lat <= 62 and lat >= -62)
             isSnowIce = isLand() && -15.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.4 &&
+//            isSnowIce = isLand() && -25.0 < btCh4Celsius && btCh4Celsius < 1.35 && reflCh1 > 0.4 &&
+//                    ratio21 > 0.8 && ratio21 < 1.15 && reflCh3 < 0.035 && diffbt53 > -14.0;
                     ratio21 > 0.8 && ratio21 < 1.15 && reflCh3 < 0.035 && diffbt53 > -14.0 && elevation > 1000.0;
+//            isSnowIce = isSnowIce || ndsi < -0.95;
         }
 
         return isSnowIce;
