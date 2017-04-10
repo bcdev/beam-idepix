@@ -103,7 +103,7 @@
 
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
-            <artifactId>beam-avhrr-ltdr-reader</artifactId>
+            <artifactId>beam-globalbedo-avhrr-ltdr-reader</artifactId>
         </dependency>
 
     </dependencies>
@@ -275,8 +275,8 @@
 
             <dependency>
                 <groupId>org.esa.beam.globalbedo</groupId>
-                <artifactId>beam-avhrr-ltdr-reader</artifactId>
-                <version>2.0.5</version>
+                <artifactId>beam-globalbedo-avhrr-ltdr-reader</artifactId>
+                <version>2.0.5-SNAPSHOT</version>
             </dependency>
 
 
